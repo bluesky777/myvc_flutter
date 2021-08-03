@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
+import 'package:http/http.dart' as http;
 
 import 'txtFormField.dart';
 
@@ -11,14 +12,25 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreen extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  void _onSubmit() {
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => PanelScreen()));
+  Future<void> _onSubmit() async {
 
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Enviando...')));
-    }
+    var url = Uri.parse('https://lalvirtual.edu.co/8myvc/public/api/publicaciones/ultimas');
+    var response = await http.put(url);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    //print(await http.read('https://example.com/foobar.txt'));
+
+
+    // Navigator.pushNamed(
+    //   context,
+    //   '/panel',
+    // );
+
+    // if (_formKey.currentState!.validate()) {
+    //   ScaffoldMessenger.of(context)
+    //       .showSnackBar(const SnackBar(content: Text('Enviando...')));
+    // }
   }
 
   @override

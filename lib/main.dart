@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/RouteGenerator.dart';
 import 'package:myvc_flutter/Screens/LoginScreen.dart';
+
+import 'Screens/PanelScreen.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  // Para las rutas
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,6 +20,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: 'Flutter MyVc'),
+      navigatorKey: navigatorKey,
+      onGenerateRoute: RouteGenerator.generateRoute,
     );
   }
 }
