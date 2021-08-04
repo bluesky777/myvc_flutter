@@ -1,31 +1,40 @@
 import 'package:flutter/material.dart';
 
-class txtFormField extends StatelessWidget {
+class txtFormField extends StatefulWidget {
   final String hint;
   final String label;
+  TextEditingController? controller;
 
-  const txtFormField({this.hint = '', required this.label, Key? key})
+
+  txtFormField({this.hint = '', required this.label, this.controller, Key? key})
       : super(key: key);
+
+
+  @override
+  _txtFormField createState() => _txtFormField();
+}
+
+class _txtFormField extends State<txtFormField> {
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       child: TextFormField(
+        obscureText: widget.label == 'Contraseña' ? true : false,
+        controller: widget.controller,
         decoration: InputDecoration(
             border: OutlineInputBorder(),
-            hintText: this.hint,
-            labelText: this.label),
+            hintText: widget.hint,
+            labelText: widget.label),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Ingrese texto';
           }
           return null;
         },
-        onChanged: (value) {
-          print(value);
-        },
       ),
     );
   }
+
 }

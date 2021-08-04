@@ -4,27 +4,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
 
-class PanelScreen extends StatefulWidget {
+class AlumTardanzaColeScreen extends StatefulWidget {
   @override
-  _PanelScreen createState() => _PanelScreen();
+  _AlumTardanzaColeScreen createState() => _AlumTardanzaColeScreen();
 }
 
-class _PanelScreen extends State<PanelScreen> {
+class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   Server server = Server();
-  List<GrupoModel>? grupos;
+  List<AlumnoModel>? alumnos;
 
   @override
   void initState() {
     super.initState();
-    server.get('/grupos').then((response) {
+    server.get('/alumnos').then((response) {
       final String res = response.body;
       final List parsedList = json.decode(res);
       setState(() {
-        grupos = parsedList.map((dato) => GrupoModel.fromJson(dato)).toList();
-        print('grupos.length: ${grupos?.length}');
+        alumnos = parsedList.map((dato) => AlumnoModel.fromJson(dato)).toList();
+        print('grupos.length: ${alumnos?.length}');
       });
 
     });
@@ -37,7 +38,7 @@ class _PanelScreen extends State<PanelScreen> {
         title: Text('Bienvenido'),
       ),
       body: SingleChildScrollView(
-        child: grupos != null ? _buildListaGrupos() : Text('Esperando grupos...')
+          child: alumnos != null ? _buildListaGrupos() : Text('Esperando alumnos...')
       ),
       drawer: DrawPanel(),
       floatingActionButton: FloatingActionButton(
@@ -48,19 +49,19 @@ class _PanelScreen extends State<PanelScreen> {
     );
   }
 
-  Widget buildTile(GrupoModel grupo) => ListTile(
-        title: Text(
-          grupo.nombre,
-          //style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-      );
+  Widget buildTile(AlumnoModel alumno) => ListTile(
+    title: Text(
+      alumno.nombres,
+      //style: TextStyle(fontWeight: FontWeight.w700),
+    ),
+  );
 
   Widget _buildListaGrupos() => ExpansionPanelList.radio(
-    children: grupos!
-        .map((grupo) => ExpansionPanelRadio(
+    children: alumnos!
+        .map((alumno) => ExpansionPanelRadio(
       canTapOnHeader: true,
-      value: grupo.nombre,
-      headerBuilder: (context, is_expanded) => buildTile(grupo),
+      value: alumno.nombres,
+      headerBuilder: (context, is_expanded) => buildTile(alumno),
       body: Column(children: [
         Text('Una cosa mientras'),
       ]),
