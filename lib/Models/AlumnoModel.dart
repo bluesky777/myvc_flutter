@@ -6,12 +6,12 @@ class AlumnoModel extends ChangeNotifier {
   String nombres;
   String? apellidos;
   String sexo;
-  bool? is_active;
-  bool is_expanded;
+  bool? isActive;
+  bool isExpanded;
   List<AlumnoModel> alumnos = [];
 
   AlumnoModel({
-    required this.id, required this.nombres, this.apellidos, required this.sexo, this.is_active, this.is_expanded=false
+    required this.id, required this.nombres, this.apellidos, required this.sexo, this.isActive, this.isExpanded=false
   });
 
   factory AlumnoModel.fromJson(Map<String, dynamic> parsedJson) {

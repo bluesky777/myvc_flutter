@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
-import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
@@ -61,7 +59,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         .map((alumno) => ExpansionPanelRadio(
       canTapOnHeader: true,
       value: alumno.nombres,
-      headerBuilder: (context, is_expanded) => buildTile(alumno),
+      headerBuilder: (context, isExpanded) => buildTile(alumno),
       body: Column(children: [
         Text('Una cosa mientras'),
       ]),

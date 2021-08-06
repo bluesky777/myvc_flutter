@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
 
-class txtFormField extends StatefulWidget {
+class TxtFormField extends StatefulWidget {
   final String hint;
   final String label;
-  TextEditingController? controller;
+  TextEditingController controller;
+  final void Function() onSubmit;
+  FocusNode? focus;
 
-
-  txtFormField({this.hint = '', required this.label, this.controller, Key? key})
-      : super(key: key);
-
+  TxtFormField({
+    this.hint = '',
+    required this.label,
+    required this.controller,
+    Key? key,
+    required void Function() this.onSubmit,
+    this.focus,
+  }) : super(key: key);
 
   @override
-  _txtFormField createState() => _txtFormField();
+  TxtFormFieldState createState() => TxtFormFieldState();
 }
 
-class _txtFormField extends State<txtFormField> {
+class TxtFormFieldState extends State<TxtFormField> {
+  void onSubmit(String? _) {
+    widget.onSubmit();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       child: TextFormField(
+        focusNode: widget.focus,
+        onFieldSubmitted: onSubmit,
         obscureText: widget.label == 'Contraseña' ? true : false,
         controller: widget.controller,
         decoration: InputDecoration(
@@ -36,5 +47,4 @@ class _txtFormField extends State<txtFormField> {
       ),
     );
   }
-
 }

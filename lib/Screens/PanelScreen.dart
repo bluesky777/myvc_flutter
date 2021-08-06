@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
@@ -60,7 +59,7 @@ class _PanelScreen extends State<PanelScreen> {
         .map((grupo) => ExpansionPanelRadio(
       canTapOnHeader: true,
       value: grupo.nombre,
-      headerBuilder: (context, is_expanded) => buildTile(grupo),
+      headerBuilder: (context, isExpanded) => buildTile(grupo),
       body: Column(children: [
         Text('Una cosa mientras'),
       ]),

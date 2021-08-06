@@ -3,17 +3,17 @@ class GrupoModel {
   String nombre;
   String abrev;
   int orden;
-  String nombres_titular;
+  String nombresTitular;
   List<GrupoModel>? grupos;
-  bool is_expanded;
+  bool isExpanded;
 
   GrupoModel({
     required this.id,
     required this.nombre,
     required this.abrev,
-    required this.nombres_titular,
+    required this.nombresTitular,
     required this.orden,
-    this.is_expanded=false
+    this.isExpanded=false
   });
 
   factory GrupoModel.fromJson(Map<String, dynamic> parsedJson) {
@@ -21,7 +21,7 @@ class GrupoModel {
       id: parsedJson['id'],
       nombre: parsedJson['nombre'].toString(),
       abrev: parsedJson['abrev'].toString(),
-      nombres_titular: parsedJson['nombres_titular'].toString(),
+      nombresTitular: parsedJson['nombres_titular'].toString(),
       orden: parsedJson['orden'],
     );
   }

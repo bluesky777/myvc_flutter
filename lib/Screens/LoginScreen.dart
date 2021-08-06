@@ -4,8 +4,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Utils/UriColegio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'txtFormField.dart';
+import 'TxtFormField.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,8 +16,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreen extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  List<DropdownMenuItem> itemsUriColegios = [
+    DropdownMenuItem(child: Text('Esperando...'))
+  ];
+  FocusNode focus = FocusNode();
 
-  Future<void> _onSubmit() async {
+  Future<void> _onSubmitFurture() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Escriba correctamente.')));
@@ -40,6 +46,10 @@ class _LoginScreen extends State<LoginScreen> {
     }
   }
 
+  void _onSubmit() {
+    _onSubmitFurture();
+  }
+
   void _snackDatosInvalidos() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -48,7 +58,7 @@ class _LoginScreen extends State<LoginScreen> {
           label: 'Limpiar',
           onPressed: () {
             passwordController.text = '';
-            //formPassword?.focalizar();
+            focus.requestFocus();
           },
         ),
       ),
@@ -58,15 +68,75 @@ class _LoginScreen extends State<LoginScreen> {
   TextEditingController usenameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  txtFormField _txtUsername() => txtFormField(
+  TxtFormField _txtUsername() => TxtFormField(
         hint: 'Usuario usado en la plataforma',
         label: 'Usuario',
         controller: usenameController,
+        onSubmit: _onSubmit,
       );
-  txtFormField _txtPassword() => txtFormField(
+  TxtFormField _txtPassword() => TxtFormField(
         hint: 'Escriba contraseña',
         label: 'Contraseña',
         controller: passwordController,
+        onSubmit: _onSubmit,
+        focus: focus
+      );
+
+  @override
+  void initState() {
+    super.initState();
+
+    SharedPreferences.getInstance().then((SharedPreferences preferences) {
+      var guardado = preferences.getString('urlColegio');
+      print('guardado $guardado');
+    });
+
+    UriColegio().fetchLista().then((value) {
+      final List listaResponse = jsonDecode(value.body);
+      final List<UriColegio> listaUrisColes = listaResponse.map((dato) {
+        print(dato['nombre_colegio']);
+        return UriColegio.fromJson(dato);
+      }).toList();
+
+      setState(() {
+        itemsUriColegios = listaUrisColes.map((e) {
+          return DropdownMenuItem(
+            child: Text(e.nombre),
+            value: e,
+          );
+        }).toList();
+      });
+      print(itemsUriColegios);
+    });
+  }
+
+  Padding _dropdownButton() => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(width: 1, color: Colors.grey),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: DropdownButtonFormField(
+              decoration: InputDecoration(
+                hintText: 'Este hint',
+                labelText: 'Elija institución',
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white)),
+              ),
+              onChanged: (dynamic value) {
+                // ****** por qué no puedo ponerle UriColegio?? **********
+                // Puedo poner en gradle.properties variables de entorno para distintos sistemas operativos?? org.gradle.java.home=C:\\Program Files\\Android\\Android Studio\\jre
+                print('Cambiada uri... ${value.uri}');
+                SharedPreferences.getInstance()
+                    .then((SharedPreferences preferences) {
+                  preferences.setString('urlColegio', value.uri);
+                });
+              },
+              items: itemsUriColegios),
+        ),
       );
 
   @override
@@ -76,6 +146,7 @@ class _LoginScreen extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          _dropdownButton(),
           _txtUsername(),
           _txtPassword(),
           Padding(
