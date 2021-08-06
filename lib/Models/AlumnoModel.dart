@@ -23,4 +23,9 @@ class AlumnoModel extends ChangeNotifier {
     );
   }
 
+  @override
+  String toString() {
+    return '(GrupoModel) $nombres';
+  }
+
 }

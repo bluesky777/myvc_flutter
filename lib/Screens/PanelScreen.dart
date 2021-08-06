@@ -21,11 +21,11 @@ class _PanelScreen extends State<PanelScreen> {
     server.get('/grupos').then((response) {
       final String res = response.body;
       final List parsedList = json.decode(res);
+
       setState(() {
         grupos = parsedList.map((dato) => GrupoModel.fromJson(dato)).toList();
         print('grupos.length: ${grupos?.length}');
       });
-
     });
   }
 
@@ -33,19 +33,37 @@ class _PanelScreen extends State<PanelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bienvenido'),
+        title: Text('Bienvenido amigos'),
       ),
       body: SingleChildScrollView(
-        child: grupos != null ? _buildListaGrupos() : Text('Esperando grupos...')
-      ),
+          child: grupos != null
+              ? _buildListaGrupos()
+              : Text('Esperando grupos...')),
       drawer: DrawPanel(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
+  Widget _buildListaGrupos() => SingleChildScrollView(
+        physics: ScrollPhysics(),
+        child: Column(children: <Widget>[
+          ListView.builder(
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            itemCount: grupos!.length,
+            itemBuilder: (context, index) {
+              GrupoModel grupo = grupos![index];
+              return ListTile(
+                title: Text(grupo.nombre),
+                leading: Icon(Icons.assistant_photo),
+                onTap: (){
+                  print(grupo);
+                },
+                trailing: Icon(Icons.arrow_right),
+              );
+            },
+          ),
+        ]),
+      );
 
   Widget buildTile(GrupoModel grupo) => ListTile(
         title: Text(
@@ -54,16 +72,16 @@ class _PanelScreen extends State<PanelScreen> {
         ),
       );
 
-  Widget _buildListaGrupos() => ExpansionPanelList.radio(
-    children: grupos!
-        .map((grupo) => ExpansionPanelRadio(
-      canTapOnHeader: true,
-      value: grupo.nombre,
-      headerBuilder: (context, isExpanded) => buildTile(grupo),
-      body: Column(children: [
-        Text('Una cosa mientras'),
-      ]),
-    ))
-        .toList(),
-  );
+  Widget _buildListaGruposOriginal() => ExpansionPanelList.radio(
+        children: grupos!
+            .map((grupo) => ExpansionPanelRadio(
+                  canTapOnHeader: true,
+                  value: grupo.nombre,
+                  headerBuilder: (context, isExpanded) => buildTile(grupo),
+                  body: Column(children: [
+                    Text('Una cosa mientras'),
+                  ]),
+                ))
+            .toList(),
+      );
 }

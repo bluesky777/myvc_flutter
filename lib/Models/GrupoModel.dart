@@ -25,4 +25,9 @@ class GrupoModel {
       orden: parsedJson['orden'],
     );
   }
+
+  @override
+  String toString() {
+    return '(GrupoModel) $nombre';
+  }
 }
