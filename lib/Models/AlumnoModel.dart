@@ -1,5 +1,10 @@
 
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
+
+
+List<AlumnoModel> alumnoModelFromJson(String str) => List<AlumnoModel>.from(json.decode(str).map((x) => AlumnoModel.fromJson(x)));
 
 class AlumnoModel extends ChangeNotifier {
   int id;
@@ -28,4 +33,11 @@ class AlumnoModel extends ChangeNotifier {
     return '(GrupoModel) $nombres';
   }
 
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "nombre": nombres,
+    "apellidos": apellidos,
+    "sexo": sexo,
+  };
+  
 }

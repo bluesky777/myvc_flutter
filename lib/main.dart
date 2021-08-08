@@ -21,7 +21,6 @@ class MyApp extends StatelessWidget {
       ),
       home: MyHomePage(title: 'Flutter MyVc'),
       navigatorKey: navigatorKey,
-      //routes:
       onGenerateRoute: RouteGenerator.generateRoute,
     );
   }

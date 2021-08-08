@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
+import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
   @override
@@ -14,16 +16,34 @@ class AlumTardanzaColeScreen extends StatefulWidget {
 class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   Server server = Server();
   List<AlumnoModel>? alumnos;
+  GrupoModel? grupo;
 
   @override
   void initState() {
     super.initState();
+
+    if (grupo == null) {
+      SharedPreferences.getInstance().then((SharedPreferences preferences) {
+        setState(() {
+          String? gupoString = preferences.getString('grupoSelected');
+          if(gupoString != null) {
+            grupo = GrupoModel.fromRawJson(gupoString);
+          }
+
+        });
+      });
+
+    }else{
+      print('Grupo después del if: ${grupo!.toJson()}');
+    }
+
+
     server.get('/alumnos').then((response) {
       final String res = response.body;
-      final List parsedList = json.decode(res);
+
       setState(() {
-        alumnos = parsedList.map((dato) => AlumnoModel.fromJson(dato)).toList();
-        print('grupos.length: ${alumnos?.length}');
+        alumnos = alumnoModelFromJson(res);
+        print('alumnos: ${alumnos?.length}');
       });
 
     });

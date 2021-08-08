@@ -31,18 +31,28 @@ class _LoginScreen extends State<LoginScreen> {
       print('Suerte: $username $password');
 
       var server = Server();
-      var response = await server.credentials(username, password);
+      var response;
+      try {
+        response = await server.credentials(username, password);
 
-      Map<String, dynamic> parsed = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        AuthService.setToken(parsed['el_token']);
-        var res = await server.login();
-        print(res.body);
-        Navigator.pushNamed(context, '/panel');
-      } else {
-        _snackDatosInvalidos();
+        Map<String, dynamic> parsed = jsonDecode(response.body);
+
+        if (response.statusCode == 200) {
+          AuthService.setToken(parsed['el_token']);
+          var res = await server.login();
+          print(res.body);
+          Navigator.pushNamed(context, '/panel');
+        } else {
+          _snackDatosInvalidos();
+        }
+      } on Exception {
+        print('***** Error: ${Server.url}');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error ${Server.url}'),
+        ));
       }
+
     }
   }
 

@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/AuthService.dart';
 
 class Server {
-  static String url = 'https://lalvirtual.edu.co/8myvc/public/api';
+  //static String url = 'https://lalvirtual.edu.co/8myvc/public/api';
+  static String url = 'http://192.168.100.107/api';
 
   Server();
 

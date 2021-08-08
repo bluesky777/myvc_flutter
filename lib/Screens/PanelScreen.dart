@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PanelScreen extends StatefulWidget {
   @override
@@ -18,12 +19,12 @@ class _PanelScreen extends State<PanelScreen> {
   @override
   void initState() {
     super.initState();
+    print('**** init panel');
     server.get('/grupos').then((response) {
       final String res = response.body;
-      final List parsedList = json.decode(res);
 
       setState(() {
-        grupos = parsedList.map((dato) => GrupoModel.fromJson(dato)).toList();
+        grupos = grupoModelFromJson(res);
         print('grupos.length: ${grupos?.length}');
       });
     });
@@ -33,7 +34,7 @@ class _PanelScreen extends State<PanelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bienvenido amigos'),
+        title: Text('Elija grupo'),
       ),
       body: SingleChildScrollView(
           child: grupos != null
@@ -43,27 +44,31 @@ class _PanelScreen extends State<PanelScreen> {
     );
   }
 
-  Widget _buildListaGrupos() => SingleChildScrollView(
-        physics: ScrollPhysics(),
-        child: Column(children: <Widget>[
-          ListView.builder(
+  Widget _buildListaGrupos() => ListView.builder(
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
             itemCount: grupos!.length,
             itemBuilder: (context, index) {
               GrupoModel grupo = grupos![index];
               return ListTile(
                 title: Text(grupo.nombre),
-                leading: Icon(Icons.assistant_photo),
+                leading: CircleAvatar(
+                    child: Text(grupo.abrev),
+                ),
                 onTap: (){
                   print(grupo);
+                  SharedPreferences.getInstance().then((SharedPreferences preferences) {
+                    print('grupoSelected ${grupo.toJson()}');
+                    preferences.setString('grupoSelected', grupo.toRawJson() );
+
+                    Navigator.pushNamed(context, '/alum-tardanza-cole');
+                  });
                 },
                 trailing: Icon(Icons.arrow_right),
               );
             },
-          ),
-        ]),
-      );
+          );
 
   Widget buildTile(GrupoModel grupo) => ListTile(
         title: Text(
