@@ -21,6 +21,16 @@ class UriColegio {
     );
   }
 
+  @override
+  String toString() {
+    return "{nombre: $nombre, uri: $uri}";
+  }
+
+  Map<String, dynamic> toJson() => {
+    "uri": uri,
+    "nombre": nombre,
+  };
+
 }
 
 

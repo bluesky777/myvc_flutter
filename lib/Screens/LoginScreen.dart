@@ -20,6 +20,7 @@ class _LoginScreen extends State<LoginScreen> {
     DropdownMenuItem(child: Text('Esperando...'))
   ];
   FocusNode focus = FocusNode();
+  String servidorElegido = '';
 
   Future<void> _onSubmitFurture() async {
     if (!_formKey.currentState!.validate()) {
@@ -32,9 +33,12 @@ class _LoginScreen extends State<LoginScreen> {
 
       var server = Server();
       var response;
+      String servidorUri = servidorElegido == 'otro' ? uriController.text : servidorElegido;
+      bool otro = servidorElegido == 'otro' ? true : false;
+      print('servidorElegido $servidorUri --- otro $otro');
       try {
-        response = await server.credentials(username, password);
-
+        response =
+            await server.credentials(username, password, servidorUri, otro: otro);
 
         Map<String, dynamic> parsed = jsonDecode(response.body);
 
@@ -47,12 +51,11 @@ class _LoginScreen extends State<LoginScreen> {
           _snackDatosInvalidos();
         }
       } on Exception {
-        print('***** Error: ${Server.url}');
+        print('***** Error: ${Server.urlApi}');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error ${Server.url}'),
+          content: Text('Error ${Server.urlApi}'),
         ));
       }
-
     }
   }
 
@@ -77,6 +80,7 @@ class _LoginScreen extends State<LoginScreen> {
 
   TextEditingController usenameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController uriController = TextEditingController();
 
   TxtFormField _txtUsername() => TxtFormField(
         hint: 'Usuario usado en la plataforma',
@@ -85,20 +89,25 @@ class _LoginScreen extends State<LoginScreen> {
         onSubmit: _onSubmit,
       );
   TxtFormField _txtPassword() => TxtFormField(
-        hint: 'Escriba contraseña',
-        label: 'Contraseña',
-        controller: passwordController,
-        onSubmit: _onSubmit,
-        focus: focus
-      );
+      hint: 'Escriba contraseña',
+      label: 'Contraseña',
+      controller: passwordController,
+      onSubmit: _onSubmit,
+      focus: focus);
 
   @override
   void initState() {
     super.initState();
 
+    uriController.text = 'http://192.168.98.215';
+
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
-      var guardado = preferences.getString('urlColegio');
+      String? guardado = preferences.getString('uriColegio');
       print('guardado $guardado');
+      if (guardado != null) {
+        servidorElegido = jsonDecode(guardado)['uri'];
+      }
+      print('guardado $servidorElegido');
     });
 
     UriColegio().fetchLista().then((value) {
@@ -108,6 +117,8 @@ class _LoginScreen extends State<LoginScreen> {
         return UriColegio.fromJson(dato);
       }).toList();
 
+      listaUrisColes.add(UriColegio(uri: 'otro', nombre: 'Otro'));
+
       setState(() {
         itemsUriColegios = listaUrisColes.map((e) {
           return DropdownMenuItem(
@@ -116,7 +127,6 @@ class _LoginScreen extends State<LoginScreen> {
           );
         }).toList();
       });
-      print(itemsUriColegios);
     });
   }
 
@@ -142,7 +152,11 @@ class _LoginScreen extends State<LoginScreen> {
                 print('Cambiada uri... ${value.uri}');
                 SharedPreferences.getInstance()
                     .then((SharedPreferences preferences) {
-                  preferences.setString('urlColegio', value.uri);
+                  preferences.setString(
+                      'uriColegio', json.encode(value.toJson()));
+                  setState(() {
+                    servidorElegido = value.uri;
+                  });
                 });
               },
               items: itemsUriColegios),
@@ -157,6 +171,7 @@ class _LoginScreen extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           _dropdownButton(),
+          _otroServido(),
           _txtUsername(),
           _txtPassword(),
           Padding(
@@ -170,5 +185,23 @@ class _LoginScreen extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  Widget _otroServido() {
+    print('servidorElegido : en otroSercido $servidorElegido');
+    if(servidorElegido == 'otro'){
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: TextFormField(
+          controller: uriController,
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Servidor',
+              labelText: 'Escriba página'),
+        ),
+      );
+    }else {
+      return Center(child: Text(servidorElegido));
+    }
   }
 }

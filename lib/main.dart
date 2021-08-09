@@ -15,11 +15,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'MyVC app',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter MyVc'),
+      home: MyHomePage(title: 'Mi Cole Virtual'),
       navigatorKey: navigatorKey,
       onGenerateRoute: RouteGenerator.generateRoute,
     );
@@ -45,12 +45,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: LoginScreen()
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){},
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+      ),);
   }
 }

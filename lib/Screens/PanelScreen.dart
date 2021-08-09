@@ -20,14 +20,21 @@ class _PanelScreen extends State<PanelScreen> {
   void initState() {
     super.initState();
     print('**** init panel');
-    server.get('/grupos').then((response) {
-      final String res = response.body;
 
-      setState(() {
-        grupos = grupoModelFromJson(res);
-        print('grupos.length: ${grupos?.length}');
+    try {
+      server.get('/grupos').then((response) {
+        final String res = response.body;
+
+        setState(() {
+          grupos = grupoModelFromJson(res);
+          print('grupos.length: ${grupos?.length}');
+        });
       });
-    });
+    } catch (e) {
+      print('*** Error ${Server.urlApi}/grupos ');
+      print(e);
+    }
+
   }
 
   @override
@@ -59,9 +66,8 @@ class _PanelScreen extends State<PanelScreen> {
                 onTap: (){
                   print(grupo);
                   SharedPreferences.getInstance().then((SharedPreferences preferences) {
-                    print('grupoSelected ${grupo.toJson()}');
-                    preferences.setString('grupoSelected', grupo.toRawJson() );
 
+                    preferences.setString('grupoSelected', grupo.toRawJson() );
                     Navigator.pushNamed(context, '/alum-tardanza-cole');
                   });
                 },
