@@ -14,6 +14,7 @@ class AlumnoModel extends ChangeNotifier {
   int? isActive;
   bool isExpanded;
   String? fotoNombre;
+
   List<AlumnoModel> alumnos = [];
   List<AsistenciaModel>? tardanzasEntrada;
   Map<String, int>? ausenciasTotal;
@@ -30,11 +31,32 @@ class AlumnoModel extends ChangeNotifier {
     this.ausenciasTotal,
   });
 
+  bool tieneTardanzaHoy (DateTime today) {
+    bool tiene = false;
+    if (tardanzasEntrada != null){
+      if(tardanzasEntrada!.length > 0){
+        print('tardanzasEntrada!.length ${tardanzasEntrada!.length}');
+        for (int i=0; i < tardanzasEntrada!.length; i++){
+          print(tardanzasEntrada![i].toJson());
+          if (tardanzasEntrada![i].createdAt != null){
+            DateTime dateTime = tardanzasEntrada![i].createdAt as DateTime;
+            DateTime date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+            if(date == today){
+              print('Uno iguallllll');
+              tiene = true;
+            }
+          }
+        }
+      }
+    }
+
+    return tiene;
+  }
+
   factory AlumnoModel.fromJson(Map<String, dynamic> parsedJson) {
     List<AsistenciaModel> listTempTardanzasEntrada = [];
 
     if (parsedJson['tardanzas'] != null) {
-      print('***** tardanzas: ${parsedJson['tardanzas']}');
       List tardanzas = parsedJson['tardanzas'] as List;
       listTempTardanzasEntrada =
           tardanzas.map((e) => AsistenciaModel.fromJson(e)).toList();

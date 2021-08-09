@@ -16,7 +16,7 @@ class GrupoModel {
     required this.nombre,
     required this.abrev,
     required this.orden,
-    required this.nombresTitular,
+    this.nombresTitular,
     this.apellidosTitular,
   });
 
@@ -24,7 +24,7 @@ class GrupoModel {
   String nombre;
   String abrev;
   int orden;
-  String nombresTitular;
+  String? nombresTitular;
   String? apellidosTitular;
 
 

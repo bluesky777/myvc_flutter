@@ -11,11 +11,12 @@ class AsistenciaModel {
   int alumnoId;
   int? asignaturaId;
   int? createdBy;
-  String? createdAt;
+  DateTime? createdAt;
   int entrada;
   String? fechaHora;
   int periodoId;
-  String tipo;
+  String? tipo;
+
 
   AsistenciaModel({
     required this.id,
@@ -26,26 +27,27 @@ class AsistenciaModel {
     required this.entrada,
     this.fechaHora,
     required this.periodoId,
-    required this.tipo,
+    this.tipo,
   });
 
   factory AsistenciaModel.fromJson(Map<String, dynamic> parsedJson) {
+    print('fromJson ${parsedJson}');
     return AsistenciaModel(
       id: parsedJson['id'],
       alumnoId: parsedJson['alumno_id'],
       asignaturaId: parsedJson['asignatura_id'],
       createdBy: parsedJson['created_by'],
-      createdAt: parsedJson['created_at'].toString(),
+      createdAt: parsedJson['created_at'] == null ? null : DateTime.parse(parsedJson['created_at'].toString()),
       entrada: parsedJson['entrada'],
       fechaHora: parsedJson['fecha_hora'].toString(),
       periodoId: parsedJson['periodo_id'],
-      tipo: parsedJson['created_at'].toString(),
+      tipo: parsedJson['tipo'] == null ? null : parsedJson['tipo'].toString(),
     );
   }
 
   @override
   String toString() {
-    return '(GrupoModel) $entrada - $alumnoId';
+    return '(AsistenciaModel) id: $id - entrada: $entrada - alumnoId: $alumnoId - createdAt $createdAt';
   }
 
   Map<String, dynamic> toJson() => {
@@ -53,7 +55,7 @@ class AsistenciaModel {
         "alumno_id": alumnoId,
         "asignatura_id": asignaturaId,
         "created_by": createdBy,
-        "created_at": createdAt,
+        "created_at": createdAt == null ? null : createdAt!.toIso8601String(),
         "entrada": entrada,
         "fechaHora": fechaHora,
         "periodoId": periodoId,
