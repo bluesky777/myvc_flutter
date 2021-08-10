@@ -41,6 +41,8 @@ class AlumnoModel extends ChangeNotifier {
           if (tardanzasEntrada![i].createdAt != null){
             DateTime dateTime = tardanzasEntrada![i].createdAt as DateTime;
             DateTime date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+            print('**** dateTime $dateTime');
+            print('**** dateTime $today');
             if(date == today){
               print('Uno iguallllll');
               tiene = true;

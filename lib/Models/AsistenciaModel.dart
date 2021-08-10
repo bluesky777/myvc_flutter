@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 
 List<AsistenciaModel> alumnoModelFromJson(String str) =>
     List<AsistenciaModel>.from(
@@ -31,7 +30,6 @@ class AsistenciaModel {
   });
 
   factory AsistenciaModel.fromJson(Map<String, dynamic> parsedJson) {
-    print('fromJson ${parsedJson}');
     return AsistenciaModel(
       id: parsedJson['id'],
       alumnoId: parsedJson['alumno_id'],

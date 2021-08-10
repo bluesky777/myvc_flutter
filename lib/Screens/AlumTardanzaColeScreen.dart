@@ -37,7 +37,6 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         setState(() {
           grupo = GrupoModel.fromRawJson(grupoString);
         });
-
       } else {
         Navigator.pushNamed(context, '/panel');
       }
@@ -59,8 +58,9 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
       appBar: AppBar(
         title: Text('Bienvenido'),
       ),
-      body:
-          grupo == null ? Text('Esperando alumnos en build...') : _buildFutureBuilder(),
+      body: grupo == null
+          ? Text('Esperando alumnos en build...')
+          : _buildFutureBuilder(),
       drawer: DrawPanel(),
     );
   }
@@ -78,10 +78,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
           } else if (snapshot.hasError) {
             return Text('Ocurrió un error trayendo los alumnos con tardanzas.');
           } else {
-            return SizedBox(
+            return Center(
               child: CircularProgressIndicator(),
-              width: 60,
-              height: 60,
             );
           }
         });
@@ -93,28 +91,28 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     var response = await server.put('/asistencias/detailed', argum);
     final List alumnosList = jsonDecode(response.body)['alumnos'];
     print('Trajo datos');
-    List<AlumnoModel> alumnosTemp = alumnosList.map((e) => AlumnoModel.fromJson(e)).toList();
+    List<AlumnoModel> alumnosTemp =
+        alumnosList.map((e) => AlumnoModel.fromJson(e)).toList();
 
     alumnos = alumnosTemp;
 
     print('alumnos: ${alumnos?.length}');
-
-    print('A retornar!!!!');
     return alumnos as List<AlumnoModel>;
   }
 
   Widget buildTile(AlumnoModel alumno, DateTime today) => ListTile(
-      tileColor: alumno.tieneTardanzaHoy(today) ? Colors.pinkAccent : null,
-          title: Text(
-            '${alumno.apellidos} ${alumno.nombres}',
-            //style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          leading: CircleAvatar(
-            backgroundImage:
-                NetworkImage('${Server.urlImages}/${alumno.fotoNombre}'),
-            backgroundColor: Colors.lightBlueAccent,
-          ),
-        );
+        dense: false,
+        title: Text(
+          '${alumno.apellidos} ${alumno.nombres}',
+          //style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text('Tardanzas: ${alumno.tardanzasEntrada!.length}'),
+        leading: CircleAvatar(
+          backgroundImage:
+              NetworkImage('${Server.urlImages}/${alumno.fotoNombre}'),
+          backgroundColor: Colors.lightBlueAccent,
+        ),
+      );
 
   Widget _buildListaGrupos() {
     DateTime now = DateTime.now();
@@ -122,121 +120,120 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
     return ExpansionPanelList.radio(
       children: alumnos!
-          .map((AlumnoModel alumno) =>
-          ExpansionPanelRadio(
-            canTapOnHeader: true,
-            value: '${alumno.apellidos} ${alumno.nombres}',
-            headerBuilder: (context, isExpanded) => buildTile(alumno, today),
-            body: Column(children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                      'Tardanzas: ${alumno
-                          .ausenciasTotal!['cant_tardanzas_entrada']
-                          .toString()} '),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (alumno.tardanzasEntrada != null) {
-                        int cantTar = alumno.tardanzasEntrada!.length;
-                        if (cantTar > 0) {
-                          AsistenciaModel tardanzaTemp;
-                          tardanzaTemp =
-                          alumno.tardanzasEntrada![cantTar - 1];
+          .map((AlumnoModel alumno) => ExpansionPanelRadio(
+                backgroundColor:
+                    alumno.tieneTardanzaHoy(today) ? Colors.pinkAccent : null,
+                canTapOnHeader: true,
+                value: '${alumno.apellidos} ${alumno.nombres}',
+                headerBuilder: (context, isExpanded) =>
+                    buildTile(alumno, today),
+                body: Column(children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                          'Tardanzas: ${alumno.ausenciasTotal!['cant_tardanzas_entrada'].toString()} '),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (alumno.tardanzasEntrada != null) {
+                            int cantTar = alumno.tardanzasEntrada!.length;
+                            if (cantTar > 0) {
+                              AsistenciaModel tardanzaTemp;
+                              tardanzaTemp =
+                                  alumno.tardanzasEntrada![cantTar - 1];
 
+                              try {
+                                var res = await server.delete(
+                                    '/ausencias/destroy/${tardanzaTemp.id}');
+
+                                if (res.statusCode < 300) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: Colors.lightBlueAccent,
+                                      content: Text('Eliminada'),
+                                    ),
+                                  );
+                                  setState(() {
+                                    print('Antes ${alumno.tardanzasEntrada!.length}');
+                                    alumno.ausenciasTotal![
+                                            'cant_tardanzas_entrada'] =
+                                        alumno.ausenciasTotal![
+                                                'cant_tardanzas_entrada']! -
+                                            1;
+                                    alumno.tardanzasEntrada!
+                                        .remove(tardanzaTemp);
+                                  });
+                                } else {
+                                  
+                                  print(alumno.tardanzasEntrada);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Error eliminado tardanza')));
+                                }
+                              } catch (err) {
+                                print(err);
+                              }
+                            }
+                          }
+                        },
+                        style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(Colors.green)),
+                        child: Text(
+                          '-',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                      ),
+                      ElevatedButton(
+                        child: Text('+', style: TextStyle(fontSize: 30)),
+                        onPressed: () async {
                           try {
-                            var res = await server.delete(
-                                '/ausencias/destroy/${tardanzaTemp.id}');
+                            var res = await server.post('/ausencias/store', {
+                              'alumno_id': alumno.id,
+                              'entrada': 1,
+                              'tipo': 'tardanza',
+                            });
 
                             if (res.statusCode < 300) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   backgroundColor: Colors.lightBlueAccent,
-                                  content: Text('Eliminada'),
+                                  content: Text('Creada'),
                                 ),
                               );
-                            } else {
+
+                              print(res.body);
+                              AsistenciaModel egragada =
+                                  AsistenciaModel.fromJson(
+                                      jsonDecode(res.body));
+
                               setState(() {
-                                print(
-                                    'Antes ${alumno.tardanzasEntrada!.length}');
                                 alumno.ausenciasTotal![
-                                'cant_tardanzas_entrada'] =
+                                        'cant_tardanzas_entrada'] =
                                     alumno.ausenciasTotal![
-                                    'cant_tardanzas_entrada']! -
+                                            'cant_tardanzas_entrada']! +
                                         1;
-                                alumno.tardanzasEntrada!
-                                    .remove(tardanzaTemp);
+                                if (alumno.tardanzasEntrada == null) {
+                                  alumno.tardanzasEntrada = [];
+                                }
+                                alumno.tardanzasEntrada!.add(egragada);
                               });
-                              print(alumno.tardanzasEntrada);
+                            } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text(
-                                          'Error eliminado tardanza')));
+                                      content: Text('Error creando tardanza')));
                             }
                           } catch (err) {
                             print(err);
                           }
-                        }
-                      }
-                    },
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Colors.green)),
-                    child: Text(
-                      '-',
-                      style: TextStyle(fontSize: 30),
-                    ),
+                        },
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    child: Text('+', style: TextStyle(fontSize: 30)),
-                    onPressed: () async {
-                      try {
-                        var res = await server.post('/ausencias/store', {
-                          'alumno_id': alumno.id,
-                          'entrada': 1,
-                          'tipo': 'tardanza',
-                        });
-
-                        if (res.statusCode < 300) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.lightBlueAccent,
-                              content: Text('Creada'),
-                            ),
-                          );
-
-                          print(res.body);
-                          AsistenciaModel egragada =
-                          AsistenciaModel.fromJson(
-                              jsonDecode(res.body));
-
-                          setState(() {
-                            alumno.ausenciasTotal![
-                            'cant_tardanzas_entrada'] =
-                                alumno.ausenciasTotal![
-                                'cant_tardanzas_entrada']! +
-                                    1;
-                            if (alumno.tardanzasEntrada == null) {
-                              alumno.tardanzasEntrada = [];
-                            }
-                            alumno.tardanzasEntrada!.add(egragada);
-                          });
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                  Text('Error creando tardanza')));
-                        }
-                      } catch (err) {
-                        print(err);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              Text('Ausencias: '),
-            ]),
-          ))
+                  Text('Ausencias: '),
+                ]),
+              ))
           .toList(),
     );
   }

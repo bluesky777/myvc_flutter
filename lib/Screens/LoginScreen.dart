@@ -16,16 +16,19 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreen extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  List<DropdownMenuItem> itemsUriColegios = [
+  List<DropdownMenuItem<UriColegio>> itemsUriColegios = [
     DropdownMenuItem(child: Text('Esperando...'))
   ];
   FocusNode focus = FocusNode();
   String servidorElegido = '';
+  List<UriColegio> listaUrisColes = [];
+  UriColegio uriColegioSeleccionada = UriColegio();
 
-  Future<void> _onSubmitFurture() async {
+
+  Future<void> _onSubmitFuture() async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Escriba correctamente.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Escriba correctamente.')));
     } else {
       String username = usenameController.text;
       String password = passwordController.text;
@@ -33,19 +36,26 @@ class _LoginScreen extends State<LoginScreen> {
 
       var server = Server();
       var response;
-      String servidorUri = servidorElegido == 'otro' ? uriController.text : servidorElegido;
+      String servidorUri =
+          servidorElegido == 'otro' ? uriController.text : servidorElegido;
       bool otro = servidorElegido == 'otro' ? true : false;
       print('servidorElegido $servidorUri --- otro $otro');
       try {
-        response =
-            await server.credentials(username, password, servidorUri, otro: otro);
+        response = await server.credentials(username, password, servidorUri,
+            otro: otro);
 
         Map<String, dynamic> parsed = jsonDecode(response.body);
 
         if (response.statusCode == 200) {
           AuthService.setToken(parsed['el_token']);
           var res = await server.login();
-          print(res.body);
+
+          SharedPreferences.getInstance().then((SharedPreferences preferences) {
+            preferences.setString('username', username);
+            preferences.setString('password', password);
+            preferences.setString('customUri', servidorElegido);
+          });
+
           Navigator.pushNamed(context, '/panel');
         } else {
           _snackDatosInvalidos();
@@ -60,7 +70,7 @@ class _LoginScreen extends State<LoginScreen> {
   }
 
   void _onSubmit() {
-    _onSubmitFurture();
+    _onSubmitFuture();
   }
 
   void _snackDatosInvalidos() {
@@ -99,7 +109,7 @@ class _LoginScreen extends State<LoginScreen> {
   void initState() {
     super.initState();
 
-    uriController.text = 'http://192.168.98.215';
+    uriController.text = 'http://192.168.18.215';
 
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
       String? guardado = preferences.getString('uriColegio');
@@ -107,12 +117,21 @@ class _LoginScreen extends State<LoginScreen> {
       if (guardado != null) {
         servidorElegido = jsonDecode(guardado)['uri'];
       }
-      print('guardado $servidorElegido');
+      String? guardadoUsername = preferences.getString('username');
+      String? guardadoPassword = preferences.getString('password');
+      String? guardadoCustomUri = preferences.getString('customUri');
+      print('*******guardadoUsername $guardadoUsername');
+      usenameController.text = guardadoUsername == null ? '' : guardadoUsername;
+      passwordController.text = guardadoPassword == null ? '' : guardadoPassword;
+      uriController.text = guardadoCustomUri == null ? '' : guardadoCustomUri;
+      // if(guardadoUsername != null && guardadoPassword != null) {
+      //   _onSubmit();
+      // }
     });
 
     UriColegio().fetchLista().then((value) {
       final List listaResponse = jsonDecode(value.body);
-      final List<UriColegio> listaUrisColes = listaResponse.map((dato) {
+      listaUrisColes = listaResponse.map((dato) {
         print(dato['nombre_colegio']);
         return UriColegio.fromJson(dato);
       }).toList();
@@ -126,6 +145,7 @@ class _LoginScreen extends State<LoginScreen> {
             value: e,
           );
         }).toList();
+        uriColegioSeleccionada = listaUrisColes[0];
       });
     });
   }
@@ -138,6 +158,8 @@ class _LoginScreen extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(5),
           ),
           child: DropdownButtonFormField(
+              //value: listaUrisColes.length > 0 ? listaUrisColes[listaUrisColes.length-1] : null,
+              //value: UriColegio(nombre: 'Otro', uri: 'otro'),
               decoration: InputDecoration(
                 hintText: 'Este hint',
                 labelText: 'Elija institución',
@@ -189,7 +211,7 @@ class _LoginScreen extends State<LoginScreen> {
 
   Widget _otroServido() {
     print('servidorElegido : en otroSercido $servidorElegido');
-    if(servidorElegido == 'otro'){
+    if (servidorElegido == 'otro') {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         child: TextFormField(
@@ -200,7 +222,7 @@ class _LoginScreen extends State<LoginScreen> {
               labelText: 'Escriba página'),
         ),
       );
-    }else {
+    } else {
       return Center(child: Text(servidorElegido));
     }
   }

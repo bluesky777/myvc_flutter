@@ -14,6 +14,14 @@ class UriColegio {
     return response;
   }
 
+  @override
+  bool operator ==(Object other) => other is UriColegio && this.nombre == other.nombre;
+
+
+  @override
+  int get hashCode => super.hashCode;
+
+  
   factory UriColegio.fromJson(Map<String, dynamic> parsedJson) {
     return UriColegio(
       nombre: parsedJson['nombre_colegio'].toString(),
@@ -30,6 +38,7 @@ class UriColegio {
     "uri": uri,
     "nombre": nombre,
   };
+
 
 }
 

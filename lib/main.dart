@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/RouteGenerator.dart';
 import 'package:myvc_flutter/Screens/LoginScreen.dart';
-import 'package:myvc_flutter/Screens/PanelScreen.dart';
 
 
 void main() {
