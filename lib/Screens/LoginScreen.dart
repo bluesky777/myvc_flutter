@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Screens/ColegiosDropdownWidget.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,11 +25,10 @@ class _LoginScreen extends State<LoginScreen> {
   List<UriColegio> listaUrisColes = [];
   UriColegio uriColegioSeleccionada = UriColegio();
 
-
   Future<void> _onSubmitFuture() async {
     if (!_formKey.currentState!.validate()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Escriba correctamente.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Escriba correctamente.')));
     } else {
       String username = usenameController.text;
       String password = passwordController.text;
@@ -122,7 +122,8 @@ class _LoginScreen extends State<LoginScreen> {
       String? guardadoCustomUri = preferences.getString('customUri');
       print('*******guardadoUsername $guardadoUsername');
       usenameController.text = guardadoUsername == null ? '' : guardadoUsername;
-      passwordController.text = guardadoPassword == null ? '' : guardadoPassword;
+      passwordController.text =
+          guardadoPassword == null ? '' : guardadoPassword;
       uriController.text = guardadoCustomUri == null ? '' : guardadoCustomUri;
       // if(guardadoUsername != null && guardadoPassword != null) {
       //   _onSubmit();
@@ -150,40 +151,16 @@ class _LoginScreen extends State<LoginScreen> {
     });
   }
 
-  Padding _dropdownButton() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(width: 1, color: Colors.grey),
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: DropdownButtonFormField(
-              //value: listaUrisColes.length > 0 ? listaUrisColes[listaUrisColes.length-1] : null,
-              //value: UriColegio(nombre: 'Otro', uri: 'otro'),
-              decoration: InputDecoration(
-                hintText: 'Este hint',
-                labelText: 'Elija institución',
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white)),
-              ),
-              onChanged: (dynamic value) {
-                // ****** por qué no puedo ponerle UriColegio?? **********
-                // Puedo poner en gradle.properties variables de entorno para distintos sistemas operativos?? org.gradle.java.home=C:\\Program Files\\Android\\Android Studio\\jre
-                print('Cambiada uri... ${value.uri}');
-                SharedPreferences.getInstance()
-                    .then((SharedPreferences preferences) {
-                  preferences.setString(
-                      'uriColegio', json.encode(value.toJson()));
-                  setState(() {
-                    servidorElegido = value.uri;
-                  });
-                });
-              },
-              items: itemsUriColegios),
-        ),
-      );
+
+  _onSelectedColegio(dynamic value) {
+    print('Cambiada uri... ${value.uri}');
+    SharedPreferences.getInstance().then((SharedPreferences preferences) {
+      preferences.setString('uriColegio', json.encode(value.toJson()));
+      setState(() {
+        servidorElegido = value.uri;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +169,7 @@ class _LoginScreen extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _dropdownButton(),
+          ColegiosDropdownWidget(itemsUriColegios, _onSelectedColegio),
           _otroServido(),
           _txtUsername(),
           _txtPassword(),
