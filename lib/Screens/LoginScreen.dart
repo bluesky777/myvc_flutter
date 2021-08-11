@@ -34,21 +34,31 @@ class _LoginScreen extends State<LoginScreen> {
       String password = passwordController.text;
       print('Suerte: $username $password');
 
+      bool isLocal = uriController.text.contains('192');
+      if (isLocal) {
+        bool hasHttp = uriController.text.contains('http');
+        uriController.text =
+            hasHttp ? uriController.text : 'http://' + uriController.text;
+      }
+
       var server = Server();
       var response;
-      String servidorUri =
-          servidorElegido == 'otro' ? uriController.text : servidorElegido;
-      bool otro = servidorElegido == 'otro' ? true : false;
-      print('servidorElegido $servidorUri --- otro $otro');
+      String servidorUri = isLocal ? uriController.text : servidorElegido;
+
       try {
-        response = await server.credentials(username, password, servidorUri,
-            otro: otro);
+        response = await server.credentials(
+          username,
+          password,
+          servidorUri,
+          otro: isLocal,
+        );
 
         Map<String, dynamic> parsed = jsonDecode(response.body);
 
         if (response.statusCode == 200) {
           AuthService.setToken(parsed['el_token']);
           var res = await server.login();
+          print('res login $res');
 
           SharedPreferences.getInstance().then((SharedPreferences preferences) {
             preferences.setString('username', username);
@@ -151,7 +161,6 @@ class _LoginScreen extends State<LoginScreen> {
     });
   }
 
-
   _onSelectedColegio(dynamic value) {
     print('Cambiada uri... ${value.uri}');
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
@@ -164,24 +173,26 @@ class _LoginScreen extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          ColegiosDropdownWidget(itemsUriColegios, _onSelectedColegio),
-          _otroServido(),
-          _txtUsername(),
-          _txtPassword(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50)),
-                onPressed: _onSubmit,
-                child: Text('Entrar')),
-          )
-        ],
+    return SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            ColegiosDropdownWidget(itemsUriColegios, _onSelectedColegio),
+            _otroServido(),
+            _txtUsername(),
+            _txtPassword(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 50)),
+                  onPressed: _onSubmit,
+                  child: Text('Entrar')),
+            )
+          ],
+        ),
       ),
     );
   }

@@ -81,16 +81,5 @@ class _PanelScreen extends State<PanelScreen> {
         ),
       );
 
-  Widget _buildListaGruposOriginal() => ExpansionPanelList.radio(
-        children: grupos!
-            .map((grupo) => ExpansionPanelRadio(
-                  canTapOnHeader: true,
-                  value: grupo.nombre,
-                  headerBuilder: (context, isExpanded) => buildTile(grupo),
-                  body: Column(children: [
-                    Text('Una cosa mientras'),
-                  ]),
-                ))
-            .toList(),
-      );
+
 }

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 class TxtFormField extends StatefulWidget {
   final String hint;
   final String label;
-  TextEditingController controller;
+  final TextEditingController controller;
   final void Function() onSubmit;
-  FocusNode? focus;
+  final FocusNode? focus;
 
   TxtFormField({
     this.hint = '',

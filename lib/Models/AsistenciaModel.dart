@@ -34,7 +34,7 @@ class AsistenciaModel {
       id: parsedJson['id'],
       alumnoId: parsedJson['alumno_id'],
       asignaturaId: parsedJson['asignatura_id'],
-      createdBy: parsedJson['created_by'],
+      createdBy: parsedJson['created_by'] == null ? null : parsedJson['created_by'],
       createdAt: parsedJson['created_at'] == null ? null : DateTime.parse(parsedJson['created_at'].toString()),
       entrada: parsedJson['entrada'],
       fechaHora: parsedJson['fecha_hora'].toString(),
