@@ -23,7 +23,7 @@ class Server {
   Future credentials(String username, String password, servidor,
       {bool otro = false}) {
 
-    print('$servidor - $otro');
+    print('$servidor - otro: $otro');
     Server.urlServer = servidor;
     if (otro){ // quiere decir que es local
       Server.urlApi = '$servidor/api';

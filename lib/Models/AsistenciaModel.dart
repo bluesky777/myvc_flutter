@@ -15,6 +15,7 @@ class AsistenciaModel {
   String? fechaHora;
   int periodoId;
   String? tipo;
+  bool isToday;
 
 
   AsistenciaModel({
@@ -27,9 +28,22 @@ class AsistenciaModel {
     this.fechaHora,
     required this.periodoId,
     this.tipo,
+    this.isToday=false,
   });
 
+
   factory AsistenciaModel.fromJson(Map<String, dynamic> parsedJson) {
+    bool hoyTemp = false;
+
+    if (parsedJson['created_at'] != null){
+      DateTime createdAtTemp = DateTime.parse(parsedJson['created_at']);
+      DateTime date = DateTime(createdAtTemp.year, createdAtTemp.month, createdAtTemp.day);
+      DateTime hoyTime = DateTime.now();
+      DateTime hoy = DateTime(hoyTime.year, hoyTime.month, hoyTime.day);
+      hoyTemp = hoy == date;
+      if (hoy == date) print('Tiene hoy!');
+    }
+  
     return AsistenciaModel(
       id: parsedJson['id'],
       alumnoId: parsedJson['alumno_id'],
@@ -40,12 +54,13 @@ class AsistenciaModel {
       fechaHora: parsedJson['fecha_hora'].toString(),
       periodoId: parsedJson['periodo_id'],
       tipo: parsedJson['tipo'] == null ? null : parsedJson['tipo'].toString(),
+      isToday: hoyTemp,
     );
   }
 
   @override
   String toString() {
-    return '(AsistenciaModel) id: $id - entrada: $entrada - alumnoId: $alumnoId - createdAt $createdAt';
+    return '(AsistenciaModel) id: $id - entrada: $entrada - isToday $isToday - alumnoId: $alumnoId - createdAt $createdAt';
   }
 
   Map<String, dynamic> toJson() => {

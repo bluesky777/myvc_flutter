@@ -31,24 +31,29 @@ class AlumnoModel extends ChangeNotifier {
     this.ausenciasTotal,
   });
 
-  bool tieneTardanzaHoy (DateTime today) {
+  bool tieneTardanzaHoy(DateTime today) {
     bool tiene = false;
-    if (tardanzasEntrada != null){
-      if(tardanzasEntrada!.length > 0){
-        print('tardanzasEntrada!.length ${tardanzasEntrada!.length}');
-        for (int i=0; i < tardanzasEntrada!.length; i++){
-          print(tardanzasEntrada![i].toJson());
-          if (tardanzasEntrada![i].createdAt != null){
-            DateTime dateTime = tardanzasEntrada![i].createdAt as DateTime;
-            DateTime date = DateTime(dateTime.year, dateTime.month, dateTime.day);
-            print('**** dateTime $dateTime');
-            print('**** dateTime $today');
-            if(date == today){
-              print('Uno iguallllll');
-              tiene = true;
-            }
-          }
-        }
+    // if (tardanzasEntrada != null){
+    //   if(tardanzasEntrada!.length > 0){
+    //     print('tardanzasEntrada!.length ${tardanzasEntrada!.length}');
+    //     for (int i=0; i < tardanzasEntrada!.length; i++){
+    //       print(tardanzasEntrada![i].toJson());
+    //       if (tardanzasEntrada![i].createdAt != null){
+    //         DateTime dateTime = tardanzasEntrada![i].createdAt as DateTime;
+    //         DateTime date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    //         print('**** dateTime $dateTime');
+    //         print('**** dateTime $today');
+    //         if(date == today){
+    //           print('Uno iguallllll');
+    //           tiene = true;
+    //         }
+    //       }
+    //     }
+    //   }
+    for (int i = 0; i < tardanzasEntrada!.length; i++) {
+      print(tardanzasEntrada![i].toJson());
+      if (tardanzasEntrada![i].isToday) {
+        tiene = true;
       }
     }
 

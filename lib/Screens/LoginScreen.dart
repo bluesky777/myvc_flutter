@@ -24,6 +24,8 @@ class _LoginScreen extends State<LoginScreen> {
   String servidorElegido = '';
   List<UriColegio> listaUrisColes = [];
   UriColegio uriColegioSeleccionada = UriColegio();
+  bool isLoading = false;
+
 
   Future<void> _onSubmitFuture() async {
     if (!_formKey.currentState!.validate()) {
@@ -45,6 +47,7 @@ class _LoginScreen extends State<LoginScreen> {
       var response;
       String servidorUri = isLocal ? uriController.text : servidorElegido;
 
+      isLoading = true;
       try {
         response = await server.credentials(
           username,
@@ -63,7 +66,7 @@ class _LoginScreen extends State<LoginScreen> {
           SharedPreferences.getInstance().then((SharedPreferences preferences) {
             preferences.setString('username', username);
             preferences.setString('password', password);
-            preferences.setString('customUri', servidorElegido);
+            preferences.setString('customUri', servidorUri);
           });
 
           Navigator.pushNamed(context, '/panel');
@@ -75,6 +78,8 @@ class _LoginScreen extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error ${Server.urlApi}'),
         ));
+      } finally {
+        isLoading = false;
       }
     }
   }
@@ -163,6 +168,7 @@ class _LoginScreen extends State<LoginScreen> {
 
   _onSelectedColegio(dynamic value) {
     print('Cambiada uri... ${value.uri}');
+    uriController.text = '';
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
       preferences.setString('uriColegio', json.encode(value.toJson()));
       setState(() {
@@ -180,7 +186,7 @@ class _LoginScreen extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             ColegiosDropdownWidget(itemsUriColegios, _onSelectedColegio),
-            _otroServido(),
+            _otroServidoTextField(),
             _txtUsername(),
             _txtPassword(),
             Padding(
@@ -189,7 +195,7 @@ class _LoginScreen extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50)),
                   onPressed: _onSubmit,
-                  child: Text('Entrar')),
+                  child: isLoading ? CircularProgressIndicator() : Text('Entrar')),
             )
           ],
         ),
@@ -197,8 +203,8 @@ class _LoginScreen extends State<LoginScreen> {
     );
   }
 
-  Widget _otroServido() {
-    print('servidorElegido : en otroSercido $servidorElegido');
+  Widget _otroServidoTextField() {
+    print('servidorElegido : en otroServido $servidorElegido');
     if (servidorElegido == 'otro') {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
