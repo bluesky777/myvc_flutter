@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/RouteGenerator.dart';
+import 'package:myvc_flutter/Screens/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/LoginScreen.dart';
 
 
@@ -18,7 +19,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Mi Cole Virtual'),
+      //home: MyHomePage(title: 'Mi Cole Virtual'),
+      home: LoginAnimScreen(title: 'Bienvenido',),
+
       navigatorKey: navigatorKey,
       onGenerateRoute: RouteGenerator.generateRoute,
     );
