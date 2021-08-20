@@ -26,7 +26,6 @@ class _LoginScreen extends State<LoginScreen> {
   UriColegio uriColegioSeleccionada = UriColegio();
   bool isLoading = false;
 
-
   Future<void> _onSubmitFuture() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,6 +143,26 @@ class _LoginScreen extends State<LoginScreen> {
       //   _onSubmit();
       // }
     });
+    uriController.text = 'http://192.168.18.215';
+
+    SharedPreferences.getInstance().then((SharedPreferences preferences) {
+      String? guardado = preferences.getString('uriColegio');
+      print('guardado $guardado');
+      if (guardado != null) {
+        servidorElegido = jsonDecode(guardado)['uri'];
+      }
+      String? guardadoUsername = preferences.getString('username');
+      String? guardadoPassword = preferences.getString('password');
+      String? guardadoCustomUri = preferences.getString('customUri');
+      print('*******guardadoUsername $guardadoUsername');
+      usenameController.text = guardadoUsername == null ? '' : guardadoUsername;
+      passwordController.text =
+          guardadoPassword == null ? '' : guardadoPassword;
+      uriController.text = guardadoCustomUri == null ? '' : guardadoCustomUri;
+      // if(guardadoUsername != null && guardadoPassword != null) {
+      //   _onSubmit();
+      // }
+    });
 
     UriColegio().fetchLista().then((value) {
       final List listaResponse = jsonDecode(value.body);
@@ -195,7 +214,8 @@ class _LoginScreen extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50)),
                   onPressed: _onSubmit,
-                  child: isLoading ? CircularProgressIndicator() : Text('Entrar')),
+                  child:
+                      isLoading ? CircularProgressIndicator() : Text('Entrar')),
             )
           ],
         ),

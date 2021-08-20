@@ -1,31 +1,35 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 
 class UriColegio {
   String nombre;
   String uri;
+  String logo;
 
-  UriColegio({this.nombre='', this.uri=''});
+  UriColegio({this.nombre = '', this.uri = '', this.logo = ''});
 
-  Future<http.Response> fetchLista () {
-    Uri direccion = Uri.parse('https://micolevirtual.com/app/listado_colegios.php');
+  Future<http.Response> fetchLista() {
+    Uri direccion =
+        Uri.parse('https://micolevirtual.com/app/listado_colegios.php');
     var response = http.post(direccion);
     return response;
   }
 
   @override
-  bool operator ==(Object other) => other is UriColegio && this.nombre == other.nombre;
+  bool operator ==(Object other) =>
+      other is UriColegio && this.nombre == other.nombre;
 
+  String toRawJson() => json.encode(toJson());
 
   @override
   int get hashCode => super.hashCode;
 
-  
   factory UriColegio.fromJson(Map<String, dynamic> parsedJson) {
     return UriColegio(
       nombre: parsedJson['nombre_colegio'].toString(),
       uri: parsedJson['url_colegio'].toString(),
+      logo: parsedJson['logo'].toString(),
     );
   }
 
@@ -35,27 +39,8 @@ class UriColegio {
   }
 
   Map<String, dynamic> toJson() => {
-    "uri": uri,
-    "nombre": nombre,
-  };
-
-
-}
-
-
-List<DropdownMenuItem> getItemsUriColegios () {
-  List<UriColegio> listaUriColegios = [
-    UriColegio(nombre: 'Localhost', uri: 'http://localhost'),
-    UriColegio(nombre: 'LICADLI Tame', uri: 'https://lalvirtual.edu.co'),
-    UriColegio(nombre: 'COAB Saravena', uri: 'https://coab.micolevirtual.com'),
-  ];
-
-  List<DropdownMenuItem> itemsUriColegios = listaUriColegios.map((item) {
-    return DropdownMenuItem<UriColegio>(
-      child: Text(item.nombre),
-      value: item,
-    );
-  }).toList();
-
-  return itemsUriColegios;
+        "uri": uri,
+        "nombre": nombre,
+        "logo": logo,
+      };
 }
