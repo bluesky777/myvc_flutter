@@ -211,12 +211,12 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Bienvenido',
+                        'Bienvenido.',
                         style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       Image(
-                        image: AssetImage('assets/images/at_computer.png'),
+                        image: AssetImage('assets/images/atComputer.png'),
                         height: 200,
                       ),
                       SizedBox(

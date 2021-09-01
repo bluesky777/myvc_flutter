@@ -13,7 +13,7 @@ class RoundedInput extends StatelessWidget {
 
   final IconData icon;
   final String hint;
-  TextEditingController? controller;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
