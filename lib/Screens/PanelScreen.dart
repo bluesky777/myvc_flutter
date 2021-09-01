@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/Server.dart';
@@ -41,9 +40,11 @@ class _PanelScreen extends State<PanelScreen> {
     return ZoomDrawer(
       menuScreen: DrawAnimation(),
       controller: _drawerController,
-      borderRadius: 24.0,
-      showShadow: false,
-      angle: -12.0,
+      borderRadius: 40.0,
+      slideWidth: 300,
+      showShadow: true,
+      angle: -8.0,
+      style: DrawerStyle.Style1,
       mainScreen: Scaffold(
         appBar: AppBar(
           title: Text('Elija grupo'),
