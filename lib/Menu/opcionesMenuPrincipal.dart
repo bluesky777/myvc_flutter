@@ -5,23 +5,6 @@ List<Map> opcionesMenuPrincipal = [
   {'icon': Icons.access_time, 'title': 'Asistencia clases'},
   {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
   {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
-  {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
-  {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
-  {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
-  {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
-  {'icon': Icons.home, 'title': 'Inicio'},
-  {'icon': Icons.access_time, 'title': 'Asistencia clases'},
-  {'icon': Icons.time_to_leave, 'title': 'Asistencia Institución'},
 ];
 
 final List<Widget> itemsMenuPrincipal = List.generate(
@@ -29,6 +12,8 @@ final List<Widget> itemsMenuPrincipal = List.generate(
   (index) => ListTile(
     leading: Icon(opcionesMenuPrincipal[index]['icon']),
     title: Text(opcionesMenuPrincipal[index]['title']),
-    onTap: (){print('presionando');},
+    onTap: () {
+      print('presionando');
+    },
   ),
 );

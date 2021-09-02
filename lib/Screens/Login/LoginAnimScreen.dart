@@ -11,11 +11,8 @@ import 'package:myvc_flutter/Screens/Login/RoundedPasswordInput.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class LoginAnimScreen extends StatefulWidget {
-  const LoginAnimScreen({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const LoginAnimScreen({Key? key}) : super(key: key);
 
   @override
   _LoginAnimScreenState createState() => _LoginAnimScreenState();
