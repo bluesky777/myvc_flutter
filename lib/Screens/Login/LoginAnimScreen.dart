@@ -2,14 +2,27 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myvc_flutter/Bloc/login_bloc.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Screens/Login/FormSelectServidor.dart';
-import 'package:myvc_flutter/Screens/Login/RoundedButton.dart';
-import 'package:myvc_flutter/Screens/Login/RoundedInput.dart';
-import 'package:myvc_flutter/Screens/Login/RoundedPasswordInput.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'FormLoginContainer.dart';
+
+class LoginAnimScreenBloc extends StatelessWidget {
+  const LoginAnimScreenBloc({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (BuildContext buildContext) => LoginBloc(),
+      child: LoginAnimScreen(),
+    );
+  }
+}
 
 class LoginAnimScreen extends StatefulWidget {
   const LoginAnimScreen({Key? key}) : super(key: key);
@@ -44,14 +57,14 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
       String? guardado = preferences.getString('uriColegio');
-      print('guardado $guardado');
+
       if (guardado != null) {
         servidorElegido = jsonDecode(guardado)['uri'];
       }
       String? guardadoUsername = preferences.getString('username');
       String? guardadoPassword = preferences.getString('password');
       String? guardadoCustomUri = preferences.getString('customUri');
-      print('*******guardadoUsername $guardadoUsername');
+
       usenameController.text = guardadoUsername == null ? '' : guardadoUsername;
       passwordController.text =
           guardadoPassword == null ? '' : guardadoPassword;
@@ -126,7 +139,9 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   }
 
   void _onSubmit() {
-    _onSubmitFuture();
+    BlocProvider.of<LoginBloc>(context)
+        .add(DoLoginEvent('username', 'password'));
+    //_onSubmitFuture();
   }
 
   void _snackDatosInvalidos() {
@@ -194,52 +209,14 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
               gestureTapCallback: isLogin ? null : _setIsLoginToTrue),
 
           // FORM Login
-          AnimatedOpacity(
-            opacity: isLogin ? 1.0 : 0.0,
-            duration: animationDuration * 4,
-            child: Align(
-              alignment: Alignment.center,
-              child: SingleChildScrollView(
-                child: Container(
-                  width: size.width,
-                  height: defaultLoginSize,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Bienvenido',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Image(
-                        image: AssetImage('assets/images/at_computer.png'),
-                        height: 200,
-                      ),
-                      SizedBox(
-                        height: 40,
-                      ),
-                      RoundedInput(
-                        controller: usenameController,
-                        icon: Icons.mail,
-                        hint: 'Usuario',
-                      ),
-                      RoundedPasswordInput(
-                        controller: passwordController,
-                        hint: 'Contraseña',
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      RoundedButton(
-                        title: 'Entrar',
-                        onTap: _onSubmit,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          FormLoginContainer(
+            isLogin: isLogin,
+            animationDuration: animationDuration,
+            size: size,
+            defaultLoginSize: defaultLoginSize,
+            usenameController: usenameController,
+            passwordController: passwordController,
+            onSubmit: _onSubmit,
           ),
 
           // BOTÓN PARA MOSTRAR SERVIDORES

@@ -13,6 +13,13 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Stream<LoginState> mapEventToState(
     LoginEvent event,
   ) async* {
-    // TODO: implement mapEventToState
+    if (event is DoLoginEvent) {
+      yield LoggingInState();
+
+      // hacer el login
+      await Future.delayed(Duration(seconds: 3));
+
+      yield LoginErrorState('No se pudo loguear');
+    }
   }
 }
