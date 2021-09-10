@@ -7,8 +7,10 @@ abstract class LoginEvent extends Equatable {
 class DoLoginEvent extends LoginEvent {
   final String username;
   final String password;
+  final bool isLocal;
+  final String textoUri;
 
-  DoLoginEvent(this.username, this.password);
+  DoLoginEvent(this.username, this.password, this.isLocal, this.textoUri);
 
   @override
   List<Object?> get props => [username, password];

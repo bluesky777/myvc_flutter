@@ -25,61 +25,84 @@ class FormLoginContainer extends StatelessWidget {
     required this.onSubmit,
   });
 
+
+
+  void _snackDatosInvalidos() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Datos inválidos.'),
+        action: SnackBarAction(
+          label: 'Limpiar',
+          onPressed: () {
+            passwordController.text = '';
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoginBloc, LoginState>(
-      builder: (context, state) {
-        return AnimatedOpacity(
-          opacity: isLogin ? 1.0 : 0.0,
-          duration: animationDuration * 4,
-          child: Align(
-            alignment: Alignment.center,
-            child: SingleChildScrollView(
-              child: Container(
-                width: size.width,
-                height: defaultLoginSize,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Bienvenido',
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    Image(
-                      image: AssetImage('assets/images/at_computer.png'),
-                      height: 200,
-                    ),
-                    SizedBox(
-                      height: 40,
-                    ),
-                    RoundedInput(
-                      controller: usenameController,
-                      icon: Icons.mail,
-                      hint: 'Usuario',
-                    ),
-                    RoundedPasswordInput(
-                      controller: passwordController,
-                      hint: 'Contraseña',
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    if (state is LoggingInState)
-                      CircularProgressIndicator()
-                    else
-                      RoundedButton(
-                        title: 'Entrar',
-                        onTap: onSubmit,
+    return BlocListener(
+      listener: (context, state) => {
+        if ( state is LoginErrorState){
+          _snackDatosInvalidos();
+        }
+      },
+      child: BlocBuilder<LoginBloc, LoginState>(
+        builder: (context, state) {
+          return AnimatedOpacity(
+            opacity: isLogin ? 1.0 : 0.0,
+            duration: animationDuration * 4,
+            child: Align(
+              alignment: Alignment.center,
+              child: SingleChildScrollView(
+                child: Container(
+                  width: size.width,
+                  height: defaultLoginSize,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Bienvenido',
+                        style:
+                            TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
-                  ],
+                      Image(
+                        image: AssetImage('assets/images/at_computer.png'),
+                        height: 200,
+                      ),
+                      SizedBox(
+                        height: 40,
+                      ),
+                      RoundedInput(
+                        controller: usenameController,
+                        icon: Icons.mail,
+                        hint: 'Usuario',
+                      ),
+                      RoundedPasswordInput(
+                        controller: passwordController,
+                        hint: 'Contraseña',
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      if (state is LoggingInState)
+                        CircularProgressIndicator()
+                      else
+                        RoundedButton(
+                          title: 'Entrar',
+                          onTap: onSubmit,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

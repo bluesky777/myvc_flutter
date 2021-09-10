@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import "package:equatable/equatable.dart";
+import 'package:myvc_flutter/Controllers/LoginController.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';
@@ -16,10 +17,15 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     if (event is DoLoginEvent) {
       yield LoggingInState();
 
-      // hacer el login
-      await Future.delayed(Duration(seconds: 3));
+      LoginController loginController = LoginController();
+      try {
+        var token = await loginController.login(event.username, event.password, event.isLocal, event.textoUri);
+        print('asdf $token');
+        yield LoggedState(token);
+      } on LoginException {
+        yield LoginErrorState('No se pudo loguear');
+      }
 
-      yield LoginErrorState('No se pudo loguear');
     }
   }
 }

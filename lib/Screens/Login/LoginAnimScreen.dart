@@ -82,66 +82,25 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   }
 
   Future<void> _onSubmitFuture() async {
-    print('_onSubmit');
-    // if (!_formKey.currentState!.validate()) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(content: Text('Escriba correctamente.')));
-    // } else {
+
+
     String username = usenameController.text;
     String password = passwordController.text;
-    print('Suerte: $username $password');
-
     bool isLocal = textoUri.contains('192');
-    if (isLocal) {
-      bool hasHttp = textoUri.contains('http');
-      textoUri = hasHttp ? textoUri : 'http://' + textoUri;
-    }
 
-    var server = Server();
-    var response;
-    String servidorUri = isLocal ? textoUri : servidorElegido;
+    BlocProvider.of<LoginBloc>(context)
+        .add(DoLoginEvent(username, password, isLocal, textoUri));
 
-    isLoading = true;
-    try {
-      response = await server.credentials(
-        username,
-        password,
-        servidorUri,
-        otro: isLocal,
-      );
+      //   Navigator.pushNamed(context, '/panel');
+      //
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      //   content: Text('Error ${Server.urlApi}'),
+      // ));
 
-      Map<String, dynamic> parsed = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        AuthService.setToken(parsed['el_token']);
-        var res = await server.login();
-        print('res login $res');
-
-        SharedPreferences.getInstance().then((SharedPreferences preferences) {
-          preferences.setString('username', username);
-          preferences.setString('password', password);
-          preferences.setString('customUri', servidorUri);
-        });
-
-        Navigator.pushNamed(context, '/panel');
-      } else {
-        _snackDatosInvalidos();
-      }
-    } on Exception {
-      print('***** Error: ${Server.urlApi}');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error ${Server.urlApi}'),
-      ));
-    } finally {
-      isLoading = false;
-    }
-    // } // Cierra condicional validator
   }
 
   void _onSubmit() {
-    BlocProvider.of<LoginBloc>(context)
-        .add(DoLoginEvent('username', 'password'));
-    //_onSubmitFuture();
+    _onSubmitFuture();
   }
 
   void _snackDatosInvalidos() {
