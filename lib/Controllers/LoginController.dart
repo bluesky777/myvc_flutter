@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
@@ -6,18 +5,29 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class LoginBaseController {
-  Future<String> login(String username, String password, bool isLocal, String textoUri);
+  Future<String> login(
+    String username,
+    String password,
+    bool isLocal,
+    String textoUri,
+    String servidorElegido,
+  );
   Future<String> logout();
 }
 
 class LoginController implements LoginBaseController {
   @override
-  Future<String> login(String username, String password, bool isLocal, String textoUri,) async {
-    await Future.delayed(Duration(seconds: 2));
+  Future<String> login(
+    String username,
+    String password,
+    bool isLocal,
+    String textoUri,
+    String servidorElegido,
+  ) async {
     print('Suerte: $username $password');
-    if(username != "username" || password != "password"){
-      throw LoginException();
-    }
+    // if (username != "username" || password != "password") {
+    //   throw LoginException();
+    // }
 
     if (isLocal) {
       bool hasHttp = textoUri.contains('http');
@@ -35,7 +45,6 @@ class LoginController implements LoginBaseController {
         servidorUri,
         otro: isLocal,
       );
-
     } on Exception {
       // print('***** Error: ${Server.urlApi}');
       // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -63,15 +72,15 @@ class LoginController implements LoginBaseController {
       throw LoginException();
     }
 
-    return "un token";
+    return "un token recibido";
   }
 
   @override
   Future<String> logout() async {
     return "";
   }
-
 }
 
 class LoginException implements Exception {}
+
 class LoginUrlException implements Exception {}

@@ -6,7 +6,7 @@ import 'RoundedButton.dart';
 import 'RoundedInput.dart';
 import 'RoundedPasswordInput.dart';
 
-class FormLoginContainer extends StatelessWidget {
+class FormLoginContainer extends StatefulWidget {
   final bool isLogin;
   final Duration animationDuration;
   final Size size;
@@ -25,8 +25,11 @@ class FormLoginContainer extends StatelessWidget {
     required this.onSubmit,
   });
 
+  @override
+  FormLoginContainerState createState() => FormLoginContainerState();
+}
 
-
+class FormLoginContainerState extends State<FormLoginContainer> {
   void _snackDatosInvalidos() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -34,7 +37,7 @@ class FormLoginContainer extends StatelessWidget {
         action: SnackBarAction(
           label: 'Limpiar',
           onPressed: () {
-            passwordController.text = '';
+            widget.passwordController.text = '';
           },
         ),
       ),
@@ -43,66 +46,59 @@ class FormLoginContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener(
-      listener: (context, state) => {
-        if ( state is LoginErrorState){
-          _snackDatosInvalidos();
-        }
-      },
-      child: BlocBuilder<LoginBloc, LoginState>(
-        builder: (context, state) {
-          return AnimatedOpacity(
-            opacity: isLogin ? 1.0 : 0.0,
-            duration: animationDuration * 4,
-            child: Align(
-              alignment: Alignment.center,
-              child: SingleChildScrollView(
-                child: Container(
-                  width: size.width,
-                  height: defaultLoginSize,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Bienvenido',
-                        style:
-                            TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return BlocBuilder<LoginBloc, LoginState>(
+      builder: (context, state) {
+        return AnimatedOpacity(
+          opacity: widget.isLogin ? 1.0 : 0.0,
+          duration: widget.animationDuration * 4,
+          child: Align(
+            alignment: Alignment.center,
+            child: SingleChildScrollView(
+              child: Container(
+                width: widget.size.width,
+                height: widget.defaultLoginSize,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Bienvenido',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    Image(
+                      image: AssetImage('assets/images/at_computer.png'),
+                      height: 200,
+                    ),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    RoundedInput(
+                      controller: widget.usenameController,
+                      icon: Icons.mail,
+                      hint: 'Usuario',
+                    ),
+                    RoundedPasswordInput(
+                      controller: widget.passwordController,
+                      hint: 'Contraseña',
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    if (state is LoggingInState)
+                      CircularProgressIndicator()
+                    else
+                      RoundedButton(
+                        title: 'Entrar',
+                        onTap: widget.onSubmit,
                       ),
-                      Image(
-                        image: AssetImage('assets/images/at_computer.png'),
-                        height: 200,
-                      ),
-                      SizedBox(
-                        height: 40,
-                      ),
-                      RoundedInput(
-                        controller: usenameController,
-                        icon: Icons.mail,
-                        hint: 'Usuario',
-                      ),
-                      RoundedPasswordInput(
-                        controller: passwordController,
-                        hint: 'Contraseña',
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      if (state is LoggingInState)
-                        CircularProgressIndicator()
-                      else
-                        RoundedButton(
-                          title: 'Entrar',
-                          onTap: onSubmit,
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -18,7 +18,7 @@ class MyUserHeader extends SliverPersistentHeaderDelegate {
         fit: StackFit.expand,
         children: [
           Image(
-            image: AssetImage('assets/images/MyVc.png'),
+            image: AssetImage('assets/images/logoMy.png'),
             height: 200,
             fit: BoxFit.cover,
           ),

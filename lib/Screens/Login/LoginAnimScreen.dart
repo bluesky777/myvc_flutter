@@ -4,25 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/Bloc/login_bloc.dart';
-import 'package:myvc_flutter/Http/AuthService.dart';
-import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Screens/Login/FormSelectServidor.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'FormLoginContainer.dart';
-
-class LoginAnimScreenBloc extends StatelessWidget {
-  const LoginAnimScreenBloc({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (BuildContext buildContext) => LoginBloc(),
-      child: LoginAnimScreen(),
-    );
-  }
-}
 
 class LoginAnimScreen extends StatefulWidget {
   const LoginAnimScreen({Key? key}) : super(key: key);
@@ -82,21 +68,23 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   }
 
   Future<void> _onSubmitFuture() async {
-
-
     String username = usenameController.text;
     String password = passwordController.text;
     bool isLocal = textoUri.contains('192');
 
-    BlocProvider.of<LoginBloc>(context)
-        .add(DoLoginEvent(username, password, isLocal, textoUri));
+    BlocProvider.of<LoginBloc>(context).add(DoLoginEvent(
+      username,
+      password,
+      isLocal,
+      textoUri,
+      servidorElegido,
+    ));
 
-      //   Navigator.pushNamed(context, '/panel');
-      //
-      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      //   content: Text('Error ${Server.urlApi}'),
-      // ));
-
+    Navigator.pushNamed(context, '/panel');
+    //
+    // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    //   content: Text('Error ${Server.urlApi}'),
+    // ));
   }
 
   void _onSubmit() {
@@ -161,11 +149,12 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
           // Cancel button
           CloseServidoresButton(
-              isLogin: isLogin,
-              animationDuration: animationDuration,
-              size: size,
-              animationController: animationController!,
-              gestureTapCallback: isLogin ? null : _setIsLoginToTrue),
+            isLogin: isLogin,
+            animationDuration: animationDuration,
+            size: size,
+            animationController: animationController!,
+            gestureTapCallback: isLogin ? null : _setIsLoginToTrue,
+          ),
 
           // FORM Login
           FormLoginContainer(

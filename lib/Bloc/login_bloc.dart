@@ -19,13 +19,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       LoginController loginController = LoginController();
       try {
-        var token = await loginController.login(event.username, event.password, event.isLocal, event.textoUri);
+        print('iniii');
+        var token = await loginController.login(
+          event.username,
+          event.password,
+          event.isLocal,
+          event.textoUri,
+          event.servidorElegido,
+        );
         print('asdf $token');
         yield LoggedState(token);
       } on LoginException {
         yield LoginErrorState('No se pudo loguear');
       }
-
     }
   }
 }

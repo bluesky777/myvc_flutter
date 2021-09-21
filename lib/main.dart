@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/RouteGenerator.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/LoginScreen.dart';
 
+import 'Bloc/login_bloc.dart';
+
 void main() {
-  runApp(MyApp());
+  runApp(
+    BlocProvider(
+      create: (BuildContext buildContext) => LoginBloc(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -19,7 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       //home: MyHomePage(title: 'Mi Cole Virtual'),
-      home: LoginAnimScreenBloc(),
+      home: LoginAnimScreen(),
 
       navigatorKey: navigatorKey,
       onGenerateRoute: RouteGenerator.generateRoute,
