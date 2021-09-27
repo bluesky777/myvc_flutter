@@ -47,7 +47,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
       String? guardado = preferences.getString('uriColegio');
-      print('guardado $guardado');
       if (guardado != null) {
         servidorElegido = jsonDecode(guardado)['uri'];
       }
@@ -318,7 +317,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
       isLogin = true;
       SharedPreferences.getInstance().then((SharedPreferences preferences) {
         String? guardado = preferences.getString('uriColegio');
-        print('guardado $guardado');
+
         if (guardado != null) {
           servidorElegido = jsonDecode(guardado)['uri'];
         }
