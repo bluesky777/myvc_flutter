@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import "package:equatable/equatable.dart";
 import 'package:myvc_flutter/Controllers/LoginController.dart';
+import 'package:myvc_flutter/cubit/select_server_cubit.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  LoginBloc() : super(LoginInitialState());
+  final SelectServerCubit selectServerCubit;
+
+  LoginBloc({required this.selectServerCubit}) : super(LoginInitialState());
 
   @override
   Stream<LoginState> mapEventToState(
@@ -17,17 +20,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     if (event is DoLoginEvent) {
       yield LoggingInState();
 
+      final servidorElegido =
+          this.selectServerCubit.state.uriColegioSelected.uri;
+
       LoginController loginController = LoginController();
       try {
-        print('iniii');
         var token = await loginController.login(
           event.username,
           event.password,
           event.isLocal,
           event.textoUri,
-          event.servidorElegido,
+          servidorElegido,
         );
-        print('asdf $token');
+
         yield LoggedState(token);
       } on LoginException {
         yield LoginErrorState('No se pudo loguear');

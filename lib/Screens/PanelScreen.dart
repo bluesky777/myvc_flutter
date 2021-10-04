@@ -18,15 +18,12 @@ class _PanelScreen extends State<PanelScreen> {
   @override
   void initState() {
     super.initState();
-    print('**** init panel');
-
     try {
       server.get('/grupos').then((response) {
         final String res = response.body;
 
         setState(() {
           grupos = grupoModelFromJson(res);
-          print('grupos.length: ${grupos?.length}');
         });
       });
     } catch (e) {

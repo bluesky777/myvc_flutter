@@ -24,10 +24,11 @@ class _ButtonSelectServidoresState extends State<ButtonSelectServidores> {
   Widget build(BuildContext context) {
     return BlocBuilder<SelectServerCubit, SelectServerState>(
       builder: (context, state) {
+        //print('en builder buttonSelect ${state.uriColegioSelected}');
         return Align(
           alignment: Alignment.bottomCenter,
           child: GestureDetector(
-            onTap: !state.mostrando
+            onTap: !state.mostrandoButtonSelectedUri
                 ? null
                 : () {
                     widget.animationController?.forward();
@@ -44,10 +45,10 @@ class _ButtonSelectServidoresState extends State<ButtonSelectServidores> {
                 color: KBackgroundColor,
               ),
               alignment: Alignment.center,
-              child: state.mostrando
+              child: state.mostrandoButtonSelectedUri
                   ? Text(
-                      widget.servidorElegido != ''
-                          ? widget.servidorElegido
+                      state.uriColegioSelected.uri != ''
+                          ? state.uriColegioSelected.uri
                           : 'Selecciona tu colegio',
                       style: TextStyle(
                         fontSize: 18,

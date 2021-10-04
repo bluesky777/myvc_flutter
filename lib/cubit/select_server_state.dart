@@ -1,31 +1,38 @@
 part of 'select_server_cubit.dart';
 
 class SelectServerState extends Equatable {
-  bool mostrando;
-  String servidorElegidoString;
+  bool mostrandoButtonSelectedUri;
+  final UriColegio uriColegioSelected;
 
-  SelectServerState({this.mostrando = true, this.servidorElegidoString = ''});
+  SelectServerState(
+      {this.mostrandoButtonSelectedUri = true,
+      required this.uriColegioSelected});
 
   @override
-  List<Object> get props => [mostrando];
+  List<Object> get props => [mostrandoButtonSelectedUri, uriColegioSelected];
 
   Map<String, dynamic> toMap() {
     return {
-      'mostrando': mostrando,
-      'servidorElegidoString': servidorElegidoString
+      'mostrando': mostrandoButtonSelectedUri,
+      'uriColegioSelected': uriColegioSelected
     };
   }
 
   factory SelectServerState.fromMap(Map<String, dynamic> map) {
     return SelectServerState(
-        mostrando: map['mostrando'],
-        servidorElegidoString: map['servidorElegidoString']);
+        mostrandoButtonSelectedUri: map['mostrando'],
+        uriColegioSelected: UriColegio(
+          nombre: map['uriColegioSelected']['nombre'],
+          uri: map['uriColegioSelected']['uri'],
+          logo: map['uriColegioSelected']['logo'],
+        ));
   }
 
   String toJson() => json.encode(toMap());
 
-  factory SelectServerState.fromJson(String source) =>
-      SelectServerState.fromMap(
-        json.decode(source),
-      );
+  factory SelectServerState.fromJson(String source) {
+    return SelectServerState.fromMap(
+      json.decode(source),
+    );
+  }
 }

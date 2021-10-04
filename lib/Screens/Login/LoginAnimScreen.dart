@@ -82,8 +82,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
       servidorElegido,
     ));
 
-    Navigator.pushNamed(context, '/panel');
-    //
     // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     //   content: Text('Error ${Server.urlApi}'),
     // ));
@@ -121,94 +119,101 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
                 parent: animationController!, curve: Curves.linear));
 
     return Scaffold(
-      body: BlocProvider<SelectServerCubit>(
-        create: (context) => SelectServerCubit(),
-        child: BlocBuilder<SelectServerCubit, SelectServerState>(
-          builder: (context, state) {
-            return Stack(
-              children: [
-                // Circulo decoración derecho
-                Positioned(
-                  top: 100,
-                  right: -50,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        color: kPrimaryColor),
+      body: BlocConsumer<LoginBloc, LoginState>(
+        listener: (BuildContext, login_state) {
+          if (login_state is LoggedState) {
+            Navigator.pushNamed(context, '/panel');
+          }
+        },
+        builder: (_, _login_state) {
+          return BlocBuilder<SelectServerCubit, SelectServerState>(
+            builder: (context, state) {
+              return Stack(
+                children: [
+                  // Circulo decoración derecho
+                  Positioned(
+                    top: 100,
+                    right: -50,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          color: kPrimaryColor),
+                    ),
                   ),
-                ),
 
-                // Circulo decoración derecho
-                Positioned(
-                  top: -50,
-                  left: -50,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        color: kPrimaryColor),
+                  // Circulo decoración derecho
+                  Positioned(
+                    top: -50,
+                    left: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          color: kPrimaryColor),
+                    ),
                   ),
-                ),
 
-                // Cancel button
-                CloseServidoresButton(
-                  isLogin: state.mostrando,
-                  animationDuration: animationDuration,
-                  size: size,
-                  animationController: animationController!,
-                  gestureTapCallback:
-                      state.mostrando ? null : _setIsLoginToTrue,
-                ),
+                  // Cancel button
+                  CloseServidoresButton(
+                    isLogin: state.mostrandoButtonSelectedUri,
+                    animationDuration: animationDuration,
+                    size: size,
+                    animationController: animationController!,
+                    gestureTapCallback: state.mostrandoButtonSelectedUri
+                        ? null
+                        : _setIsLoginToTrue,
+                  ),
 
-                // FORM Login
-                FormLoginContainer(
-                  isLogin: isLogin,
-                  animationDuration: animationDuration,
-                  size: size,
-                  defaultLoginSize: defaultLoginSize,
-                  usenameController: usenameController,
-                  passwordController: passwordController,
-                  onSubmit: _onSubmit,
-                ),
+                  // FORM Login
+                  FormLoginContainer(
+                    isLogin: isLogin,
+                    animationDuration: animationDuration,
+                    size: size,
+                    defaultLoginSize: defaultLoginSize,
+                    usenameController: usenameController,
+                    passwordController: passwordController,
+                    onSubmit: _onSubmit,
+                  ),
 
-                // BOTÓN PARA MOSTRAR SERVIDORES
-                AnimatedBuilder(
-                  animation: animationController!,
-                  builder: (context, child) {
-                    bool isInLoginForm = state.mostrando;
+                  // BOTÓN PARA MOSTRAR SERVIDORES
+                  AnimatedBuilder(
+                    animation: animationController!,
+                    builder: (context, child) {
+                      bool isInLoginForm = state.mostrandoButtonSelectedUri;
 
-                    if (viewInset == 0 && isInLoginForm) {
-                      return ButtonSelectServidores(
-                        servidorElegido: servidorElegido,
-                        animationController: animationController,
-                        containerSize: containerSize,
-                      );
-                    } else if (!isInLoginForm) {
-                      return ButtonSelectServidores(
-                        servidorElegido: servidorElegido,
-                        animationController: animationController,
-                        containerSize: containerSize,
-                      );
-                    }
-                    return Container();
-                  },
-                ),
+                      if (viewInset == 0 && isInLoginForm) {
+                        return ButtonSelectServidores(
+                          servidorElegido: servidorElegido,
+                          animationController: animationController,
+                          containerSize: containerSize,
+                        );
+                      } else if (!isInLoginForm) {
+                        return ButtonSelectServidores(
+                          servidorElegido: servidorElegido,
+                          animationController: animationController,
+                          containerSize: containerSize,
+                        );
+                      }
+                      return Container();
+                    },
+                  ),
 
-                // FORM Seleccionar servidor
-                FormSelectServidor(
-                  isLogin: isLogin,
-                  animationController: animationController,
-                  animationDuration: animationDuration,
-                  size: size,
-                  defaultLoginSize: defaultLoginSize,
-                ),
-              ],
-            );
-          },
-        ),
+                  // FORM Seleccionar servidor
+                  FormSelectServidor(
+                    isLogin: isLogin,
+                    animationController: animationController,
+                    animationDuration: animationDuration,
+                    size: size,
+                    defaultLoginSize: defaultLoginSize,
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -299,7 +304,9 @@ class CloseServidoresButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      opacity: BlocProvider.of<SelectServerCubit>(context).state.mostrando
+      opacity: BlocProvider.of<SelectServerCubit>(context)
+              .state
+              .mostrandoButtonSelectedUri
           ? 0.0
           : 1.0,
       duration: animationDuration,

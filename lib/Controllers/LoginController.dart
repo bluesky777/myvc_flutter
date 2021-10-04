@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
@@ -24,6 +25,8 @@ class LoginController implements LoginBaseController {
     String textoUri,
     String servidorElegido,
   ) async {
+    var completer = Completer<String>();
+
     print('Suerte: $username $password');
     // if (username != "username" || password != "password") {
     //   throw LoginException();
@@ -46,10 +49,11 @@ class LoginController implements LoginBaseController {
         otro: isLocal,
       );
     } on Exception {
-      // print('***** Error: ${Server.urlApi}');
+      print('***** Error: ${Server.urlApi}');
       // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       //   content: Text('Error ${Server.urlApi}'),
       // ));
+      completer.completeError("Error al loguear.");
       throw LoginUrlException();
     }
 
@@ -65,14 +69,15 @@ class LoginController implements LoginBaseController {
         preferences.setString('password', password);
         preferences.setString('customUri', servidorUri);
       });
-
+      completer.complete('Token recibido');
       //Navigator.pushNamed(context, '/panel');
 
     } else {
+      completer.completeError("Error al loguear 2.");
       throw LoginException();
     }
 
-    return "un token recibido";
+    return completer.future;
   }
 
   @override

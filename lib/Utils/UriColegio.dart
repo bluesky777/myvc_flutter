@@ -7,13 +7,23 @@ class UriColegio {
   String uri;
   String logo;
 
+  List<UriColegio> listaUrisColes = [];
+
   UriColegio({this.nombre = '', this.uri = '', this.logo = ''});
 
-  Future<http.Response> fetchLista() {
-    Uri direccion =
-        Uri.parse('https://micolevirtual.com/app/listado_colegios.php');
-    var response = http.post(direccion);
-    return response;
+  Future<List<UriColegio>> fetchLista() async {
+    final path = 'https://micolevirtual.com/app/listado_colegios.php';
+    Uri direccion = Uri.parse(path);
+
+    return http.post(direccion).then((value) {
+      final List listaResponse = jsonDecode(value.body);
+      this.listaUrisColes = listaResponse.map((dato) {
+        return UriColegio.fromJson(dato);
+      }).toList();
+
+      this.listaUrisColes.add(UriColegio(uri: 'otro', nombre: 'Otro'));
+      return this.listaUrisColes;
+    });
   }
 
   @override

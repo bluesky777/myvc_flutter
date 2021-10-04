@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'RoundedButton.dart';
 import 'RoundedInput.dart';
@@ -30,15 +27,19 @@ class FormSelectServidor extends StatefulWidget {
 }
 
 class _FormSelectServidorState extends State<FormSelectServidor> {
+  TextEditingController uriTextController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SelectServerCubit, SelectServerState>(
       builder: (context, state) {
+        uriTextController.text = state.uriColegioSelected.uri;
+
         return AnimatedOpacity(
-          opacity: state.mostrando ? 0.0 : 1.0,
+          opacity: state.mostrandoButtonSelectedUri ? 0.0 : 1.0,
           duration: widget.animationDuration * 5,
           child: Visibility(
-            visible: !state.mostrando,
+            visible: !state.mostrandoButtonSelectedUri,
             child: Align(
               alignment: Alignment.center,
               child: SingleChildScrollView(
@@ -68,13 +69,16 @@ class _FormSelectServidorState extends State<FormSelectServidor> {
                       RoundedInput(
                         icon: Icons.add_link,
                         hint: 'Dirección personalizada',
+                        controller: uriTextController,
                       ),
                       RoundedButton(
                         title: 'Aceptar',
                         onTap: () {
-                          print('Aceptando...');
+                          print('Aceptando... ${uriTextController.text}');
+                          context
+                              .read<SelectServerCubit>()
+                              .setOtroUriColegio(uriTextController.text);
                           widget.animationController?.reverse();
-                          context.read<SelectServerCubit>().toggleMostrar();
                         },
                       )
                     ],
@@ -100,8 +104,6 @@ class ListViewServidores extends StatefulWidget {
 }
 
 class _ListViewServidoresState extends State<ListViewServidores> {
-  TextEditingController uriController = TextEditingController();
-  String servidorElegido = '';
   List<UriColegio> listaUrisColes = [];
   UriColegio uriColegioSeleccionada = UriColegio();
 
@@ -109,25 +111,9 @@ class _ListViewServidoresState extends State<ListViewServidores> {
   void initState() {
     super.initState();
 
-    uriController.text = 'http://192.168.18.215';
-
-    SharedPreferences.getInstance().then((SharedPreferences preferences) {
-      String? guardado = preferences.getString('uriColegio');
-      if (guardado != null) {
-        servidorElegido = jsonDecode(guardado)['uri'];
-      }
-      String? guardadoCustomUri = preferences.getString('customUri');
-      print('*******guardadoUsername $guardadoCustomUri');
-      uriController.text = guardadoCustomUri == null ? '' : guardadoCustomUri;
-    });
-
     UriColegio().fetchLista().then((value) {
-      final List listaResponse = jsonDecode(value.body);
-      listaUrisColes = listaResponse.map((dato) {
-        return UriColegio.fromJson(dato);
-      }).toList();
+      listaUrisColes = value;
 
-      listaUrisColes.add(UriColegio(uri: 'otro', nombre: 'Otro'));
       setState(() {
         uriColegioSeleccionada = listaUrisColes[0];
       });
@@ -155,19 +141,13 @@ class _ListViewServidoresState extends State<ListViewServidores> {
                 ),
           onTap: () {
             print('Cambiada uri... ${uriColegio.uri}');
-            uriController.text = '';
-            SharedPreferences.getInstance()
-                .then((SharedPreferences preferences) {
-              preferences.setString(
-                'uriColegio',
-                json.encode(uriColegio.toJson()),
-              );
-              setState(() {
-                servidorElegido = uriColegio.uri;
-              });
+            BlocProvider.of<SelectServerCubit>(context)
+                .selectUriColegio(uriColegio);
+
+            if (uriColegio.nombre != 'Otro') {
               widget.animationController?.reverse();
               context.read<SelectServerCubit>().toggleMostrar();
-            });
+            }
           },
           trailing: Icon(Icons.arrow_right),
         );
