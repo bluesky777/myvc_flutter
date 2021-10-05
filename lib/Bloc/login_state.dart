@@ -21,7 +21,6 @@ class LoggedState extends LoginState {
 
   @override
   List<Object?> get props => [token];
-
 }
 
 class LoginErrorState extends LoginState {

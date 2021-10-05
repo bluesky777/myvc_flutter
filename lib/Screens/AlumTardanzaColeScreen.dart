@@ -132,7 +132,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                          'Tardanzas: ${alumno.ausenciasTotal!['cant_tardanzas_entrada'].toString()} '),
+                        'Tardanzas: ${alumno.ausenciasTotal!['cant_tardanzas_entrada'].toString()} ',
+                      ),
                       ElevatedButton(
                         onPressed: () async {
                           if (alumno.tardanzasEntrada != null) {
@@ -154,7 +155,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                                     ),
                                   );
                                   setState(() {
-                                    print('Antes ${alumno.tardanzasEntrada!.length}');
+                                    print(
+                                        'Antes ${alumno.tardanzasEntrada!.length}');
                                     alumno.ausenciasTotal![
                                             'cant_tardanzas_entrada'] =
                                         alumno.ausenciasTotal![
@@ -164,7 +166,6 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                                         .remove(tardanzaTemp);
                                   });
                                 } else {
-                                  
                                   print(alumno.tardanzasEntrada);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
@@ -189,10 +190,14 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                         child: Text('+', style: TextStyle(fontSize: 30)),
                         onPressed: () async {
                           try {
+                            var now = DateTime.now();
+                            // String fecha_hora = '${now.year}-$now.month-${now.day} ${now.hours}:${now.minutes}:${now.seconds}';
+
                             var res = await server.post('/ausencias/store', {
                               'alumno_id': alumno.id,
                               'entrada': 1,
                               'tipo': 'tardanza',
+                              'fecha_hora': now.toString(),
                             });
 
                             if (res.statusCode < 300) {

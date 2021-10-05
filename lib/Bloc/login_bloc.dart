@@ -22,14 +22,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       final servidorElegido =
           this.selectServerCubit.state.uriColegioSelected.uri;
+      final isLocal =
+          this.selectServerCubit.state.uriColegioSelected.nombre == 'Otro'
+              ? true
+              : false;
+
+      print('+++ servidorElegido $servidorElegido - ${event.textoUri}');
 
       LoginController loginController = LoginController();
       try {
         var token = await loginController.login(
           event.username,
           event.password,
-          event.isLocal,
-          event.textoUri,
+          isLocal,
           servidorElegido,
         );
 

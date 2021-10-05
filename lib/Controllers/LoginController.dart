@@ -10,7 +10,6 @@ abstract class LoginBaseController {
     String username,
     String password,
     bool isLocal,
-    String textoUri,
     String servidorElegido,
   );
   Future<String> logout();
@@ -22,7 +21,6 @@ class LoginController implements LoginBaseController {
     String username,
     String password,
     bool isLocal,
-    String textoUri,
     String servidorElegido,
   ) async {
     var completer = Completer<String>();
@@ -33,19 +31,18 @@ class LoginController implements LoginBaseController {
     // }
 
     if (isLocal) {
-      bool hasHttp = textoUri.contains('http');
-      textoUri = hasHttp ? textoUri : 'http://' + textoUri;
+      bool hasHttp = servidorElegido.contains('http');
+      servidorElegido = hasHttp ? servidorElegido : 'http://' + servidorElegido;
     }
 
     var server = Server();
     var response;
-    String servidorUri = isLocal ? textoUri : servidorElegido;
 
     try {
       response = await server.credentials(
         username,
         password,
-        servidorUri,
+        servidorElegido,
         otro: isLocal,
       );
     } on Exception {
@@ -67,7 +64,7 @@ class LoginController implements LoginBaseController {
       SharedPreferences.getInstance().then((SharedPreferences preferences) {
         preferences.setString('username', username);
         preferences.setString('password', password);
-        preferences.setString('customUri', servidorUri);
+        preferences.setString('customUri', servidorElegido);
       });
       completer.complete('Token recibido');
       //Navigator.pushNamed(context, '/panel');
