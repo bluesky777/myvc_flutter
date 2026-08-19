@@ -11,7 +11,16 @@ class SelectServerCubit extends Cubit<SelectServerState> with HydratedMixin {
   final UriColegio uriColegio;
 
   SelectServerCubit(this.uriColegio)
-      : super(SelectServerState(uriColegioSelected: UriColegio()));
+      : super(SelectServerState(uriColegioSelected: UriColegio())) {
+    // Obligatorio al usar HydratedMixin directamente: es hydrate() quien lee el
+    // estado guardado y, de paso, quien inicializa el almacén interno. Sin esta
+    // llamada el colegio elegido no se recuperaba al arrancar y, peor, el
+    // primer emit reventaba con LateInitializationError.
+    //
+    // Hasta hydrated_bloc 7 el getter de state leía del almacén por su cuenta y
+    // esto no hacía falta; en la 11 ya no.
+    hydrate();
+  }
 
   void toggleMostrar() {
     emit(
