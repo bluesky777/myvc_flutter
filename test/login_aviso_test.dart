@@ -19,7 +19,13 @@ void main() {
   Widget pantalla() {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => SelectServerCubit(UriColegio())),
+        // Sin colegio: en depuración el cubit arranca con el servidor local
+        // —ver DatosDesarrollo—, y lo que aquí se prueba es justo el caso
+        // contrario, el del docente que entra sin haber elegido colegio.
+        BlocProvider(
+          create: (_) =>
+              SelectServerCubit(UriColegio())..selectUriColegio(UriColegio()),
+        ),
         BlocProvider(
           create: (ctx) =>
               LoginBloc(selectServerCubit: BlocProvider.of<SelectServerCubit>(ctx)),

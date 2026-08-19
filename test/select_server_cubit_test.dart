@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:myvc_flutter/Utils/DatosDesarrollo.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
 
@@ -56,5 +57,26 @@ void main() {
       alArrancarDeNuevo.state.uriColegioSelected.uri,
       'https://coab.micolevirtual.com',
     );
+  });
+
+  test('en depuración arranca en el servidor local, sin elegir colegio', () {
+    // Las pruebas corren en modo depuración, que es cuando esto está activo.
+    expect(DatosDesarrollo.activo, isTrue);
+
+    final cubit = SelectServerCubit(UriColegio());
+
+    expect(cubit.state.uriColegioSelected.uri, DatosDesarrollo.servidor);
+    // 'Otro' es lo que hace que LoginBloc trate la dirección como local.
+    expect(cubit.state.uriColegioSelected.nombre, 'Otro');
+  });
+
+  test('el colegio guardado manda sobre el atajo de depuración', () {
+    SelectServerCubit(UriColegio()).selectUriColegio(
+      UriColegio(nombre: 'Fortul', uri: 'https://coaf.micolevirtual.com'),
+    );
+
+    final alArrancarDeNuevo = SelectServerCubit(UriColegio());
+
+    expect(alArrancarDeNuevo.state.uriColegioSelected.nombre, 'Fortul');
   });
 }
