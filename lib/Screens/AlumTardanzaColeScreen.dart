@@ -19,14 +19,31 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   List<AlumnoModel>? alumnos;
   GrupoModel? grupo;
   DateTime? today; // la cambio en init
+  DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
     DateTime now = DateTime.now();
     today = DateTime(now.year, now.month, now.day);
+    _selectedDate = today;
 
     traerGrupo();
+  }
+
+  Future<void> _selectDate() async {
+    DateTime now = DateTime.now();
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? today ?? now,
+      firstDate: DateTime(2020),
+      lastDate: now,
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   void traerGrupo() {
@@ -118,7 +135,22 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
 
-    return ExpansionPanelList.radio(
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Fecha: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            IconButton(
+              icon: Icon(Icons.calendar_today),
+              onPressed: _selectDate,
+            ),
+          ],
+        ),
+        ExpansionPanelList.radio(
       children: alumnos!
           .map((AlumnoModel alumno) => ExpansionPanelRadio(
                 backgroundColor:
@@ -190,14 +222,13 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                         child: Text('+', style: TextStyle(fontSize: 30)),
                         onPressed: () async {
                           try {
-                            var now = DateTime.now();
-                            // String fecha_hora = '${now.year}-$now.month-${now.day} ${now.hours}:${now.minutes}:${now.seconds}';
+                            var dateToUse = _selectedDate ?? DateTime.now();
 
                             var res = await server.post('/ausencias/store', {
                               'alumno_id': alumno.id,
                               'entrada': 1,
                               'tipo': 'tardanza',
-                              'fecha_hora': now.toString(),
+                              'fecha_hora': dateToUse.toString(),
                             });
 
                             if (res.statusCode < 300) {
@@ -240,6 +271,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
                 ]),
               ))
           .toList(),
+        ),
+      ],
     );
   }
 }
