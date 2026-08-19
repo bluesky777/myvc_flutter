@@ -58,6 +58,26 @@ void main() {
     );
   });
 
+  group('lo que dejó guardado una versión anterior', () {
+    test('sin la clave mostrando, se asume que sí', () {
+      final estado = SelectServerState.fromMap({
+        'uriColegioSelected': {'nombre': 'Fortul', 'uri': 'https://coaf.com'},
+      });
+
+      expect(estado.mostrandoButtonSelectedUri, isTrue);
+      expect(estado.uriColegioSelected.nombre, 'Fortul');
+      // El logo tampoco estaba: cadena vacía, no una excepción.
+      expect(estado.uriColegioSelected.logo, '');
+    });
+
+    test('sin colegio guardado no revienta al arrancar', () {
+      final estado = SelectServerState.fromMap({'mostrando': false});
+
+      expect(estado.mostrandoButtonSelectedUri, isFalse);
+      expect(estado.uriColegioSelected.uri, isEmpty);
+    });
+  });
+
   test('sin nada guardado no hay colegio elegido', () {
     // El docente tiene que elegir el suyo: la app no arranca apuntando a
     // ningún servidor por su cuenta.

@@ -13,22 +13,43 @@ class PanelScreen extends StatefulWidget {
 class _PanelScreen extends State<PanelScreen> {
   Server server = Server();
   List<GrupoModel>? grupos;
+  String? error;
   final _drawerController = ZoomDrawerController();
 
   @override
   void initState() {
     super.initState();
-    try {
-      server.get('/grupos').then((response) {
-        final String res = response.body;
+    _traerGrupos();
+  }
 
-        setState(() {
-          grupos = grupoModelFromJson(res);
-        });
-      });
-    } catch (e) {
-      print('*** Error ${Server.urlApi}/grupos ');
-      print(e);
+  /// Los grupos del docente.
+  ///
+  /// Con await y try/catch de verdad. Antes el try envolvía la *creación* del
+  /// Future, no su resultado: un servidor caído, una dirección mal escrita o un
+  /// token vencido fallaban después de que el try hubiera terminado, nadie
+  /// recogía el error y la pantalla se quedaba en «Esperando grupos...» para
+  /// siempre. Es la primera pantalla después de entrar, así que era justo
+  /// donde más se notaba.
+  Future<void> _traerGrupos() async {
+    setState(() {
+      error = null;
+      grupos = null;
+    });
+
+    try {
+      final response = await server.get('/grupos');
+      if (!mounted) return;
+
+      if (response.statusCode >= 300) {
+        setState(() => error = 'El servidor respondió ${response.statusCode}.');
+        return;
+      }
+
+      final traidos = grupoModelFromJson(response.body);
+      setState(() => grupos = traidos);
+    } catch (err) {
+      if (!mounted) return;
+      setState(() => error = '$err');
     }
   }
 
@@ -54,17 +75,50 @@ class _PanelScreen extends State<PanelScreen> {
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () {
-              print('Presionando icon');
               _drawerController.toggle!();
             },
           ),
         ),
-        body: SingleChildScrollView(
-            child: grupos != null
-                ? _buildListaGrupos()
-                : Text('Esperando grupos...')),
+        body: _buildCuerpo(),
+      ),
+    );
+  }
 
-        //drawer: DrawPanel(),
+  Widget _buildCuerpo() {
+    if (error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'No se pudieron traer los grupos.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 8),
+              Text(error!, textAlign: TextAlign.center),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _traerGrupos,
+                child: Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (grupos == null) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return RefreshIndicator(
+      onRefresh: _traerGrupos,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: _buildListaGrupos(),
       ),
     );
   }
@@ -81,13 +135,11 @@ class _PanelScreen extends State<PanelScreen> {
             leading: CircleAvatar(
               child: Text(grupo.abrev),
             ),
-            onTap: () {
-              print(grupo);
-              SharedPreferences.getInstance()
-                  .then((SharedPreferences preferences) {
-                preferences.setString('grupoSelected', grupo.toRawJson());
-                Navigator.pushNamed(context, '/alum-tardanza-cole');
-              });
+            onTap: () async {
+              final preferences = await SharedPreferences.getInstance();
+              await preferences.setString('grupoSelected', grupo.toRawJson());
+              if (!mounted) return;
+              Navigator.pushNamed(context, '/alum-tardanza-cole');
             },
             trailing: Icon(Icons.arrow_right),
           );

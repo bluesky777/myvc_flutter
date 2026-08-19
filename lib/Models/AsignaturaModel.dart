@@ -1,3 +1,5 @@
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
+
 /// Una asignatura: la materia que un docente da a un grupo.
 ///
 /// Viene de `GET /asignaturas/listasignaturas[/{profesor_id}]`, que sin id
@@ -23,9 +25,9 @@ class AsignaturaModel {
 
   factory AsignaturaModel.fromJson(Map<String, dynamic> json) {
     return AsignaturaModel(
-      id: _entero(json['asignatura_id']) ?? 0,
-      grupoId: _entero(json['grupo_id']) ?? 0,
-      profesorId: _entero(json['profesor_id']),
+      id: entero(json['asignatura_id']) ?? 0,
+      grupoId: entero(json['grupo_id']) ?? 0,
+      profesorId: entero(json['profesor_id']),
       materia: '${json['materia'] ?? ''}',
       aliasMateria: '${json['alias_materia'] ?? ''}',
       nombreGrupo: '${json['nombre_grupo'] ?? ''}',
@@ -51,11 +53,4 @@ class DocenteModel {
     required this.nombre,
     this.fotoNombre,
   });
-}
-
-int? _entero(dynamic valor) {
-  if (valor == null) return null;
-  if (valor is int) return valor;
-  if (valor is num) return valor.toInt();
-  return int.tryParse(valor.toString());
 }

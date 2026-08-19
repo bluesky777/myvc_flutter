@@ -26,6 +26,18 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   Server server = Server();
   List<AlumnoModel>? alumnos;
   GrupoModel? grupo;
+
+  /// Los alumnos del grupo, pedidos una sola vez.
+  ///
+  /// El Future vive aquí y no dentro de `build()`: creado allí, cada setState
+  /// —poner una falta, quitarla, cambiar el día— fabricaba uno nuevo, el
+  /// FutureBuilder lo veía cambiar y volvía a `waiting`. Se cerraba el panel
+  /// del alumno que estuviera abierto, salía la rueda de carga y se disparaba
+  /// una petición PUT /asistencias/detailed de más por cada botón pulsado.
+  ///
+  /// Cambiar de día no lo recarga: el backend manda las faltas de todo el
+  /// periodo y el día se filtra aquí.
+  Future<List<AlumnoModel>>? _alumnosFuture;
   DateTime? today; // la cambio en init
   DateTime? _selectedDate;
   final _drawerController = ZoomDrawerController();
@@ -59,9 +71,12 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     SharedPreferences.getInstance().then((SharedPreferences preferences) {
       String? grupoString = preferences.getString('grupoSelected');
 
+      if (!mounted) return;
+
       if (grupoString != null) {
         setState(() {
           grupo = GrupoModel.fromRawJson(grupoString);
+          _alumnosFuture = traerAlumnosModel();
         });
       } else {
         Navigator.pushNamed(context, '/panel');
@@ -78,8 +93,6 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('**** En build');
-
     // El mismo menú y la misma forma de abrirlo que en el inicio.
     return ZoomDrawer(
       menuScreen: MenuLateral(),
@@ -106,24 +119,59 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     );
   }
 
-  FutureBuilder<List<AlumnoModel>> _buildFutureBuilder() {
+  Widget _buildFutureBuilder() {
     return FutureBuilder<List<AlumnoModel>>(
-        future: traerAlumnosModel(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          print('Buildereando el future');
-          if (snapshot.hasData) {
-            return SingleChildScrollView(
-                child: alumnos != null
-                    ? _buildListaGrupos()
-                    : Text('Esperando alumnos...'));
-          } else if (snapshot.hasError) {
-            return Text('Ocurrió un error trayendo los alumnos con tardanzas.');
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        });
+      future: _alumnosFuture,
+      builder: (BuildContext context, AsyncSnapshot<List<AlumnoModel>> snapshot) {
+        if (snapshot.hasError) {
+          return _errorAlTraer('${snapshot.error}');
+        }
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        // Tirar hacia abajo recarga: es la única forma de volver a pedir la
+        // lista ahora que ya no se rehace sola en cada toque.
+        return RefreshIndicator(
+          onRefresh: _recargarAlumnos,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: _buildListaGrupos(),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _recargarAlumnos() async {
+    final pedido = traerAlumnosModel();
+    setState(() => _alumnosFuture = pedido);
+    await pedido;
+  }
+
+  Widget _errorAlTraer(String detalle) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'No se pudieron traer los alumnos del grupo.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8),
+            Text(detalle, textAlign: TextAlign.center),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _recargarAlumnos,
+              child: Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<List<AlumnoModel>> traerAlumnosModel() async {
@@ -131,13 +179,11 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
     var response = await server.put('/asistencias/detailed', argum);
     final List alumnosList = jsonDecode(response.body)['alumnos'];
-    print('Trajo datos');
     List<AlumnoModel> alumnosTemp =
         alumnosList.map((e) => AlumnoModel.fromJson(e)).toList();
 
     alumnos = alumnosTemp;
 
-    print('alumnos: ${alumnos?.length}');
     return alumnos as List<AlumnoModel>;
   }
 
@@ -408,35 +454,61 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
   Future<void> _agregarFalta(
       AlumnoModel alumno, DateTime dia, TipoFalta tipo) async {
+    final dynamic res;
     try {
       // entrada: 1 es lo que la marca como falta a la institución y no a una
       // clase; el tipo separa la tardanza de la ausencia. Es lo mismo que manda
       // la pantalla de asistencias del front web.
-      final res = await server.post('/ausencias/store', {
+      res = await server.post('/ausencias/store', {
         'alumno_id': alumno.id,
         'entrada': 1,
         'tipo': tipo.valor,
         'fecha_hora': faltaDelDiaParaServidor(dia),
       });
-
-      if (res.statusCode >= 300) {
-        _aviso('No se pudo registrar la ${tipo.singular}'
-            ' (HTTP ${res.statusCode}).');
-        return;
-      }
-
-      final creada = AsistenciaModel.fromJson(jsonDecode(res.body));
-
-      setState(() {
-        _listaDe(alumno, tipo).add(creada);
-        alumno.ausenciasTotal?[tipo.claveTotal] = _totalDe(alumno, tipo) + 1;
-      });
-
-      _aviso('${_conMayuscula(tipo.singular)} registrada el ${formatoDia(dia)}.',
-          error: false);
     } catch (err) {
-      _aviso('Error registrando la ${tipo.singular}: $err');
+      _aviso('No se pudo registrar la ${tipo.singular}: $err');
+      return;
     }
+
+    if (res.statusCode >= 300) {
+      _aviso('No se pudo registrar la ${tipo.singular}'
+          ' (HTTP ${res.statusCode}).');
+      return;
+    }
+
+    // De aquí en adelante el servidor ya la guardó. Lo que falle al leer su
+    // respuesta es un problema de pintar la pantalla, no de registrar la
+    // falta: decir «error» aquí hace que el docente vuelva a pulsar y queden
+    // dos filas por la misma tardanza.
+    //
+    // POST /ausencias/store devuelve la fila recién creada —el controlador
+    // hace `return $aus` sobre el modelo de Eloquent—, así que lo normal es
+    // que se lea entera; pero viene de SQL a pelo, sin casts, y los tipos los
+    // decide el driver.
+    AsistenciaModel? creada;
+    try {
+      creada = AsistenciaModel.fromJson(jsonDecode(res.body));
+    } catch (_) {
+      creada = null;
+    }
+
+    if (creada == null) {
+      _aviso(
+        '${_conMayuscula(tipo.singular)} registrada el ${formatoDia(dia)},'
+        ' pero la lista no pudo actualizarse sola: tira hacia abajo para'
+        ' refrescar.',
+        error: false,
+      );
+      return;
+    }
+
+    setState(() {
+      _listaDe(alumno, tipo).add(creada!);
+      alumno.ausenciasTotal?[tipo.claveTotal] = _totalDe(alumno, tipo) + 1;
+    });
+
+    _aviso('${_conMayuscula(tipo.singular)} registrada el ${formatoDia(dia)}.',
+        error: false);
   }
 
   Future<void> _quitarFalta(

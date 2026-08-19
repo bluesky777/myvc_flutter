@@ -1,7 +1,7 @@
 part of 'select_server_cubit.dart';
 
 class SelectServerState extends Equatable {
-  bool mostrandoButtonSelectedUri;
+  final bool mostrandoButtonSelectedUri;
   final UriColegio uriColegioSelected;
 
   SelectServerState(
@@ -18,14 +18,24 @@ class SelectServerState extends Equatable {
     };
   }
 
+  /// Tolerante con lo que dejó guardado una versión anterior.
+  ///
+  /// Esto lee del almacén de hydrated_bloc, que sobrevive a las
+  /// actualizaciones de la app. Si falta una clave —'mostrando' no existía
+  /// siempre— lo que antes ocurría era una excepción al arrancar, y con ella
+  /// se perdía el colegio elegido.
   factory SelectServerState.fromMap(Map<String, dynamic> map) {
+    final colegio = map['uriColegioSelected'];
+
     return SelectServerState(
-        mostrandoButtonSelectedUri: map['mostrando'],
-        uriColegioSelected: UriColegio(
-          nombre: map['uriColegioSelected']['nombre'],
-          uri: map['uriColegioSelected']['uri'],
-          logo: map['uriColegioSelected']['logo'],
-        ));
+        mostrandoButtonSelectedUri: map['mostrando'] as bool? ?? true,
+        uriColegioSelected: colegio is Map
+            ? UriColegio(
+                nombre: '${colegio['nombre'] ?? ''}',
+                uri: '${colegio['uri'] ?? ''}',
+                logo: '${colegio['logo'] ?? ''}',
+              )
+            : UriColegio());
   }
 
   String toJson() => json.encode(toMap());

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 List<AlumnoModel> alumnoModelFromJson(String str) => List<AlumnoModel>.from(
     json.decode(str).map((x) => AlumnoModel.fromJson(x)));
@@ -65,22 +66,25 @@ class AlumnoModel extends ChangeNotifier {
     final crudas = json[clave];
     if (crudas is! List) return [];
 
-    return crudas.map((e) => AsistenciaModel.fromJson(e)).toList();
+    final faltas = <AsistenciaModel>[];
+    for (final cruda in crudas) {
+      if (cruda is! Map) continue;
+      faltas.add(AsistenciaModel.fromJson(Map<String, dynamic>.from(cruda)));
+    }
+    return faltas;
   }
 
   factory AlumnoModel.fromJson(Map<String, dynamic> parsedJson) {
 
     return AlumnoModel(
-      id: parsedJson['alumno_id'],
-      nombres: parsedJson['nombres'].toString(),
-      apellidos: parsedJson['apellidos'].toString(),
-      sexo: parsedJson['sexo'].toString(),
-      fotoNombre: parsedJson['foto_nombre'] == null
-          ? null
-          : parsedJson['foto_nombre'].toString(),
+      id: enteroO(parsedJson['alumno_id']),
+      nombres: '${parsedJson['nombres'] ?? ''}',
+      apellidos: texto(parsedJson['apellidos']),
+      sexo: '${parsedJson['sexo'] ?? ''}',
+      fotoNombre: texto(parsedJson['foto_nombre']),
       tardanzasEntrada: _faltas(parsedJson, 'tardanzas'),
       ausenciasEntrada: _faltas(parsedJson, 'ausencias'),
-      ausenciasTotal: Map<String, int>.from(parsedJson['ausencias_total']),
+      ausenciasTotal: mapaDeEnteros(parsedJson['ausencias_total']),
     );
   }
 

@@ -38,6 +38,9 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   @override
   void initState() {
     super.initState();
+    // Pantalla completa solo aquí: el login se ve mejor sin barra de estado.
+    // Se deshace en dispose(); antes no, y el docente se quedaba sin ver la
+    // hora ni la batería en el resto de la app.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     animationController =
@@ -66,6 +69,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   @override
   void dispose() {
     _ocultarAviso();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     if (animationController != null) animationController!.dispose();
     super.dispose();
   }
@@ -168,7 +172,11 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
             // El banner es de la app, no de esta pantalla: sin esto viajaría
             // con el docente hasta el panel.
             _ocultarAviso();
-            Navigator.pushNamed(context, '/panel');
+            // Y no pushNamed: el login se quedaba en la pila con el usuario y
+            // la contraseña escritos, así que el botón atrás desde el panel
+            // devolvía al formulario con la sesión ya abierta. El logout sí lo
+            // hacía bien; la entrada no.
+            Navigator.pushNamedAndRemoveUntil(context, '/panel', (_) => false);
           } else if (login_state is LoggingInState) {
             _ocultarAviso();
           } else if (login_state is LoginErrorState) {

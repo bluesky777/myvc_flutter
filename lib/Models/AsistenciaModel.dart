@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
+
 
 List<AsistenciaModel> alumnoModelFromJson(String str) =>
     List<AsistenciaModel>.from(
@@ -52,15 +54,15 @@ class AsistenciaModel {
 
     return AsistenciaModel(
       fecha: crudo == null ? null : DateTime.tryParse(crudo.toString()),
-      id: parsedJson['id'],
-      alumnoId: parsedJson['alumno_id'],
-      asignaturaId: parsedJson['asignatura_id'],
-      createdBy: parsedJson['created_by'] == null ? null : parsedJson['created_by'],
-      createdAt: parsedJson['created_at'] == null ? null : DateTime.parse(parsedJson['created_at'].toString()),
-      entrada: parsedJson['entrada'],
-      fechaHora: parsedJson['fecha_hora'].toString(),
-      periodoId: parsedJson['periodo_id'],
-      tipo: parsedJson['tipo'] == null ? null : parsedJson['tipo'].toString(),
+      id: enteroO(parsedJson['id']),
+      alumnoId: enteroO(parsedJson['alumno_id']),
+      asignaturaId: entero(parsedJson['asignatura_id']),
+      createdBy: entero(parsedJson['created_by']),
+      createdAt: DateTime.tryParse('${parsedJson['created_at']}'),
+      entrada: enteroO(parsedJson['entrada']),
+      fechaHora: texto(crudo),
+      periodoId: enteroO(parsedJson['periodo_id']),
+      tipo: texto(parsedJson['tipo']),
     );
   }
 

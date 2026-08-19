@@ -26,14 +26,21 @@ class UriColegio {
     });
   }
 
+  /// Dos colegios son el mismo si se llaman igual.
   @override
   bool operator ==(Object other) =>
       other is UriColegio && this.nombre == other.nombre;
 
-  String toRawJson() => json.encode(toJson());
-
+  /// El hash tiene que salir de lo mismo que compara ==.
+  ///
+  /// Devolvía `super.hashCode`, que es la identidad del objeto: dos colegios
+  /// «iguales» daban hashes distintos, de modo que en un Set o como clave de
+  /// un Map se colaban duplicados. SelectServerState hereda ese comparador a
+  /// través de Equatable, así que el fallo llegaba hasta el estado guardado.
   @override
-  int get hashCode => super.hashCode;
+  int get hashCode => nombre.hashCode;
+
+  String toRawJson() => json.encode(toJson());
 
   factory UriColegio.fromJson(Map<String, dynamic> parsedJson) {
     return UriColegio(
