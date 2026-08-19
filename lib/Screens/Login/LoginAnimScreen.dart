@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/Bloc/login_bloc.dart';
 import 'package:myvc_flutter/Screens/Login/FormSelectServidor.dart';
+import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +30,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   String textoUri = ''; // 'http://192.168.18.215'
   String servidorElegido = '';
   bool isLoading = false;
+  bool guardarDatos = true;
 
   TextEditingController usenameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -36,30 +38,37 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIOverlays([]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     animationController =
         AnimationController(vsync: this, duration: animationDuration);
 
     //textoUri = 'http://192.168.18.215';
 
-    SharedPreferences.getInstance().then((SharedPreferences preferences) {
+    SharedPreferences.getInstance().then((SharedPreferences preferences) async {
       String? guardado = preferences.getString('uriColegio');
 
       if (guardado != null) {
         servidorElegido = jsonDecode(guardado)['uri'];
       }
-      String? guardadoUsername = preferences.getString('username');
-      String? guardadoPassword = preferences.getString('password');
       String? guardadoCustomUri = preferences.getString('customUri');
-
-      usenameController.text = guardadoUsername == null ? '' : guardadoUsername;
-      passwordController.text =
-          guardadoPassword == null ? '' : guardadoPassword;
       textoUri = guardadoCustomUri == null ? '' : guardadoCustomUri;
-      // if(guardadoUsername != null && guardadoPassword != null) {
-      //   _onSubmit();
-      // }
+
+      // Si el dispositivo no recuerda los datos, el formulario arranca vacío
+      // aunque queden credenciales de una versión anterior.
+      final recordar = await PreferenciasSesion.guardarDatos();
+      String? guardadoUsername =
+          preferences.getString(PreferenciasSesion.claveUsername);
+      String? guardadoPassword =
+          preferences.getString(PreferenciasSesion.clavePassword);
+
+      setState(() {
+        guardarDatos = recordar;
+        usenameController.text =
+            recordar && guardadoUsername != null ? guardadoUsername : '';
+        passwordController.text =
+            recordar && guardadoPassword != null ? guardadoPassword : '';
+      });
     });
   }
 
@@ -89,6 +98,22 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
   void _onSubmit() {
     _onSubmitFuture();
+  }
+
+  Future<void> _onGuardarDatosChanged(bool valor) async {
+    setState(() {
+      guardarDatos = valor;
+    });
+
+    await PreferenciasSesion.setGuardarDatos(valor);
+
+    // Al desmarcar se limpia lo que ya estuviera puesto en pantalla.
+    if (!valor && mounted) {
+      setState(() {
+        usenameController.text = '';
+        passwordController.text = '';
+      });
+    }
   }
 
   void _snackDatosInvalidos() {
@@ -176,6 +201,8 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
                     usenameController: usenameController,
                     passwordController: passwordController,
                     onSubmit: _onSubmit,
+                    guardarDatos: guardarDatos,
+                    onGuardarDatosChanged: _onGuardarDatosChanged,
                   ),
 
                   // BOTÓN PARA MOSTRAR SERVIDORES

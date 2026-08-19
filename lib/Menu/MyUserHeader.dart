@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Http/AuthService.dart';
 
 class MyUserHeader extends SliverPersistentHeaderDelegate {
   final double minExtend;
@@ -27,17 +28,19 @@ class MyUserHeader extends SliverPersistentHeaderDelegate {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Joseth David',
+                  AuthService.user.nombres ?? 'Sin identificar',
                   style: TextStyle(
                     fontSize: 25.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                // El usuario, a la vista: es lo que queda firmando cada
+                // tardanza, y así se nota de un vistazo si la sesión abierta
+                // es la del docente anterior.
                 Text(
-                  'Guerrero',
+                  AuthService.user.username,
                   style: TextStyle(
-                    fontSize: 25.0,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
                   ),
                 ),
               ],

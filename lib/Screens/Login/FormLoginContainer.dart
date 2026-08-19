@@ -14,6 +14,8 @@ class FormLoginContainer extends StatefulWidget {
   final TextEditingController usenameController;
   final TextEditingController passwordController;
   final void Function() onSubmit;
+  final bool guardarDatos;
+  final void Function(bool) onGuardarDatosChanged;
 
   const FormLoginContainer({
     required this.isLogin,
@@ -23,6 +25,8 @@ class FormLoginContainer extends StatefulWidget {
     required this.usenameController,
     required this.passwordController,
     required this.onSubmit,
+    required this.guardarDatos,
+    required this.onGuardarDatosChanged,
   });
 
   @override
@@ -71,7 +75,7 @@ class FormLoginContainerState extends State<FormLoginContainer> {
                       height: 200,
                     ),
                     SizedBox(
-                      height: 40,
+                      height: 20,
                     ),
                     RoundedInput(
                       controller: widget.usenameController,
@@ -81,6 +85,24 @@ class FormLoginContainerState extends State<FormLoginContainer> {
                     RoundedPasswordInput(
                       controller: widget.passwordController,
                       hint: 'Contraseña',
+                    ),
+                    // Misma banda que InputContainer y RoundedButton: los dos
+                    // usan size.width * 0.8 centrado.
+                    SizedBox(
+                      width: widget.size.width * 0.8,
+                      child: CheckboxListTile(
+                        value: widget.guardarDatos,
+                        onChanged: (valor) =>
+                            widget.onGuardarDatosChanged(valor ?? false),
+                        title: Text('Recordar mis datos en este dispositivo'),
+                        subtitle: Text(
+                          'Desactívalo si el equipo es compartido',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
                     ),
                     SizedBox(
                       height: 10,

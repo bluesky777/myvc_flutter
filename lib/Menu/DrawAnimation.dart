@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Menu/MyUserHeader.dart';
 import 'package:myvc_flutter/Menu/opcionesMenuPrincipal.dart';
 
@@ -40,9 +41,15 @@ class _DrawAnimationState extends State<DrawAnimation> {
               ListTile(
                 leading: Icon(Icons.logout),
                 title: Text('Cerrar sesión'),
-                onTap: () {
-                  print('presionando cerrar');
-                  Navigator.pushNamed(context, '/login');
+                onTap: () async {
+                  await LoginController().logout();
+
+                  if (!mounted) return;
+
+                  // pushNamed dejaba el panel vivo debajo del login, con la
+                  // sesión anterior todavía abierta. Se descarta la pila.
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/login', (route) => false);
                 },
               ),
               SizedBox(
