@@ -13,6 +13,20 @@ class Server {
 
   Server();
 
+  /// La URL de una foto de perfil, con el nombre escapado.
+  ///
+  /// Los nombres vienen de la tabla images tal como se subieron, con carpeta y
+  /// con espacios —'user_2/P Ariolfo.JPG'—, y un espacio en una URL no es
+  /// válido. Se escapa tramo a tramo para no tocar las barras.
+  ///
+  /// Cadena vacía si no hay foto: quien la pinte decide qué poner en su lugar.
+  static String urlFoto(String? nombre) {
+    if (nombre == null || nombre.trim().isEmpty) return '';
+
+    final ruta = nombre.split('/').map(Uri.encodeComponent).join('/');
+    return '${Server.urlImages}/$ruta';
+  }
+
   Uri _uri(direction) => Uri.parse('${Server.urlApi}$direction');
 
   Map<String, String> _encabezado () => {

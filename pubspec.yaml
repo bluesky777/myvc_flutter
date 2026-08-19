@@ -14,6 +14,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Los textos que pone Material por su cuenta —el calendario, sus botones, los
+  # nombres de los meses— salían en inglés dentro de una app en español.
+  flutter_localizations:
+    sdk: flutter
+
   provider: ^6.1.5+1
   shared_preferences: ^2.5.5
   cupertino_icons: ^1.0.9

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
@@ -47,6 +48,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      // En español, que es el idioma del colegio. Sin esto, lo que pinta
+      // Material por su cuenta —el calendario, sus botones, los meses, los días
+      // de la semana— salía en inglés en medio de pantallas en español.
+      locale: const Locale('es'),
+      supportedLocales: const [Locale('es'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: LoginAnimScreen(),
       navigatorKey: navigatorKey,
       onGenerateRoute: RouteGenerator.generateRoute,

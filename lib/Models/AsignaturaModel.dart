@@ -42,7 +42,15 @@ class DocenteModel {
   final int profesorId;
   final String nombre;
 
-  DocenteModel({required this.profesorId, required this.nombre});
+  /// El archivo de su foto, tal como lo da /contratos. Cuando el docente no
+  /// tiene foto propia, el backend ya devuelve el default según el sexo.
+  final String? fotoNombre;
+
+  DocenteModel({
+    required this.profesorId,
+    required this.nombre,
+    this.fotoNombre,
+  });
 }
 
 int? _entero(dynamic valor) {

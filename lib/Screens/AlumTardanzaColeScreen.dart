@@ -8,10 +8,13 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
+import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
+import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/FondoFalta.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
-import 'package:myvc_flutter/Screens/TardanzasAlumnoScreen.dart';
+import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
@@ -138,21 +141,36 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     return alumnos as List<AlumnoModel>;
   }
 
-  Widget buildTile(AlumnoModel alumno, DateTime dia) => ListTile(
+  /// La fila del alumno, con el color de lo que tenga ese día.
+  ///
+  /// El color se pinta aquí y no en el `backgroundColor` del panel: ese tiñe la
+  /// tarjeta entera y se llevaba por delante el formulario de dentro. Así la
+  /// franja de color se queda en la cabecera, que es lo que hay que ver de un
+  /// vistazo recorriendo la lista.
+  Widget buildTile(AlumnoModel alumno, DateTime dia) {
+    return Container(
+      decoration: _fondoDelDia(alumno, dia),
+      child: ListTile(
         dense: false,
-        title: Text(
-          '${alumno.apellidos} ${alumno.nombres}',
-          //style: TextStyle(fontWeight: FontWeight.w700),
+        title: Text('${alumno.apellidos} ${alumno.nombres}'),
+        subtitle: Text(_resumenDelDia(alumno, dia)),
+        leading: AvatarPersona(
+          nombre: '${alumno.nombres} ${alumno.apellidos ?? ''}',
+          fotoNombre: alumno.fotoNombre,
         ),
-        subtitle: Text(
-          '${alumno.tardanzasDelDia(dia).length} el ${formatoDia(dia)}'
-          ' · ${alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0} en el periodo',
-        ),
-        leading: CircleAvatar(
-          backgroundImage:
-              NetworkImage('${Server.urlImages}/${alumno.fotoNombre}'),
-          backgroundColor: Colors.lightBlueAccent,
-        ),
+      ),
+    );
+  }
+
+  BoxDecoration? _fondoDelDia(AlumnoModel alumno, DateTime dia) => fondoDeFaltas(
+        tardanza: alumno.tieneTardanzaEn(dia),
+        ausencia: alumno.tieneAusenciaEn(dia),
+      );
+
+  Color? _colorTrasLaFlecha(AlumnoModel alumno, DateTime dia) =>
+      colorFinalDeFaltas(
+        tardanza: alumno.tieneTardanzaEn(dia),
+        ausencia: alumno.tieneAusenciaEn(dia),
       );
 
   Widget _buildListaGrupos() {
@@ -179,17 +197,21 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         ExpansionPanelList.radio(
           children: alumnos!
               .map((AlumnoModel alumno) => ExpansionPanelRadio(
-                    // Resalta si tiene tardanza EL DÍA ELEGIDO. Antes se miraba
-                    // created_at, así que cualquiera registrada hoy salía
-                    // resaltada aunque fuera de otro día.
-                    backgroundColor: alumno.tieneTardanzaEn(dia)
-                        ? Colors.pinkAccent
-                        : null,
+                    // El color del día va en la cabecera, no aquí: este tiñe
+                    // toda la tarjeta. Lo único que se le deja es el extremo
+                    // derecho, donde vive la flecha de abrir, para que la
+                    // franja de la cabecera no se corte antes de tiempo.
+                    backgroundColor: _colorTrasLaFlecha(alumno, dia),
                     canTapOnHeader: true,
                     value: '${alumno.apellidos} ${alumno.nombres}',
                     headerBuilder: (context, isExpanded) =>
                         buildTile(alumno, dia),
-                    body: _buildCuerpoAlumno(alumno, dia),
+                    // Fondo propio: sin esto el cuerpo hereda el color de la
+                    // cabecera y el formulario queda ilegible.
+                    body: Container(
+                      color: Colors.white,
+                      child: _buildCuerpoAlumno(alumno, dia),
+                    ),
                   ))
               .toList(),
         ),
@@ -199,74 +221,135 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
   /// El cuerpo del panel del alumno.
   ///
-  /// Todo lo que muestra y lo que hacen los botones va referido al día elegido
-  /// arriba. Antes el contador era el total del periodo y el botón de quitar
-  /// borraba la última tardanza de la lista, fuera del día que fuera.
+  /// Dos secciones, porque son dos cosas distintas y antes estaban revueltas:
+  ///
+  ///   - La institución: llegó tarde al colegio, o no vino en todo el día.
+  ///     Se pone aquí mismo, referido al día elegido arriba.
+  ///   - Cada asignatura: las faltas de una clase concreta, que dependen del
+  ///     docente y del horario. Eso vive en su propia pantalla.
   Widget _buildCuerpoAlumno(AlumnoModel alumno, DateTime dia) {
-    final delDia = alumno.tardanzasDelDia(dia).length;
-    final total = alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _rotulo('En la institución', 'El ${formatoDia(dia)}'),
+          _filaContador(alumno, dia, TipoFalta.tardanza),
+          const SizedBox(height: 8),
+          _filaContador(alumno, dia, TipoFalta.ausencia),
+          const SizedBox(height: 14),
+          Text(
+            'En el periodo: '
+            '${TipoFalta.tardanza.contar(_totalDe(alumno, TipoFalta.tardanza))}'
+            ' · '
+            '${TipoFalta.ausencia.contar(_totalDe(alumno, TipoFalta.ausencia))}',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black54, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          _botonAncho(
+            icono: Icons.history,
+            texto: 'Ver histórico del año',
+            onPressed: () => _verHistorico(alumno),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1),
+          ),
+          _rotulo('En cada asignatura', 'Las faltas de cada clase, por materia'),
+          const SizedBox(height: 4),
+          _botonAncho(
+            icono: Icons.class_outlined,
+            texto: 'Asistencia a clases',
+            onPressed: () => _verAsistenciaClases(alumno),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rotulo(String titulo, String detalle) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tardanzas del ${formatoDia(dia)}',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            titulo,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Text(
+            detalle,
+            style: TextStyle(color: Colors.black54, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Una línea de contador: el rótulo a la izquierda y los botones a la derecha.
+  ///
+  /// Lo que cuenta es lo del día elegido, no el total del periodo: el botón de
+  /// quitar borra una falta de ese día, y si no hay ninguna lo dice en vez de
+  /// llevarse por delante la última de otra fecha.
+  Widget _filaContador(AlumnoModel alumno, DateTime dia, TipoFalta tipo) {
+    final delDia = _faltasDelDia(alumno, dia, tipo).length;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _botonContador(
-                icono: Icons.remove,
-                color: Colors.redAccent,
-                onPressed: () => _quitarTardanza(alumno, dia),
+              Text(
+                tipo.titulo,
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
-              Container(
-                width: 80,
-                alignment: Alignment.center,
-                child: Text(
-                  '$delDia',
-                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
-                ),
-              ),
-              _botonContador(
-                icono: Icons.add,
-                color: Colors.green,
-                onPressed: () => _agregarTardanza(alumno, dia),
+              Text(
+                tipo.explicacion,
+                style: TextStyle(color: Colors.black54, fontSize: 11),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () => _verAsistenciaClases(alumno),
-            icon: Icon(Icons.class_outlined, size: 18),
-            label: Text('Asistencia a clases'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              side: BorderSide(color: kPrimaryColor),
-              foregroundColor: kPrimaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
+        ),
+        _botonContador(
+          icono: Icons.remove,
+          color: delDia == 0 ? Colors.grey.shade400 : Colors.redAccent,
+          onPressed: () => _quitarFalta(alumno, dia, tipo),
+        ),
+        Container(
+          width: 48,
+          alignment: Alignment.center,
+          child: Text(
+            '$delDia',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () => _verHistorico(alumno),
-            icon: Icon(Icons.history, size: 18),
-            label: Text('Total del periodo: $total'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              side: BorderSide(color: kPrimaryColor),
-              foregroundColor: kPrimaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-          ),
-        ],
+        ),
+        _botonContador(
+          icono: Icons.add,
+          color: Colors.green,
+          onPressed: () => _agregarFalta(alumno, dia, tipo),
+        ),
+      ],
+    );
+  }
+
+  Widget _botonAncho({
+    required IconData icono,
+    required String texto,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icono, size: 18),
+      label: Text(texto),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        side: BorderSide(color: kPrimaryColor),
+        foregroundColor: kPrimaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
       ),
     );
   }
@@ -282,68 +365,115 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         backgroundColor: color,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(12),
       ),
-      child: Icon(icono, size: 26),
+      child: Icon(icono, size: 22),
     );
   }
 
-  Future<void> _agregarTardanza(AlumnoModel alumno, DateTime dia) async {
+  /// Lo que tiene el alumno ese día, para la línea de debajo del nombre.
+  String _resumenDelDia(AlumnoModel alumno, DateTime dia) {
+    final tardanzas = alumno.tardanzasDelDia(dia).length;
+    final ausencias = alumno.ausenciasDelDia(dia).length;
+
+    if (tardanzas == 0 && ausencias == 0) {
+      return 'Sin faltas el ${formatoDia(dia)}';
+    }
+
+    final partes = <String>[
+      if (ausencias > 0) TipoFalta.ausencia.contar(ausencias),
+      if (tardanzas > 0) TipoFalta.tardanza.contar(tardanzas),
+    ];
+
+    return '${partes.join(' · ')} el ${formatoDia(dia)}';
+  }
+
+  List<AsistenciaModel> _faltasDelDia(
+      AlumnoModel alumno, DateTime dia, TipoFalta tipo) {
+    return tipo == TipoFalta.tardanza
+        ? alumno.tardanzasDelDia(dia)
+        : alumno.ausenciasDelDia(dia);
+  }
+
+  /// La lista donde vive ese tipo de falta, creada si aún no existía.
+  List<AsistenciaModel> _listaDe(AlumnoModel alumno, TipoFalta tipo) {
+    if (tipo == TipoFalta.tardanza) {
+      return alumno.tardanzasEntrada ??= [];
+    }
+    return alumno.ausenciasEntrada ??= [];
+  }
+
+  int _totalDe(AlumnoModel alumno, TipoFalta tipo) =>
+      alumno.ausenciasTotal?[tipo.claveTotal] ?? 0;
+
+  Future<void> _agregarFalta(
+      AlumnoModel alumno, DateTime dia, TipoFalta tipo) async {
     try {
+      // entrada: 1 es lo que la marca como falta a la institución y no a una
+      // clase; el tipo separa la tardanza de la ausencia. Es lo mismo que manda
+      // la pantalla de asistencias del front web.
       final res = await server.post('/ausencias/store', {
         'alumno_id': alumno.id,
         'entrada': 1,
-        'tipo': 'tardanza',
+        'tipo': tipo.valor,
         'fecha_hora': faltaDelDiaParaServidor(dia),
       });
 
       if (res.statusCode >= 300) {
-        _aviso('No se pudo registrar la tardanza (HTTP ${res.statusCode}).');
+        _aviso('No se pudo registrar la ${tipo.singular}'
+            ' (HTTP ${res.statusCode}).');
         return;
       }
 
       final creada = AsistenciaModel.fromJson(jsonDecode(res.body));
 
       setState(() {
-        alumno.tardanzasEntrada ??= [];
-        alumno.tardanzasEntrada!.add(creada);
-        alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) + 1;
+        _listaDe(alumno, tipo).add(creada);
+        alumno.ausenciasTotal?[tipo.claveTotal] = _totalDe(alumno, tipo) + 1;
       });
 
-      _aviso('Tardanza registrada el ${formatoDia(dia)}.', error: false);
+      _aviso('${_conMayuscula(tipo.singular)} registrada el ${formatoDia(dia)}.',
+          error: false);
     } catch (err) {
-      _aviso('Error registrando la tardanza: $err');
+      _aviso('Error registrando la ${tipo.singular}: $err');
     }
   }
 
-  Future<void> _quitarTardanza(AlumnoModel alumno, DateTime dia) async {
-    final delDia = alumno.tardanzasDelDia(dia);
+  Future<void> _quitarFalta(
+      AlumnoModel alumno, DateTime dia, TipoFalta tipo) async {
+    final delDia = _faltasDelDia(alumno, dia, tipo);
 
     if (delDia.isEmpty) {
-      _aviso('No hay tardanzas del ${formatoDia(dia)} para quitar.');
+      _aviso('No hay ${tipo.plural} del ${formatoDia(dia)} para quitar.');
       return;
     }
 
-    final tardanza = delDia.last;
+    final falta = delDia.last;
 
     try {
-      final res = await server.delete('/ausencias/destroy/${tardanza.id}');
+      final res = await server.delete('/ausencias/destroy/${falta.id}');
 
       if (res.statusCode >= 300) {
-        _aviso('No se pudo eliminar la tardanza (HTTP ${res.statusCode}).');
+        _aviso('No se pudo eliminar la ${tipo.singular}'
+            ' (HTTP ${res.statusCode}).');
         return;
       }
 
       setState(() {
-        alumno.tardanzasEntrada!.remove(tardanza);
-        alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) - 1;
+        _listaDe(alumno, tipo).remove(falta);
+        alumno.ausenciasTotal?[tipo.claveTotal] = _totalDe(alumno, tipo) - 1;
       });
 
-      _aviso('Tardanza del ${formatoDia(dia)} eliminada.', error: false);
+      _aviso(
+          '${_conMayuscula(tipo.singular)} del ${formatoDia(dia)} eliminada.',
+          error: false);
     } catch (err) {
-      _aviso('Error eliminando la tardanza: $err');
+      _aviso('Error eliminando la ${tipo.singular}: $err');
     }
   }
+
+  String _conMayuscula(String palabra) =>
+      palabra.isEmpty ? palabra : palabra[0].toUpperCase() + palabra.substring(1);
 
   void _verAsistenciaClases(AlumnoModel alumno) {
     Navigator.pushNamed(
@@ -353,24 +483,24 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         alumnoId: alumno.id,
         nombre: '${alumno.apellidos} ${alumno.nombres}',
         grupoId: grupo!.id,
+        fotoNombre: alumno.fotoNombre,
       ),
     );
   }
 
+  /// El histórico por periodos: tardanzas y ausencias de todo un año.
   void _verHistorico(AlumnoModel alumno) {
     Navigator.pushNamed(
       context,
-      '/tardanzas-alumno',
-      arguments: TardanzasAlumnoArgs(
+      '/faltas-alumno',
+      arguments: FaltasAlumnoArgs(
         alumnoId: alumno.id,
         nombre: '${alumno.apellidos} ${alumno.nombres}',
         grupoId: grupo!.id,
+        fotoNombre: alumno.fotoNombre,
       ),
     );
   }
-
-  int total(AlumnoModel alumno) =>
-      alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0;
 
   void _aviso(String mensaje, {bool error = true}) {
     ScaffoldMessenger.of(context)

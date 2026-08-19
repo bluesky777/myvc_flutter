@@ -54,4 +54,50 @@ void main() {
     expect(formatoDia(DateTime(2026, 1, 5)), '05/01/2026');
     expect(formatoDia(null), '—');
   });
+
+  test('el día con hora se lee en el reloj de doce', () {
+    expect(
+        formatoDiaYHora(DateTime(2026, 1, 5, 7, 4)), '05/01/2026 - 7:04 a. m.');
+    expect(formatoDiaYHora(DateTime(2026, 8, 19, 19, 34)),
+        '19/08/2026 - 7:34 p. m.');
+    expect(formatoDiaYHora(null), '—');
+  });
+
+  group('la hora en el reloj de doce', () {
+    test('la mañana es a. m. y la tarde p. m.', () {
+      expect(formatoHora12(DateTime(2026, 8, 19, 7, 5)), '7:05 a. m.');
+      expect(formatoHora12(DateTime(2026, 8, 19, 15, 40)), '3:40 p. m.');
+    });
+
+    test('las doce de la noche y las doce del día no se confunden', () {
+      // Es donde falla el módulo a secas: las dos caerían en 0.
+      expect(formatoHora12(DateTime(2026, 8, 19, 0, 0)), '12:00 a. m.');
+      expect(formatoHora12(DateTime(2026, 8, 19, 12, 0)), '12:00 p. m.');
+    });
+
+    test('y de vuelta a las 24 del servidor', () {
+      expect(hora24DesdeDoce(hora12: 12, esTarde: false), 0);
+      expect(hora24DesdeDoce(hora12: 12, esTarde: true), 12);
+      expect(hora24DesdeDoce(hora12: 7, esTarde: false), 7);
+      expect(hora24DesdeDoce(hora12: 7, esTarde: true), 19);
+    });
+
+    test('lo que va al servidor sigue en 24 horas', () {
+      // La columna datetime de MySQL no entiende de a. m. ni p. m.
+      expect(
+        fechaHoraParaServidor(DateTime(2026, 8, 19, 19, 34, 5)),
+        '2026-08-19 19:34:05',
+      );
+    });
+  });
+
+  test('la hora que guardó el backend se lee tal cual, sin correrla', () {
+    // created_at llega con una Z al final, así que Dart la lee como UTC. El
+    // backend guardó ahí la hora de Bogotá: pasarla a local la correría cinco
+    // horas y la falta parecería registrada por la tarde en vez de por la
+    // mañana.
+    final registrada = DateTime.parse('2026-08-19T07:34:49.000000Z');
+
+    expect(formatoDiaYHora(registrada), '19/08/2026 - 7:34 a. m.');
+  });
 }

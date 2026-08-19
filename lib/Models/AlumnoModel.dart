@@ -16,7 +16,14 @@ class AlumnoModel extends ChangeNotifier {
   String? fotoNombre;
 
   List<AlumnoModel> alumnos = [];
+
+  /// Las tardanzas a la institución: llegó tarde al colegio (entrada=1).
   List<AsistenciaModel>? tardanzasEntrada;
+
+  /// Las ausencias a la institución: no vino al colegio ese día (entrada=1).
+  /// Son otra fila de la misma tabla, con tipo 'ausencia' en vez de 'tardanza'.
+  List<AsistenciaModel>? ausenciasEntrada;
+
   Map<String, int>? ausenciasTotal;
 
   AlumnoModel({
@@ -28,25 +35,40 @@ class AlumnoModel extends ChangeNotifier {
     this.isExpanded = false,
     this.fotoNombre,
     this.tardanzasEntrada,
+    this.ausenciasEntrada,
     this.ausenciasTotal,
   });
 
-  /// Las tardanzas registradas para el día dado.
-  List<AsistenciaModel> tardanzasDelDia(DateTime dia) {
-    if (tardanzasEntrada == null) return [];
-    return tardanzasEntrada!.where((t) => t.esDelDia(dia)).toList();
-  }
+  /// Las tardanzas a la institución registradas para el día dado.
+  List<AsistenciaModel> tardanzasDelDia(DateTime dia) =>
+      _delDia(tardanzasEntrada, dia);
+
+  /// Las ausencias a la institución registradas para el día dado.
+  List<AsistenciaModel> ausenciasDelDia(DateTime dia) =>
+      _delDia(ausenciasEntrada, dia);
 
   bool tieneTardanzaEn(DateTime dia) => tardanzasDelDia(dia).isNotEmpty;
 
-  factory AlumnoModel.fromJson(Map<String, dynamic> parsedJson) {
-    List<AsistenciaModel> listTempTardanzasEntrada = [];
+  bool tieneAusenciaEn(DateTime dia) => ausenciasDelDia(dia).isNotEmpty;
 
-    if (parsedJson['tardanzas'] != null) {
-      List tardanzas = parsedJson['tardanzas'] as List;
-      listTempTardanzasEntrada =
-          tardanzas.map((e) => AsistenciaModel.fromJson(e)).toList();
-    }
+  List<AsistenciaModel> _delDia(List<AsistenciaModel>? faltas, DateTime dia) {
+    if (faltas == null) return [];
+    return faltas.where((f) => f.esDelDia(dia)).toList();
+  }
+
+  /// Las faltas a la institución que vengan bajo esa clave.
+  ///
+  /// /asistencias/detailed las separa ya filtradas por entrada=1: 'tardanzas'
+  /// son las de llegar tarde y 'ausencias' las de no venir. Las de clase van
+  /// aparte, en 'tardanzas_clase' y 'ausencias_clase', y aquí no se miran.
+  static List<AsistenciaModel> _faltas(Map<String, dynamic> json, String clave) {
+    final crudas = json[clave];
+    if (crudas is! List) return [];
+
+    return crudas.map((e) => AsistenciaModel.fromJson(e)).toList();
+  }
+
+  factory AlumnoModel.fromJson(Map<String, dynamic> parsedJson) {
 
     return AlumnoModel(
       id: parsedJson['alumno_id'],
@@ -56,7 +78,8 @@ class AlumnoModel extends ChangeNotifier {
       fotoNombre: parsedJson['foto_nombre'] == null
           ? null
           : parsedJson['foto_nombre'].toString(),
-      tardanzasEntrada: listTempTardanzasEntrada,
+      tardanzasEntrada: _faltas(parsedJson, 'tardanzas'),
+      ausenciasEntrada: _faltas(parsedJson, 'ausencias'),
       ausenciasTotal: Map<String, int>.from(parsedJson['ausencias_total']),
     );
   }
@@ -73,6 +96,7 @@ class AlumnoModel extends ChangeNotifier {
         "foto_nombre": fotoNombre,
         "sexo": sexo,
         "tardanzas": tardanzasEntrada,
+        "ausencias": ausenciasEntrada,
         "ausencias_total": ausenciasTotal,
       };
 }
