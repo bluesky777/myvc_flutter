@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/Bloc/login_bloc.dart';
 import 'package:myvc_flutter/Screens/Login/FormSelectServidor.dart';
-import 'package:myvc_flutter/Utils/DatosDesarrollo.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
@@ -58,14 +57,8 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
       setState(() {
         guardarDatos = recordar;
-        // Solo en depuración, y solo si no hay nada guardado: nunca pisa lo que
-        // el docente tenga recordado en su equipo.
-        usenameController.text = usuario.isEmpty && DatosDesarrollo.activo
-            ? DatosDesarrollo.username
-            : usuario;
-        passwordController.text = clave.isEmpty && DatosDesarrollo.activo
-            ? DatosDesarrollo.password
-            : clave;
+        usenameController.text = usuario;
+        passwordController.text = clave;
       });
     });
   }
