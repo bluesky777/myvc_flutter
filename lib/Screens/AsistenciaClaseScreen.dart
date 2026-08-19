@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
+import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 class AsistenciaClaseArgs {
@@ -30,7 +31,14 @@ class AsistenciaClaseArgs {
 ///   PUT    /notas/subunidad {grupo_id, asignatura_id}    alumnos con sus fallas
 ///   POST   /ausencias/agregar-ausencia {now, alumno_id, asignatura_id}
 ///   POST   /ausencias/agregar-tardanza {now, alumno_id, asignatura_id}
+///   PUT    /ausencias/guardar-cambios-ausencia {ausencia_id, fecha_hora}
 ///   DELETE /ausencias/destroy/{id}
+///
+/// La fecha de la falta es `fecha_hora`: el día en que el alumno no entró a
+/// clase. No es lo mismo que created_at, que es cuándo se tecleó, ni que
+/// updated_at, que es cuándo se corrigió. Por eso el día se elige al registrar
+/// y se puede cambiar después, que es lo que hace la plataforma web desde la
+/// pantalla de asistencias.
 ///
 /// Un docente ve directamente sus materias. Cualquier otro usuario elige antes
 /// de qué docente, porque no tiene materias propias.
@@ -57,6 +65,10 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   List<AsistenciaModel> ausencias = [];
   List<AsistenciaModel> tardanzas = [];
 
+  /// El día al que se refiere lo que se registre: el día que el alumno faltó.
+  /// Arranca en hoy, que es el caso normal —se pasa lista en clase—.
+  late DateTime fechaFalta;
+
   bool cargando = true;
   bool guardando = false;
   String? error;
@@ -64,6 +76,8 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   @override
   void initState() {
     super.initState();
+    final ahora = DateTime.now();
+    fechaFalta = DateTime(ahora.year, ahora.month, ahora.day);
     _arrancar();
   }
 
@@ -217,18 +231,20 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
       final res = await server.post(ruta, {
         'alumno_id': widget.args.alumnoId,
         'asignatura_id': asignaturaElegida!.id,
-        // La hora real: en una clase importa a qué hora llegó.
-        'now': _ahoraParaServidor(),
+        // El día que faltó, no el día en que se teclea.
+        'now': faltaDelDiaParaServidor(fechaFalta),
         'entrada': 0,
       });
 
       if (res.statusCode >= 300) {
-        _aviso('No se pudo registrar (HTTP ${res.statusCode}).');
+        _aviso(_mensajeHttp(res.statusCode, 'registrar'));
         return;
       }
 
       await _cargarFallas(asignaturaElegida!);
-      _aviso('${tipo == 'tardanza' ? 'Tardanza' : 'Ausencia'} registrada.',
+      _aviso(
+          '${tipo == 'tardanza' ? 'Tardanza' : 'Ausencia'} registrada'
+          ' el ${formatoDia(fechaFalta)}.',
           error: false);
     } catch (err) {
       _aviso('Error registrando: $err');
@@ -245,7 +261,7 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
       final res = await server.delete('/ausencias/destroy/${falla.id}');
 
       if (res.statusCode >= 300) {
-        _aviso('No se pudo eliminar (HTTP ${res.statusCode}).');
+        _aviso(_mensajeHttp(res.statusCode, 'eliminar'));
         return;
       }
 
@@ -258,17 +274,91 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
     }
   }
 
-  String _ahoraParaServidor() {
-    final d = DateTime.now();
-    return '${d.year}-${_dd(d.month)}-${_dd(d.day)} '
-        '${_dd(d.hour)}:${_dd(d.minute)}:${_dd(d.second)}';
+  /// El día al que se registran las faltas nuevas.
+  Future<void> _elegirFechaFalta() async {
+    final ahora = DateTime.now();
+
+    final elegida = await showDatePicker(
+      context: context,
+      initialDate: fechaFalta,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(ahora.year, ahora.month, ahora.day),
+      helpText: 'Día en que el alumno faltó',
+    );
+
+    if (elegida != null) setState(() => fechaFalta = elegida);
+  }
+
+  /// Cambia el día de una falta ya registrada.
+  ///
+  /// Se conserva la hora original: el día se corrige, pero a qué hora era la
+  /// clase no cambia porque uno se equivocara de fecha. Si la falta no tenía
+  /// hora —las de un día pasado se guardan a las 00:00— sigue sin tenerla.
+  Future<void> _cambiarFechaDe(AsistenciaModel falla) async {
+    if (guardando) return;
+
+    final ahora = DateTime.now();
+    final actual = falla.fecha ?? ahora;
+
+    final elegida = await showDatePicker(
+      context: context,
+      initialDate: DateTime(actual.year, actual.month, actual.day),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(ahora.year, ahora.month, ahora.day),
+      helpText: 'Día en que el alumno faltó',
+    );
+
+    if (elegida == null) return;
+
+    final nueva = DateTime(
+      elegida.year,
+      elegida.month,
+      elegida.day,
+      actual.hour,
+      actual.minute,
+      actual.second,
+    );
+
+    setState(() => guardando = true);
+
+    try {
+      final res = await server.put('/ausencias/guardar-cambios-ausencia', {
+        'ausencia_id': falla.id,
+        'fecha_hora': fechaHoraParaServidor(nueva),
+      });
+
+      if (res.statusCode >= 300) {
+        _aviso(_mensajeHttp(res.statusCode, 'cambiar la fecha'));
+        return;
+      }
+
+      await _cargarFallas(asignaturaElegida!);
+      _aviso('Ahora consta del ${formatoDia(nueva)}.', error: false);
+    } catch (err) {
+      _aviso('Error cambiando la fecha: $err');
+    } finally {
+      setState(() => guardando = false);
+    }
+  }
+
+  /// El backend responde 400 con 'No tienes permiso' cuando el periodo está
+  /// cerrado para docentes; el número suelto no le dice nada a nadie.
+  String _mensajeHttp(int codigo, String accion) {
+    if (codigo == 400 || codigo == 401 || codigo == 403) {
+      return 'No tienes permiso para $accion en este periodo.';
+    }
+    return 'No se pudo $accion (HTTP $codigo).';
   }
 
   String _dd(int n) => n.toString().padLeft(2, '0');
 
-  String _fecha(DateTime? d) => d == null
-      ? '—'
-      : '${_dd(d.day)}/${_dd(d.month)}/${d.year} ${_dd(d.hour)}:${_dd(d.minute)}';
+  /// La hora, solo si la hay: las faltas de días pasados se guardan a las 00:00
+  /// y mostrar «00:00» aparenta un dato que nadie puso.
+  String _hora(DateTime? d) {
+    if (d == null) return '';
+    if (d.hour == 0 && d.minute == 0) return '';
+    return ' · ${_dd(d.hour)}:${_dd(d.minute)}';
+  }
 
   void _aviso(String mensaje, {bool error = true}) {
     if (!mounted) return;
@@ -398,7 +488,9 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
+        _buildSelectorFecha(),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -421,6 +513,32 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
         ...ausencias.map((f) => _buildFalla(f, 'Ausencia', Colors.redAccent)),
         ...tardanzas.map((f) => _buildFalla(f, 'Tardanza', Colors.orange)),
       ],
+    );
+  }
+
+  /// El día al que se refieren las faltas que se agreguen.
+  ///
+  /// Va justo encima de los botones de agregar para que se lea como una sola
+  /// frase: esta ausencia es de este día.
+  Widget _buildSelectorFecha() {
+    final esHoy = esElMismoDia(fechaFalta, DateTime.now());
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: esHoy ? null : Colors.amber.shade50,
+      child: ListTile(
+        leading: Icon(Icons.event, color: kPrimaryColor),
+        title: Text('Faltó el día'),
+        subtitle: Text(
+          esHoy ? '${formatoDia(fechaFalta)} (hoy)' : formatoDia(fechaFalta),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+        trailing: TextButton.icon(
+          onPressed: guardando ? null : _elegirFechaFalta,
+          icon: Icon(Icons.calendar_today, size: 18),
+          label: Text('Cambiar'),
+        ),
+      ),
     );
   }
 
@@ -458,11 +576,30 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
             size: 20,
           ),
         ),
-        title: Text(etiqueta),
-        subtitle: Text(_fecha(falla.fecha)),
-        trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: kPrimaryColor),
-          onPressed: guardando ? null : () => _eliminar(falla),
+        title: Text('$etiqueta del ${formatoDia(falla.fecha)}${_hora(falla.fecha)}'),
+        subtitle: Text(
+          // La consulta de /notas/subunidad no trae created_at, así que casi
+          // siempre se cae al segundo caso; si algún día lo trae, aquí se ve
+          // la diferencia entre cuándo faltó y cuándo se registró.
+          falla.createdAt != null
+              ? 'Registrada el ${formatoDia(falla.createdAt)}'
+              : 'Toca el calendario para corregir el día',
+          style: TextStyle(fontSize: 12),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Cambiar el día',
+              icon: Icon(Icons.edit_calendar_outlined, color: kPrimaryColor),
+              onPressed: guardando ? null : () => _cambiarFechaDe(falla),
+            ),
+            IconButton(
+              tooltip: 'Eliminar',
+              icon: Icon(Icons.delete_outline, color: kPrimaryColor),
+              onPressed: guardando ? null : () => _eliminar(falla),
+            ),
+          ],
         ),
       ),
     );

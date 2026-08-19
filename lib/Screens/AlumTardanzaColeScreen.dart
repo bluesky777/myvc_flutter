@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
+import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/TardanzasAlumnoScreen.dart';
@@ -144,7 +145,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
           //style: TextStyle(fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          '${alumno.tardanzasDelDia(dia).length} el ${_formatoFecha(dia)}'
+          '${alumno.tardanzasDelDia(dia).length} el ${formatoDia(dia)}'
           ' · ${alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0} en el periodo',
         ),
         leading: CircleAvatar(
@@ -165,7 +166,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Fecha: ${_formatoFecha(dia)}',
+                'Fecha: ${formatoDia(dia)}',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               IconButton(
@@ -210,7 +211,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
       child: Column(
         children: [
           Text(
-            'Tardanzas del ${_formatoFecha(dia)}',
+            'Tardanzas del ${formatoDia(dia)}',
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           ),
           const SizedBox(height: 20),
@@ -293,7 +294,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         'alumno_id': alumno.id,
         'entrada': 1,
         'tipo': 'tardanza',
-        'fecha_hora': _fechaParaServidor(dia),
+        'fecha_hora': faltaDelDiaParaServidor(dia),
       });
 
       if (res.statusCode >= 300) {
@@ -309,7 +310,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) + 1;
       });
 
-      _aviso('Tardanza registrada el ${_formatoFecha(dia)}.', error: false);
+      _aviso('Tardanza registrada el ${formatoDia(dia)}.', error: false);
     } catch (err) {
       _aviso('Error registrando la tardanza: $err');
     }
@@ -319,7 +320,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     final delDia = alumno.tardanzasDelDia(dia);
 
     if (delDia.isEmpty) {
-      _aviso('No hay tardanzas del ${_formatoFecha(dia)} para quitar.');
+      _aviso('No hay tardanzas del ${formatoDia(dia)} para quitar.');
       return;
     }
 
@@ -338,7 +339,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) - 1;
       });
 
-      _aviso('Tardanza del ${_formatoFecha(dia)} eliminada.', error: false);
+      _aviso('Tardanza del ${formatoDia(dia)} eliminada.', error: false);
     } catch (err) {
       _aviso('Error eliminando la tardanza: $err');
     }
@@ -370,27 +371,6 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
 
   int total(AlumnoModel alumno) =>
       alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0;
-
-  String _formatoFecha(DateTime d) =>
-      '${_dosDigitos(d.day)}/${_dosDigitos(d.month)}/${d.year}';
-
-  String _dosDigitos(int n) => n.toString().padLeft(2, '0');
-
-  /// La fecha tal como la espera la columna datetime de MySQL.
-  ///
-  /// Con la hora real cuando el día elegido es hoy —en una tardanza a la
-  /// entrada la hora es el dato— y a las 00:00 cuando se registra una de un día
-  /// pasado, donde no hay hora que reconstruir.
-  String _fechaParaServidor(DateTime dia) {
-    final ahora = DateTime.now();
-    final esHoy =
-        dia.year == ahora.year && dia.month == ahora.month && dia.day == ahora.day;
-    final momento = esHoy ? ahora : DateTime(dia.year, dia.month, dia.day);
-
-    return '${momento.year}-${_dosDigitos(momento.month)}-${_dosDigitos(momento.day)}'
-        ' ${_dosDigitos(momento.hour)}:${_dosDigitos(momento.minute)}'
-        ':${_dosDigitos(momento.second)}';
-  }
 
   void _aviso(String mensaje, {bool error = true}) {
     ScaffoldMessenger.of(context)
