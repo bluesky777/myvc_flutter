@@ -15,7 +15,14 @@ class AsistenciaModel {
   String? fechaHora;
   int periodoId;
   String? tipo;
-  bool isToday;
+
+  /// El día de la tardanza, sacado de `fecha_hora`.
+  ///
+  /// Antes esto se miraba con `created_at`, que es cuándo se grabó la fila, no
+  /// de qué día es la tardanza. Al registrar una de un día pasado, la fila se
+  /// creaba hoy y la pantalla la pintaba como de hoy: de ahí la impresión de
+  /// que la fecha elegida se ignoraba.
+  final DateTime? fecha;
 
 
   AsistenciaModel({
@@ -28,23 +35,23 @@ class AsistenciaModel {
     this.fechaHora,
     required this.periodoId,
     this.tipo,
-    this.isToday=false,
+    this.fecha,
   });
+
+  /// Si esta tardanza es del día dado, comparando solo año, mes y día.
+  bool esDelDia(DateTime dia) {
+    if (fecha == null) return false;
+    return fecha!.year == dia.year &&
+        fecha!.month == dia.month &&
+        fecha!.day == dia.day;
+  }
 
 
   factory AsistenciaModel.fromJson(Map<String, dynamic> parsedJson) {
-    bool hoyTemp = false;
+    final crudo = parsedJson['fecha_hora'];
 
-    if (parsedJson['created_at'] != null){
-      DateTime createdAtTemp = DateTime.parse(parsedJson['created_at']);
-      DateTime date = DateTime(createdAtTemp.year, createdAtTemp.month, createdAtTemp.day);
-      DateTime hoyTime = DateTime.now();
-      DateTime hoy = DateTime(hoyTime.year, hoyTime.month, hoyTime.day);
-      hoyTemp = hoy == date;
-      if (hoy == date) print('Tiene hoy!');
-    }
-  
     return AsistenciaModel(
+      fecha: crudo == null ? null : DateTime.tryParse(crudo.toString()),
       id: parsedJson['id'],
       alumnoId: parsedJson['alumno_id'],
       asignaturaId: parsedJson['asignatura_id'],
@@ -54,13 +61,12 @@ class AsistenciaModel {
       fechaHora: parsedJson['fecha_hora'].toString(),
       periodoId: parsedJson['periodo_id'],
       tipo: parsedJson['tipo'] == null ? null : parsedJson['tipo'].toString(),
-      isToday: hoyTemp,
     );
   }
 
   @override
   String toString() {
-    return '(AsistenciaModel) id: $id - entrada: $entrada - isToday $isToday - alumnoId: $alumnoId - createdAt $createdAt';
+    return '(AsistenciaModel) id: $id - entrada: $entrada - fecha: $fecha - alumnoId: $alumnoId';
   }
 
   Map<String, dynamic> toJson() => {

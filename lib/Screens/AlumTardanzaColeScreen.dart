@@ -117,13 +117,16 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     return alumnos as List<AlumnoModel>;
   }
 
-  Widget buildTile(AlumnoModel alumno, DateTime today) => ListTile(
+  Widget buildTile(AlumnoModel alumno, DateTime dia) => ListTile(
         dense: false,
         title: Text(
           '${alumno.apellidos} ${alumno.nombres}',
           //style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        subtitle: Text('Tardanzas: ${alumno.tardanzasEntrada!.length}'),
+        subtitle: Text(
+          '${alumno.tardanzasDelDia(dia).length} el ${_formatoFecha(dia)}'
+          ' · ${alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0} en el periodo',
+        ),
         leading: CircleAvatar(
           backgroundImage:
               NetworkImage('${Server.urlImages}/${alumno.fotoNombre}'),
@@ -132,147 +135,204 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
       );
 
   Widget _buildListaGrupos() {
-    DateTime now = DateTime.now();
-    DateTime today = DateTime(now.year, now.month, now.day);
+    final dia = _selectedDate ?? today!;
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Fecha: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            IconButton(
-              icon: Icon(Icons.calendar_today),
-              onPressed: _selectDate,
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Fecha: ${_formatoFecha(dia)}',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              IconButton(
+                icon: Icon(Icons.calendar_today),
+                onPressed: _selectDate,
+              ),
+            ],
+          ),
         ),
         ExpansionPanelList.radio(
-      children: alumnos!
-          .map((AlumnoModel alumno) => ExpansionPanelRadio(
-                backgroundColor:
-                    alumno.tieneTardanzaHoy(today) ? Colors.pinkAccent : null,
-                canTapOnHeader: true,
-                value: '${alumno.apellidos} ${alumno.nombres}',
-                headerBuilder: (context, isExpanded) =>
-                    buildTile(alumno, today),
-                body: Column(children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Tardanzas: ${alumno.ausenciasTotal!['cant_tardanzas_entrada'].toString()} ',
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (alumno.tardanzasEntrada != null) {
-                            int cantTar = alumno.tardanzasEntrada!.length;
-                            if (cantTar > 0) {
-                              AsistenciaModel tardanzaTemp;
-                              tardanzaTemp =
-                                  alumno.tardanzasEntrada![cantTar - 1];
-
-                              try {
-                                var res = await server.delete(
-                                    '/ausencias/destroy/${tardanzaTemp.id}');
-
-                                if (res.statusCode < 300) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: Colors.lightBlueAccent,
-                                      content: Text('Eliminada'),
-                                    ),
-                                  );
-                                  setState(() {
-                                    print(
-                                        'Antes ${alumno.tardanzasEntrada!.length}');
-                                    alumno.ausenciasTotal![
-                                            'cant_tardanzas_entrada'] =
-                                        alumno.ausenciasTotal![
-                                                'cant_tardanzas_entrada']! -
-                                            1;
-                                    alumno.tardanzasEntrada!
-                                        .remove(tardanzaTemp);
-                                  });
-                                } else {
-                                  print(alumno.tardanzasEntrada);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'Error eliminado tardanza')));
-                                }
-                              } catch (err) {
-                                print(err);
-                              }
-                            }
-                          }
-                        },
-                        style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(Colors.green)),
-                        child: Text(
-                          '-',
-                          style: TextStyle(fontSize: 30),
-                        ),
-                      ),
-                      ElevatedButton(
-                        child: Text('+', style: TextStyle(fontSize: 30)),
-                        onPressed: () async {
-                          try {
-                            var dateToUse = _selectedDate ?? DateTime.now();
-
-                            var res = await server.post('/ausencias/store', {
-                              'alumno_id': alumno.id,
-                              'entrada': 1,
-                              'tipo': 'tardanza',
-                              'fecha_hora': dateToUse.toString(),
-                            });
-
-                            if (res.statusCode < 300) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: Colors.lightBlueAccent,
-                                  content: Text('Creada'),
-                                ),
-                              );
-
-                              print(res.body);
-                              AsistenciaModel egragada =
-                                  AsistenciaModel.fromJson(
-                                      jsonDecode(res.body));
-
-                              setState(() {
-                                alumno.ausenciasTotal![
-                                        'cant_tardanzas_entrada'] =
-                                    alumno.ausenciasTotal![
-                                            'cant_tardanzas_entrada']! +
-                                        1;
-                                if (alumno.tardanzasEntrada == null) {
-                                  alumno.tardanzasEntrada = [];
-                                }
-                                alumno.tardanzasEntrada!.add(egragada);
-                              });
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Error creando tardanza')));
-                            }
-                          } catch (err) {
-                            print(err);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Text('Ausencias: '),
-                ]),
-              ))
-          .toList(),
+          children: alumnos!
+              .map((AlumnoModel alumno) => ExpansionPanelRadio(
+                    // Resalta si tiene tardanza EL DÍA ELEGIDO. Antes se miraba
+                    // created_at, así que cualquiera registrada hoy salía
+                    // resaltada aunque fuera de otro día.
+                    backgroundColor: alumno.tieneTardanzaEn(dia)
+                        ? Colors.pinkAccent
+                        : null,
+                    canTapOnHeader: true,
+                    value: '${alumno.apellidos} ${alumno.nombres}',
+                    headerBuilder: (context, isExpanded) =>
+                        buildTile(alumno, dia),
+                    body: _buildCuerpoAlumno(alumno, dia),
+                  ))
+              .toList(),
         ),
       ],
     );
+  }
+
+  /// El cuerpo del panel del alumno.
+  ///
+  /// Todo lo que muestra y lo que hacen los botones va referido al día elegido
+  /// arriba. Antes el contador era el total del periodo y el botón de quitar
+  /// borraba la última tardanza de la lista, fuera del día que fuera.
+  Widget _buildCuerpoAlumno(AlumnoModel alumno, DateTime dia) {
+    final delDia = alumno.tardanzasDelDia(dia).length;
+    final total = alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Column(
+        children: [
+          Text(
+            'Tardanzas del ${_formatoFecha(dia)}',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _botonContador(
+                icono: Icons.remove,
+                color: Colors.redAccent,
+                onPressed: () => _quitarTardanza(alumno, dia),
+              ),
+              Container(
+                width: 80,
+                alignment: Alignment.center,
+                child: Text(
+                  '$delDia',
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
+                ),
+              ),
+              _botonContador(
+                icono: Icons.add,
+                color: Colors.green,
+                onPressed: () => _agregarTardanza(alumno, dia),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Total del periodo: $total',
+            style: TextStyle(color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _botonContador({
+    required IconData icono,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(18),
+      ),
+      child: Icon(icono, size: 26),
+    );
+  }
+
+  Future<void> _agregarTardanza(AlumnoModel alumno, DateTime dia) async {
+    try {
+      final res = await server.post('/ausencias/store', {
+        'alumno_id': alumno.id,
+        'entrada': 1,
+        'tipo': 'tardanza',
+        'fecha_hora': _fechaParaServidor(dia),
+      });
+
+      if (res.statusCode >= 300) {
+        _aviso('No se pudo registrar la tardanza (HTTP ${res.statusCode}).');
+        return;
+      }
+
+      final creada = AsistenciaModel.fromJson(jsonDecode(res.body));
+
+      setState(() {
+        alumno.tardanzasEntrada ??= [];
+        alumno.tardanzasEntrada!.add(creada);
+        alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) + 1;
+      });
+
+      _aviso('Tardanza registrada el ${_formatoFecha(dia)}.', error: false);
+    } catch (err) {
+      _aviso('Error registrando la tardanza: $err');
+    }
+  }
+
+  Future<void> _quitarTardanza(AlumnoModel alumno, DateTime dia) async {
+    final delDia = alumno.tardanzasDelDia(dia);
+
+    if (delDia.isEmpty) {
+      _aviso('No hay tardanzas del ${_formatoFecha(dia)} para quitar.');
+      return;
+    }
+
+    final tardanza = delDia.last;
+
+    try {
+      final res = await server.delete('/ausencias/destroy/${tardanza.id}');
+
+      if (res.statusCode >= 300) {
+        _aviso('No se pudo eliminar la tardanza (HTTP ${res.statusCode}).');
+        return;
+      }
+
+      setState(() {
+        alumno.tardanzasEntrada!.remove(tardanza);
+        alumno.ausenciasTotal!['cant_tardanzas_entrada'] = total(alumno) - 1;
+      });
+
+      _aviso('Tardanza del ${_formatoFecha(dia)} eliminada.', error: false);
+    } catch (err) {
+      _aviso('Error eliminando la tardanza: $err');
+    }
+  }
+
+  int total(AlumnoModel alumno) =>
+      alumno.ausenciasTotal!['cant_tardanzas_entrada'] ?? 0;
+
+  String _formatoFecha(DateTime d) =>
+      '${_dosDigitos(d.day)}/${_dosDigitos(d.month)}/${d.year}';
+
+  String _dosDigitos(int n) => n.toString().padLeft(2, '0');
+
+  /// La fecha tal como la espera la columna datetime de MySQL.
+  ///
+  /// Con la hora real cuando el día elegido es hoy —en una tardanza a la
+  /// entrada la hora es el dato— y a las 00:00 cuando se registra una de un día
+  /// pasado, donde no hay hora que reconstruir.
+  String _fechaParaServidor(DateTime dia) {
+    final ahora = DateTime.now();
+    final esHoy =
+        dia.year == ahora.year && dia.month == ahora.month && dia.day == ahora.day;
+    final momento = esHoy ? ahora : DateTime(dia.year, dia.month, dia.day);
+
+    return '${momento.year}-${_dosDigitos(momento.month)}-${_dosDigitos(momento.day)}'
+        ' ${_dosDigitos(momento.hour)}:${_dosDigitos(momento.minute)}'
+        ':${_dosDigitos(momento.second)}';
+  }
+
+  void _aviso(String mensaje, {bool error = true}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(mensaje),
+          backgroundColor: error ? Colors.red.shade700 : Colors.lightBlueAccent,
+        ),
+      );
   }
 }
