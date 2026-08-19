@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/AuthService.dart';
@@ -17,7 +16,7 @@ class Server {
   Uri _uri(direction) => Uri.parse('${Server.urlApi}$direction');
 
   Map<String, String> _encabezado () => {
-    HttpHeaders.authorizationHeader: 'Bearer ${AuthService.user.token}',
+    'Authorization': 'Bearer ${AuthService.user.token}',
   };
 
   Future credentials(String username, String password, servidor,
@@ -43,7 +42,7 @@ class Server {
   Future login() {
     var url = _uri('/login');
     var response = http.post(url, headers: {
-      HttpHeaders.authorizationHeader: 'Bearer ${AuthService.user.token}',
+      'Authorization': 'Bearer ${AuthService.user.token}',
     });
     return response;
   }
@@ -51,7 +50,7 @@ class Server {
   Future get(String direccion) {
     var url = _uri(direccion);
     var response = http.get(url, headers: {
-      HttpHeaders.authorizationHeader: 'Bearer ${AuthService.user.token}',
+      'Authorization': 'Bearer ${AuthService.user.token}',
     });
     return response;
   }
@@ -60,7 +59,7 @@ class Server {
     var url = _uri(direccion);
     var response = http.put(url,
         headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${AuthService.user.token}',
+          'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(params));
@@ -71,7 +70,7 @@ class Server {
     var url = _uri(direccion);
     var response = http.post(url,
         headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${AuthService.user.token}',
+          'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(params));
