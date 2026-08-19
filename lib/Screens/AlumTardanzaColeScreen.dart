@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Screens/DrawPanel.dart';
+import 'package:myvc_flutter/Screens/TardanzasAlumnoScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
@@ -217,10 +218,11 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            'Total del periodo: $total',
-            style: TextStyle(color: Colors.black54),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => _verHistorico(alumno),
+            icon: Icon(Icons.history, size: 18),
+            label: Text('Total del periodo: $total'),
           ),
         ],
       ),
@@ -299,6 +301,18 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     } catch (err) {
       _aviso('Error eliminando la tardanza: $err');
     }
+  }
+
+  void _verHistorico(AlumnoModel alumno) {
+    Navigator.pushNamed(
+      context,
+      '/tardanzas-alumno',
+      arguments: TardanzasAlumnoArgs(
+        alumnoId: alumno.id,
+        nombre: '${alumno.apellidos} ${alumno.nombres}',
+        grupoId: grupo!.id,
+      ),
+    );
   }
 
   int total(AlumnoModel alumno) =>
