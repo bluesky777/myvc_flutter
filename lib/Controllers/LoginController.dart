@@ -82,7 +82,6 @@ class LoginController implements LoginBaseController {
       }
 
       final preferences = await SharedPreferences.getInstance();
-      await preferences.setString('customUri', servidorElegido);
 
       if (await PreferenciasSesion.guardarDatos()) {
         await preferences.setString(PreferenciasSesion.claveUsername, username);

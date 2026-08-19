@@ -7,12 +7,10 @@ import '../../constantes.dart';
 class ButtonSelectServidores extends StatefulWidget {
   final AnimationController? animationController;
   final Animation<double>? containerSize;
-  final String servidorElegido;
 
   const ButtonSelectServidores({
     required this.animationController,
     required this.containerSize,
-    required this.servidorElegido,
   }) : super();
 
   @override

@@ -27,7 +27,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
               ? true
               : false;
 
-      print('+++ servidorElegido $servidorElegido - ${event.textoUri}');
+      print('+++ servidorElegido $servidorElegido');
 
       LoginController loginController = LoginController();
       try {

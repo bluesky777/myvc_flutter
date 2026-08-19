@@ -7,17 +7,10 @@ abstract class LoginEvent extends Equatable {
 class DoLoginEvent extends LoginEvent {
   final String username;
   final String password;
-  final bool isLocal;
-  final String textoUri;
-  final String servidorElegido;
 
-  DoLoginEvent(
-    this.username,
-    this.password,
-    this.isLocal,
-    this.textoUri,
-    this.servidorElegido,
-  );
+  // El servidor no viaja en el evento: LoginBloc lo toma de SelectServerCubit,
+  // que es el único sitio donde la elección de colegio está viva.
+  DoLoginEvent(this.username, this.password);
 
   @override
   List<Object?> get props => [username, password];

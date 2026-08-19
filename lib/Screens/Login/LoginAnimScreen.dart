@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,8 +25,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   AnimationController? animationController;
   Duration animationDuration = Duration(milliseconds: 270);
   //final _formKey = GlobalKey<FormState>();
-  String textoUri = ''; // 'http://192.168.18.215'
-  String servidorElegido = '';
   bool isLoading = false;
   bool guardarDatos = true;
 
@@ -43,17 +39,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
     animationController =
         AnimationController(vsync: this, duration: animationDuration);
 
-    //textoUri = 'http://192.168.18.215';
-
     SharedPreferences.getInstance().then((SharedPreferences preferences) async {
-      String? guardado = preferences.getString('uriColegio');
-
-      if (guardado != null) {
-        servidorElegido = jsonDecode(guardado)['uri'];
-      }
-      String? guardadoCustomUri = preferences.getString('customUri');
-      textoUri = guardadoCustomUri == null ? '' : guardadoCustomUri;
-
       // Si el dispositivo no recuerda los datos, el formulario arranca vacío
       // aunque queden credenciales de una versión anterior.
       final recordar = await PreferenciasSesion.guardarDatos();
@@ -81,15 +67,10 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   Future<void> _onSubmitFuture() async {
     String username = usenameController.text;
     String password = passwordController.text;
-    bool isLocal = textoUri.contains('192');
 
-    BlocProvider.of<LoginBloc>(context).add(DoLoginEvent(
-      username,
-      password,
-      isLocal,
-      textoUri,
-      servidorElegido,
-    ));
+    // El servidor y si es local los resuelve LoginBloc desde SelectServerCubit,
+    // que es donde vive la elección de colegio.
+    BlocProvider.of<LoginBloc>(context).add(DoLoginEvent(username, password));
 
     // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     //   content: Text('Error ${Server.urlApi}'),
@@ -187,9 +168,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
                     animationDuration: animationDuration,
                     size: size,
                     animationController: animationController!,
-                    gestureTapCallback: state.mostrandoButtonSelectedUri
-                        ? null
-                        : _setIsLoginToTrue,
                   ),
 
                   // FORM Login
@@ -213,13 +191,11 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
                       if (viewInset == 0 && isInLoginForm) {
                         return ButtonSelectServidores(
-                          servidorElegido: servidorElegido,
                           animationController: animationController,
                           containerSize: containerSize,
                         );
                       } else if (!isInLoginForm) {
                         return ButtonSelectServidores(
-                          servidorElegido: servidorElegido,
                           animationController: animationController,
                           containerSize: containerSize,
                         );
@@ -244,72 +220,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
       ),
     );
   }
-
-  Widget buildSelectServidoresContainer() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: GestureDetector(
-        onTap: !isLogin
-            ? null
-            : () {
-                animationController?.forward();
-                print('isLogin $isLogin');
-                BlocProvider.of<SelectServerCubit>(context).toggleMostrar();
-                setState(() {
-                  isLogin = !isLogin;
-                });
-              },
-        child: Container(
-          width: double.infinity,
-          height: containerSize?.value,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(100),
-              topRight: Radius.circular(100),
-            ),
-            color: KBackgroundColor,
-          ),
-          alignment: Alignment.center,
-          child: isLogin
-              ? Text(
-                  servidorElegido != ''
-                      ? servidorElegido
-                      : 'Selecciona tu colegio',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: kPrimaryColor,
-                  ),
-                )
-              : null,
-        ),
-      ),
-    );
-  }
-
-  void _setIsLoginToTrue() {
-    // print('Setting login in true');
-    // animationController?.reverse();
-    // setState(() {
-    //   isLogin = true;
-    //   SharedPreferences.getInstance().then((SharedPreferences preferences) {
-    //     String? guardado = preferences.getString('uriColegio');
-    //     print('guardado $guardado');
-    //     if (guardado != null) {
-    //       servidorElegido = jsonDecode(guardado)['uri'];
-    //     }
-    //
-    //     print(' *******  servidorElegido $servidorElegido');
-    //   });
-    // });
-    SharedPreferences.getInstance().then((SharedPreferences preferences) {
-      String? guardado = preferences.getString('uriColegio');
-      if (guardado != null) {
-        servidorElegido = jsonDecode(guardado)['uri'];
-      }
-
-      print(' *******  servidorElegido $servidorElegido');
-    });
-  }
 }
 
 class CloseServidoresButton extends StatelessWidget {
@@ -317,15 +227,13 @@ class CloseServidoresButton extends StatelessWidget {
   final Duration animationDuration;
   final Size size;
   final AnimationController animationController;
-  final GestureTapCallback? gestureTapCallback;
 
   const CloseServidoresButton(
       {Key? key,
       required this.isLogin,
       required this.animationDuration,
       required this.size,
-      required this.animationController,
-      required this.gestureTapCallback})
+      required this.animationController})
       : super(key: key);
 
   @override
@@ -356,8 +264,7 @@ class CloseServidoresButton extends StatelessWidget {
 
   void _setIsLoginToTrue(context) {
     print('Setting login in true');
-    if (animationController != null) animationController.reverse();
+    animationController.reverse();
     BlocProvider.of<SelectServerCubit>(context).toggleMostrar();
-    this.gestureTapCallback!();
   }
 }
