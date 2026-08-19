@@ -41,7 +41,7 @@ class _PanelScreen extends State<PanelScreen> {
       slideWidth: 300,
       showShadow: true,
       angle: -8.0,
-      style: DrawerStyle.Style1,
+      style: DrawerStyle.style1,
       mainScreen: Scaffold(
         appBar: AppBar(
           title: Text('Elija grupo'),
