@@ -11,37 +11,40 @@ part 'login_state.dart';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final SelectServerCubit selectServerCubit;
 
-  LoginBloc({required this.selectServerCubit}) : super(LoginInitialState());
+  LoginBloc({required this.selectServerCubit}) : super(LoginInitialState()) {
+    // bloc 8 quitó mapEventToState y no dejó nada en su lugar: el método seguía
+    // aquí con un @override que ya no overrideaba nada, y como no había ningún
+    // on<...> registrado, pulsar "Entrar" no ejecutaba absolutamente nada.
+    on<DoLoginEvent>(_alEntrar);
+  }
 
-  @override
-  Stream<LoginState> mapEventToState(
-    LoginEvent event,
-  ) async* {
-    if (event is DoLoginEvent) {
-      yield LoggingInState();
+  Future<void> _alEntrar(DoLoginEvent event, Emitter<LoginState> emit) async {
+    final colegio = selectServerCubit.state.uriColegioSelected;
+    final servidorElegido = colegio.uri;
+    final isLocal = colegio.nombre == 'Otro';
 
-      final servidorElegido =
-          this.selectServerCubit.state.uriColegioSelected.uri;
-      final isLocal =
-          this.selectServerCubit.state.uriColegioSelected.nombre == 'Otro'
-              ? true
-              : false;
+    if (servidorElegido.isEmpty) {
+      emit(LoginErrorState('Elige primero tu colegio.'));
+      return;
+    }
 
-      print('+++ servidorElegido $servidorElegido');
+    emit(LoggingInState());
 
-      LoginController loginController = LoginController();
-      try {
-        var token = await loginController.login(
-          event.username,
-          event.password,
-          isLocal,
-          servidorElegido,
-        );
+    try {
+      final token = await LoginController().login(
+        event.username,
+        event.password,
+        isLocal,
+        servidorElegido,
+      );
 
-        yield LoggedState(token);
-      } on LoginException {
-        yield LoginErrorState('No se pudo loguear');
-      }
+      emit(LoggedState(token));
+    } on LoginException catch (err) {
+      emit(LoginErrorState(err.mensaje));
+    } catch (err) {
+      // Que nada quede en silencio: antes cualquier fallo que no fuera
+      // LoginException se escapaba sin que el docente viera nada.
+      emit(LoginErrorState('Fallo inesperado al entrar:\n$err'));
     }
   }
 }

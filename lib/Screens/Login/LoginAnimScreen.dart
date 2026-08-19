@@ -129,6 +129,22 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
         listener: (BuildContext, login_state) {
           if (login_state is LoggedState) {
             Navigator.pushNamed(context, '/panel');
+          } else if (login_state is LoginErrorState) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(login_state.mensaje),
+                  backgroundColor: Colors.red.shade700,
+                  duration: Duration(seconds: 8),
+                  action: SnackBarAction(
+                    label: 'Cerrar',
+                    textColor: Colors.white,
+                    onPressed: () =>
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                  ),
+                ),
+              );
           }
         },
         builder: (_, _login_state) {
