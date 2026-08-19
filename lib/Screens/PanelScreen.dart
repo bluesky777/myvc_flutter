@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/Server.dart';
-import 'package:myvc_flutter/Menu/DrawAnimation.dart';
+import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +35,7 @@ class _PanelScreen extends State<PanelScreen> {
   @override
   Widget build(BuildContext context) {
     return ZoomDrawer(
-      menuScreen: DrawAnimation(),
+      menuScreen: MenuLateral(),
       controller: _drawerController,
       borderRadius: 40.0,
       slideWidth: 300,

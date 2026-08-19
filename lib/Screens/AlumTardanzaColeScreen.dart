@@ -2,11 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
+import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
-import 'package:myvc_flutter/Screens/DrawPanel.dart';
+import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/TardanzasAlumnoScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +24,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   GrupoModel? grupo;
   DateTime? today; // la cambio en init
   DateTime? _selectedDate;
+  final _drawerController = ZoomDrawerController();
 
   @override
   void initState() {
@@ -72,14 +76,29 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   Widget build(BuildContext context) {
     print('**** En build');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bienvenido'),
+    // El mismo menú y la misma forma de abrirlo que en el inicio.
+    return ZoomDrawer(
+      menuScreen: MenuLateral(),
+      controller: _drawerController,
+      borderRadius: 40.0,
+      slideWidth: 300,
+      showShadow: true,
+      angle: -8.0,
+      style: DrawerStyle.style1,
+      mainScreenTapClose: true,
+      androidCloseOnBackTap: true,
+      mainScreen: Scaffold(
+        appBar: AppBar(
+          title: Text(grupo?.nombre ?? 'Alumnos'),
+          leading: GestureDetector(
+            child: Icon(Icons.menu),
+            onTap: () => _drawerController.toggle!(),
+          ),
+        ),
+        body: grupo == null
+            ? Text('Esperando alumnos en build...')
+            : _buildFutureBuilder(),
       ),
-      body: grupo == null
-          ? Text('Esperando alumnos en build...')
-          : _buildFutureBuilder(),
-      drawer: DrawPanel(),
     );
   }
 
@@ -218,11 +237,33 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          TextButton.icon(
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => _verAsistenciaClases(alumno),
+            icon: Icon(Icons.class_outlined, size: 18),
+            label: Text('Asistencia a clases'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              side: BorderSide(color: kPrimaryColor),
+              foregroundColor: kPrimaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
             onPressed: () => _verHistorico(alumno),
             icon: Icon(Icons.history, size: 18),
             label: Text('Total del periodo: $total'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              side: BorderSide(color: kPrimaryColor),
+              foregroundColor: kPrimaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
           ),
         ],
       ),
@@ -301,6 +342,18 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     } catch (err) {
       _aviso('Error eliminando la tardanza: $err');
     }
+  }
+
+  void _verAsistenciaClases(AlumnoModel alumno) {
+    Navigator.pushNamed(
+      context,
+      '/asistencia-clase',
+      arguments: AsistenciaClaseArgs(
+        alumnoId: alumno.id,
+        nombre: '${alumno.apellidos} ${alumno.nombres}',
+        grupoId: grupo!.id,
+      ),
+    );
   }
 
   void _verHistorico(AlumnoModel alumno) {
