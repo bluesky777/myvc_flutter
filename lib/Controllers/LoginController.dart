@@ -75,6 +75,8 @@ class LoginController implements LoginBaseController {
           .where((parte) => parte != null && '$parte'.trim().isNotEmpty)
           .join(' ');
 
+      AuthService.user.id = int.tryParse('${datos['user_id']}');
+      AuthService.user.tipo = datos['tipo']?.toString();
       AuthService.user.username = '${datos['username'] ?? username}';
       AuthService.user.nombres = nombre.isEmpty ? null : nombre;
       AuthService.user.sexo = '${datos['sexo'] ?? 'M'}';

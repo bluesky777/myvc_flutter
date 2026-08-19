@@ -12,6 +12,8 @@ class AuthService {
 
 class UserAutenticado {
   String? token;
+  int? id;
+  String? tipo;
   String username;
   String? nombres;
   String sexo;
@@ -19,9 +21,17 @@ class UserAutenticado {
 
   UserAutenticado({
     this.token,
+    this.id,
+    this.tipo,
     this.username = '',
     this.sexo = 'M',
     this.nombres,
     this.periodo,
   });
+
+  /// Cómo se nombra a este usuario, con la misma regla que el resto de la
+  /// plataforma: los de tipo Usuario no tienen ficha con nombres, y ahí el
+  /// nombre de usuario ES el nombre.
+  String get nombreVisible =>
+      (nombres != null && nombres!.trim().isNotEmpty) ? nombres! : username;
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
@@ -309,11 +310,31 @@ class _TardanzasAlumnoScreenState extends State<TardanzasAlumnoScreen> {
     );
   }
 
+  /// Cómo nombra la plataforma a quien puso la tardanza.
+  ///
+  /// El backend resuelve esto en el SQL de cada consulta, con un UNION: si el
+  /// usuario es Profesor, su nombre de la tabla profesores; si no, su nombre de
+  /// usuario. La tardanza solo trae created_by, así que la misma regla se
+  /// aplica con lo que sí se puede consultar desde aquí:
+  ///
+  ///   - /contratos da el nombre de todos los profesores.
+  ///   - Del que tiene la sesión abierta se sabe el nombre por /login, y suele
+  ///     ser quien puso la mayoría de las que está mirando.
+  ///
+  /// Fuera de eso queda el número: ningún endpoint resuelve un usuario
+  /// cualquiera por id, y sin tocar el backend no hay de dónde sacarlo.
   String _docente(int? createdBy) {
     if (createdBy == null) return 'Sin registrar';
-    // Quien la puso puede no ser docente —un administrador, coordinación—, y
-    // /contratos solo trae profesores. Al menos queda el rastro de quién fue.
-    return docentes[createdBy] ?? 'Usuario $createdBy';
+
+    final profesor = docentes[createdBy];
+    if (profesor != null && profesor.isNotEmpty) return profesor;
+
+    if (AuthService.user.id == createdBy) {
+      final propio = AuthService.user.nombreVisible;
+      if (propio.isNotEmpty) return propio;
+    }
+
+    return 'Usuario $createdBy';
   }
 
   String _dia(DateTime? d) {
