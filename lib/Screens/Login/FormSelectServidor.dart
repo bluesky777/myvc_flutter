@@ -105,23 +105,52 @@ class ListViewServidores extends StatefulWidget {
 
 class _ListViewServidoresState extends State<ListViewServidores> {
   List<UriColegio> listaUrisColes = [];
-  UriColegio uriColegioSeleccionada = UriColegio();
+  String? errorLista;
 
   @override
   void initState() {
     super.initState();
 
     UriColegio().fetchLista().then((value) {
-      listaUrisColes = value;
-
+      if (!mounted) return;
       setState(() {
-        uriColegioSeleccionada = listaUrisColes[0];
+        listaUrisColes = value;
+        errorLista = null;
+      });
+    }).catchError((err) {
+      if (!mounted) return;
+
+      // Sin este catchError el fallo moría en un Future que nadie esperaba: la
+      // lista se quedaba vacía, sin "Otro" y sin decir por qué. Se deja "Otro"
+      // para que aun sin lista se pueda escribir una dirección a mano.
+      setState(() {
+        listaUrisColes = [UriColegio(uri: 'otro', nombre: 'Otro')];
+        errorLista = 'No se pudo cargar la lista de colegios.\n'
+            'Escribe la dirección a mano en "Otro".';
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (errorLista != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              errorLista!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.red.shade700),
+            ),
+          ),
+        _buildLista(),
+      ],
+    );
+  }
+
+  Widget _buildLista() {
     return ListView.builder(
       scrollDirection: Axis.vertical,
       shrinkWrap: true,

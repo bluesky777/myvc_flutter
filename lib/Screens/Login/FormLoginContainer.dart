@@ -60,7 +60,13 @@ class FormLoginContainerState extends State<FormLoginContainer> {
             child: SingleChildScrollView(
               child: Container(
                 width: widget.size.width,
-                height: widget.defaultLoginSize,
+                // Altura mínima, no fija: así el Column sigue centrado cuando
+                // sobra sitio, pero puede crecer y dejar que el
+                // SingleChildScrollView lo desplace cuando no cabe. Con altura
+                // fija, en pantallas cortas el formulario desbordaba y el botón
+                // "Entrar" quedaba debajo de la barra del colegio, sin poder
+                // pulsarse.
+                constraints: BoxConstraints(minHeight: widget.defaultLoginSize),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -72,7 +78,10 @@ class FormLoginContainerState extends State<FormLoginContainer> {
                     ),
                     Image(
                       image: AssetImage('assets/images/at_computer.png'),
-                      height: 200,
+                      // Se encoge donde no hay sitio: con 200 fijos, en una
+                      // pantalla de 600px el botón "Entrar" terminaba debajo de
+                      // la barra del colegio y no se podía pulsar.
+                      height: (widget.size.height * 0.23).clamp(90.0, 200.0),
                     ),
                     SizedBox(
                       height: 20,

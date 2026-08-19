@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +29,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   //final _formKey = GlobalKey<FormState>();
   bool isLoading = false;
   bool guardarDatos = true;
+  Timer? _temporizadorAviso;
 
   TextEditingController usenameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -60,8 +63,45 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
   @override
   void dispose() {
+    _temporizadorAviso?.cancel();
     if (animationController != null) animationController!.dispose();
     super.dispose();
+  }
+
+  /// Aviso de error arriba.
+  ///
+  /// Va en un MaterialBanner y no en un SnackBar porque el SnackBar sale abajo,
+  /// justo encima del botón del colegio —el dato que más falta hace cuando algo
+  /// falla—. El banner ocupa su sitio arriba y no tapa nada.
+  void _mostrarAviso(String mensaje) {
+    final mensajero = ScaffoldMessenger.of(context);
+
+    _temporizadorAviso?.cancel();
+    mensajero.hideCurrentMaterialBanner();
+
+    mensajero.showMaterialBanner(
+      MaterialBanner(
+        backgroundColor: Colors.red.shade700,
+        leading: Icon(Icons.error_outline, color: Colors.white),
+        content: Text(mensaje, style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: _ocultarAviso,
+            child: Text('Cerrar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    // El banner no se va solo: si no lo cierran, se queda para siempre.
+    _temporizadorAviso = Timer(Duration(seconds: 12), () {
+      mensajero.hideCurrentMaterialBanner();
+    });
+  }
+
+  void _ocultarAviso() {
+    _temporizadorAviso?.cancel();
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
   }
 
   Future<void> _onSubmitFuture() async {
@@ -128,23 +168,14 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
       body: BlocConsumer<LoginBloc, LoginState>(
         listener: (BuildContext, login_state) {
           if (login_state is LoggedState) {
+            // El banner es de la app, no de esta pantalla: sin esto viajaría
+            // con el docente hasta el panel.
+            _ocultarAviso();
             Navigator.pushNamed(context, '/panel');
+          } else if (login_state is LoggingInState) {
+            _ocultarAviso();
           } else if (login_state is LoginErrorState) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(login_state.mensaje),
-                  backgroundColor: Colors.red.shade700,
-                  duration: Duration(seconds: 8),
-                  action: SnackBarAction(
-                    label: 'Cerrar',
-                    textColor: Colors.white,
-                    onPressed: () =>
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                  ),
-                ),
-              );
+            _mostrarAviso(login_state.mensaje);
           }
         },
         builder: (_, _login_state) {
