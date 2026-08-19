@@ -6,6 +6,8 @@ import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PanelScreen extends StatefulWidget {
+  const PanelScreen({super.key});
+
   @override
   _PanelScreen createState() => _PanelScreen();
 }
@@ -138,7 +140,9 @@ class _PanelScreen extends State<PanelScreen> {
             onTap: () async {
               final preferences = await SharedPreferences.getInstance();
               await preferences.setString('grupoSelected', grupo.toRawJson());
-              if (!mounted) return;
+              // El context aquí es el del itemBuilder, no el del State: hay
+              // que preguntarle a él si sigue montado.
+              if (!context.mounted) return;
               Navigator.pushNamed(context, '/alum-tardanza-cole');
             },
             trailing: Icon(Icons.arrow_right),

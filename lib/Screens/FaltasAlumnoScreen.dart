@@ -51,7 +51,7 @@ class FaltasAlumnoArgs {
 class FaltasAlumnoScreen extends StatefulWidget {
   final FaltasAlumnoArgs args;
 
-  const FaltasAlumnoScreen({Key? key, required this.args}) : super(key: key);
+  const FaltasAlumnoScreen({super.key, required this.args});
 
   @override
   _FaltasAlumnoScreenState createState() => _FaltasAlumnoScreenState();
@@ -141,7 +141,7 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
       }
       docentes = mapa;
     } catch (err) {
-      print('No se pudo traer los docentes: $err');
+      debugPrint('No se pudo traer los docentes: $err');
     }
   }
 

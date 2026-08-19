@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
@@ -18,6 +17,8 @@ import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
+  const AlumTardanzaColeScreen({super.key});
+
   @override
   _AlumTardanzaColeScreen createState() => _AlumTardanzaColeScreen();
 }

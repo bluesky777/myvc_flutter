@@ -5,11 +5,11 @@ import 'InputContainer.dart';
 
 class RoundedInput extends StatelessWidget {
   RoundedInput({
-    Key? key,
+    super.key,
     required this.icon,
     required this.hint,
     this.controller,
-  }) : super(key: key);
+  });
 
   final IconData icon;
   final String hint;

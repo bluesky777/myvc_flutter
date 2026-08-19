@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
@@ -26,11 +28,11 @@ class LoginController implements LoginBaseController {
   ) async {
     if (isLocal) {
       bool hasHttp = servidorElegido.contains('http');
-      servidorElegido = hasHttp ? servidorElegido : 'http://' + servidorElegido;
+      servidorElegido = hasHttp ? servidorElegido : 'http://$servidorElegido';
     }
 
     var server = Server();
-    var response;
+    http.Response response;
 
     try {
       response = await server.credentials(
@@ -83,7 +85,7 @@ class LoginController implements LoginBaseController {
     } catch (err) {
       // El contexto es un extra: si no llega, la sesión sigue siendo válida.
       AuthService.user.username = username;
-      print('No se pudo leer el contexto del usuario: $err');
+      debugPrint('No se pudo leer el contexto del usuario: $err');
     }
 
     final preferences = await SharedPreferences.getInstance();

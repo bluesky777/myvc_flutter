@@ -38,6 +38,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  MyApp({super.key});
+
   // Para las rutas
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

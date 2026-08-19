@@ -1,6 +1,6 @@
 class AuthService {
   static UserAutenticado user = UserAutenticado();
-  static setToken(String mytoken) => AuthService.user.token = mytoken;
+  static void setToken(String mytoken) => AuthService.user.token = mytoken;
 
   /// Deja el servicio como recién arrancado.
   ///

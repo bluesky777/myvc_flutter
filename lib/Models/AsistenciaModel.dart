@@ -76,7 +76,7 @@ class AsistenciaModel {
         "alumno_id": alumnoId,
         "asignatura_id": asignaturaId,
         "created_by": createdBy,
-        "created_at": createdAt == null ? null : createdAt!.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "entrada": entrada,
         "fechaHora": fechaHora,
         "periodoId": periodoId,

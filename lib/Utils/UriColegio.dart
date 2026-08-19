@@ -17,19 +17,19 @@ class UriColegio {
 
     return http.post(direccion).then((value) {
       final List listaResponse = jsonDecode(value.body);
-      this.listaUrisColes = listaResponse.map((dato) {
+      listaUrisColes = listaResponse.map((dato) {
         return UriColegio.fromJson(dato);
       }).toList();
 
-      this.listaUrisColes.add(UriColegio(uri: 'otro', nombre: 'Otro'));
-      return this.listaUrisColes;
+      listaUrisColes.add(UriColegio(uri: 'otro', nombre: 'Otro'));
+      return listaUrisColes;
     });
   }
 
   /// Dos colegios son el mismo si se llaman igual.
   @override
   bool operator ==(Object other) =>
-      other is UriColegio && this.nombre == other.nombre;
+      other is UriColegio && nombre == other.nombre;
 
   /// El hash tiene que salir de lo mismo que compara ==.
   ///

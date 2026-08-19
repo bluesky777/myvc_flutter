@@ -18,6 +18,7 @@ class FormLoginContainer extends StatefulWidget {
   final void Function(bool) onGuardarDatosChanged;
 
   const FormLoginContainer({
+    super.key,
     required this.isLogin,
     required this.animationDuration,
     required this.size,
@@ -34,20 +35,6 @@ class FormLoginContainer extends StatefulWidget {
 }
 
 class FormLoginContainerState extends State<FormLoginContainer> {
-  void _snackDatosInvalidos() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Datos inválidos.'),
-        action: SnackBarAction(
-          label: 'Limpiar',
-          onPressed: () {
-            widget.passwordController.text = '';
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginBloc, LoginState>(

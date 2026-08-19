@@ -17,11 +17,11 @@ class AvatarPersona extends StatelessWidget {
   final double radio;
 
   const AvatarPersona({
-    Key? key,
+    super.key,
     required this.nombre,
     this.fotoNombre,
     this.radio = 20,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

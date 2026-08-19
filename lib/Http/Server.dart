@@ -27,7 +27,7 @@ class Server {
     return '${Server.urlImages}/$ruta';
   }
 
-  Uri _uri(direction) => Uri.parse('${Server.urlApi}$direction');
+  Uri _uri(String direction) => Uri.parse('${Server.urlApi}$direction');
 
   Map<String, String> _encabezado () => {
     'Authorization': 'Bearer ${AuthService.user.token}',
@@ -36,7 +36,6 @@ class Server {
   Future credentials(String username, String password, servidor,
       {bool otro = false}) {
 
-    print('$servidor - otro: $otro');
     Server.urlServer = servidor;
     if (otro){ // quiere decir que es local
       Server.urlApi = '$servidor/api';

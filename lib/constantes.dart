@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 const kPrimaryColor = Color(0XFF6A62B7);
-const KBackgroundColor = Color(0XFFE5E5E5);
+const kBackgroundColor = Color(0XFFE5E5E5);
 
 /// Los colores con los que se señala una falta a la institución en la lista.
 ///

@@ -8,13 +8,13 @@ import 'RoundedInput.dart';
 
 class FormSelectServidor extends StatefulWidget {
   const FormSelectServidor({
-    Key? key,
+    super.key,
     required this.isLogin,
     required this.animationDuration,
     required this.size,
     required this.defaultLoginSize,
     required this.animationController,
-  }) : super(key: key);
+  });
 
   final bool isLogin;
   final Duration animationDuration;
@@ -43,7 +43,7 @@ class _FormSelectServidorState extends State<FormSelectServidor> {
             child: Align(
               alignment: Alignment.center,
               child: SingleChildScrollView(
-                child: Container(
+                child: SizedBox(
                   width: widget.size.width,
                   height: widget.defaultLoginSize,
                   child: Column(
@@ -58,7 +58,7 @@ class _FormSelectServidorState extends State<FormSelectServidor> {
                       SizedBox(
                         height: 20,
                       ),
-                      Container(
+                      SizedBox(
                         height: widget.size.height * 0.5,
                         child: SingleChildScrollView(
                           physics: ScrollPhysics(),
@@ -74,7 +74,6 @@ class _FormSelectServidorState extends State<FormSelectServidor> {
                       RoundedButton(
                         title: 'Aceptar',
                         onTap: () {
-                          print('Aceptando... ${uriTextController.text}');
                           context
                               .read<SelectServerCubit>()
                               .setOtroUriColegio(uriTextController.text);
@@ -94,8 +93,7 @@ class _FormSelectServidorState extends State<FormSelectServidor> {
 }
 
 class ListViewServidores extends StatefulWidget {
-  const ListViewServidores({Key? key, required this.animationController})
-      : super(key: key);
+  const ListViewServidores({super.key, required this.animationController});
 
   final AnimationController? animationController;
 
@@ -169,7 +167,6 @@ class _ListViewServidoresState extends State<ListViewServidores> {
                   backgroundImage: NetworkImage(uriColegio.logo),
                 ),
           onTap: () {
-            print('Cambiada uri... ${uriColegio.uri}');
             BlocProvider.of<SelectServerCubit>(context)
                 .selectUriColegio(uriColegio);
 

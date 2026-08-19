@@ -34,6 +34,7 @@ class GrupoModel {
 
   String toRawJson() => json.encode(toJson());
 
+  @override
   String toString() => '(GrupoModel) $nombre';
 
   factory GrupoModel.fromJson(Map<String, dynamic> json) => GrupoModel(

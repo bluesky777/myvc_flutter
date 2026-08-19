@@ -4,14 +4,14 @@ import '../../constantes.dart';
 import 'InputContainer.dart';
 
 class RoundedPasswordInput extends StatelessWidget {
-  RoundedPasswordInput({
-    Key? key,
+  const RoundedPasswordInput({
+    super.key,
     required this.hint,
     this.controller,
-  }) : super(key: key);
+  });
 
   final String hint;
-  TextEditingController? controller;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {

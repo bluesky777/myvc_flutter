@@ -53,7 +53,7 @@ class AsistenciaClaseArgs {
 class AsistenciaClaseScreen extends StatefulWidget {
   final AsistenciaClaseArgs args;
 
-  const AsistenciaClaseScreen({Key? key, required this.args}) : super(key: key);
+  const AsistenciaClaseScreen({super.key, required this.args});
 
   @override
   _AsistenciaClaseScreenState createState() => _AsistenciaClaseScreenState();

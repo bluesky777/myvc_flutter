@@ -8,7 +8,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 /// otro distinto en el listado de alumnos con un único elemento que no llevaba
 /// a ninguna parte. Ahora las dos pantallas montan este mismo.
 class MenuLateral extends StatelessWidget {
-  const MenuLateral({Key? key}) : super(key: key);
+  const MenuLateral({super.key});
 
   @override
   Widget build(BuildContext context) {

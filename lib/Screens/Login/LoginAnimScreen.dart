@@ -14,7 +14,7 @@ import 'ButtonSelectServidores.dart';
 import 'FormLoginContainer.dart';
 
 class LoginAnimScreen extends StatefulWidget {
-  const LoginAnimScreen({Key? key}) : super(key: key);
+  const LoginAnimScreen({super.key});
 
   @override
   _LoginAnimScreenState createState() => _LoginAnimScreenState();
@@ -138,20 +138,6 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
     }
   }
 
-  void _snackDatosInvalidos() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Datos inválidos.'),
-        action: SnackBarAction(
-          label: 'Limpiar',
-          onPressed: () {
-            passwordController.text = '';
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -167,8 +153,8 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
     return Scaffold(
       body: BlocConsumer<LoginBloc, LoginState>(
-        listener: (BuildContext, login_state) {
-          if (login_state is LoggedState) {
+        listener: (_, estadoLogin) {
+          if (estadoLogin is LoggedState) {
             // El banner es de la app, no de esta pantalla: sin esto viajaría
             // con el docente hasta el panel.
             _ocultarAviso();
@@ -177,13 +163,13 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
             // devolvía al formulario con la sesión ya abierta. El logout sí lo
             // hacía bien; la entrada no.
             Navigator.pushNamedAndRemoveUntil(context, '/panel', (_) => false);
-          } else if (login_state is LoggingInState) {
+          } else if (estadoLogin is LoggingInState) {
             _ocultarAviso();
-          } else if (login_state is LoginErrorState) {
-            _mostrarAviso(login_state.mensaje);
+          } else if (estadoLogin is LoginErrorState) {
+            _mostrarAviso(estadoLogin.mensaje);
           }
         },
-        builder: (_, _login_state) {
+        builder: (_, __) {
           return BlocBuilder<SelectServerCubit, SelectServerState>(
             builder: (context, state) {
               return Stack(
@@ -281,12 +267,11 @@ class CloseServidoresButton extends StatelessWidget {
   final AnimationController animationController;
 
   const CloseServidoresButton(
-      {Key? key,
+      {super.key,
       required this.isLogin,
       required this.animationDuration,
       required this.size,
-      required this.animationController})
-      : super(key: key);
+      required this.animationController});
 
   @override
   Widget build(BuildContext context) {
@@ -314,8 +299,7 @@ class CloseServidoresButton extends StatelessWidget {
     );
   }
 
-  void _setIsLoginToTrue(context) {
-    print('Setting login in true');
+  void _setIsLoginToTrue(BuildContext context) {
     animationController.reverse();
     BlocProvider.of<SelectServerCubit>(context).toggleMostrar();
   }

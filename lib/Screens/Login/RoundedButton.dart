@@ -4,10 +4,10 @@ import '../../constantes.dart';
 
 class RoundedButton extends StatelessWidget {
   const RoundedButton({
-    Key? key,
+    super.key,
     required this.title,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   final String title;
   final void Function() onTap;

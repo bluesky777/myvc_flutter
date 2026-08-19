@@ -5,9 +5,9 @@ import '../../constantes.dart';
 
 class InputContainer extends StatelessWidget {
   const InputContainer({
-    Key? key,
+    super.key,
     required this.child
-  }) : super(key: key);
+  });
 
   final Widget child;
 

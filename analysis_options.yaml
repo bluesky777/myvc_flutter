@@ -1,0 +1,24 @@
+# Las reglas con las que se revisa este proyecto.
+#
+# Se parte de las que Flutter recomienda. Lo que se apaga aquí abajo se apaga a
+# propósito, con su motivo: una regla que se incumple en trescientos sitios no
+# avisa de nada, solo tapa a las que sí importan.
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Esta app se escribió con constructores sin `const`. Ponerlos todos es un
+    # cambio grande y mecánico que no arregla ningún error; se hará cuando se
+    # toque cada pantalla por otra razón.
+    prefer_const_constructors: false
+    prefer_const_constructors_in_immutables: false
+    prefer_const_literals_to_create_immutables: false
+
+    # Los nombres de archivo van en PascalCase en todo el proyecto
+    # —AlumnoModel.dart, LoginAnimScreen.dart—. Renombrarlos rompería todos los
+    # imports a cambio de nada.
+    file_names: false
+
+    # Las clases de estado privadas (_PanelScreen) las nombra así el propio
+    # generador de Flutter.
+    library_private_types_in_public_api: false

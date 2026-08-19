@@ -9,9 +9,10 @@ class ButtonSelectServidores extends StatefulWidget {
   final Animation<double>? containerSize;
 
   const ButtonSelectServidores({
+    super.key,
     required this.animationController,
     required this.containerSize,
-  }) : super();
+  });
 
   @override
   _ButtonSelectServidoresState createState() => _ButtonSelectServidoresState();
@@ -22,7 +23,6 @@ class _ButtonSelectServidoresState extends State<ButtonSelectServidores> {
   Widget build(BuildContext context) {
     return BlocBuilder<SelectServerCubit, SelectServerState>(
       builder: (context, state) {
-        //print('en builder buttonSelect ${state.uriColegioSelected}');
         return Align(
           alignment: Alignment.bottomCenter,
           child: GestureDetector(
@@ -40,7 +40,7 @@ class _ButtonSelectServidoresState extends State<ButtonSelectServidores> {
                   topLeft: Radius.circular(100),
                   topRight: Radius.circular(100),
                 ),
-                color: KBackgroundColor,
+                color: kBackgroundColor,
               ),
               alignment: Alignment.center,
               child: state.mostrandoButtonSelectedUri
