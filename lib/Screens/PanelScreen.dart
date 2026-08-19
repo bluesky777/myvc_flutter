@@ -42,6 +42,12 @@ class _PanelScreen extends State<PanelScreen> {
       showShadow: true,
       angle: -8.0,
       style: DrawerStyle.style1,
+      // Sin esto el menú no se podía cerrar: mainScreenAbsorbPointer viene en
+      // true, así que con el menú abierto la pantalla principal se traga los
+      // toques y el icono ☰ deja de responder; y mainScreenTapClose viene en
+      // false, así que tocar fuera tampoco cerraba. Solo quedaba arrastrar.
+      mainScreenTapClose: true,
+      androidCloseOnBackTap: true,
       mainScreen: Scaffold(
         appBar: AppBar(
           title: Text('Elija grupo'),
