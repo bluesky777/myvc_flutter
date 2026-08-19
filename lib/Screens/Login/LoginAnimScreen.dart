@@ -30,6 +30,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
   bool isLoading = false;
   bool guardarDatos = true;
   Timer? _temporizadorAviso;
+  OverlayEntry? _avisoEntry;
 
   TextEditingController usenameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -63,45 +64,40 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
   @override
   void dispose() {
-    _temporizadorAviso?.cancel();
+    _ocultarAviso();
     if (animationController != null) animationController!.dispose();
     super.dispose();
   }
 
-  /// Aviso de error arriba.
+  /// Aviso de error arriba, y descartable arrastrándolo hacia arriba.
   ///
-  /// Va en un MaterialBanner y no en un SnackBar porque el SnackBar sale abajo,
-  /// justo encima del botón del colegio —el dato que más falta hace cuando algo
-  /// falla—. El banner ocupa su sitio arriba y no tapa nada.
+  /// Va en el Overlay y no en un SnackBar ni en un MaterialBanner. El SnackBar
+  /// sale abajo, encima del botón del colegio, que es el dato que más falta
+  /// hace cuando el login falla. El MaterialBanner sí sale arriba, pero no
+  /// tiene gesto de descarte. Así se quedan las tres cosas: arriba, se arrastra
+  /// para quitarlo, y se va solo si nadie lo toca.
   void _mostrarAviso(String mensaje) {
-    final mensajero = ScaffoldMessenger.of(context);
+    _ocultarAviso();
 
-    _temporizadorAviso?.cancel();
-    mensajero.hideCurrentMaterialBanner();
-
-    mensajero.showMaterialBanner(
-      MaterialBanner(
-        backgroundColor: Colors.red.shade700,
-        leading: Icon(Icons.error_outline, color: Colors.white),
-        content: Text(mensaje, style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(
-            onPressed: _ocultarAviso,
-            child: Text('Cerrar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final entrada = OverlayEntry(
+      builder: (_) => _AvisoSuperior(mensaje: mensaje, onCerrar: _ocultarAviso),
     );
 
-    // El banner no se va solo: si no lo cierran, se queda para siempre.
-    _temporizadorAviso = Timer(Duration(seconds: 12), () {
-      mensajero.hideCurrentMaterialBanner();
-    });
+    _avisoEntry = entrada;
+    Overlay.of(context).insert(entrada);
+
+    _temporizadorAviso = Timer(Duration(seconds: 12), _ocultarAviso);
   }
 
   void _ocultarAviso() {
     _temporizadorAviso?.cancel();
-    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _temporizadorAviso = null;
+
+    // A null antes de nada: remove() solo admite una llamada, y aquí se entra
+    // por tres sitios —el botón, el arrastre y el temporizador—.
+    final entrada = _avisoEntry;
+    _avisoEntry = null;
+    entrada?.remove();
   }
 
   Future<void> _onSubmitFuture() async {
@@ -313,5 +309,60 @@ class CloseServidoresButton extends StatelessWidget {
     print('Setting login in true');
     animationController.reverse();
     BlocProvider.of<SelectServerCubit>(context).toggleMostrar();
+  }
+}
+
+/// La barra roja de error. Se arrastra hacia arriba para quitarla, que es lo
+/// que uno intenta por instinto con un aviso que estorba.
+class _AvisoSuperior extends StatelessWidget {
+  final String mensaje;
+  final VoidCallback onCerrar;
+
+  const _AvisoSuperior({required this.mensaje, required this.onCerrar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Dismissible(
+        key: const ValueKey('aviso-login'),
+        direction: DismissDirection.up,
+        // Sin esto, al soltarlo intenta animar el hueco que deja, y aquí no hay
+        // hueco: el aviso flota sobre la pantalla.
+        resizeDuration: null,
+        onDismissed: (_) => onCerrar(),
+        child: Material(
+          color: Colors.red.shade700,
+          elevation: 6,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      mensaje,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onCerrar,
+                    child: Text(
+                      'Cerrar',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

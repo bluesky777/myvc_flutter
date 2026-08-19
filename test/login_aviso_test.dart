@@ -49,6 +49,25 @@ void main() {
         reason: 'el aviso tiene que quedar por encima del botón del colegio');
   });
 
+  testWidgets('el aviso se quita arrastrándolo hacia arriba',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(pantalla());
+    await tester.pump();
+
+    await tester.tap(find.text('Entrar'));
+    await tester.pump();
+    await tester.pump();
+
+    final aviso = find.text('Elige primero tu colegio.');
+    expect(aviso, findsOneWidget);
+
+    // El gesto que hace cualquiera con un aviso que estorba.
+    await tester.drag(aviso, const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    expect(aviso, findsNothing);
+  });
+
   testWidgets('el aviso se va solo a los 12 segundos',
       (WidgetTester tester) async {
     await tester.pumpWidget(pantalla());
