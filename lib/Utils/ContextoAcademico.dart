@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
+import 'package:myvc_flutter/Utils/SesionGuardada.dart';
 
 /// El año y el periodo con los que trabaja el usuario ahora mismo.
 ///
@@ -138,6 +139,12 @@ class ContextoAcademico extends ChangeNotifier {
       if (datos is! Map) return 'Se cambió, pero el servidor no dijo con qué.';
 
       tomarDelLogin(Map<String, dynamic>.from(datos));
+
+      // La sesión guardada tiene una copia de esta misma respuesta, y acaba de
+      // quedarse vieja: el periodo es otro. Sin esto, recargar la página
+      // devolvería al usuario al periodo anterior.
+      await SesionGuardada.actualizarUsuario(res.body);
+
       return null;
     } catch (err) {
       return 'Se cambió, pero no se pudo releer el periodo: $err';

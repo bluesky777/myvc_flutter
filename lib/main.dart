@@ -1,9 +1,11 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
-import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
+import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
@@ -20,6 +22,11 @@ void main() async {
         : HydratedStorageDirectory((await getApplicationDocumentsDirectory()).path),
   );
 
+  // Antes de pintar nada: si hay una sesión guardada y sigue valiendo, se
+  // recupera. Es lo que hace que recargar la página en la web no tire al
+  // usuario a la calle. Ver LoginController.restaurar().
+  final haySesion = await LoginController().restaurar();
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -32,13 +39,16 @@ void main() async {
           ),
         ),
       ],
-      child: MyApp(),
+      child: MyApp(haySesion: haySesion),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  MyApp({super.key, this.haySesion = false});
+
+  /// Si al arrancar se recuperó una sesión que el servidor da por buena.
+  final bool haySesion;
 
   // Para las rutas
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -60,9 +70,39 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: LoginAnimScreen(),
+      // Sin `home:` a propósito: con él, la ruta '/' era siempre el login y no
+      // había forma de arrancar en otra pantalla. Ahora la primera ruta se
+      // decide arriba, y '/' la resuelve RouteGenerator como el login.
+      initialRoute: rutaDeArranque(
+        ui.PlatformDispatcher.instance.defaultRouteName,
+        haySesion: haySesion,
+      ),
+      // Una ruta, no una pila. Flutter, ante un initialRoute como
+      // '/mis-notas', monta por debajo también '/' —parte la ruta por sus
+      // tramos—, y eso dejaría el login montado debajo de la pantalla del
+      // usuario: se vería al volver atrás, y se construiría de balde en cada
+      // arranque.
+      onGenerateInitialRoutes: (ruta) => [
+        RouteGenerator.generateRoute(RouteSettings(name: ruta)),
+      ],
       navigatorKey: navigatorKey,
       onGenerateRoute: RouteGenerator.generateRoute,
     );
   }
+}
+
+/// Con qué pantalla abre la app.
+///
+/// En la web, el navegador dice en qué ruta estaba: al recargar en «Mis notas»,
+/// `defaultRouteName` llega como '/mis-notas' y hay que volver ahí, no al
+/// principio. En el móvil llega siempre '/'.
+///
+/// Sin sesión no se discute: al login, aunque el navegador pida otra cosa. Es
+/// lo que faltaba y por lo que recargar acababa en una pantalla que pedía datos
+/// con el token en null y recibía 404 de un servidor que ni siquiera era el del
+/// colegio.
+String rutaDeArranque(String delNavegador, {required bool haySesion}) {
+  if (!haySesion) return '/login';
+
+  return delNavegador == '/' ? '/muro' : delNavegador;
 }

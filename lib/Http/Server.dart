@@ -43,17 +43,33 @@ class Server {
     'Authorization': 'Bearer ${AuthService.user.token}',
   };
 
-  Future credentials(String username, String password, servidor,
-      {bool otro = false}) {
-
+  /// A qué servidor habla la app.
+  ///
+  /// Estaba metido dentro de credentials(), o sea que solo se sabía apuntar a
+  /// un colegio mientras alguien escribía su usuario y su clave. Al recargar la
+  /// página en la web eso se pierde —los estáticos viven en memoria— y las
+  /// peticiones salían contra `/api` del propio dominio de la app, que
+  /// contestaba 404. Ahora es un paso aparte y lo usan los dos: el login y el
+  /// arranque que recupera la sesión guardada.
+  ///
+  /// `otro` quiere decir que es un servidor local, escrito a mano. Los colegios
+  /// en internet tienen la plataforma colgando de /8myvc/public.
+  static void apuntarA(String servidor, {bool otro = false}) {
     Server.urlServer = servidor;
-    if (otro){ // quiere decir que es local
+
+    if (otro) {
       Server.urlApi = '$servidor/api';
       Server.urlImages = '$servidor/images/perfil';
-    }else{ // En internet tengo los servidores en estas carpetas
+    } else {
       Server.urlApi = '$servidor/8myvc/public/api';
       Server.urlImages = '$servidor/8myvc/public/images/perfil';
     }
+  }
+
+  Future credentials(String username, String password, servidor,
+      {bool otro = false}) {
+
+    Server.apuntarA(servidor, otro: otro);
 
 
     var url = _uri('/login/credentials');

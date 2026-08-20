@@ -13,6 +13,10 @@ import 'AlumTardanzaColeScreen.dart';
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      // '/' es el login: es donde cae quien abre la app sin sesión, y antes lo
+      // resolvía el `home:` de MaterialApp, que se quitó para poder arrancar en
+      // otra pantalla al recuperar la sesión.
+      case '/':
       case '/login':
         return MaterialPageRoute(
             settings: settings, builder: (context) => LoginAnimScreen());

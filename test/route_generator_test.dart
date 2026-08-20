@@ -9,6 +9,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
         onGenerateRoute: RouteGenerator.generateRoute,
+        // Igual que main.dart, y por lo mismo: sin esto Flutter monta además
+        // la ruta '/' por debajo —parte la ruta por tramos—, que es el login y
+        // aquí no viene a cuento.
+        onGenerateInitialRoutes: (ruta) => [
+          RouteGenerator.generateRoute(RouteSettings(name: ruta)),
+        ],
         initialRoute: '/panle-mal-escrito',
       ));
       await tester.pump();
