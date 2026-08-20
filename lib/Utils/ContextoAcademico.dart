@@ -77,39 +77,70 @@ class ContextoAcademico extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Cambia el periodo del usuario, y con él el año si es de otro.
+  /// Cambia el año del usuario.
   ///
-  /// Devuelve null si se guardó, o el mensaje de lo que pasó. El orden importa:
-  /// primero el año —que mueve al usuario a un periodo cualquiera de ese año— y
-  /// después el periodo exacto que se pidió, que es el que manda.
-  Future<String?> cambiarA(
+  /// `PUT years/useractive/{id}`, que es exactamente lo que llama el front web
+  /// desde su barra de arriba. El backend no guarda el año en ninguna parte:
+  /// mueve al usuario al periodo del mismo número en el año destino y, si ese
+  /// año no lo tiene, al último. O sea que el periodo cambia también, y no
+  /// siempre al que uno esperaría: por eso después se relee, en vez de dar por
+  /// hecho cuál quedó.
+  Future<String?> cambiarYear(Server server, YearModel yearNuevo) async {
+    return _cambiar(
+      server,
+      ruta: '/years/useractive/${yearNuevo.id}',
+      accion: 'cambiar de año',
+    );
+  }
+
+  /// Cambia el periodo del usuario.
+  ///
+  /// `PUT periodos/useractive/{id}`, el otro de la barra del front.
+  Future<String?> cambiarPeriodo(Server server, PeriodoModel periodoNuevo) {
+    return _cambiar(
+      server,
+      ruta: '/periodos/useractive/${periodoNuevo.id}',
+      accion: 'cambiar de periodo',
+    );
+  }
+
+  Future<String?> _cambiar(
     Server server, {
-    required YearModel yearNuevo,
-    required PeriodoModel periodoNuevo,
+    required String ruta,
+    required String accion,
   }) async {
     try {
-      if (yearNuevo.id != yearId) {
-        final res = await server.put('/years/useractive/${yearNuevo.id}', {});
-        if (res.statusCode >= 300) {
-          return _mensaje(res.statusCode, 'cambiar de año');
-        }
-      }
+      final res = await server.put(ruta, {});
+      if (res.statusCode >= 300) return _mensaje(res.statusCode, accion);
 
-      final res =
-          await server.put('/periodos/useractive/${periodoNuevo.id}', {});
+      return await refrescar(server);
+    } catch (err) {
+      return 'No se pudo $accion: $err';
+    }
+  }
+
+  /// Vuelve a leer del servidor con qué año y periodo quedó el usuario.
+  ///
+  /// Es la misma llamada que hace la app al entrar —`POST /login` con el
+  /// token—, que devuelve el contexto ya resuelto. El front web consigue lo
+  /// mismo recargando la página entera después de cambiar; aquí basta con
+  /// releer, y así lo que se pinta arriba es lo que de verdad quedó guardado y
+  /// no lo que la app supuso.
+  Future<String?> refrescar(Server server) async {
+    try {
+      final res = await server.login();
       if (res.statusCode >= 300) {
-        return _mensaje(res.statusCode, 'cambiar de periodo');
+        return 'Se cambió, pero no se pudo releer el periodo'
+            ' (HTTP ${res.statusCode}).';
       }
 
-      yearId = yearNuevo.id;
-      year = yearNuevo.year;
-      periodoId = periodoNuevo.id;
-      numeroPeriodo = periodoNuevo.numero;
-      notifyListeners();
+      final datos = jsonDecode(res.body);
+      if (datos is! Map) return 'Se cambió, pero el servidor no dijo con qué.';
 
+      tomarDelLogin(Map<String, dynamic>.from(datos));
       return null;
     } catch (err) {
-      return 'No se pudo cambiar el periodo: $err';
+      return 'Se cambió, pero no se pudo releer el periodo: $err';
     }
   }
 

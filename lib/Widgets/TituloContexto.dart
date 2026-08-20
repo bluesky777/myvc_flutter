@@ -111,23 +111,57 @@ class _SelectorContextoState extends State<_SelectorContexto> {
     }
   }
 
-  Future<void> _elegir(PeriodoModel periodo) async {
-    if (guardando || yearMostrado == null) return;
+  /// Cambiar el año se guarda al momento, no al elegir después un periodo.
+  ///
+  /// Era el fallo de la primera versión: el desplegable del año solo filtraba
+  /// qué periodos se veían, así que quien elegía 2025 y cerraba el cuadro se
+  /// quedaba igual que estaba, sin que nada se lo dijera. El front web tiene
+  /// los dos menús y cada uno guarda al pulsarlo; aquí, lo mismo.
+  Future<void> _elegirYear(YearModel year) async {
+    if (guardando || year.id == contexto.yearId) {
+      setState(() => yearMostrado = year);
+      return;
+    }
+
+    setState(() {
+      guardando = true;
+      yearMostrado = year;
+    });
+
+    await _guardar(() => contexto.cambiarYear(server, year), cerrar: false);
+  }
+
+  Future<void> _elegirPeriodo(PeriodoModel periodo) async {
+    if (guardando) return;
 
     setState(() => guardando = true);
+    await _guardar(() => contexto.cambiarPeriodo(server, periodo));
+  }
 
-    final problema = await contexto.cambiarA(
-      server,
-      yearNuevo: yearMostrado!,
-      periodoNuevo: periodo,
-    );
-
+  Future<void> _guardar(Future<String?> Function() tarea,
+      {bool cerrar = true}) async {
+    final problema = await tarea();
     if (!mounted) return;
 
     if (problema != null) {
       setState(() {
         guardando = false;
         error = problema;
+      });
+      return;
+    }
+
+    // Al cambiar de año el backend elige el periodo por su cuenta, así que el
+    // cuadro se queda abierto enseñando en cuál quedó: cerrarlo dejaría al
+    // usuario adivinando.
+    if (!cerrar) {
+      setState(() {
+        guardando = false;
+        error = null;
+        yearMostrado = contexto.years.firstWhere(
+          (y) => y.id == contexto.yearId,
+          orElse: () => yearMostrado ?? contexto.years.first,
+        );
       });
       return;
     }
@@ -161,7 +195,7 @@ class _SelectorContextoState extends State<_SelectorContexto> {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Lo que se elija aquí manda en todas las pantallas.',
+              'Se guarda en el momento, y manda en todas las pantallas.',
               style: TextStyle(fontSize: 13, color: Colors.black54),
             ),
             const SizedBox(height: 18),
@@ -206,7 +240,9 @@ class _SelectorContextoState extends State<_SelectorContexto> {
             .toList(),
         onChanged: guardando
             ? null
-            : (nuevo) => setState(() => yearMostrado = nuevo),
+            : (nuevo) {
+                if (nuevo != null) _elegirYear(nuevo);
+              },
       ),
       const SizedBox(height: 16),
       // Los periodos, en fila: son tres o cuatro, y un desplegable dentro de
@@ -241,7 +277,7 @@ class _SelectorContextoState extends State<_SelectorContexto> {
     return ChoiceChip(
       label: Text('Periodo ${periodo.numero}'),
       selected: esElActual,
-      onSelected: guardando ? null : (_) => _elegir(periodo),
+      onSelected: guardando ? null : (_) => _elegirPeriodo(periodo),
     );
   }
 }
