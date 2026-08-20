@@ -60,6 +60,9 @@ class _MuroScreenState extends State<MuroScreen> {
       mainScreenTapClose: true,
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
+        // Un gris muy claro detrás: es lo que hace que cada publicación se lea
+        // como una tarjeta y no como un trozo suelto de la pantalla.
+        backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
           title: Text('Publicaciones'),
           leading: GestureDetector(

@@ -6,7 +6,7 @@ class ComentarioModel {
   final String autor;
   final String? fotoAutor;
   final String comentario;
-  final String? cuando;
+  final DateTime? cuando;
 
   ComentarioModel({
     required this.id,
@@ -22,7 +22,7 @@ class ComentarioModel {
       autor: '${json['nombre_autor'] ?? ''}',
       fotoAutor: texto(json['foto_autor']),
       comentario: '${json['comentario'] ?? ''}',
-      cuando: texto(json['created_at']),
+      cuando: DateTime.tryParse('${json['created_at']}'),
     );
   }
 }
@@ -43,7 +43,7 @@ class PublicacionModel {
   final String? imagenNombre;
   final String autor;
   final String? fotoAutor;
-  final String? cuando;
+  final DateTime? cuando;
   final List<ComentarioModel> comentarios;
 
   /// Quién la escribió, para saber si el que mira es su dueño.
@@ -67,6 +67,22 @@ class PublicacionModel {
   /// Si hay algo que enseñar. Una publicación sin texto ni imagen no se pinta.
   bool get tieneAlgo => tieneTexto || tieneImagen;
 
+  /// El pie de comentarios. Se enseña siempre, también en cero: saber que
+  /// nadie ha comentado es un dato, y un pie que aparece y desaparece hace que
+  /// las tarjetas bailen al recorrer la lista.
+  String get resumenComentarios {
+    if (comentarios.isEmpty) return 'Sin comentarios';
+    if (comentarios.length == 1) return '1 comentario';
+    return '${comentarios.length} comentarios';
+  }
+
+  /// Si el texto es corto y va solo, se pinta en grande y centrado.
+  ///
+  /// Son los avisos: «Mañana no hay clase». En la plataforma web se publican
+  /// así, sobre un fondo de color, para que no se pasen por alto al bajar. Un
+  /// texto largo con ese tratamiento sería un muro de letras.
+  bool get esAviso => tieneTexto && !tieneImagen && contenido!.length <= 140;
+
   factory PublicacionModel.fromJson(Map<String, dynamic> json) {
     final crudos = json['comentarios'];
 
@@ -76,7 +92,8 @@ class PublicacionModel {
       imagenNombre: texto(json['imagen_nombre']),
       autor: '${json['nombre_autor'] ?? ''}',
       fotoAutor: texto(json['foto_autor']),
-      cuando: texto(json['created_at']),
+      // Llega como '2026-08-19 19:10:58', sin zona: se lee tal cual.
+      cuando: DateTime.tryParse('${json['created_at']}'),
       personaId: entero(json['persona_id']),
       comentarios: crudos is List
           ? crudos

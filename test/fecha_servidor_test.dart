@@ -100,4 +100,43 @@ void main() {
 
     expect(formatoDiaYHora(registrada), '19/08/2026 - 7:34 a. m.');
   });
+
+  _pruebasDelMuro();
+}
+
+void _pruebasDelMuro() {
+  group('cuánto hace que se publicó', () {
+    final ahora = DateTime(2026, 8, 19, 19, 30);
+
+    test('lo de hace un instante', () {
+      expect(hace(DateTime(2026, 8, 19, 19, 30), ahora: ahora), 'ahora mismo');
+      expect(hace(DateTime(2026, 8, 19, 19, 29, 30), ahora: ahora),
+          'ahora mismo');
+    });
+
+    test('minutos y horas, en singular cuando toca', () {
+      expect(hace(DateTime(2026, 8, 19, 19, 29), ahora: ahora), 'hace 1 minuto');
+      expect(hace(DateTime(2026, 8, 19, 19, 10), ahora: ahora),
+          'hace 20 minutos');
+      expect(hace(DateTime(2026, 8, 19, 18, 30), ahora: ahora), 'hace 1 hora');
+      expect(hace(DateTime(2026, 8, 19, 14, 30), ahora: ahora), 'hace 5 horas');
+    });
+
+    test('ayer se dice ayer', () {
+      expect(hace(DateTime(2026, 8, 18, 19, 0), ahora: ahora), 'ayer');
+    });
+
+    test('pasada la semana ya se pone la fecha', () {
+      expect(hace(DateTime(2026, 8, 15), ahora: ahora), 'hace 4 días');
+      expect(hace(DateTime(2026, 8, 1), ahora: ahora), '01/08/2026');
+    });
+
+    test('una fecha futura es un reloj mal puesto, no un error en pantalla', () {
+      expect(hace(DateTime(2026, 8, 20), ahora: ahora), 'ahora mismo');
+    });
+
+    test('sin fecha no se inventa nada', () {
+      expect(hace(null), '');
+    });
+  });
 }

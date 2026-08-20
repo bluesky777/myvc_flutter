@@ -71,3 +71,35 @@ int hora24DesdeDoce({required int hora12, required bool esTarde}) {
 }
 
 String _dd(int n) => n.toString().padLeft(2, '0');
+
+/// Cuánto hace que ocurrió algo, para leerlo de un vistazo en un muro.
+///
+/// En una lista que se recorre hacia abajo, «hace 5 min» dice más que
+/// «19/08/2026 - 7:10 p. m.»: lo que importa es si es de ahora o de la semana
+/// pasada. A partir de una semana ya se pone la fecha, que es cuando el «hace
+/// N días» deja de significar nada.
+String hace(DateTime? cuando, {DateTime? ahora}) {
+  if (cuando == null) return '';
+
+  final referencia = ahora ?? DateTime.now();
+  final diferencia = referencia.difference(cuando);
+
+  // Una publicación con fecha futura es un reloj mal puesto en el servidor o
+  // en el teléfono. No se discute: se enseña como recién hecha.
+  if (diferencia.isNegative || diferencia.inMinutes < 1) return 'ahora mismo';
+
+  if (diferencia.inMinutes < 60) {
+    final minutos = diferencia.inMinutes;
+    return 'hace $minutos ${minutos == 1 ? 'minuto' : 'minutos'}';
+  }
+
+  if (diferencia.inHours < 24) {
+    final horas = diferencia.inHours;
+    return 'hace $horas ${horas == 1 ? 'hora' : 'horas'}';
+  }
+
+  if (diferencia.inDays == 1) return 'ayer';
+  if (diferencia.inDays < 7) return 'hace ${diferencia.inDays} días';
+
+  return formatoDia(cuando);
+}

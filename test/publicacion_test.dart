@@ -118,7 +118,79 @@ void main() {
       expect(find.text('Ariolfo Gómez'), findsOneWidget);
       expect(find.text('¡Qué bien!'), findsOneWidget);
       // El segundo no se pinta entero: se cuenta.
-      expect(find.text('Y un comentario más.'), findsOneWidget);
+      expect(find.text('2 comentarios'), findsOneWidget);
+    });
+
+    testWidgets('sin comentarios el pie sigue ahí, diciéndolo',
+        (WidgetTester tester) async {
+      // Un pie que aparece y desaparece hace bailar las tarjetas al bajar.
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Publicacion(
+            publicacion: PublicacionModel.fromJson({
+              'id': 10,
+              'contenido': 'Algo',
+              'nombre_autor': 'Rectoría',
+            }),
+          ),
+        ),
+      ));
+
+      expect(find.text('Sin comentarios'), findsOneWidget);
+    });
+  });
+
+  group('un aviso corto', () {
+    test('va solo, es texto y es breve', () {
+      final aviso = PublicacionModel.fromJson({
+        'id': 11,
+        'contenido': 'Esta es una informacion un poco pequeña pero'
+            ' improtante, no se la salten!',
+      });
+
+      expect(aviso.esAviso, isTrue);
+    });
+
+    test('un texto largo no es un aviso', () {
+      final largo = PublicacionModel.fromJson({
+        'id': 12,
+        'contenido': 'a' * 200,
+      });
+
+      expect(largo.esAviso, isFalse);
+    });
+
+    test('con imagen no es un aviso, por corto que sea', () {
+      final conFoto = PublicacionModel.fromJson({
+        'id': 13,
+        'contenido': 'Izada',
+        'imagen_nombre': 'user_2/izada.jpg',
+      });
+
+      expect(conFoto.esAviso, isFalse);
+    });
+  });
+
+  group('la fecha de la publicación', () {
+    test('se lee del formato que manda el servidor', () {
+      final publi = PublicacionModel.fromJson({
+        'id': 14,
+        'contenido': 'Algo',
+        'created_at': '2026-08-19 19:10:58',
+      });
+
+      expect(publi.cuando, DateTime(2026, 8, 19, 19, 10, 58));
+    });
+
+    test('una fecha ilegible no tumba la publicación', () {
+      final publi = PublicacionModel.fromJson({
+        'id': 15,
+        'contenido': 'Algo',
+        'created_at': 'cuando sea',
+      });
+
+      expect(publi.cuando, isNull);
+      expect(publi.tieneAlgo, isTrue);
     });
   });
 }
