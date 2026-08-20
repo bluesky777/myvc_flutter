@@ -87,6 +87,16 @@ class Publicacion extends StatelessWidget {
       Server.urlFoto(publicacion.imagenNombre),
       fit: BoxFit.fitWidth,
       width: double.infinity,
+      // Lo mismo que hace AvatarPersona, y por lo mismo. Las fotos no las
+      // sirve Laravel: las saca el servidor web del disco, y ahí no pasan por
+      // el middleware que pone `Access-Control-Allow-Origin`. O sea que en
+      // cuanto la app se sirve desde un dominio distinto al del colegio
+      // —app.micolevirtual.com pidiendo a lalvirtual.edu.co— el navegador
+      // bloquea el fetch de bytes aunque el servidor responda 200, y el muro
+      // enseñaba «No se pudo cargar la imagen» en todas las publicaciones.
+      // Con fallback se reintenta con una etiqueta <img>, que no está sujeta a
+      // esa regla. Se pierde poder aplicarle filtros, que aquí no se usan.
+      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
       errorBuilder: (_, __, ___) => _marcoGris(
         alto: 110,
         hijo: const Row(
