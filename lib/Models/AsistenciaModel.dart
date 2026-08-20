@@ -1,11 +1,6 @@
-import 'dart:convert';
 
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
-
-List<AsistenciaModel> alumnoModelFromJson(String str) =>
-    List<AsistenciaModel>.from(
-        json.decode(str).map((x) => AsistenciaModel.fromJson(x)));
 
 class AsistenciaModel {
   int id;

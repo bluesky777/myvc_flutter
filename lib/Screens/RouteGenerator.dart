@@ -29,8 +29,49 @@ class RouteGenerator {
             settings: settings,
             builder: (context) => FaltasAlumnoScreen(args: args));
       default:
+        // Y no PanelScreen. Mandar lo desconocido al panel hacía que un nombre
+        // de ruta mal escrito no fallara: simplemente llevaba a otro sitio, y
+        // eso se busca durante horas. Mejor que se vea dónde está el error.
         return MaterialPageRoute(
-            settings: settings, builder: (context) => PanelScreen());
+          settings: settings,
+          builder: (context) => _RutaDesconocida(nombre: settings.name),
+        );
     }
+  }
+}
+
+/// Lo que se ve cuando se navega a una ruta que no existe.
+class _RutaDesconocida extends StatelessWidget {
+  const _RutaDesconocida({this.nombre});
+
+  final String? nombre;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Ruta desconocida')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wrong_location, size: 48),
+              SizedBox(height: 12),
+              Text(
+                'No existe ninguna pantalla en «${nombre ?? 'sin nombre'}».',
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context, '/panel', (_) => false),
+                child: Text('Ir al inicio'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

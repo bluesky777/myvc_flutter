@@ -4,9 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/AuthService.dart';
 
 class Server {
-  //static String urlServer = 'https://lalvirtual.edu.co/8myvc/public';
-  // static String urlServer = 'http://192.168.100.107';
-  static String urlServer = 'http://192.168.18.215';
+  /// El servidor del colegio. Lo fija el login, que es quien sabe cuál es.
+  ///
+  /// Vacío mientras nadie haya entrado: antes aquí había una IP de una red
+  /// local —192.168.18.215— commiteada, con otras dos comentadas encima. Iba
+  /// cambiando de casa en casa y de commit en commit, y a cualquiera que
+  /// clonara el proyecto le apuntaba a una máquina que no es la suya.
+  ///
+  /// Para desarrollar contra un servidor propio sin volver a commitear una
+  /// dirección:
+  ///
+  ///   flutter run -d chrome --dart-define=SERVIDOR=http://192.168.1.5
+  static String urlServer =
+      const String.fromEnvironment('SERVIDOR', defaultValue: '');
 
   static String urlApi = '$urlServer/api';
   static String urlImages = '$urlServer/images/perfil';
