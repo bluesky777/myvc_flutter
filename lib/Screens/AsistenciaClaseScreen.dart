@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
+import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -389,119 +390,19 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
 
   /// El docente elegido, con su foto.
   ///
-  /// Era un DropdownButton y se cambió: son dieciséis docentes con nombres de
-  /// hasta cinco palabras, y en el menú de un dropdown la foto y el nombre no
-  /// caben en la misma línea sin recortar el nombre. La hoja inferior da el
-  /// ancho de la pantalla y sitio para una foto que se reconozca.
+  /// El campo y su hoja de fotos viven en CampoDocente desde que la pantalla de
+  /// unidades necesitó lo mismo. Aquí solo queda con qué lista se llena y qué
+  /// hacer con el elegido.
   Widget _buildSelectorDocente() {
-    final elegido = docenteElegido;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: InkWell(
-        onTap: docentes.isEmpty ? null : _elegirDocente,
-        borderRadius: BorderRadius.circular(12),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: 'Docente',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          child: Row(
-            children: [
-              if (elegido != null) ...[
-                AvatarPersona(
-                  nombre: elegido.nombre,
-                  fotoNombre: elegido.fotoNombre,
-                  radio: 16,
-                ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Text(
-                  elegido?.nombre ?? 'Elige el docente',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: elegido == null ? null : FontWeight.w600,
-                    color: elegido == null ? Colors.black54 : null,
-                  ),
-                ),
-              ),
-              Icon(Icons.arrow_drop_down, color: Colors.black54),
-            ],
-          ),
-        ),
-      ),
+    return CampoDocente(
+      docentes: docentes,
+      elegido: docenteElegido,
+      titulo: 'Docentes del grupo',
+      alElegir: (elegido) {
+        setState(() => docenteElegido = elegido);
+        _cargarAsignaturas(elegido.profesorId);
+      },
     );
-  }
-
-  Future<void> _elegirDocente() async {
-    final elegido = await showModalBottomSheet<DocenteModel>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Docentes del grupo',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  Text('${docentes.length}',
-                      style: TextStyle(color: Colors.black54)),
-                ],
-              ),
-            ),
-            Divider(height: 1),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: docentes.length,
-                itemBuilder: (context, i) {
-                  final d = docentes[i];
-                  final esElActual = identical(d, docenteElegido);
-
-                  return ListTile(
-                    leading: AvatarPersona(
-                      nombre: d.nombre,
-                      fotoNombre: d.fotoNombre,
-                      radio: 22,
-                    ),
-                    title: Text(d.nombre),
-                    selected: esElActual,
-                    trailing: esElActual
-                        ? Icon(Icons.check, color: kPrimaryColor)
-                        : null,
-                    onTap: () => Navigator.pop(context, d),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (elegido == null || identical(elegido, docenteElegido)) return;
-
-    setState(() => docenteElegido = elegido);
-    _cargarAsignaturas(elegido.profesorId);
   }
 
   Widget _buildSelectorAsignatura() {
