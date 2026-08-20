@@ -193,6 +193,29 @@ class AlumnoDisciplinaModel {
   bool tieneGravesEn(int periodo) =>
       cuantasSituaciones(periodo, 2) > 0 || cuantasSituaciones(periodo, 3) > 0;
 
+  /// Una copia con las fallas de uniforme de un periodo cambiadas.
+  ///
+  /// La pantalla de uniformes devuelve la lista como quedó, y esto la mete en
+  /// su sitio sin volver a pedir el grupo entero. Es el único cambio que no
+  /// llega ya recalculado desde el backend: crear, editar y borrar situaciones
+  /// devuelven el alumno completo, pero los endpoints de uniformes no.
+  AlumnoDisciplinaModel conUniformesDe(
+    int periodo,
+    List<UniformeModel> nuevas,
+  ) {
+    return AlumnoDisciplinaModel(
+      alumnoId: alumnoId,
+      nombres: nombres,
+      apellidos: apellidos,
+      fotoNombre: fotoNombre,
+      estado: estado,
+      situaciones: situaciones,
+      uniformes: {...uniformes, periodo: nuevas},
+      faltasInstitucion: faltasInstitucion,
+      conteos: conteos,
+    );
+  }
+
   @override
   String toString() => '(AlumnoDisciplinaModel) $alumnoId $nombreCompleto';
 }

@@ -182,6 +182,7 @@ Future<List<DocenteModel>> traerDocentesDelColegio(Server server) async {
       profesorId: id,
       nombre: '${crudo['nombre_completo'] ?? 'Docente $id'}'.trim(),
       fotoNombre: crudo['foto_nombre']?.toString(),
+      userId: int.tryParse('${crudo['user_id']}'),
     ));
   }
 

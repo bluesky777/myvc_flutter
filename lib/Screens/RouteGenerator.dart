@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
+import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 
 import 'AlumTardanzaColeScreen.dart';
@@ -32,6 +33,13 @@ class RouteGenerator {
       case '/unidades':
         return MaterialPageRoute(
             settings: settings, builder: (context) => UnidadesScreen());
+      // Solo la de entrada tiene nombre. La ficha del alumno, el editor de
+      // situaciones y los uniformes se abren con push directo: reciben modelos
+      // ya cargados y devuelven el alumno recalculado, y por una ruta con
+      // nombre eso viaja como `Object?` y hay que creerse el tipo al bajarlo.
+      case '/disciplina':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => DisciplinaGrupoScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());

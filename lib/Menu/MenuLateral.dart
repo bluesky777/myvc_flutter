@@ -106,6 +106,18 @@ class MenuLateral extends StatelessWidget {
       ruta: '/unidades',
     ));
 
+    // «Disciplina» y no «Convivencia» ni «Observador»: es como se llama la
+    // pantalla equivalente en la plataforma web y como la nombra el colegio al
+    // pedirla. Los alumnos y los acudientes no la ven, y no es solo por
+    // pudor: todas las rutas de disciplina del backend llevan `auth.personal`
+    // y les responderían 403.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.gavel_outlined,
+      texto: 'Disciplina',
+      ruta: '/disciplina',
+    ));
+
     return opciones;
   }
 

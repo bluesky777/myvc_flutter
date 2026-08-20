@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Http/UnidadesApi.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
 
 /// Por qué no se pueden ver unas notas.
@@ -98,25 +99,22 @@ Future<Map<int, String>> traerDocentesPorProfesor(Server server) async {
 ///
 /// Las tablas de la plataforma guardan `added_by` y `created_by` como
 /// `user_id`, que NO es el `profesor_id`: son dos numeraciones y cruzarlas por
-/// la equivocada pone el nombre de otro docente. /contratos trae los dos, así
-/// que aquí se indexa por el que hace falta.
+/// la equivocada pone el nombre de otro docente.
+///
+/// Se apoya en [traerDocentesDelColegio] para no tener un segundo sitio que
+/// entienda la forma de /contratos: es la misma respuesta, indexada por la
+/// otra clave.
 ///
 /// Mapa vacío si falla: el nombre de quien registró es un dato de apoyo, no la
 /// falta en sí, y quedarse sin él no puede tumbar la pantalla.
 Future<Map<int, String>> traerNombresPorUsuario(Server server) async {
   try {
-    final res = await server.get('/contratos');
-    final lista = jsonDecode(res.body) as List;
+    final docentes = await traerDocentesDelColegio(server);
 
-    final mapa = <int, String>{};
-    for (final contrato in lista) {
-      if (contrato is! Map) continue;
-
-      final id = int.tryParse('${contrato['user_id']}');
-      final nombre = contrato['nombre_completo'];
-      if (id != null && nombre != null) mapa[id] = '$nombre'.trim();
-    }
-    return mapa;
+    return {
+      for (final docente in docentes)
+        if (docente.userId != null) docente.userId!: docente.nombre
+    };
   } catch (_) {
     return {};
   }

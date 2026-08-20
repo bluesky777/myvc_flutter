@@ -48,9 +48,19 @@ class DocenteModel {
   /// tiene foto propia, el backend ya devuelve el default según el sexo.
   final String? fotoNombre;
 
+  /// Su cuenta de usuario, que NO es el `profesor_id`.
+  ///
+  /// Son dos numeraciones distintas, y las tablas de la plataforma guardan
+  /// `added_by` y `created_by` con la del usuario. Sin esto, poner nombre a
+  /// quien registró una falta obligaba a pedir /contratos por segunda vez para
+  /// indexarlo por la otra clave. Puede venir nulo: un profesor puede no tener
+  /// cuenta.
+  final int? userId;
+
   DocenteModel({
     required this.profesorId,
     required this.nombre,
     this.fotoNombre,
+    this.userId,
   });
 }

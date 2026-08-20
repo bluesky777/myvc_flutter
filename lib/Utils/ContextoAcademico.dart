@@ -40,6 +40,37 @@ class ContextoAcademico extends ChangeNotifier {
     return '$year · Periodo $numeroPeriodo';
   }
 
+  /// Los periodos del año en curso, cuando los años ya se trajeron.
+  ///
+  /// Vacío mientras nadie haya llamado a [cargarYears]: la barra de arriba los
+  /// pide al abrirse, pero una pantalla que los necesite antes tiene que
+  /// pedirlos ella.
+  List<PeriodoModel> get periodosDelYear {
+    for (final anio in years) {
+      if (anio.id == yearId) return anio.periodos;
+    }
+    return const [];
+  }
+
+  /// El id del periodo que hace el número dado, dentro del año en curso.
+  ///
+  /// Hace falta donde se trabaja con los cuatro periodos a la vez —disciplina
+  /// enseña el año entero— y no solo con el de la barra: para crear algo en el
+  /// periodo 2 hay que mandarle al backend su `periodo_id`, y el número no le
+  /// vale.
+  ///
+  /// Cuando se pregunta justo por el periodo en el que está el usuario se
+  /// responde con el suyo aunque los años no se hayan traído todavía, que es
+  /// el caso más común y el que no debería depender de una segunda petición.
+  int? periodoIdDe(int numero) {
+    if (numero == numeroPeriodo && periodoId != null) return periodoId;
+
+    for (final periodo in periodosDelYear) {
+      if (periodo.numero == numero) return periodo.id;
+    }
+    return null;
+  }
+
   /// Lo que vino en la respuesta de /login.
   void tomarDelLogin(Map<String, dynamic> datos) {
     yearId = _entero(datos['year_id']);
