@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/Widgets/FondoFalta.dart';
 import 'package:myvc_flutter/constantes.dart';
@@ -114,7 +115,12 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
         appBar: AppBar(
-          title: Text(grupo?.nombre ?? 'Alumnos'),
+          // El grupo solo no dice a qué se ha entrado: el mismo 10-B sale en
+          // asistencias, en disciplina y en notas.
+          title: TituloPantalla(
+            titulo: 'Asistencia al colegio',
+            subtitulo: grupo?.nombre,
+          ),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

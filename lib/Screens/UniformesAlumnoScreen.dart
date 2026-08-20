@@ -4,6 +4,7 @@ import 'package:myvc_flutter/Http/UniformesApi.dart';
 import 'package:myvc_flutter/Models/UniformeModel.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Con qué se abre la pantalla.
@@ -102,7 +103,24 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Uniforme · Periodo ${widget.args.numeroPeriodo}'),
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              AvatarPersona(
+                nombre: widget.args.nombre,
+                fotoNombre: widget.args.fotoNombre,
+                radio: 18,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TituloPantalla(
+                  titulo: 'Fallas de uniforme',
+                  subtitulo: '${widget.args.nombre}'
+                      ' · Periodo ${widget.args.numeroPeriodo}',
+                ),
+              ),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: agregando ? null : _agregar,
@@ -122,36 +140,16 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
     );
   }
 
+  /// Cuántas lleva. El nombre y la foto están arriba, en la barra.
   Widget _cabecera() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: [
-          AvatarPersona(
-            nombre: widget.args.nombre,
-            fotoNombre: widget.args.fotoNombre,
-            radio: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.args.nombre,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  uniformes.isEmpty
-                      ? 'Sin fallas en el periodo'
-                      : '${uniformes.length} falla'
-                          '${uniformes.length == 1 ? '' : 's'} en el periodo',
-                  style: TextStyle(color: Colors.black54, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: Text(
+        uniformes.isEmpty
+            ? 'Sin fallas en el periodo'
+            : '${uniformes.length} falla'
+                '${uniformes.length == 1 ? '' : 's'} en el periodo',
+        style: TextStyle(color: Colors.black54, fontSize: 13),
       ),
     );
   }

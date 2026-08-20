@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 
 /// El año y el periodo, en la barra de arriba y tocables.
 ///
@@ -9,10 +10,18 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 /// del que cuelga todo lo que se ve debajo. Que se pueda tocar lo dice la
 /// flechita; sin ella parecería un rótulo más.
 class TituloContexto extends StatelessWidget {
-  const TituloContexto({super.key, this.alCambiar});
+  const TituloContexto({super.key, this.alCambiar, this.titulo});
 
   /// Qué hacer cuando el usuario cambia de periodo: normalmente, recargar.
   final VoidCallback? alCambiar;
+
+  /// El nombre de la pantalla, que va encima del año y el periodo.
+  ///
+  /// Sin él, tres pantallas distintas —el inicio, las unidades, la
+  /// disciplina— llevaban por título exactamente el mismo texto y no había
+  /// forma de saber en cuál se estaba. Se deja opcional porque el widget se
+  /// puede montar suelto, pero una pantalla del menú debería pasarlo siempre.
+  final String? titulo;
 
   @override
   Widget build(BuildContext context) {
@@ -26,23 +35,29 @@ class TituloContexto extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    contexto.titulo,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: titulo != null
+                ? TituloPantalla(
+                    titulo: titulo!,
+                    subtitulo: contexto.titulo,
+                    conFlecha: true,
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          contexto.titulo,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.expand_more, size: 20),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.expand_more, size: 20),
-              ],
-            ),
           ),
         );
       },

@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/CampoConSugerencias.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/SelectorOrdinales.dart';
 
@@ -144,7 +145,27 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(creando ? 'Nueva situación' : 'Editar situación'),
+        titleSpacing: 0,
+        // La cara del alumno en la barra y no en el cuerpo: así se queda a la
+        // vista mientras se rellena el formulario, y anotarle una falta al
+        // alumno equivocado deja de depender de recordar a quién se tocó.
+        title: Row(
+          children: [
+            AvatarPersona(
+              nombre: widget.args.alumno.nombreCompleto,
+              fotoNombre: widget.args.alumno.fotoNombre,
+              radio: 18,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TituloPantalla(
+                titulo: creando ? 'Nueva situación' : 'Editar situación',
+                subtitulo: '${widget.args.alumno.nombreCompleto}'
+                    ' · Periodo ${widget.args.numeroPeriodo}',
+              ),
+            ),
+          ],
+        ),
         actions: [
           if (!creando && puedeBorrar)
             IconButton(
@@ -160,7 +181,7 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
           key: _formulario,
           child: ListView(
             children: [
-              _cabecera(),
+              const SizedBox(height: 8),
               _selectorDeTipo(),
               CampoConSugerencias(
                 controlador: _descripcion,
@@ -211,39 +232,6 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _cabecera() {
-    final alumno = widget.args.alumno;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Row(
-        children: [
-          AvatarPersona(
-            nombre: alumno.nombreCompleto,
-            fotoNombre: alumno.fotoNombre,
-            radio: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  alumno.nombreCompleto,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  'Periodo ${widget.args.numeroPeriodo}',
-                  style: TextStyle(color: Colors.black54, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

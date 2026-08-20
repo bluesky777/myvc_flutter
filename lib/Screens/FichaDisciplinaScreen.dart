@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Con qué se abre la ficha.
@@ -112,7 +113,23 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(alumno.nombreCompleto, overflow: TextOverflow.ellipsis),
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              AvatarPersona(
+                nombre: alumno.nombreCompleto,
+                fotoNombre: alumno.fotoNombre,
+                radio: 18,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TituloPantalla(
+                  titulo: alumno.nombreCompleto,
+                  subtitulo: 'Ficha de disciplina',
+                ),
+              ),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _abrirEditor(),
@@ -134,34 +151,20 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
     );
   }
 
+  /// Solo el aviso de que es asistente, que cambia cómo se lee su ficha. El
+  /// nombre y la foto están arriba, en la barra.
   Widget _cabecera() {
+    if (!alumno.esAsistente) return const SizedBox(height: 8);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
-          AvatarPersona(
-            nombre: alumno.nombreCompleto,
-            fotoNombre: alumno.fotoNombre,
-            radio: 26,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  alumno.nombreCompleto,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                Text(
-                  alumno.esAsistente
-                      ? 'Asistente · no matriculado'
-                      : 'Año en curso',
-                  style: TextStyle(color: Colors.black54, fontSize: 13),
-                ),
-              ],
-            ),
+          Icon(Icons.info_outline, size: 15, color: Colors.black45),
+          const SizedBox(width: 6),
+          Text(
+            'Asistente · no matriculado',
+            style: TextStyle(color: Colors.black54, fontSize: 13),
           ),
         ],
       ),

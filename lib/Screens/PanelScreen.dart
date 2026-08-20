@@ -3,6 +3,7 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PanelScreen extends StatefulWidget {
@@ -73,7 +74,13 @@ class _PanelScreen extends State<PanelScreen> {
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
         appBar: AppBar(
-          title: Text('Elija grupo'),
+          // «Asistencias», como la llama el menú, y debajo qué toca hacer
+          // aquí. Antes ponía solo «Elija grupo», que dice el paso pero no de
+          // qué: se llega desde el menú y no hay nada más que lo diga.
+          title: TituloPantalla(
+            titulo: 'Asistencias',
+            subtitulo: 'Elige el grupo',
+          ),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () {

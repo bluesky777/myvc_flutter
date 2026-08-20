@@ -315,7 +315,7 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
         appBar: AppBar(
-          title: TituloContexto(alCambiar: _arrancar),
+          title: TituloContexto(titulo: 'Disciplina', alCambiar: _arrancar),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

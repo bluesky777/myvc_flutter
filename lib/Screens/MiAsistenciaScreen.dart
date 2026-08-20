@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Models/AsistenciaPeriodoModel.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
 import 'package:myvc_flutter/constantes.dart';
@@ -213,7 +214,7 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
       mainScreen: Scaffold(
         backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
-          title: Text(deQuien ?? 'Asistencia'),
+          title: TituloPantalla(titulo: 'Asistencia', subtitulo: deQuien),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

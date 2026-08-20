@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
 import 'package:myvc_flutter/constantes.dart';
@@ -193,7 +194,13 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
       mainScreen: Scaffold(
         backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
-          title: Text(boletin?.nombreCompleto ?? 'Notas'),
+          // El nombre del alumno debajo y no como título: para un acudiente
+          // con un solo hijo, «Ana Acosta» era el título tanto aquí como en la
+          // asistencia, y las dos pantallas se veían iguales desde arriba.
+          title: TituloPantalla(
+            titulo: 'Mis notas',
+            subtitulo: boletin?.nombreCompleto,
+          ),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

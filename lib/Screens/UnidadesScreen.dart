@@ -237,7 +237,7 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
         appBar: AppBar(
           // Las unidades son del periodo, no de la asignatura: cambiarlo arriba
           // cambia todo lo que se ve y lo que se guarda.
-          title: TituloContexto(alCambiar: _arrancar),
+          title: TituloContexto(titulo: 'Unidades', alCambiar: _arrancar),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

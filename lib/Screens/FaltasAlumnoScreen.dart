@@ -12,6 +12,7 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -251,9 +252,12 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                widget.args.nombre,
-                overflow: TextOverflow.ellipsis,
+              child: TituloPantalla(
+                titulo: widget.args.nombre,
+                // Qué se está mirando de este alumno: son tres pantallas que
+                // se abren con su cara arriba y sin esto se distinguen solo
+                // por lo que hay debajo.
+                subtitulo: 'Faltas al colegio',
               ),
             ),
           ],

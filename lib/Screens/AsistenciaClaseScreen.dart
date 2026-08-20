@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
@@ -357,7 +358,12 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Asistencia a clases')),
+      appBar: AppBar(
+        title: TituloPantalla(
+          titulo: 'Asistencia a clases',
+          subtitulo: widget.args.nombre,
+        ),
+      ),
       body: Column(
         children: [
           Padding(
