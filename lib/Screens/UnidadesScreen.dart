@@ -9,7 +9,7 @@ import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
-import 'package:myvc_flutter/Widgets/BarraContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Las unidades con las que un docente evalúa cada asignatura en el periodo.
@@ -234,17 +234,14 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
         backgroundColor: const Color(0xFFF4F5F7),
-        appBar: AppBar(
-          // Las unidades son del periodo, no de la asignatura: cambiarlo arriba
-          // cambia todo lo que se ve y lo que se guarda.
-          title: Text('Unidades'),
-          bottom: BarraContexto(alCambiar: _arrancar),
-          leading: GestureDetector(
-            child: Icon(Icons.menu),
-            onTap: () => _drawerController.toggle!(),
-          ),
+        // Las unidades son del periodo, no de la asignatura: cambiarlo arriba
+        // cambia todo lo que se ve y lo que se guarda.
+        body: BarraPlegable(
+          titulo: 'Unidades',
+          alAbrirMenu: () => _drawerController.toggle!(),
+          alCambiarContexto: _arrancar,
+          child: _buildCuerpo(),
         ),
-        body: _buildCuerpo(),
       ),
     );
   }

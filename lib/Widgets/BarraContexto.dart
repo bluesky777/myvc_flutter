@@ -26,8 +26,15 @@ class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
 
   final VoidCallback? alCambiar;
 
+  /// Lo que mide de alto.
+  ///
+  /// Constante y no un número suelto porque quien la monta tiene que sumarla:
+  /// va dentro de la parte plegable de la barra, y esa parte necesita saber
+  /// cuánto ocupa para saber cuánto encoger.
+  static const alto = 44.0;
+
   @override
-  Size get preferredSize => const Size.fromHeight(44);
+  Size get preferredSize => const Size.fromHeight(alto);
 
   @override
   Widget build(BuildContext context) {

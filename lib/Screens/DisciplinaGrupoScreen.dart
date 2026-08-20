@@ -18,7 +18,7 @@ import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorGrupo.dart';
-import 'package:myvc_flutter/Widgets/BarraContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -314,13 +314,10 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
       mainScreenTapClose: true,
       androidCloseOnBackTap: true,
       mainScreen: Scaffold(
-        appBar: AppBar(
-          title: Text('Disciplina'),
-          bottom: BarraContexto(alCambiar: _arrancar),
-          leading: GestureDetector(
-            child: Icon(Icons.menu),
-            onTap: () => _drawerController.toggle!(),
-          ),
+        body: BarraPlegable(
+          titulo: 'Disciplina',
+          alAbrirMenu: () => _drawerController.toggle!(),
+          alCambiarContexto: _arrancar,
           actions: [
             IconButton(
               tooltip: 'Volver a traer el grupo',
@@ -328,8 +325,8 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
               onPressed: cargandoAlumnos ? null : _cargarAlumnos,
             ),
           ],
+          child: _cuerpo(),
         ),
-        body: _cuerpo(),
       ),
     );
   }

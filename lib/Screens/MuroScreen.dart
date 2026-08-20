@@ -5,7 +5,7 @@ import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
-import 'package:myvc_flutter/Widgets/BarraContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///
@@ -64,21 +64,17 @@ class _MuroScreenState extends State<MuroScreen> {
         // Un gris muy claro detrás: es lo que hace que cada publicación se lea
         // como una tarjeta y no como un trozo suelto de la pantalla.
         backgroundColor: const Color(0xFFF4F5F7),
-        appBar: AppBar(
-          // El nombre de la pantalla arriba y el periodo en su propia franja
-          // debajo. Antes iba solo el periodo, con el argumento de que el muro
-          // se reconoce solo; pero las unidades y la disciplina llevaban ese
-          // mismo título, así que las tres barras decían lo mismo y ninguna
-          // decía dónde estabas. «Inicio» y no «Muro», que es como lo llama el
-          // menú.
-          title: Text('Inicio'),
-          bottom: BarraContexto(alCambiar: _cargar),
-          leading: GestureDetector(
-            child: Icon(Icons.menu),
-            onTap: () => _drawerController.toggle!(),
-          ),
+        // El nombre de la pantalla arriba y el periodo en su propia franja
+        // debajo. Antes iba solo el periodo, con el argumento de que el muro se
+        // reconoce solo; pero las unidades y la disciplina llevaban ese mismo
+        // título, así que las tres barras decían lo mismo y ninguna decía dónde
+        // estabas. «Inicio» y no «Muro», que es como lo llama el menú.
+        body: BarraPlegable(
+          titulo: 'Inicio',
+          alAbrirMenu: () => _drawerController.toggle!(),
+          alCambiarContexto: _cargar,
+          child: _buildCuerpo(),
         ),
-        body: _buildCuerpo(),
       ),
     );
   }
