@@ -71,7 +71,7 @@ void main() {
 
       await montar(tester);
 
-      expect(find.text('Publicaciones'), findsOneWidget);
+      expect(find.text('Inicio'), findsOneWidget);
       expect(find.text('Asistencias'), findsOneWidget);
       expect(find.text('Unidades'), findsOneWidget);
       expect(find.text('Mis notas'), findsNothing);

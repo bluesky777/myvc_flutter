@@ -61,10 +61,14 @@ class MenuLateral extends StatelessWidget {
     final usuario = AuthService.user;
 
     final opciones = <Widget>[
+      // «Inicio» y no «Publicaciones»: es la primera opción y la pantalla a la
+      // que vuelve todo el mundo, y lo que se dice en un menú es a dónde
+      // lleva, no qué hay dentro. El muro sigue siendo el muro por debajo, y
+      // la ruta sigue llamándose /muro.
       _opcion(
         context,
-        icono: Icons.forum_outlined,
-        texto: 'Publicaciones',
+        icono: Icons.home_outlined,
+        texto: 'Inicio',
         ruta: '/muro',
       ),
     ];
