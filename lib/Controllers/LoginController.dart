@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -86,6 +87,9 @@ class LoginController implements LoginBaseController {
       AuthService.user.sexo = '${datos['sexo'] ?? 'M'}';
       AuthService.user.isSuperuser = entero(datos['is_superuser']) == 1;
       AuthService.user.roles = _rolesDe(datos['roles']);
+
+      // El año y el periodo con los que entra. De aquí cuelga todo lo demás.
+      ContextoAcademico.instancia.tomarDelLogin(datos);
     } catch (err) {
       // El contexto es un extra: si no llega, la sesión sigue siendo válida.
       AuthService.user.username = username;
@@ -143,6 +147,9 @@ class LoginController implements LoginBaseController {
   @override
   Future<String> logout() async {
     AuthService.limpiar();
+    // El año y el periodo son de quien entró: no pueden quedarse puestos para
+    // el docente siguiente, que es lo mismo que ya se cuida con el token.
+    ContextoAcademico.instancia.limpiar();
 
     // Manda la casilla: si este dispositivo es de uno, cerrar sesión no tiene
     // por qué hacerle reescribir las credenciales. En el equipo compartido se

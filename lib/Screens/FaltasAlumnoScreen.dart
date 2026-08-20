@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
@@ -114,9 +115,17 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
         return;
       }
 
+      // El año con el que el usuario está trabajando manda sobre el año actual
+      // del colegio: si se puso en 2025 para revisar algo, aquí no puede
+      // aparecerle 2026 y hacerle elegir otra vez.
+      final suyo = ContextoAcademico.instancia.yearId;
+
       yearElegido = years.firstWhere(
-        (y) => y.actual,
-        orElse: () => years.first,
+        (y) => y.id == suyo,
+        orElse: () => years.firstWhere(
+          (y) => y.actual,
+          orElse: () => years.first,
+        ),
       );
 
       await _cargarDocentes();

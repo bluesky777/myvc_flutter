@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
+import 'package:myvc_flutter/Widgets/TituloContexto.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///
@@ -64,7 +65,10 @@ class _MuroScreenState extends State<MuroScreen> {
         // como una tarjeta y no como un trozo suelto de la pantalla.
         backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
-          title: Text('Publicaciones'),
+          // El año y el periodo en vez del nombre de la pantalla: el usuario ya
+          // sabe dónde está —el muro es lo que tiene delante—, y lo que sí
+          // necesita ver de un vistazo es con qué periodo está trabajando.
+          title: TituloContexto(alCambiar: _cargar),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),
