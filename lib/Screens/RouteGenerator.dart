@@ -4,7 +4,7 @@ import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
 import 'package:myvc_flutter/Screens/MisNotasScreen.dart';
 import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
-import 'package:myvc_flutter/Screens/PantallaPendiente.dart';
+import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 
@@ -25,11 +25,9 @@ class RouteGenerator {
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());
-      // Todavía sin construir, pero ya en el menú: ver PantallaPendiente.
       case '/unidades':
         return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => PantallaPendiente(seccion: 'Unidades'));
+            settings: settings, builder: (context) => UnidadesScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());
