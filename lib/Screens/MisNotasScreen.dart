@@ -31,6 +31,14 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
   Map<int, String> docentes = {};
   PeriodoNotasModel? periodoMostrado;
 
+  /// Los acudidos, si quien mira es acudiente.
+  ///
+  /// Se guardan de la primera carga para poder cambiar de hijo desde la barra:
+  /// vinieron todos en la misma respuesta del muro y volver a pedirla solo
+  /// para elegir a otro sería pedir dos veces lo mismo.
+  List<AcudidoModel> acudidos = const [];
+  int? alumnoMostrado;
+
   bool cargando = true;
   String? error;
   NotasBloqueadas? bloqueo;
@@ -78,6 +86,8 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
         return;
       }
 
+      setState(() => acudidos = muro.acudidos);
+
       final elegido = await pedirAcudido(
         context,
         muro.acudidos,
@@ -102,11 +112,32 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
     }
   }
 
+  /// Cambia de acudido sin salir de la pantalla.
+  ///
+  /// Mismo botón y misma hoja que en Asistencia: son la misma pregunta hecha
+  /// en dos sitios y no tienen por qué contestarse distinto.
+  Future<void> _cambiarAcudido() async {
+    if (acudidos.length < 2) return;
+
+    final elegido = await pedirAcudido(
+      context,
+      acudidos,
+      titulo: '¿De quién quieres ver las notas?',
+    );
+
+    if (!mounted || elegido == null || elegido.alumnoId == alumnoMostrado) {
+      return;
+    }
+
+    await _cargar(elegido.alumnoId, null);
+  }
+
   Future<void> _cargar(int alumnoId, int? grupoId) async {
     setState(() {
       cargando = true;
       error = null;
       bloqueo = null;
+      alumnoMostrado = alumnoId;
     });
 
     try {
@@ -167,6 +198,16 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),
           ),
+          actions: [
+            // Solo con más de un acudido: con uno solo no hay entre qué
+            // elegir y el botón sobraría.
+            if (acudidos.length > 1)
+              IconButton(
+                icon: const Icon(Icons.switch_account_outlined),
+                tooltip: 'Cambiar de acudido',
+                onPressed: _cambiarAcudido,
+              ),
+          ],
         ),
         body: _buildCuerpo(),
       ),

@@ -20,6 +20,18 @@ void main() {
       expect(acudido.pazYSalvo, isFalse);
     });
 
+    test('el grupo se lee como lo nombra el panel', () {
+      // La consulta de acudidos de ChangesAsked/to-me devuelve `nombre_grupo`,
+      // no `grupo_nombre`: leyendo solo el segundo, el grupo era null siempre.
+      final acudido = AcudidoModel.fromJson({
+        'alumno_id': 31,
+        'nombres': 'Dámaris',
+        'nombre_grupo': 'Séptimo A',
+      });
+
+      expect(acudido.grupo, 'Séptimo A');
+    });
+
     test('sin el dato de tesorería se asume que está a paz y salvo', () {
       // Es lo que hace el front: el aviso rojo solo sale cuando llega un 0.
       final acudido = AcudidoModel.fromJson({'alumno_id': 4, 'nombres': 'X'});

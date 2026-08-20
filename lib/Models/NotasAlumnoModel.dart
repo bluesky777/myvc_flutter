@@ -1,3 +1,5 @@
+import 'package:myvc_flutter/Models/AsistenciaModel.dart';
+import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 /// Las notas de un alumno en una asignatura, en un periodo.
@@ -21,6 +23,22 @@ class AsignaturaNotaModel {
   final bool recuperada;
   final bool manual;
 
+  /// Las faltas del alumno a ESTA clase en ESTE periodo, con su día.
+  ///
+  /// Son las de entrada=0 —las de la asignatura—: el backend las saca con
+  /// `Ausencia::deAlumno`, que filtra por asignatura_id, así que las faltas al
+  /// colegio, que no tienen asignatura, no vienen aquí. Esas se cuentan aparte,
+  /// en el resumen por periodo de AsistenciaAlumnoApi.
+  final List<AsistenciaModel> faltas;
+
+  /// Los totales tal como los suma el backend.
+  ///
+  /// No es lo mismo que `faltas.length`: cada fila lleva `cantidad_ausencia` o
+  /// `cantidad_tardanza` y el backend suma esas cantidades, no las filas. Se
+  /// respeta su cuenta, que es la que ve el docente en su planilla.
+  final int totalAusencias;
+  final int totalTardanzas;
+
   AsignaturaNotaModel({
     required this.asignaturaId,
     required this.materia,
@@ -33,9 +51,21 @@ class AsignaturaNotaModel {
     this.desempenio,
     this.recuperada = false,
     this.manual = false,
+    this.faltas = const [],
+    this.totalAusencias = 0,
+    this.totalTardanzas = 0,
   });
 
   bool get tieneNota => nota != null;
+
+  bool get tieneFaltas => totalAusencias + totalTardanzas > 0;
+
+  /// Las faltas de un tipo, de la más reciente a la más vieja.
+  List<AsistenciaModel> faltasDe(TipoFalta tipo) {
+    return soloDelTipo(faltas, tipo)
+      ..sort((a, b) =>
+          (b.fecha ?? DateTime(1900)).compareTo(a.fecha ?? DateTime(1900)));
+  }
 
   /// La nota como se escribe en un boletín: sin decimales cuando es redonda.
   String get notaEscrita {
@@ -61,6 +91,9 @@ class AsignaturaNotaModel {
       desempenio: texto(json['desempenio']),
       recuperada: entero(json['recuperada']) == 1,
       manual: entero(json['manual']) == 1,
+      faltas: _faltas(json['ausencias']),
+      totalAusencias: enteroO(json['total_ausencias']),
+      totalTardanzas: enteroO(json['total_tardanzas']),
     );
   }
 }
@@ -164,6 +197,17 @@ class NotasAlumnoModel {
       periodos: periodos,
     );
   }
+}
+
+/// La clave se llama `ausencias` pero trae los dos tipos: dentro van también
+/// las tardanzas, y lo que las separa es la columna `tipo` de cada fila.
+List<AsistenciaModel> _faltas(dynamic crudas) {
+  if (crudas is! List) return const [];
+
+  return crudas
+      .whereType<Map>()
+      .map((f) => AsistenciaModel.fromJson(Map<String, dynamic>.from(f)))
+      .toList();
 }
 
 double? _decimal(dynamic valor) {

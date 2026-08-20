@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Models/AsistenciaPeriodoModel.dart';
 import 'package:myvc_flutter/Models/PublicacionModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
@@ -10,7 +11,18 @@ class MuroCargado {
   final List<PublicacionModel> publicaciones;
   final List<AcudidoModel> acudidos;
 
-  MuroCargado({required this.publicaciones, required this.acudidos});
+  /// Las faltas del propio alumno, cuando quien mira es un alumno.
+  ///
+  /// Viene en la misma respuesta porque es el único sitio del que un alumno
+  /// puede sacarlas: todas las rutas de ausencias están cerradas para alumnos y
+  /// acudientes por el middleware ExigirPersonal.
+  final List<AsistenciaPeriodoModel> asistenciaPropia;
+
+  MuroCargado({
+    required this.publicaciones,
+    required this.acudidos,
+    this.asistenciaPropia = const [],
+  });
 }
 
 /// Un alumno a cargo de un acudiente, tal como lo devuelve el muro.
@@ -26,6 +38,9 @@ class AcudidoModel {
   /// bloqueadas y hay que decírselo.
   final bool pazYSalvo;
 
+  /// Las faltas del acudido, periodo a periodo.
+  final List<AsistenciaPeriodoModel> asistencia;
+
   AcudidoModel({
     required this.alumnoId,
     required this.nombres,
@@ -34,6 +49,7 @@ class AcudidoModel {
     this.grupo,
     this.grupoAbrev,
     this.pazYSalvo = true,
+    this.asistencia = const [],
   });
 
   String get nombreCompleto => '$nombres ${apellidos ?? ''}'.trim();
@@ -44,11 +60,17 @@ class AcudidoModel {
       nombres: '${json['nombres'] ?? ''}',
       apellidos: texto(json['apellidos']),
       fotoNombre: texto(json['foto_nombre']),
-      grupo: texto(json['grupo_nombre']),
-      grupoAbrev: texto(json['grupo_abrev']),
+      // `nombre_grupo` primero: así lo llama la consulta de acudidos de
+      // ChangesAsked/to-me —`g.nombre as nombre_grupo`—, que es de donde sale
+      // esta lista. Leyendo solo `grupo_nombre`, que es como lo llaman otros
+      // endpoints, el grupo salía siempre vacío y el cuadro de elegir acudido
+      // ponía «Sin grupo» debajo de todos.
+      grupo: texto(json['nombre_grupo'] ?? json['grupo_nombre']),
+      grupoAbrev: texto(json['grupo_abrev'] ?? json['abrev_grupo']),
       // Viene como 1/0, y a veces sin venir: sin dato se asume que sí, que es
       // lo que hace el front —el aviso rojo solo sale cuando hay un 0—.
       pazYSalvo: entero(json['pazysalvo']) != 0,
+      asistencia: asistenciaPorPeriodo(json['ausencias_periodo']),
     );
   }
 }
@@ -76,7 +98,7 @@ Future<MuroCargado> traerMuro(Server server) async {
 
   return MuroCargado(
     publicaciones: _publicaciones(cuerpo['publicaciones']),
-    acudidos: _acudidos(cuerpo['alumnos']),
+    acudidos: leerAcudidos(cuerpo['alumnos']),
   );
 }
 
@@ -98,7 +120,17 @@ List<PublicacionModel> _publicaciones(dynamic crudas) {
   return leidas;
 }
 
-List<AcudidoModel> _acudidos(dynamic crudos) {
+/// Los acudidos que vienen en la clave `alumnos` de `ChangesAsked/to-me`.
+///
+/// Público porque de ese mismo cajón cuelgan también las faltas de cada
+/// acudido, que es lo que lee AsistenciaAlumnoApi: leerlos dos veces con dos
+/// criterios distintos era pedir que un día discreparan.
+///
+/// Ojo: la clave `alumnos` solo trae acudidos cuando quien pregunta es
+/// acudiente. Para un alumno el backend mete ahí su propia prematrícula del año
+/// siguiente, que no es un acudido de nadie. Por eso quien llama decide, por el
+/// rol, si esta lista significa algo.
+List<AcudidoModel> leerAcudidos(dynamic crudos) {
   if (crudos is! List) return const [];
 
   return crudos
