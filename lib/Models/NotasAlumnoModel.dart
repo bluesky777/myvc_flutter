@@ -67,6 +67,19 @@ class AsignaturaNotaModel {
           (b.fecha ?? DateTime(1900)).compareTo(a.fecha ?? DateTime(1900)));
   }
 
+  /// Las que además dicen qué día fue.
+  ///
+  /// Once de cada cien filas de la tabla ausencias no tienen `fecha_hora` —en
+  /// la base del colegio, 5.068 de 46.457—: son las que se subieron desde la
+  /// planilla web y las de antes de que se guardara el día. Contarlas, se
+  /// cuentan; lo que no se puede es decir cuándo fueron, y escribir «el —»
+  /// doce veces seguidas no es decirlo, es ensuciarlo.
+  List<AsistenciaModel> faltasConDiaDe(TipoFalta tipo) =>
+      faltasDe(tipo).where((f) => f.fecha != null).toList();
+
+  /// Cuántas faltas no dicen de qué día son.
+  int get faltasSinDia => faltas.where((f) => f.fecha == null).length;
+
   /// La nota como se escribe en un boletín: sin decimales cuando es redonda.
   String get notaEscrita {
     if (nota == null) return '—';

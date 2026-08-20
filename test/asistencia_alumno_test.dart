@@ -148,4 +148,35 @@ void main() {
       expect(asignatura.tieneFaltas, isFalse);
     });
   });
+
+  group('las faltas que no dicen de qué día son', () {
+    // Once de cada cien filas de ausencias no traen fecha_hora: se comprobó
+    // contra la base del colegio, 5.068 de 46.457. Vienen de la planilla web.
+    final asignatura = AsignaturaNotaModel.fromJson({
+      'asignatura_id': 5,
+      'materia': 'Ciencias Naturales',
+      'total_ausencias': 3,
+      'ausencias': [
+        {'id': 1, 'tipo': 'ausencia', 'fecha_hora': null},
+        {'id': 2, 'tipo': 'ausencia', 'fecha_hora': '2026-03-11 00:00:00'},
+        {'id': 3, 'tipo': 'ausencia', 'fecha_hora': null},
+      ],
+    });
+
+    test('se cuentan, porque pasaron', () {
+      expect(asignatura.totalAusencias, 3);
+      expect(asignatura.faltasDe(TipoFalta.ausencia).length, 3);
+    });
+
+    test('pero no se listan como día', () {
+      final conDia = asignatura.faltasConDiaDe(TipoFalta.ausencia);
+
+      expect(conDia.length, 1);
+      expect(conDia.single.fecha, DateTime(2026, 3, 11));
+    });
+
+    test('y se dice cuántas son, para que no parezca que falta algo', () {
+      expect(asignatura.faltasSinDia, 2);
+    });
+  });
 }

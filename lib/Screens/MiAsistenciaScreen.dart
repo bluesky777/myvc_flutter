@@ -498,15 +498,33 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
                 style: const TextStyle(fontSize: 11.5, color: Colors.black45),
               ),
             ),
+          if (asignatura.faltasSinDia > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                asignatura.faltasSinDia == 1
+                    ? 'y una sin día registrado'
+                    : 'y ${asignatura.faltasSinDia} sin día registrado',
+                style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Colors.black38,
+                    fontStyle: FontStyle.italic),
+              ),
+            ),
         ],
       ),
     );
   }
 
   /// Los días de las faltas de un tipo, como se leen en una línea.
+  ///
+  /// Solo las que traen día. Las que no —una de cada nueve en la base del
+  /// colegio— se quedan fuera de esta línea y se dicen aparte, contadas: el
+  /// número de arriba sí las incluye, y sin explicar por qué no aparecen
+  /// abajo parecería que falta información.
   List<String> _dias(AsignaturaNotaModel asignatura, TipoFalta tipo) {
     return asignatura
-        .faltasDe(tipo)
+        .faltasConDiaDe(tipo)
         .map((f) => '${tipo.singular} el ${formatoDia(f.fecha)}')
         .toList();
   }
