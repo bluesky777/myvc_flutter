@@ -115,8 +115,7 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
               Expanded(
                 child: TituloPantalla(
                   titulo: 'Fallas de uniforme',
-                  subtitulo: '${widget.args.nombre}'
-                      ' · Periodo ${widget.args.numeroPeriodo}',
+                  subtitulo: widget.args.nombre,
                 ),
               ),
             ],
@@ -140,16 +139,35 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
     );
   }
 
-  /// Cuántas lleva. El nombre y la foto están arriba, en la barra.
+  /// De qué periodo son estas fallas, y cuántas van.
+  ///
+  /// El periodo, a tamaño de leerse: aquí se registra y se borra, y no hay
+  /// forma de cambiarlo desde esta pantalla, así que tiene que estar claro
+  /// antes de tocar nada.
   Widget _cabecera() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Text(
-        uniformes.isEmpty
-            ? 'Sin fallas en el periodo'
-            : '${uniformes.length} falla'
-                '${uniformes.length == 1 ? '' : 's'} en el periodo',
-        style: TextStyle(color: Colors.black54, fontSize: 13),
+      child: Row(
+        children: [
+          Icon(Icons.event_note_outlined, size: 19, color: kPrimaryColor),
+          const SizedBox(width: 8),
+          Text(
+            'Periodo ${widget.args.numeroPeriodo}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: kPrimaryColor,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            uniformes.isEmpty
+                ? 'Sin fallas'
+                : '${uniformes.length} falla'
+                    '${uniformes.length == 1 ? '' : 's'}',
+            style: TextStyle(color: Colors.black54, fontSize: 13),
+          ),
+        ],
       ),
     );
   }

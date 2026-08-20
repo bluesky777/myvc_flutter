@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Widgets/CampoConSugerencias.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/SelectorOrdinales.dart';
+import 'package:myvc_flutter/constantes.dart';
 
 /// Con qué se abre el editor.
 class SituacionEditorArgs {
@@ -160,8 +161,7 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
             Expanded(
               child: TituloPantalla(
                 titulo: creando ? 'Nueva situación' : 'Editar situación',
-                subtitulo: '${widget.args.alumno.nombreCompleto}'
-                    ' · Periodo ${widget.args.numeroPeriodo}',
+                subtitulo: widget.args.alumno.nombreCompleto,
               ),
             ),
           ],
@@ -181,7 +181,7 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
           key: _formulario,
           child: ListView(
             children: [
-              const SizedBox(height: 8),
+              _enQuePeriodo(),
               _selectorDeTipo(),
               CampoConSugerencias(
                 controlador: _descripcion,
@@ -232,6 +232,32 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// En qué periodo se está anotando.
+  ///
+  /// A tamaño de leerse y no en la letra chica del subtítulo: es lo que decide
+  /// en qué casilla del año cae la situación, no se puede cambiar desde aquí
+  /// —se elige antes, al abrir— y equivocarse de periodo no se ve hasta que
+  /// alguien echa en falta la anotación.
+  Widget _enQuePeriodo() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      child: Row(
+        children: [
+          Icon(Icons.event_note_outlined, size: 19, color: kPrimaryColor),
+          const SizedBox(width: 8),
+          Text(
+            'Periodo ${widget.args.numeroPeriodo}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: kPrimaryColor,
+            ),
+          ),
+        ],
       ),
     );
   }

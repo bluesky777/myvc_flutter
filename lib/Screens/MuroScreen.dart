@@ -65,12 +65,14 @@ class _MuroScreenState extends State<MuroScreen> {
         // como una tarjeta y no como un trozo suelto de la pantalla.
         backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
-          // El nombre de la pantalla arriba y el periodo debajo. Antes iba
-          // solo el periodo, con el argumento de que el muro se reconoce solo;
-          // pero las unidades y la disciplina llevaban ese mismo título, así
-          // que las tres barras decían lo mismo y ninguna decía dónde estabas.
-          // «Inicio» y no «Muro», que es como lo llama el menú.
-          title: TituloContexto(titulo: 'Inicio', alCambiar: _cargar),
+          // El nombre de la pantalla arriba y el periodo en su propia franja
+          // debajo. Antes iba solo el periodo, con el argumento de que el muro
+          // se reconoce solo; pero las unidades y la disciplina llevaban ese
+          // mismo título, así que las tres barras decían lo mismo y ninguna
+          // decía dónde estabas. «Inicio» y no «Muro», que es como lo llama el
+          // menú.
+          title: Text('Inicio'),
+          bottom: BarraContexto(alCambiar: _cargar),
           leading: GestureDetector(
             child: Icon(Icons.menu),
             onTap: () => _drawerController.toggle!(),

@@ -54,7 +54,7 @@ void main() {
     expect(find.text('2026 · Periodo 3'), findsNothing);
   });
 
-  group('con el nombre de la pantalla', () {
+  group('la franja del periodo, debajo del título', () {
     setUp(() {
       contexto.tomarDelLogin({
         'year_id': 6,
@@ -64,38 +64,52 @@ void main() {
       });
     });
 
-    testWidgets('salen los dos: dónde estoy y con qué periodo',
+    Widget conFranja() => MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('Disciplina'),
+              bottom: BarraContexto(),
+            ),
+            body: const SizedBox(),
+          ),
+        );
+
+    testWidgets('el nombre de la pantalla y el periodo, cada uno en su renglón',
         (WidgetTester tester) async {
-      // Sin el nombre, el inicio, las unidades y la disciplina llevaban
-      // exactamente el mismo título y no había forma de saber en cuál se
-      // estaba.
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          appBar: AppBar(title: TituloContexto(titulo: 'Disciplina')),
-          body: const SizedBox(),
-        ),
-      ));
+      // Juntos en un título de dos líneas obligaban a encoger el periodo
+      // hasta que dejaba de leerse, y es el dato que más se mira.
+      await tester.pumpWidget(conFranja());
 
       expect(find.text('Disciplina'), findsOneWidget);
       expect(find.text('2026 · Periodo 3'), findsOneWidget);
       expect(find.byIcon(Icons.expand_more), findsOneWidget);
     });
 
-    testWidgets('el periodo se sigue pudiendo cambiar desde ahí',
+    testWidgets('desde ahí se sigue cambiando de periodo',
         (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          appBar: AppBar(title: TituloContexto(titulo: 'Unidades')),
-          body: const SizedBox(),
-        ),
-      ));
+      await tester.pumpWidget(conFranja());
 
-      await tester.tap(find.text('Unidades'));
+      await tester.tap(find.text('2026 · Periodo 3'));
       await tester.pump();
 
       // Se comprueba que la hoja se abre y no qué trae: lo que trae sale de
       // GET /years, y en las pruebas no hay servidor que conteste.
       expect(find.byType(BottomSheet), findsOneWidget);
+    });
+
+    testWidgets('se actualiza sola cuando cambia el contexto',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(conFranja());
+
+      contexto.tomarDelLogin({
+        'year_id': 5,
+        'year': '2025',
+        'periodo_id': 14,
+        'numero_periodo': 1,
+      });
+      await tester.pump();
+
+      expect(find.text('2025 · Periodo 1'), findsOneWidget);
     });
   });
 

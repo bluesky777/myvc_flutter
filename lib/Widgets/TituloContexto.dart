@@ -2,26 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
-import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 
 /// El año y el periodo, en la barra de arriba y tocables.
 ///
-/// Va donde iría el título de la pantalla porque no es un adorno: es el filtro
-/// del que cuelga todo lo que se ve debajo. Que se pueda tocar lo dice la
-/// flechita; sin ella parecería un rótulo más.
+/// No es un adorno: es el filtro del que cuelga todo lo que se ve debajo. Que
+/// se pueda tocar lo dice la flechita; sin ella parecería un rótulo más.
+///
+/// Esto va en el hueco del título. Cuando la pantalla además necesita decir su
+/// nombre —que son todas las del menú—, el nombre va en el título y esto baja
+/// a la franja de debajo: ver [BarraContexto]. Juntar las dos cosas en un
+/// título de dos líneas obliga a encoger el periodo hasta que deja de leerse,
+/// y el periodo es lo que más se mira.
 class TituloContexto extends StatelessWidget {
-  const TituloContexto({super.key, this.alCambiar, this.titulo});
+  const TituloContexto({super.key, this.alCambiar});
 
   /// Qué hacer cuando el usuario cambia de periodo: normalmente, recargar.
   final VoidCallback? alCambiar;
-
-  /// El nombre de la pantalla, que va encima del año y el periodo.
-  ///
-  /// Sin él, tres pantallas distintas —el inicio, las unidades, la
-  /// disciplina— llevaban por título exactamente el mismo texto y no había
-  /// forma de saber en cuál se estaba. Se deja opcional porque el widget se
-  /// puede montar suelto, pero una pantalla del menú debería pasarlo siempre.
-  final String? titulo;
 
   @override
   Widget build(BuildContext context) {
@@ -31,51 +27,121 @@ class TituloContexto extends StatelessWidget {
       listenable: contexto,
       builder: (context, _) {
         return InkWell(
-          onTap: () => _abrirSelector(context),
+          onTap: () => abrirSelectorDeContexto(context, alCambiar: alCambiar),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: titulo != null
-                ? TituloPantalla(
-                    titulo: titulo!,
-                    subtitulo: contexto.titulo,
-                    conFlecha: true,
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          contexto.titulo,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.expand_more, size: 20),
-                    ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    contexto.titulo,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.expand_more, size: 20),
+              ],
+            ),
           ),
         );
       },
     );
   }
+}
 
-  Future<void> _abrirSelector(BuildContext context) async {
-    final cambiado = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (_) => const _SelectorContexto(),
+/// El año y el periodo en su propia franja, debajo del título de la pantalla.
+///
+/// Se monta en el hueco `bottom:` de la barra, así:
+///
+///     AppBar(
+///       title: Text('Disciplina'),
+///       bottom: BarraContexto(alCambiar: _arrancar),
+///     )
+///
+/// Es lo mismo que [TituloContexto] y en el mismo sitio de la pantalla, pero
+/// en su propio renglón. Nació de intentar lo contrario: meter el nombre de la
+/// pantalla y el periodo en un título de dos líneas dejaba el periodo en letra
+/// pequeña, y es el dato que más se mira y el único que se toca. Aquí va a
+/// tamaño de leerse, ocupando el ancho, y se ve que es un control y no un
+/// rótulo.
+class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
+  const BarraContexto({super.key, this.alCambiar});
+
+  final VoidCallback? alCambiar;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(44);
+
+  @override
+  Widget build(BuildContext context) {
+    final contexto = ContextoAcademico.instancia;
+
+    return ListenableBuilder(
+      listenable: contexto,
+      builder: (context, _) {
+        return SizedBox(
+          height: preferredSize.height,
+          width: double.infinity,
+          child: Material(
+            // Transparente para quedarse con el color de la barra: pintarle un
+            // fondo propio la separaría en dos bloques de colores distintos.
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () =>
+                  abrirSelectorDeContexto(context, alCambiar: alCambiar),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.event_note_outlined, size: 19),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        contexto.titulo,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.expand_more, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
-
-    if (cambiado == true) alCambiar?.call();
   }
+}
+
+/// Abre el cuadro donde se cambia de año y de periodo.
+///
+/// Suelto y no dentro de un widget porque lo abren los dos: el título y la
+/// franja.
+Future<void> abrirSelectorDeContexto(
+  BuildContext context, {
+  VoidCallback? alCambiar,
+}) async {
+  final cambiado = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+    ),
+    builder: (_) => const _SelectorContexto(),
+  );
+
+  if (cambiado == true) alCambiar?.call();
 }
 
 class _SelectorContexto extends StatefulWidget {
