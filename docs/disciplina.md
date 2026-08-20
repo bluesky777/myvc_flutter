@@ -1,7 +1,8 @@
 # Disciplina
 
-Plan de la pantalla de disciplina en la app, traída de `/disciplina` del front web
-(`myvc_front/app/scripts/comportamiento/`).
+La pantalla de disciplina de la app, traída de `/disciplina` del front web
+(`myvc_front/app/scripts/comportamiento/`). Está hecha salvo la del alumno y el acudiente, que
+sigue esperando un endpoint; ver «Lo que queda pendiente».
 
 Los diagramas son [Mermaid](https://mermaid.js.org). Para verlos dibujados en VS Code,
 extensión `bierner.markdown-mermaid` y vista previa con `⌘K V`; en GitHub se ven solos.
@@ -59,6 +60,10 @@ Escritas aquí para no descubrirlas dos veces.
    en singular para los botones, `faltas_tipoN_displayname` en plural para los títulos. Nunca
    «Tipo 1» a pelo.
 9. **`grupos/con-disciplina` devuelve todos los grupos.** El filtro por docente es del cliente.
+10. **`dependencias` va SIEMPRE en el update**, aunque esté vacía. El backend hace
+    `count($dependencias)` sin comprobar antes que sea un array, y en PHP 8.3 `count(null)` es un
+    TypeError: omitir la clave no guarda nada y devuelve un 500. El alta sí lo protege con
+    `is_array`, así que la diferencia está solo en editar.
 
 ### La trampa de los ordinales, en detalle
 
@@ -181,10 +186,18 @@ Todo lo que ofrece el modal del front web, con los controles de esta app:
 | Ordinales | `CampoOrdinales`, abajo |
 
 **El control del ordinal** es el `ui-select multiple` de la web traducido: el campo enseña los
-elegidos como chips (`tipo - ordinal. descripción`); al tocarlo se abre una hoja inferior a
-pantalla casi completa con un buscador arriba y la lista del manual de convivencia con
-casilla, filtrando según se escribe. Los ordinales son de solo lectura: aquí se eligen, no se
-crean ni se editan.
+elegidos como chips con su número; al tocarlo se abre una hoja inferior a pantalla casi
+completa con un buscador arriba y la lista del manual de convivencia con casilla, filtrando
+según se escribe sin distinguir acentos. Los ordinales son de solo lectura: aquí se eligen, no
+se crean ni se editan.
+
+**Cuándo se guardan, y por qué no como en la web.** Allí marcar un ordinal dispara
+`asignar-ordinal` en ese instante, aunque después se cancele el formulario. Aquí no se toca
+nada hasta pulsar Guardar. En el teléfono se cancela mucho más —basta el gesto de volver— y
+guardar a espaldas de quien está escribiendo deja ordinales puestos en situaciones que nadie
+llegó a modificar. Al guardar van **primero los ordinales y después el resto**, al revés de
+como se lee: `disciplina/update` devuelve el alumno recalculado, así que si los ordinales
+fueran después, lo que vuelve estaría ya viejo y la ficha pintaría los de antes.
 
 ### UniformesAlumnoScreen
 
@@ -211,24 +224,46 @@ eliminar. Las marcas van como `FilterChip`, que es lo que eran los `btn-checkbox
 - `lib/Screens/SituacionEditorScreen.dart`
 - `lib/Screens/UniformesAlumnoScreen.dart`
 
-**Tocados** — `lib/Http/AuthService.dart` (`esEspecial`), `lib/Menu/MenuLateral.dart` (la
-opción), `lib/Screens/RouteGenerator.dart` (tres rutas).
+**Tocados**
+
+- `lib/Http/AuthService.dart` — el getter `esEspecial`
+- `lib/Menu/MenuLateral.dart` — la opción, solo para el personal
+- `lib/Screens/RouteGenerator.dart` — la ruta `/disciplina`
+- `lib/Models/GrupoModel.dart` — `titular_id` y `nombre_grado`, y se lee con `JsonBackend`
+- `lib/Models/AsignaturaModel.dart` — `DocenteModel` gana `userId`
+- `lib/Utils/ContextoAcademico.dart` — `periodoIdDe(numero)`, para poder escribir en un periodo
+  que no es el de la barra
+- `lib/Http/UnidadesApi.dart` y `lib/Http/NotasApi.dart` — un solo sitio que entiende la forma
+  de `/contratos`, en vez de tres copias del mismo cruce
+
+**Una sola ruta con nombre.** `/disciplina` es la puerta; la ficha, el editor y los uniformes se
+abren con `push` directo. Reciben modelos ya cargados y devuelven el alumno recalculado, y por
+una ruta con nombre eso viaja como `Object?` y hay que creerse el tipo al bajarlo. Así no se
+vuelve a pedir el grupo de cuarenta alumnos después de cada guardado.
 
 **Reutilizados sin tocar** — `AvatarPersona`, `CampoDocente`, `ControlOcupado`,
-`TituloContexto`, `SelectorDia`, `FechaServidor`, `JsonBackend`, `TipoFalta`, `mensajeDeFallo`.
+`TituloContexto`, `FechaServidor`, `JsonBackend`, `TipoFalta`, `mensajeDeFallo`, y la pantalla
+`/faltas-alumno`, que ya sabía corregir el día de una tardanza.
 
 ## Las fases
 
 ```mermaid
 flowchart LR
-    F1["1 · Datos<br/>modelos + APIs<br/>+ tests de parseo"] --> F2["2 · Listado<br/>grupo, resumen,<br/>menú y rutas"]
-    F2 --> F3["3 · Ficha<br/>del alumno"]
-    F3 --> F4["4 · Crear y editar<br/>situaciones"]
-    F4 --> F5["5 · Uniformes"]
+    F1["1 · Datos ✓<br/>modelos + APIs<br/>+ 21 pruebas"] --> F2["2 · Listado ✓<br/>grupo, resumen,<br/>menú y ruta"]
+    F2 --> F3["3 · Ficha ✓<br/>del alumno"]
+    F3 --> F4["4 · Crear y editar ✓<br/>situaciones"]
+    F4 --> F5["5 · Uniformes ✓"]
     F5 -.->|"necesita<br/>endpoint nuevo"| F6["6 · Pantalla del<br/>alumno y acudiente"]
 
+    style F1 fill:#e8f4e8,stroke:#5a8f5a
+    style F2 fill:#e8f4e8,stroke:#5a8f5a
+    style F3 fill:#e8f4e8,stroke:#5a8f5a
+    style F4 fill:#e8f4e8,stroke:#5a8f5a
+    style F5 fill:#e8f4e8,stroke:#5a8f5a
     style F6 fill:#fff0e6,stroke:#c98a4b,stroke-dasharray: 5 3
 ```
+
+De la 1 a la 5, hechas en la rama `feat/disciplina`.
 
 ## Lo que queda pendiente
 
