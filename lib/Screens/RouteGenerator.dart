@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
+import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
+import 'package:myvc_flutter/Screens/PantallaPendiente.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 
@@ -12,6 +14,22 @@ class RouteGenerator {
       case '/login':
         return MaterialPageRoute(
             settings: settings, builder: (context) => LoginAnimScreen());
+      case '/muro':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => MuroScreen());
+      // Todavía sin construir, pero ya en el menú: ver PantallaPendiente.
+      case '/mis-notas':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => PantallaPendiente(seccion: 'Mis notas'));
+      case '/mi-asistencia':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => PantallaPendiente(seccion: 'Asistencia'));
+      case '/unidades':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => PantallaPendiente(seccion: 'Unidades'));
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());
@@ -65,7 +83,7 @@ class _RutaDesconocida extends StatelessWidget {
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                    context, '/panel', (_) => false),
+                    context, '/muro', (_) => false),
                 child: Text('Ir al inicio'),
               ),
             ],

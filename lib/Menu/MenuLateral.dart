@@ -23,12 +23,7 @@ class MenuLateral extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  ListTile(
-                    leading: Icon(Icons.home),
-                    title: Text('Inicio'),
-                    onTap: () => Navigator.pushNamedAndRemoveUntil(
-                        context, '/panel', (ruta) => false),
-                  ),
+                  ..._opciones(context),
                 ],
               ),
             ),
@@ -49,6 +44,73 @@ class MenuLateral extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// Lo que ve cada quien.
+  ///
+  /// El muro es de todos; lo demás depende del rol. Un alumno no tiene nada que
+  /// hacer en el listado de grupos del colegio, y un docente no tiene «Mis
+  /// notas» que mirar.
+  List<Widget> _opciones(BuildContext context) {
+    final usuario = AuthService.user;
+
+    final opciones = <Widget>[
+      _opcion(
+        context,
+        icono: Icons.forum_outlined,
+        texto: 'Publicaciones',
+        ruta: '/muro',
+      ),
+    ];
+
+    if (usuario.esAlumno || usuario.esAcudiente) {
+      opciones.addAll([
+        _opcion(
+          context,
+          icono: Icons.school_outlined,
+          texto: 'Mis notas',
+          ruta: '/mis-notas',
+        ),
+        _opcion(
+          context,
+          icono: Icons.event_available_outlined,
+          texto: 'Asistencia',
+          ruta: '/mi-asistencia',
+        ),
+      ]);
+      return opciones;
+    }
+
+    // Docentes, administrativos y superusuarios.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.fact_check_outlined,
+      texto: 'Asistencias',
+      ruta: '/panel',
+    ));
+
+    opciones.add(_opcion(
+      context,
+      icono: Icons.menu_book_outlined,
+      texto: 'Unidades',
+      ruta: '/unidades',
+    ));
+
+    return opciones;
+  }
+
+  Widget _opcion(
+    BuildContext context, {
+    required IconData icono,
+    required String texto,
+    required String ruta,
+  }) {
+    return ListTile(
+      leading: Icon(icono),
+      title: Text(texto),
+      onTap: () =>
+          Navigator.pushNamedAndRemoveUntil(context, ruta, (_) => false),
     );
   }
 

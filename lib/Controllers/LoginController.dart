@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,11 +78,14 @@ class LoginController implements LoginBaseController {
           .where((parte) => parte != null && '$parte'.trim().isNotEmpty)
           .join(' ');
 
-      AuthService.user.id = int.tryParse('${datos['user_id']}');
-      AuthService.user.tipo = datos['tipo']?.toString();
+      AuthService.user.id = entero(datos['user_id']);
+      AuthService.user.personaId = entero(datos['persona_id']);
+      AuthService.user.tipo = texto(datos['tipo']);
       AuthService.user.username = '${datos['username'] ?? username}';
       AuthService.user.nombres = nombre.isEmpty ? null : nombre;
       AuthService.user.sexo = '${datos['sexo'] ?? 'M'}';
+      AuthService.user.isSuperuser = entero(datos['is_superuser']) == 1;
+      AuthService.user.roles = _rolesDe(datos['roles']);
     } catch (err) {
       // El contexto es un extra: si no llega, la sesión sigue siendo válida.
       AuthService.user.username = username;
@@ -160,4 +164,23 @@ class LoginException implements Exception {
 
   @override
   String toString() => mensaje;
+}
+
+/// Los nombres de los roles que manda /login, en minúsculas.
+///
+/// Vienen como filas de la tabla `roles`, cada una con su `name`. Se normalizan
+/// aquí para no tener que recordar en cada comparación si el colegio escribió
+/// 'Admin' o 'admin'.
+Set<String> _rolesDe(dynamic crudos) {
+  if (crudos is! List) return {};
+
+  final nombres = <String>{};
+  for (final rol in crudos) {
+    final nombre = rol is Map ? rol['name'] : rol;
+    if (nombre == null) continue;
+
+    final limpio = nombre.toString().trim().toLowerCase();
+    if (limpio.isNotEmpty) nombres.add(limpio);
+  }
+  return nombres;
 }

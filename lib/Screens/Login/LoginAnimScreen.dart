@@ -162,7 +162,7 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
             // la contraseña escritos, así que el botón atrás desde el panel
             // devolvía al formulario con la sesión ya abierta. El logout sí lo
             // hacía bien; la entrada no.
-            Navigator.pushNamedAndRemoveUntil(context, '/panel', (_) => false);
+            Navigator.pushNamedAndRemoveUntil(context, '/muro', (_) => false);
           } else if (estadoLogin is LoggingInState) {
             _ocultarAviso();
           } else if (estadoLogin is LoginErrorState) {
