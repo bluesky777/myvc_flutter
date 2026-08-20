@@ -9,7 +9,7 @@ import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
-import 'package:myvc_flutter/Widgets/TituloContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraContexto.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Las unidades con las que un docente evalúa cada asignatura en el periodo.

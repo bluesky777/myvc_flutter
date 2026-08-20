@@ -148,6 +148,10 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
+        // Centrado, igual que en la franja de las pantallas del menú. La
+        // cuenta va detrás y no empujada al borde: así el periodo queda en el
+        // centro y no descolocado por lo larga que sea la cuenta.
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.event_note_outlined, size: 19, color: kPrimaryColor),
           const SizedBox(width: 8),
@@ -159,11 +163,10 @@ class _UniformesAlumnoScreenState extends State<UniformesAlumnoScreen> {
               color: kPrimaryColor,
             ),
           ),
-          const Spacer(),
           Text(
             uniformes.isEmpty
-                ? 'Sin fallas'
-                : '${uniformes.length} falla'
+                ? '  ·  sin fallas'
+                : '  ·  ${uniformes.length} falla'
                     '${uniformes.length == 1 ? '' : 's'}',
             style: TextStyle(color: Colors.black54, fontSize: 13),
           ),

@@ -5,7 +5,7 @@ import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
-import 'package:myvc_flutter/Widgets/TituloContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraContexto.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///

@@ -18,7 +18,7 @@ import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorGrupo.dart';
-import 'package:myvc_flutter/Widgets/TituloContexto.dart';
+import 'package:myvc_flutter/Widgets/BarraContexto.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

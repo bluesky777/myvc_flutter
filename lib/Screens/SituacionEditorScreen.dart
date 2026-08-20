@@ -246,6 +246,9 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       child: Row(
+        // Centrado, igual que en la franja de las pantallas del menú: es el
+        // mismo dato y va siempre en el mismo sitio de la pantalla.
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.event_note_outlined, size: 19, color: kPrimaryColor),
           const SizedBox(width: 8),

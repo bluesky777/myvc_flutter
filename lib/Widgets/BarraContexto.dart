@@ -3,58 +3,6 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 
-/// El año y el periodo, en la barra de arriba y tocables.
-///
-/// No es un adorno: es el filtro del que cuelga todo lo que se ve debajo. Que
-/// se pueda tocar lo dice la flechita; sin ella parecería un rótulo más.
-///
-/// Esto va en el hueco del título. Cuando la pantalla además necesita decir su
-/// nombre —que son todas las del menú—, el nombre va en el título y esto baja
-/// a la franja de debajo: ver [BarraContexto]. Juntar las dos cosas en un
-/// título de dos líneas obliga a encoger el periodo hasta que deja de leerse,
-/// y el periodo es lo que más se mira.
-class TituloContexto extends StatelessWidget {
-  const TituloContexto({super.key, this.alCambiar});
-
-  /// Qué hacer cuando el usuario cambia de periodo: normalmente, recargar.
-  final VoidCallback? alCambiar;
-
-  @override
-  Widget build(BuildContext context) {
-    final contexto = ContextoAcademico.instancia;
-
-    return ListenableBuilder(
-      listenable: contexto,
-      builder: (context, _) {
-        return InkWell(
-          onTap: () => abrirSelectorDeContexto(context, alCambiar: alCambiar),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    contexto.titulo,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.expand_more, size: 20),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// El año y el periodo en su propia franja, debajo del título de la pantalla.
 ///
 /// Se monta en el hueco `bottom:` de la barra, así:
@@ -64,12 +12,15 @@ class TituloContexto extends StatelessWidget {
 ///       bottom: BarraContexto(alCambiar: _arrancar),
 ///     )
 ///
-/// Es lo mismo que [TituloContexto] y en el mismo sitio de la pantalla, pero
-/// en su propio renglón. Nació de intentar lo contrario: meter el nombre de la
-/// pantalla y el periodo en un título de dos líneas dejaba el periodo en letra
-/// pequeña, y es el dato que más se mira y el único que se toca. Aquí va a
-/// tamaño de leerse, ocupando el ancho, y se ve que es un control y no un
-/// rótulo.
+/// Nació de intentar lo contrario: meter el nombre de la pantalla y el periodo
+/// en un título de dos líneas dejaba el periodo en letra pequeña, y es el dato
+/// que más se mira y el único que se toca. Aquí va a tamaño de leerse,
+/// ocupando el ancho, y se ve que es un control y no un rótulo.
+///
+/// Centrado, y no pegado a la izquierda como el título de encima: así se lee
+/// como una cosa aparte y no como una segunda línea del título. Es el mismo
+/// control en las tres pantallas del menú y conviene que esté siempre en el
+/// mismo sitio, se llame la pantalla «Inicio» o «Disciplina».
 class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
   const BarraContexto({super.key, this.alCambiar});
 
@@ -98,6 +49,7 @@ class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.event_note_outlined, size: 19),
                     const SizedBox(width: 8),
