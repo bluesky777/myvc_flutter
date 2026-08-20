@@ -14,35 +14,40 @@ class MenuLateral extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.blue[50],
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildCabecera(),
-            Expanded(
+      // El SafeArea va por dentro y no envolviéndolo todo: la cabecera tiene
+      // que llegar hasta el borde de arriba, por debajo de la barra de estado.
+      // Envolviendo la Column entera, el fondo arrancaba más abajo y quedaba
+      // una franja del color del Scaffold encima.
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCabecera(context),
+          Expanded(
+            child: SafeArea(
+              top: false,
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
                   ..._opciones(context),
+                  Divider(height: 20, thickness: 2, indent: 20, endIndent: 20),
+                  ListTile(
+                    leading: Icon(Icons.logout),
+                    title: Text('Cerrar sesión'),
+                    onTap: () async {
+                      await LoginController().logout();
+
+                      if (!context.mounted) return;
+
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, '/login', (ruta) => false);
+                    },
+                  ),
+                  SizedBox(height: 20),
                 ],
               ),
             ),
-            Divider(height: 20, thickness: 2, indent: 20, endIndent: 20),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Cerrar sesión'),
-              onTap: () async {
-                await LoginController().logout();
-
-                if (!context.mounted) return;
-
-                Navigator.pushNamedAndRemoveUntil(
-                    context, '/login', (ruta) => false);
-              },
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -114,26 +119,59 @@ class MenuLateral extends StatelessWidget {
     );
   }
 
-  Widget _buildCabecera() {
-    return Container(
-      color: Colors.lightBlueAccent,
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  /// La cabecera del menú: el logo de fondo y el usuario encima.
+  ///
+  /// Así era antes de que el commit 3ff68a4 unificara los dos menús: al
+  /// extraer este, la cabecera se rehízo como una columna con la imagen de 70
+  /// px arriba y el nombre debajo, o sea que el logo dejó de ser un fondo y
+  /// pasó a ser una fila más del menú.
+  ///
+  /// El velo oscuro de abajo no es adorno: el logo tiene zonas claras y sin él
+  /// el nombre en blanco se pierde justo encima de ellas.
+  Widget _buildCabecera(BuildContext context) {
+    final alturaBarra = MediaQuery.of(context).padding.top;
+
+    return SizedBox(
+      height: 180 + alturaBarra,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Image(
-            image: AssetImage('assets/images/logoMy.png'),
-            height: 70,
+          Image.asset('assets/images/logoMy.png', fit: BoxFit.cover),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black54],
+              ),
+            ),
           ),
-          SizedBox(height: 12),
-          // El usuario a la vista: es quien queda firmando cada tardanza.
-          Text(
-            AuthService.user.nombres ?? 'Sin identificar',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            AuthService.user.username,
-            style: TextStyle(fontSize: 14),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Quien queda firmando cada tardanza. nombreVisible y no
+                // `nombres ?? 'Sin identificar'`: los usuarios de tipo Usuario
+                // no tienen ficha con nombres, y para ellos el nombre de
+                // usuario ES el nombre. Decirles «Sin identificar» a quienes sí
+                // están identificados no tenía sentido.
+                Text(
+                  AuthService.user.nombreVisible,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  AuthService.user.username,
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+              ],
+            ),
           ),
         ],
       ),
