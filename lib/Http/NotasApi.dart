@@ -93,3 +93,31 @@ Future<Map<int, String>> traerDocentesPorProfesor(Server server) async {
     return {};
   }
 }
+
+/// user_id -> nombre completo, para ponerle nombre a quien registró algo.
+///
+/// Las tablas de la plataforma guardan `added_by` y `created_by` como
+/// `user_id`, que NO es el `profesor_id`: son dos numeraciones y cruzarlas por
+/// la equivocada pone el nombre de otro docente. /contratos trae los dos, así
+/// que aquí se indexa por el que hace falta.
+///
+/// Mapa vacío si falla: el nombre de quien registró es un dato de apoyo, no la
+/// falta en sí, y quedarse sin él no puede tumbar la pantalla.
+Future<Map<int, String>> traerNombresPorUsuario(Server server) async {
+  try {
+    final res = await server.get('/contratos');
+    final lista = jsonDecode(res.body) as List;
+
+    final mapa = <int, String>{};
+    for (final contrato in lista) {
+      if (contrato is! Map) continue;
+
+      final id = int.tryParse('${contrato['user_id']}');
+      final nombre = contrato['nombre_completo'];
+      if (id != null && nombre != null) mapa[id] = '$nombre'.trim();
+    }
+    return mapa;
+  } catch (_) {
+    return {};
+  }
+}

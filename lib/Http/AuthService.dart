@@ -59,6 +59,21 @@ class UserAutenticado {
 
   bool get esAdmin => isSuperuser || tieneRol('admin');
 
+  /// Quien ve el colegio entero y no solo lo suyo.
+  ///
+  /// En disciplina decide algo concreto: si el selector de grupos trae todos
+  /// los del año o solo aquellos en los que el docente da clase. La
+  /// coordinación entra porque es la que lleva el observador de todos los
+  /// grados; los cargos se buscan por prefijo porque en la tabla aparecen con
+  /// apellido —'Coord disciplinario', 'Coord académico'— y cada colegio tiene
+  /// los suyos.
+  ///
+  /// No sustituye a lo que comprueba el backend: allí la puerta es
+  /// `auth.personal`, que solo deja fuera a alumnos y acudientes. Esto es
+  /// alcance, no permiso.
+  bool get esEspecial =>
+      esAdmin || roles.any((rol) => rol.startsWith('coord'));
+
   /// Quien puede comentar una publicación del muro.
   ///
   /// Los alumnos y los acudientes leen; escriben los del colegio. Los cargos de

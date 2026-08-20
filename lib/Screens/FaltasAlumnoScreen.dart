@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/FaltasApi.dart';
+import 'package:myvc_flutter/Http/NotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
@@ -141,23 +142,10 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
   /// El nombre del docente no viene con la falta, solo su created_by.
   ///
   /// Si falla, la pantalla sigue sirviendo: se muestra el número de usuario.
+  /// El cruce por `user_id` lo hace [traerNombresPorUsuario], que es el mismo
+  /// que usa la pantalla de disciplina para saber quién registró una situación.
   Future<void> _cargarDocentes() async {
-    try {
-      final res = await server.get('/contratos');
-      final lista = jsonDecode(res.body) as List;
-
-      final mapa = <int, String>{};
-      for (final c in lista) {
-        final userId = c['user_id'];
-        final nombre = c['nombre_completo'];
-        if (userId != null && nombre != null) {
-          mapa[int.parse('$userId')] = '$nombre'.trim();
-        }
-      }
-      docentes = mapa;
-    } catch (err) {
-      debugPrint('No se pudo traer los docentes: $err');
-    }
+    docentes = await traerNombresPorUsuario(server);
   }
 
   Future<void> _cargarYear() async {
