@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
+import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 class AsistenciaClaseArgs {
@@ -78,7 +79,18 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   late DateTime fechaFalta;
 
   bool cargando = true;
-  bool guardando = false;
+  /// Lo que está esperando respuesta ahora mismo, por control y no por
+  /// pantalla: `agregar-tardanza`, `agregar-ausencia` o `falta-<id>`. Registrar
+  /// una tardanza no tiene por qué apagar el botón de la ausencia, ni el de las
+  /// faltas ya registradas.
+  final Set<String> _guardando = {};
+
+  /// Si hay algo guardándose, sea lo que sea.
+  ///
+  /// Solo para el selector de la fecha a la que se registran las faltas
+  /// nuevas: cambiarla en mitad de un POST deja al docente sin saber a qué día
+  /// fue la que acaba de poner.
+  bool get algoGuardando => _guardando.isNotEmpty;
   String? error;
 
   @override
@@ -228,9 +240,10 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   }
 
   Future<void> _agregar(String tipo) async {
-    if (asignaturaElegida == null || guardando) return;
+    final clave = 'agregar-$tipo';
+    if (asignaturaElegida == null || _guardando.contains(clave)) return;
 
-    setState(() => guardando = true);
+    setState(() => _guardando.add(clave));
 
     try {
       final ruta = tipo == 'tardanza'
@@ -258,13 +271,14 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
     } catch (err) {
       _aviso('Error registrando: $err');
     } finally {
-      setState(() => guardando = false);
+      if (mounted) setState(() => _guardando.remove(clave));
     }
   }
 
   Future<void> _eliminar(AsistenciaModel falla) async {
-    if (guardando) return;
-    setState(() => guardando = true);
+    final clave = _claveFalta(falla);
+    if (_guardando.contains(clave)) return;
+    setState(() => _guardando.add(clave));
 
     try {
       final res = await server.delete('/ausencias/destroy/${falla.id}');
@@ -279,7 +293,7 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
     } catch (err) {
       _aviso('Error eliminando: $err');
     } finally {
-      setState(() => guardando = false);
+      if (mounted) setState(() => _guardando.remove(clave));
     }
   }
 
@@ -300,12 +314,13 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
 
   /// Cambia el día de una falta ya registrada.
   Future<void> _cambiarFechaDe(AsistenciaModel falla) async {
-    if (guardando) return;
+    final clave = _claveFalta(falla);
+    if (_guardando.contains(clave)) return;
 
     final nueva = await pedirDiaDeFalta(context, falla.fecha);
     if (nueva == null) return;
 
-    setState(() => guardando = true);
+    setState(() => _guardando.add(clave));
 
     try {
       final problema = await cambiarFechaDeFalta(
@@ -322,9 +337,11 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
       await _cargarFallas(asignaturaElegida!);
       _aviso('Ahora consta del ${formatoDiaYHora(nueva)}.', error: false);
     } finally {
-      setState(() => guardando = false);
+      if (mounted) setState(() => _guardando.remove(clave));
     }
   }
+
+  String _claveFalta(AsistenciaModel falla) => 'falta-${falla.id}';
 
   void _aviso(String mensaje, {bool error = true}) {
     if (!mounted) return;
@@ -560,9 +577,9 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildContador('Ausencias', ausencias.length, Colors.redAccent,
-                () => _agregar('ausencia')),
+                'ausencia'),
             _buildContador('Tardanzas', tardanzas.length, Colors.orange,
-                () => _agregar('tardanza')),
+                'tardanza'),
           ],
         ),
         const SizedBox(height: 24),
@@ -599,7 +616,7 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         trailing: TextButton.icon(
-          onPressed: guardando ? null : _elegirFechaFalta,
+          onPressed: algoGuardando ? null : _elegirFechaFalta,
           icon: Icon(Icons.calendar_today, size: 18),
           label: Text('Cambiar'),
         ),
@@ -608,24 +625,29 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
   }
 
   Widget _buildContador(
-      String titulo, int cantidad, Color color, VoidCallback onAgregar) {
-    return Column(
-      children: [
-        Text(titulo, style: TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Text('$cantidad',
-            style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ElevatedButton.icon(
-          onPressed: guardando ? null : onAgregar,
-          icon: Icon(Icons.add, size: 18),
-          label: Text('Agregar'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            foregroundColor: Colors.white,
+      String titulo, int cantidad, Color color, String tipo) {
+    // El número y su botón van dentro del mismo envoltorio: mientras se guarda,
+    // la cuenta que se ve todavía es la de antes.
+    return ControlOcupado(
+      ocupado: _guardando.contains('agregar-$tipo'),
+      child: Column(
+        children: [
+          Text(titulo, style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text('$cantidad',
+              style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () => _agregar(tipo),
+            icon: Icon(Icons.add, size: 18),
+            label: Text('Agregar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -651,20 +673,23 @@ class _AsistenciaClaseScreenState extends State<AsistenciaClaseScreen> {
               : 'Toca el calendario para corregir el día y la hora',
           style: TextStyle(fontSize: 12),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: 'Cambiar el día',
-              icon: Icon(Icons.edit_calendar_outlined, color: kPrimaryColor),
-              onPressed: guardando ? null : () => _cambiarFechaDe(falla),
-            ),
-            IconButton(
-              tooltip: 'Eliminar',
-              icon: Icon(Icons.delete_outline, color: kPrimaryColor),
-              onPressed: guardando ? null : () => _eliminar(falla),
-            ),
-          ],
+        trailing: ControlOcupado(
+          ocupado: _guardando.contains(_claveFalta(falla)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: 'Cambiar el día',
+                icon: Icon(Icons.edit_calendar_outlined, color: kPrimaryColor),
+                onPressed: () => _cambiarFechaDe(falla),
+              ),
+              IconButton(
+                tooltip: 'Eliminar',
+                icon: Icon(Icons.delete_outline, color: kPrimaryColor),
+                onPressed: () => _eliminar(falla),
+              ),
+            ],
+          ),
         ),
       ),
     );

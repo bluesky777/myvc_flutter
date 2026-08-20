@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/Widgets/FondoFalta.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
@@ -39,6 +40,12 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   /// Cambiar de día no lo recarga: el backend manda las faltas de todo el
   /// periodo y el día se filtra aquí.
   Future<List<AlumnoModel>>? _alumnosFuture;
+  /// Los contadores que están esperando respuesta del servidor.
+  ///
+  /// Uno por alumno y tipo de falta, no uno para toda la pantalla: mientras se
+  /// guarda la tardanza de un alumno, los botones de los demás siguen vivos.
+  final Set<String> _guardando = {};
+
   DateTime? today; // la cambio en init
   DateTime? _selectedDate;
   final _drawerController = ZoomDrawerController();
@@ -359,23 +366,36 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
             ],
           ),
         ),
-        _botonContador(
-          icono: Icons.remove,
-          color: delDia == 0 ? Colors.grey.shade400 : Colors.redAccent,
-          onPressed: () => _quitarFalta(alumno, dia, tipo),
-        ),
-        Container(
-          width: 48,
-          alignment: Alignment.center,
-          child: Text(
-            '$delDia',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+        // Los tres van dentro del mismo envoltorio: mientras se guarda, el
+        // número que se ve todavía es el de antes, así que tampoco tiene
+        // sentido dejarlo nítido.
+        ControlOcupado(
+          ocupado: _guardando.contains(_claveContador(alumno, tipo)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _botonContador(
+                icono: Icons.remove,
+                color: delDia == 0 ? Colors.grey.shade400 : Colors.redAccent,
+                onPressed: () => _mientrasGuarda(alumno, tipo,
+                    () => _quitarFalta(alumno, dia, tipo)),
+              ),
+              Container(
+                width: 48,
+                alignment: Alignment.center,
+                child: Text(
+                  '$delDia',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+              ),
+              _botonContador(
+                icono: Icons.add,
+                color: Colors.green,
+                onPressed: () => _mientrasGuarda(alumno, tipo,
+                    () => _agregarFalta(alumno, dia, tipo)),
+              ),
+            ],
           ),
-        ),
-        _botonContador(
-          icono: Icons.add,
-          color: Colors.green,
-          onPressed: () => _agregarFalta(alumno, dia, tipo),
         ),
       ],
     );
@@ -399,6 +419,26 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         ),
       ),
     );
+  }
+
+  String _claveContador(AlumnoModel alumno, TipoFalta tipo) =>
+      '${alumno.id}-${tipo.valor}';
+
+  /// Marca el contador como ocupado mientras corre [tarea].
+  ///
+  /// El `finally` es lo que importa: si la petición falla, los botones tienen
+  /// que volver, o el docente se queda sin poder reintentar.
+  Future<void> _mientrasGuarda(
+      AlumnoModel alumno, TipoFalta tipo, Future<void> Function() tarea) async {
+    final clave = _claveContador(alumno, tipo);
+    if (_guardando.contains(clave)) return;
+
+    setState(() => _guardando.add(clave));
+    try {
+      await tarea();
+    } finally {
+      setState(() => _guardando.remove(clave));
+    }
   }
 
   Widget _botonContador({

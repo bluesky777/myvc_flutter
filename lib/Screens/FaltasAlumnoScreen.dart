@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorDia.dart';
+import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Los datos que hacen falta para abrir la pantalla.
@@ -70,7 +71,12 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
   Map<int, List<AsistenciaModel>> porPeriodo = {};
 
   bool cargando = true;
-  bool guardando = false;
+
+  /// Las faltas a las que se les está cambiando el día ahora mismo.
+  ///
+  /// Por falta y no para toda la pantalla: cambiar la fecha de una no tiene por
+  /// qué apagar el botón de las otras diecisiete del periodo.
+  final Set<int> _cambiandoFecha = {};
   String? error;
 
   @override
@@ -196,12 +202,12 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
   DateTime _orden(AsistenciaModel t) => t.fecha ?? t.createdAt ?? DateTime(1900);
 
   Future<void> _cambiarFechaDe(AsistenciaModel falta) async {
-    if (guardando) return;
+    if (_cambiandoFecha.contains(falta.id)) return;
 
     final nueva = await pedirDiaDeFalta(context, falta.fecha);
     if (nueva == null) return;
 
-    setState(() => guardando = true);
+    setState(() => _cambiandoFecha.add(falta.id));
 
     try {
       final problema = await cambiarFechaDeFalta(
@@ -220,7 +226,7 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
       await _cargarYear();
       _aviso('Ahora consta del ${formatoDiaYHora(nueva)}.', error: false);
     } finally {
-      setState(() => guardando = false);
+      if (mounted) setState(() => _cambiandoFecha.remove(falta.id));
     }
   }
 
@@ -283,7 +289,7 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
                         child: Text(y.actual ? '${y.year} (actual)' : y.year),
                       ))
                   .toList(),
-              onChanged: years.isEmpty || guardando
+              onChanged: years.isEmpty || cargando
                   ? null
                   : (nuevo) {
                       if (nuevo == null || nuevo == yearElegido) return;
@@ -444,11 +450,14 @@ class _FaltasAlumnoScreenState extends State<FaltasAlumnoScreen> {
                 ],
               ),
             ),
-            TextButton.icon(
-              onPressed: guardando ? null : () => _cambiarFechaDe(falta),
-              icon: Icon(Icons.edit_calendar_outlined, size: 18),
-              label: Text('Cambiar'),
-              style: TextButton.styleFrom(foregroundColor: kPrimaryColor),
+            ControlOcupado(
+              ocupado: _cambiandoFecha.contains(falta.id),
+              child: TextButton.icon(
+                onPressed: () => _cambiarFechaDe(falta),
+                icon: Icon(Icons.edit_calendar_outlined, size: 18),
+                label: Text('Cambiar'),
+                style: TextButton.styleFrom(foregroundColor: kPrimaryColor),
+              ),
             ),
           ],
         ),
