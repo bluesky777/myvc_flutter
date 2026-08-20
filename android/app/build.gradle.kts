@@ -18,7 +18,7 @@ if (archivoDeFirma.exists()) {
 }
 
 android {
-    namespace = "com.app.micolevirtual.myvc_flutter"
+    namespace = "com.micolevirtual.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -28,7 +28,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.app.micolevirtual.myvc_flutter"
+        applicationId = "com.micolevirtual.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

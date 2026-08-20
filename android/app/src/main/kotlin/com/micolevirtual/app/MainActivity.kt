@@ -1,4 +1,4 @@
-package com.app.micolevirtual.myvc_flutter
+package com.micolevirtual.app
 
 import io.flutter.embedding.android.FlutterActivity
 
