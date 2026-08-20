@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
+import 'package:myvc_flutter/Screens/MisNotasScreen.dart';
 import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/PantallaPendiente.dart';
@@ -17,11 +18,10 @@ class RouteGenerator {
       case '/muro':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MuroScreen());
-      // Todavía sin construir, pero ya en el menú: ver PantallaPendiente.
       case '/mis-notas':
         return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => PantallaPendiente(seccion: 'Mis notas'));
+            settings: settings, builder: (context) => MisNotasScreen());
+      // Todavía sin construir, pero ya en el menú: ver PantallaPendiente.
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings,
