@@ -141,8 +141,10 @@ void main() {
       final year = yearDePrueba();
       final periodo1 = year.periodos.firstWhere((p) => p.numero == 1);
 
-      final despues =
-          year.conPeriodo(periodo1.copiaCon(puedenEditarNotas: false));
+      final despues = year.cambiandoPeriodo(
+        periodo1.id,
+        (p) => p.copiaCon(puedenEditarNotas: false),
+      );
 
       expect(
         despues.periodos.firstWhere((p) => p.numero == 1).puedenEditarNotas,
@@ -152,6 +154,27 @@ void main() {
         despues.periodos.firstWhere((p) => p.numero == 2).puedenNivelar,
         isTrue,
       );
+    });
+
+    test('dos interruptores del mismo periodo a la vez no se pisan', () {
+      // Se pueden tocar los dos mientras el primero sigue en vuelo. Con un
+      // periodo capturado antes de la petición, el segundo en responder
+      // escribiría encima con los valores de antes.
+      final year = yearDePrueba();
+      final periodo1 = year.periodos.firstWhere((p) => p.numero == 1);
+
+      final tras1 = year.cambiandoPeriodo(
+        periodo1.id,
+        (p) => p.copiaCon(puedenEditarNotas: false),
+      );
+      final tras2 = tras1.cambiandoPeriodo(
+        periodo1.id,
+        (p) => p.copiaCon(puedenNivelar: false),
+      );
+
+      final quedo = tras2.periodos.firstWhere((p) => p.numero == 1);
+      expect(quedo.puedenEditarNotas, isFalse);
+      expect(quedo.puedenNivelar, isFalse);
     });
 
     test('hacer actual un periodo apaga los demás', () {

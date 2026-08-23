@@ -433,7 +433,10 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 periodoId: periodo.id,
                 pueden: nuevo,
               ),
-              (y) => y.conPeriodo(periodo.copiaCon(puedenEditarNotas: nuevo)),
+              (y) => y.cambiandoPeriodo(
+                periodo.id,
+                (p) => p.copiaCon(puedenEditarNotas: nuevo),
+              ),
               year.id,
             ),
           ),
@@ -450,7 +453,10 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 periodoId: periodo.id,
                 pueden: nuevo,
               ),
-              (y) => y.conPeriodo(periodo.copiaCon(puedenNivelar: nuevo)),
+              (y) => y.cambiandoPeriodo(
+                periodo.id,
+                (p) => p.copiaCon(puedenNivelar: nuevo),
+              ),
               year.id,
             ),
           ),
@@ -516,10 +522,9 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
         fecha: fecha,
         esElInicio: esElInicio,
       ),
-      (y) => y.conPeriodo(
-        esElInicio
-            ? periodo.copiaCon(inicio: fecha)
-            : periodo.copiaCon(fin: fecha),
+      (y) => y.cambiandoPeriodo(
+        periodo.id,
+        (p) => esElInicio ? p.copiaCon(inicio: fecha) : p.copiaCon(fin: fecha),
       ),
       year.id,
     );

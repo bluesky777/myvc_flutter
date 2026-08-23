@@ -130,7 +130,13 @@ class _HojaDetalleNotaState extends State<_HojaDetalleNota> {
     setState(() => borrando = false);
 
     if (fallo != null) {
-      setState(() => error = fallo);
+      // Por aviso y no en el hueco del historial: allí hay un «Reintentar» que
+      // vuelve a pedir el historial, que no es lo que falló. Ofrecer el botón
+      // equivocado es peor que no ofrecer ninguno; el de borrar sigue ahí.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(fallo)));
       return;
     }
 

@@ -100,11 +100,21 @@ class YearDelColegio {
     );
   }
 
-  /// El mismo año con un periodo cambiado.
-  YearDelColegio conPeriodo(PeriodoDelColegio nuevo) {
+  /// El mismo año con un periodo cambiado, partiendo del que hay **ahora**.
+  ///
+  /// Recibe una función y no un periodo ya hecho, y esto no es capricho: los
+  /// interruptores de un periodo se pueden tocar mientras otro del mismo
+  /// periodo sigue en vuelo. Con un periodo capturado antes de la petición, el
+  /// segundo en responder escribiría encima con los valores de antes y borraría
+  /// el cambio del primero. Aplicándolo sobre el que hay en ese momento, cada
+  /// respuesta toca solo su campo.
+  YearDelColegio cambiandoPeriodo(
+    int periodoId,
+    PeriodoDelColegio Function(PeriodoDelColegio) comoQueda,
+  ) {
     return copiaCon(periodos: [
       for (final periodo in periodos)
-        periodo.id == nuevo.id ? nuevo : periodo,
+        periodo.id == periodoId ? comoQueda(periodo) : periodo,
     ]);
   }
 

@@ -88,11 +88,35 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
     if (mounted) super.setState(fn);
   }
 
+  /// Tira lo escrito en los campos y las marcas de corregido.
+  ///
+  /// Hay que hacerlo en cada recarga. Los campos se guardan por id de nota, y
+  /// esos ids siguen siendo los mismos después de refrescar: sin esto, un campo
+  /// enseñaría lo que alguien tecleó hace un rato encima de una nota que el
+  /// servidor acaba de devolver con otro valor, y las filas verdes de
+  /// «corregida» sobrevivirían a los datos que las justificaban.
+  ///
+  /// Los controladores se tiran en el frame siguiente y no ahora: durante este
+  /// todavía puede haber campos montados apuntando a ellos, y usar uno ya
+  /// tirado revienta.
+  void _olvidarLoEscrito() {
+    final viejos = List.of(_campos.values);
+    _campos.clear();
+    _corregidas.clear();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final campo in viejos) {
+        campo.dispose();
+      }
+    });
+  }
+
   Future<void> _arrancar() async {
     setState(() {
       cargando = true;
       error = null;
       grupos = [];
+      _olvidarLoEscrito();
     });
 
     try {
@@ -125,7 +149,7 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
       cargando = true;
       error = null;
       grupos = [];
-      _corregidas.clear();
+      _olvidarLoEscrito();
     });
 
     try {
