@@ -12,11 +12,11 @@ Están ordenadas por lo que dan a cambio de lo que cuestan.
 flowchart LR
     A["1 · PUT notas/lote<br/>quita carga al servidor"] --> A1["30 peticiones → 1<br/>y 30 agregados → 1"]
     B["2 · GET disciplina/mis-fichas<br/>desbloquea una pantalla"] --> B1["el alumno y el acudiente<br/>ven sus situaciones"]
-    C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear"]
+    C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 comprobado ✓</i>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
     style B fill:#fff0e6,stroke:#c98a4b
-    style C fill:#ffe6e6,stroke:#c04b4b
+    style C fill:#fff0e6,stroke:#c98a4b
 ```
 
 ---
@@ -136,12 +136,13 @@ El plan entero, con el porqué de cada decisión, está en
    `dis_procesos`, `publicaciones`—, una marca de por dónde iba, y el envío.
 3. **La línea de cron**: `*/15 * * * * php artisan notificaciones:enviar`.
 
-**Antes que nada, un `curl` desde el servidor.** Todo esto depende de que el
-hosting permita salir por HTTPS a `oauth2.googleapis.com` y
-`fcm.googleapis.com`. Algunos compartidos lo bloquean, y si está cerrado el plan
-cambia entero —hay un plan B sin push en el mismo documento—. Es la comprobación
-más barata y la que decide todo lo demás; conviene hacerla antes de escribir una
-línea.
+**El paso 0 ya está comprobado, el 24 de agosto de 2026, y sale bien:** el
+hosting deja salir por HTTPS a `oauth2.googleapis.com` y a `fcm.googleapis.com`
+—los dos contestan— y ejecuta artisan (Laravel 13.26.1). O sea que el push es
+viable y no hace falta el plan B. Falta solo confirmar que se puede programar el
+cron, y ese cron **no es uno, es un bucle sobre los dieciséis colegios**: cada
+uno es un directorio con su `.env` y su base. El detalle, en
+[notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 
 No hace falta añadir el SDK de Google: se firma un JWT con `openssl_sign` y se
 pide el token con Guzzle, que ya está en el `composer.json`.

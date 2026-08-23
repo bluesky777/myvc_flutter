@@ -185,10 +185,52 @@ con `openssl_sign` y se pide el token con Guzzle —que ya está en el
 `composer.json`—, y el token se cachea la hora que dura. Una dependencia menos
 que mantener en un hosting donde actualizar es incómodo.
 
-> **A verificar antes de nada:** que el hosting permita **conexiones salientes
-> HTTPS** a `oauth2.googleapis.com` y `fcm.googleapis.com`. Algunos compartidos
-> las bloquean. Se comprueba con un `curl` desde el servidor, y si están
-> cerradas todo este plan cambia (ver la alternativa al final).
+### Lo comprobado en el servidor — 24 de agosto de 2026
+
+El paso 0 del plan, hecho. Dos de las tres respuestas están, y las dos son que
+sí:
+
+| Pregunta | Comprobación | Resultado |
+|---|---|---|
+| ¿Sale el servidor por HTTPS a Google? | `curl` a `oauth2.googleapis.com/token` y a `fcm.googleapis.com` | **sí** — los dos contestan `404` |
+| ¿Ejecuta artisan? | `php artisan --version` | **sí** — Laravel 13.26.1 |
+| ¿Puede programar cron? | `crontab -l` | **probablemente** — el comando existe y no protesta, pero sin tareas puestas eso no lo demuestra |
+
+Sobre el `404`: **es la respuesta correcta para esta comprobación.** Un 404 es
+Google contestando —hubo DNS, handshake TLS y conversación—, y eso es justo lo
+que se quería saber. Lo que delataría un bloqueo sería que se quedara colgado, o
+un `Could not resolve host`, o un `Connection refused`. Pedir esas URLs sin
+credenciales y sin el método correcto **tiene** que dar 404.
+
+Queda confirmar el cron de verdad, que es programar una tarea de un minuto y
+mirar si corre. Y al hacerlo, averiguar **la ruta absoluta del binario de PHP**
+(`which php`), porque cron arranca con un `PATH` mínimo y casi nunca encuentra
+`php` a secas: es el fallo clásico de cron en cPanel. El del shell puede además
+no ser el mismo que el que sirve Laravel 13; se comprueba con `php -v`.
+
+### Y el cron no es uno, es un bucle
+
+Esto salió al ver la ruta real del servidor, `~/coabsaravena.micolevirtual.com/8myvc`:
+**cada colegio es un directorio con su propio `.env` y su propia base de datos**,
+como dice el `CLAUDE.md` del backend. Así que el comando hay que ejecutarlo una
+vez **por colegio**, y son dieciséis.
+
+Dieciséis entradas de cron es la forma equivocada: muchos hostings limitan
+cuántas se pueden tener, y disparadas a la misma hora son dieciséis procesos PHP
+a la vez, que es justo la carga que este documento entero intenta evitar. Una
+sola entrada que los recorra en fila:
+
+```
+*/15 * * * * for d in ~/*.micolevirtual.com/8myvc; do /ruta/absoluta/php "$d/artisan" notificaciones:enviar; done
+```
+
+Secuencial —un proceso cada vez— y añadir un colegio nuevo no obliga a tocar el
+crontab.
+
+Dos detalles más de cPanel: algunos no dejan bajar de los 15 minutos, que da
+igual porque es la frecuencia del plan; y por defecto mandan **un correo por
+ejecución**, que se apaga con `MAILTO=""` en la primera línea del crontab o
+redirigiendo la salida.
 
 ### En la app
 
@@ -228,7 +270,7 @@ Y lo demás:
 
 ```mermaid
 flowchart LR
-    V["0 · Verificar<br/>salidas HTTPS<br/>del hosting"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
+    V["0 · Verificar el hosting ✓<br/>salidas HTTPS y artisan<br/><i>falta confirmar cron</i>"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
     B --> A["2 · App<br/>Firebase + permiso<br/>+ suscripción"]
     A --> T["3 · Un solo tipo<br/>(Muro)<br/>de punta a punta"]
     T --> P["4 · Pantalla de<br/>preferencias"]
@@ -236,7 +278,8 @@ flowchart LR
     R --> D["6 · Política y<br/>ficha de Play"]
 ```
 
-El paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
+El paso 0 está hecho salvo la confirmación del cron; ver «Lo comprobado en el
+servidor». El paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
 datos de nadie— porque el objetivo de esa fase es probar la tubería entera, no
 el contenido. Cuando llegue un aviso de muro a un teléfono real, los otros
 cuatro son la misma cañería con otra consulta.
