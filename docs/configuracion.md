@@ -1,7 +1,11 @@
 # La configuración del colegio en la app
 
 Una pantalla que **enseña** cómo está configurado el colegio y deja **editar
-solo lo que cambia a menudo**. Escrito el 23 de agosto de 2026.
+solo lo que cambia a menudo**. Escrito el 23 de agosto de 2026 y construido el
+mismo día: [ConfiguracionScreen](../lib/Screens/ConfiguracionScreen.dart),
+[ConfiguracionApi](../lib/Http/ConfiguracionApi.dart) y
+[ColegioModel](../lib/Models/ColegioModel.dart), con sus pruebas en
+`test/configuracion_colegio_pantalla_test.dart`.
 
 ## El criterio
 
@@ -124,10 +128,35 @@ para eso—.
 
 ## Coste
 
-Ninguno digno de mención: la pantalla se arma con `GET years/colegio`,
-`GET periodos/show/{year_id}` y `GET escalas`, tres consultas simples, y solo
-cuando alguien la abre. Los cambios son un `PUT` por interruptor. Es la pantalla
-más barata de todo el plan.
+Ninguno digno de mención, y menos de lo previsto: el plan contaba tres consultas
+y hace falta **una**. `GET years/colegio` devuelve los años **con sus periodos y
+sus escalas dentro**, así que `GET periodos/show/{year_id}` y `GET escalas`
+sobran. Se pide solo cuando alguien abre la pantalla; los cambios son un `PUT`
+diminuto por interruptor. Es la pantalla más barata de todo el plan.
+
+## Lo que se aprendió al construirla
+
+**La columna dice lo contrario que el interruptor.** El ajuste de los números se
+guarda en `solo_escalas_valorativas`, que en 1 significa que el alumno **no** ve
+números. La pantalla pregunta si los ve, que es como se piensa el ajuste, así
+que la vuelta se da una sola vez —al leer y al escribir, en
+[ColegioModel](../lib/Models/ColegioModel.dart) y
+[ConfiguracionApi](../lib/Http/ConfiguracionApi.dart)— y tiene su prueba, para
+que nadie la «arregle» al pasar por ahí.
+
+**Los dos interruptores del periodo mandan 1 y 0; los del año, booleanos.** Los
+de `years` pasan por un `(bool)` en el controlador; los de `periodos` se asignan
+tal cual a una columna `tinyint`. No es una diferencia que se note leyendo el
+front, y es la clase de cosa que funciona hasta que un día no.
+
+**Cambiar el periodo actual apaga los demás, y hay que reflejarlo.** El backend
+recorre los periodos del año poniéndolos en 0 antes de encender el elegido. Si
+la app solo encendiera el nuevo, quedarían dos marcados como actuales hasta la
+siguiente recarga.
+
+**Lo que no viene no es un «no».** En un año viejo puede faltar la columna
+entera, y suponer que está apagada haría que la pantalla mintiera sobre el
+colegio. Solo un 0 explícito significa que no.
 
 ## Apéndice: endpoints
 

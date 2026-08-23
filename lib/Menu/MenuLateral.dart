@@ -137,6 +137,16 @@ class MenuLateral extends StatelessWidget {
       ruta: '/disciplina',
     ));
 
+    // La última, y para todo el personal aunque casi todo lo que hay dentro
+    // solo lo pueda mover un administrador: la mitad de su gracia es explicarle
+    // a un docente por qué hoy no puede editar notas, o qué significa un 85.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.settings_outlined,
+      texto: 'Configuración',
+      ruta: '/configuracion',
+    ));
+
     return opciones;
   }
 

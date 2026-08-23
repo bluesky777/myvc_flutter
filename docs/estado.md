@@ -13,23 +13,32 @@ flowchart LR
     D["Disciplina<br/>docs/disciplina.md"] --> D5["fases 1–5 ✓"]
     D --> D6["fase 6 ⛔<br/>falta endpoint"]
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
-    C["Configuración<br/>docs/configuracion.md"] --> C0["sin empezar ○"]
+    C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["⛔ necesita<br/>trabajo en el backend"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#ffe6e6,stroke:#c04b4b
     style P0 fill:#ffe6e6,stroke:#c04b4b
-    style C0 fill:#fff0e6,stroke:#c98a4b
+    style C0 fill:#e8f4e8,stroke:#5a8f5a
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
 
 ## Qué sigue, en orden
 
-1. **La pantalla de configuración.** El plan entero está en
-   [configuracion.md](configuracion.md); no se ha escrito una línea de código.
-   Es lo único pendiente que no depende de nadie más.
+**No queda nada pendiente que dependa solo de la app.** Los dos frentes que
+siguen abiertos —la pantalla de disciplina del alumno y las notificaciones—
+necesitan trabajo en el backend, y el backend es de solo lectura para esta app.
+Ver «Lo que está bloqueado».
+
+Cuando se desbloquee alguno, el orden es:
+
+1. **Disciplina, la pantalla del alumno y del acudiente**, en cuanto exista
+   `GET disciplina/mis-fichas`. Es corta: la ficha del alumno en modo lectura.
+2. **Notificaciones**, empezando por el paso 0 —comprobar con un `curl` que el
+   hosting deje salir a Google— y por el tipo más tonto, el del muro, para
+   probar la tubería entera antes de llenarla.
 
 ## Lo que está bloqueado, y por qué
 
@@ -98,8 +107,13 @@ acudiente, bloqueada por el endpoint que no existe.
 
 ### Configuración — [configuracion.md](configuracion.md)
 
-Solo el plan. Lo que se edita son siete ajustes; lo demás se ve en gris con «lo
-demás se configura en la plataforma web».
+Hecha: menú ▸ Configuración →
+[ConfiguracionScreen](../lib/Screens/ConfiguracionScreen.dart). Se edita lo que
+un directivo cambia estando de pie —siete ajustes— y lo demás se ve, con «lo
+demás se configura en la plataforma web» al final. La ve todo el personal; los
+interruptores solo los mueve un administrador, y eso es **alcance de la app, no
+permiso del servidor**: sus endpoints llevan `auth.personal` y un docente
+podría llamarlos.
 
 ### Notificaciones — [notificaciones.md](notificaciones.md)
 

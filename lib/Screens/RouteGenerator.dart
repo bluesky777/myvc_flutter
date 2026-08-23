@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
+import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 
@@ -48,6 +49,9 @@ class RouteGenerator {
       case '/disciplina':
         return MaterialPageRoute(
             settings: settings, builder: (context) => DisciplinaGrupoScreen());
+      case '/configuracion':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => ConfiguracionScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());
