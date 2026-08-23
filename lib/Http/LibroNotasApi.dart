@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
+import 'package:myvc_flutter/Models/FraseModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
@@ -69,6 +70,18 @@ class LibroDeNotas {
     return suma;
   }
 
+  /// El mismo libro con las frases de un alumno cambiadas.
+  LibroDeNotas conFrasesDe(int alumnoId, List<FraseDeAlumno> nuevas) {
+    return LibroDeNotas(
+      asignatura: asignatura,
+      unidades: unidades,
+      alumnos: [
+        for (final alumno in alumnos)
+          alumno.alumnoId == alumnoId ? alumno.conFrases(nuevas) : alumno,
+      ],
+    );
+  }
+
   /// El mismo libro con la definitiva de un alumno cambiada.
   LibroDeNotas conNotaFinalDe(int alumnoId, NotaFinalDelLibro nueva) {
     return LibroDeNotas(
@@ -131,6 +144,11 @@ class AlumnoDelLibro {
 
   final NotaFinalDelLibro? notaFinal;
 
+  /// Lo que se le dice al alumno en el boletín además de la nota, ya en esta
+  /// respuesta: `notas/detailed` las trae por alumno, así que la ficha no pide
+  /// nada aparte para enseñarlas.
+  final List<FraseDeAlumno> frases;
+
   const AlumnoDelLibro({
     required this.alumnoId,
     required this.nombres,
@@ -142,6 +160,7 @@ class AlumnoDelLibro {
     this.tardanzasCount = 0,
     this.notas = const {},
     this.notaFinal,
+    this.frases = const [],
   });
 
   /// Como se lista: por apellidos, que es como los ordena el backend y como
@@ -172,9 +191,14 @@ class AlumnoDelLibro {
   AlumnoDelLibro conNotaFinal(NotaFinalDelLibro nueva) =>
       copiaCon(notaFinal: nueva);
 
+  /// El mismo alumno con otras frases.
+  AlumnoDelLibro conFrases(List<FraseDeAlumno> nuevas) =>
+      copiaCon(frases: nuevas);
+
   AlumnoDelLibro copiaCon({
     Map<int, NotaDelLibro>? notas,
     NotaFinalDelLibro? notaFinal,
+    List<FraseDeAlumno>? frases,
   }) {
     return AlumnoDelLibro(
       alumnoId: alumnoId,
@@ -187,6 +211,7 @@ class AlumnoDelLibro {
       tardanzasCount: tardanzasCount,
       notas: notas ?? this.notas,
       notaFinal: notaFinal ?? this.notaFinal,
+      frases: frases ?? this.frases,
     );
   }
 
@@ -218,6 +243,7 @@ class AlumnoDelLibro {
       notaFinal: finalCruda is Map
           ? NotaFinalDelLibro.fromJson(Map<String, dynamic>.from(finalCruda))
           : null,
+      frases: frasesDeLista(json['frases']),
     );
   }
 }

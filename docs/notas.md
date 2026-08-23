@@ -21,7 +21,7 @@ este.
 | 3 | La planilla del indicador (casos A y B) | **hecha** |
 | 4 | La ficha del alumno (casos C y E) | **hecha** |
 | 5 | Notas perdidas | **hecha** |
-| 6 | Frases, historial, borrar nota | pendiente |
+| 6 | Frases, historial, borrar nota | **hecha** |
 
 Lo hecho vive en:
 
@@ -31,6 +31,8 @@ Lo hecho vive en:
 - [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart), con sus dos pestañas → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart) y [FichaAlumnoNotasScreen.dart](../lib/Screens/FichaAlumnoNotasScreen.dart).
 - [DefinitivasApi.dart](../lib/Http/DefinitivasApi.dart) — nivelar, y las tres trampas de las banderas.
 - [NotasPerdidasApi.dart](../lib/Http/NotasPerdidasApi.dart) y [NotasPerdidasScreen.dart](../lib/Screens/NotasPerdidasScreen.dart) — lo que llevan perdido, y arreglarlo.
+- [FrasesApi.dart](../lib/Http/FrasesApi.dart), [FraseModel.dart](../lib/Models/FraseModel.dart) y [SelectorFrases.dart](../lib/Widgets/SelectorFrases.dart) — la información para el alumno.
+- [HistorialNotaApi.dart](../lib/Http/HistorialNotaApi.dart) y [HojaDetalleNota.dart](../lib/Widgets/HojaDetalleNota.dart) — de dónde viene una nota, y borrarla.
 
 ---
 
@@ -295,13 +297,55 @@ Ya vienen en la respuesta; solo hay que leerlos. Con
 [JsonBackend](../lib/Utils/JsonBackend.dart), que es lo que hay para no fiarse
 del tipo que devuelva PDO.
 
-### 1.9 Lo que no entra en la primera versión
+### 1.9 Lo que llegó después de la primera versión — fase 6
 
-- **Frases** («información para el alumno»): es su propio subsistema con su
-  catálogo. Fase 2.
-- **Historial de la nota** (doble clic en el web): útil pero no diario. Fase 2.
-- **Borrar una nota**: `DELETE notas/destroy/{id}` existe. No es diario y es
-  destructivo. Fase 2, con confirmación.
+Las tres cosas que se dejaron fuera del arranque, y cómo quedaron.
+
+**Frases** («información para el alumno»). Son dos tablas y no conviene
+confundirlas: `frases` es el catálogo del año, que escribe el colegio —más de
+cuatrocientas filas en producción—, y `frases_asignatura` es lo que se le pone a
+un alumno concreto en una asignatura y un periodo. Tres cosas que importan:
+
+- **Las que ya tiene un alumno no se piden**: vienen dentro de `notas/detailed`,
+  en `alumno.frases`. El catálogo sí es una petición aparte, y se hace **la
+  primera vez que alguien va a poner una**, no al abrir la ficha: son
+  cuatrocientas filas que la mayoría de las visitas no llega a mirar.
+- **El periodo no se puede elegir.** `FrasesAsignaturaController` escribe
+  siempre `periodo_id = $user->periodo_id`, o sea el de la barra de arriba, y no
+  mira lo que se le mande. Ofrecer elegirlo sería ofrecer algo que no se cumple.
+- **Poner devuelve la lista entera recalculada; quitar no.** El `store` contesta
+  todas las frases del alumno y el `destroy` solo la fila borrada, así que al
+  poner se pinta lo que dice el backend y al quitar se saca de la lista de aquí.
+
+**Historial de la nota.** `PUT historiales/nota-detalle {nota_id}` sobre las
+`bitacoras` que ya escribía cada `notas/update`. Se llega **manteniendo pulsada
+la nota**, en la planilla y en la ficha. En la web hay que encender antes un
+interruptor «Ver historial» para que el doble clic haga algo, y un modo que hay
+que acordarse de encender es un modo que nadie enciende.
+
+Un detalle al leerlo: la bitácora guarda las notas en columnas
+`..._value_int`, así que un 85,5 quedó registrado como 85. El historial dice
+quién y cuándo con precisión, y el cuánto con la del entero; enseñar decimales
+que nadie guardó sería inventarlos.
+
+**Borrar una nota.** `DELETE notas/destroy/{id}`, dentro de la misma hoja del
+historial y con confirmación. Vive ahí y no suelto en la lista a propósito:
+borrar es raro y destructivo, así que hay que abrir algo primero, y de paso se
+ve lo que se va a perder antes de perderlo.
+
+El diálogo dice que la casilla vuelve, porque si no, borrar da miedo de más:
+`notas/detailed` la vuelve a crear con la nota por defecto de la subunidad. Es
+la forma de deshacer «puse un 40 donde no había nada» sin dejar un cero que
+parezca una nota de verdad.
+
+Y una consecuencia que sí obliga a recargar: **el borrado recalcula la
+definitiva** del alumno —`DefinitivasDeAsignatura::recalcular`—, cosa que
+`notas/update` no hace, y no dice con qué valor quedó. Es lo único de la ficha
+que la app no puede aplicar en memoria, así que es lo único que hace pagar otra
+vez la consulta cara.
+
+### Lo que sigue fuera a propósito
+
 - **Ausencias y tardanzas dentro del libro**: no se traen. Se enlaza a
   [AsistenciaClaseScreen](../lib/Screens/AsistenciaClaseScreen.dart), que ya
   hace eso mejor que una columna dentro de una tabla.

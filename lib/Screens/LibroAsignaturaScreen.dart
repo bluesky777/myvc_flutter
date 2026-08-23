@@ -127,8 +127,16 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
       if (cambios.notaFinal != null) {
         nuevo = nuevo.conNotaFinalDe(alumno.alumnoId, cambios.notaFinal!);
       }
+      if (cambios.frases != null) {
+        nuevo = nuevo.conFrasesDe(alumno.alumnoId, cambios.frases!);
+      }
       libro = nuevo;
     });
+
+    // Borrar una nota es lo único que deja al libro con datos que la app no
+    // puede recalcular: el backend rehace la definitiva por su cuenta y no dice
+    // con qué valor. Ahí sí toca pagar la consulta cara.
+    if (cambios.hayQueRecargar) await _cargar();
   }
 
   @override

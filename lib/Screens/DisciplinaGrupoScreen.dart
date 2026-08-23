@@ -16,6 +16,7 @@ import 'package:myvc_flutter/Screens/FichaDisciplinaScreen.dart';
 import 'package:myvc_flutter/Screens/SituacionEditorScreen.dart';
 import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/TextoPlano.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorGrupo.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
@@ -271,26 +272,11 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
   }
 
   /// Los alumnos que responden a lo que se está buscando.
-  List<AlumnoDisciplinaModel> get _filtrados {
-    final aguja = _plano(busqueda);
-    if (aguja.isEmpty) return alumnos;
-
-    return alumnos
-        .where((alumno) => _plano(alumno.nombreCompleto).contains(aguja))
-        .toList();
-  }
-
+  ///
   /// Sin acentos y en minúsculas: quien busca «Peña» escribe «pena».
-  static String _plano(String texto) {
-    var plano = texto.toLowerCase().trim();
-
-    const acentos = {
-      'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
-    };
-    acentos.forEach((con, sin) => plano = plano.replaceAll(con, sin));
-
-    return plano;
-  }
+  List<AlumnoDisciplinaModel> get _filtrados => alumnos
+      .where((alumno) => coincideConBusqueda(alumno.nombreCompleto, busqueda))
+      .toList();
 
   void _reemplazar(AlumnoDisciplinaModel nuevo) {
     setState(() {

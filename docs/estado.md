@@ -12,8 +12,7 @@ miente, es un fallo tan real como una prueba en rojo.
 flowchart LR
     D["Disciplina<br/>docs/disciplina.md"] --> D5["fases 1–5 ✓"]
     D --> D6["fase 6 ⛔<br/>falta endpoint"]
-    N["Notas<br/>docs/notas.md"] --> N4["fases 1–4 ✓"]
-    N --> N56["fase 6 ○"]
+    N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["sin empezar ○"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["⛔ necesita<br/>trabajo en el backend"]
 
@@ -21,7 +20,6 @@ flowchart LR
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#ffe6e6,stroke:#c04b4b
     style P0 fill:#ffe6e6,stroke:#c04b4b
-    style N56 fill:#fff0e6,stroke:#c98a4b
     style C0 fill:#fff0e6,stroke:#c98a4b
 ```
 
@@ -29,9 +27,9 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-1. **Notas, fase 6 — frases, historial y borrar nota.** Ver [notas.md §1.9](notas.md).
-2. **La pantalla de configuración.** El plan entero está en
+1. **La pantalla de configuración.** El plan entero está en
    [configuracion.md](configuracion.md); no se ha escrito una línea de código.
+   Es lo único pendiente que no depende de nadie más.
 
 ## Lo que está bloqueado, y por qué
 
@@ -75,7 +73,7 @@ flowchart LR
 | 3 | La planilla del indicador (casos A y B) | hecha |
 | 4 | La ficha del alumno (casos C y E) | hecha |
 | 5 | Notas perdidas | hecha |
-| 6 | Frases, historial, borrar nota | **pendiente** |
+| 6 | Frases, historial, borrar nota | hecha |
 
 El camino en la app: menú ▸ Notas → [NotasScreen](../lib/Screens/NotasScreen.dart)
 → [LibroAsignaturaScreen](../lib/Screens/LibroAsignaturaScreen.dart), que tiene
@@ -85,6 +83,9 @@ dos pestañas sobre el mismo libro ya cargado:
   trabajo diario: una casilla y los treinta alumnos.
 - **Por alumno** → [FichaAlumnoNotasScreen](../lib/Screens/FichaAlumnoNotasScreen.dart),
   el acudiente que pregunta y el nivelar de fin de periodo.
+
+Dentro de las dos, manteniendo pulsada una nota se abre su historial y desde
+ahí se borra ([HojaDetalleNota](../lib/Widgets/HojaDetalleNota.dart)).
 
 Y aparte, menú ▸ Notas perdidas →
 [NotasPerdidasScreen](../lib/Screens/NotasPerdidasScreen.dart): el árbol de lo

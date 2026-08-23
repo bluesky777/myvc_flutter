@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -242,6 +243,37 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     );
   }
 
+  /// Abre el detalle de la nota de ese alumno: quién la tocó, cuándo, y
+  /// borrarla.
+  ///
+  /// Manteniendo pulsado el número, que es donde está la nota. El toque corto
+  /// sobre la foto y el nombre ya lleva a la asistencia, así que el gesto largo
+  /// va sobre la otra mitad de la fila y los dos no se pisan.
+  Future<void> _abrirDetalle(int indice) async {
+    final alumno = _alumnos[indice];
+    final nota = alumno.notaDe(widget.subunidad.id);
+    if (nota == null || nota.id == 0) return;
+
+    final borrada = await mostrarDetalleDeNota(
+      context,
+      notaId: nota.id,
+      titulo: alumno.nombreEnLista,
+      subtitulo: widget.subunidad.definicion,
+    );
+
+    if (!borrada) return;
+
+    setState(() {
+      // La casilla vuelve al recargar el libro con la nota por defecto de la
+      // subunidad; hasta entonces queda vacía y sin nada que mandar.
+      _campos[indice].text = '';
+      _original[indice] = null;
+    });
+
+    _avisar('Nota borrada. Recarga el libro para que la casilla se vuelva a'
+        ' crear.');
+  }
+
   @override
   Widget build(BuildContext context) {
     final numero = widget.unidad.subunidades.indexOf(widget.subunidad) + 1;
@@ -424,40 +456,46 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            child: TextField(
-              controller: _campos[indice],
-              focusNode: _focos[indice],
-              enabled: editable,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              // El último cierra el teclado; los demás bajan al siguiente.
-              textInputAction: indice == _alumnos.length - 1
-                  ? TextInputAction.done
-                  : TextInputAction.next,
-              onSubmitted: (_) => _siguiente(indice),
-              // Al enfocar, el contenido queda seleccionado: se escribe encima
-              // sin tener que borrar.
-              onTap: () => _campos[indice].selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: _campos[indice].text.length,
-              ),
-              onChanged: (_) => setState(() {}),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: perdida ? Colors.red[700] : Colors.black87,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: sinFila ? '—' : null,
-                border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                filled: perdida,
-                fillColor: perdida ? const Color(0xFFFFEBEE) : null,
+          // Mantener pulsado el número abre el detalle de la nota: quién la
+          // tocó, cuándo, y borrarla.
+          GestureDetector(
+            onLongPress: sinFila ? null : () => _abrirDetalle(indice),
+            child: SizedBox(
+              width: 64,
+              child: TextField(
+                controller: _campos[indice],
+                focusNode: _focos[indice],
+                enabled: editable,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+                // El último cierra el teclado; los demás bajan al siguiente.
+                textInputAction: indice == _alumnos.length - 1
+                    ? TextInputAction.done
+                    : TextInputAction.next,
+                onSubmitted: (_) => _siguiente(indice),
+                // Al enfocar, el contenido queda seleccionado: se escribe
+                // encima sin tener que borrar.
+                onTap: () => _campos[indice].selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _campos[indice].text.length,
+                ),
+                onChanged: (_) => setState(() {}),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: perdida ? Colors.red[700] : Colors.black87,
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: sinFila ? '—' : null,
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  filled: perdida,
+                  fillColor: perdida ? const Color(0xFFFFEBEE) : null,
+                ),
               ),
             ),
           ),

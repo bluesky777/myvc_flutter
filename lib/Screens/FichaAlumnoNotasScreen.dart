@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myvc_flutter/Http/DefinitivasApi.dart';
+import 'package:myvc_flutter/Http/FrasesApi.dart';
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Models/FraseModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
+import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
+import 'package:myvc_flutter/Widgets/SelectorFrases.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Lo que la ficha devuelve al libro, para no volver a pedir `notas/detailed`.
 class CambiosDeLaFicha {
-  const CambiosDeLaFicha({this.notas = const [], this.notaFinal});
+  const CambiosDeLaFicha({
+    this.notas = const [],
+    this.notaFinal,
+    this.frases,
+    this.hayQueRecargar = false,
+  });
 
   /// Las notas de subunidad que entraron.
   final List<NotaPendiente> notas;
@@ -21,7 +30,16 @@ class CambiosDeLaFicha {
   /// La definitiva, si cambió. Null si nadie la tocó.
   final NotaFinalDelLibro? notaFinal;
 
-  bool get hayAlgo => notas.isNotEmpty || notaFinal != null;
+  /// Las frases del alumno, si se puso o se quitó alguna.
+  final List<FraseDeAlumno>? frases;
+
+  /// Si algo de lo que pasó aquí deja al libro con datos viejos que la app no
+  /// puede recalcular sola. Hoy solo lo enciende borrar una nota: el backend
+  /// recalcula la definitiva por su cuenta y no dice con qué valor.
+  final bool hayQueRecargar;
+
+  bool get hayAlgo =>
+      notas.isNotEmpty || notaFinal != null || frases != null || hayQueRecargar;
 }
 
 /// La ficha de notas de un alumno en una asignatura: el otro eje del libro.
@@ -82,6 +100,20 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
   final List<NotaPendiente> _guardadas = [];
   Set<int> _fallidas = {};
 
+  /// Las frases del alumno tal como están ahora.
+  late List<FraseDeAlumno> _frases;
+
+  /// Si se puso o se quitó alguna, para devolverlas al libro.
+  bool _frasesTocadas = false;
+
+  /// El catálogo del año, pedido la primera vez que alguien abre la hoja.
+  List<FraseDelCatalogo>? _catalogo;
+  bool _trayendoCatalogo = false;
+
+  /// Encendido si se borró alguna nota: el backend recalcula la definitiva por
+  /// su cuenta y no dice con qué, así que lo que hay en memoria ya no vale.
+  bool _hayQueRecargar = false;
+
   bool get _puedeEditarNotas =>
       ContextoAcademico.instancia.config.puedeEditarNotas;
 
@@ -99,6 +131,7 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
       }
     }
 
+    _frases = widget.alumno.frases;
     _notaFinal = widget.alumno.notaFinal;
     _definitivaOriginal = _notaFinal?.nota;
     _definitiva.text = notaEscrita(_definitivaOriginal);
@@ -303,6 +336,99 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
     }
   }
 
+  /// El catálogo del año, traído la primera vez que hace falta.
+  ///
+  /// No se pide al abrir la ficha: son cuatrocientas filas que la mayoría de
+  /// las visitas no llegan a mirar, y esta pantalla se abre muchas veces al
+  /// día. Una vez traído se queda mientras la pantalla viva.
+  Future<void> _asegurarCatalogo() async {
+    if (_catalogo != null || _trayendoCatalogo) return;
+
+    setState(() => _trayendoCatalogo = true);
+    try {
+      _catalogo = await traerCatalogoDeFrases(server);
+    } catch (err) {
+      _avisar('No se pudo traer el catálogo de frases: $err');
+      _catalogo = const [];
+    }
+    setState(() => _trayendoCatalogo = false);
+  }
+
+  Future<void> _ponerFrase() async {
+    await _asegurarCatalogo();
+    if (!mounted) return;
+
+    final elegida = await pedirFrase(context, _catalogo ?? const []);
+    if (elegida == null) return;
+
+    final resultado = await ponerFrase(
+      server,
+      alumnoId: widget.alumno.alumnoId,
+      asignaturaId: widget.libro.asignatura.id,
+      fraseId: elegida.fraseId,
+      texto: elegida.texto,
+    );
+
+    if (!resultado.entro) {
+      _avisar(resultado.motivo!);
+      return;
+    }
+
+    // El backend contesta la lista entera ya recalculada, así que se pinta lo
+    // que él dice y no lo que la app supone.
+    setState(() {
+      _frases = resultado.frases ?? _frases;
+      _frasesTocadas = true;
+    });
+  }
+
+  Future<void> _quitarFrase(FraseDeAlumno frase) async {
+    final fallo = await quitarFrase(server, id: frase.id);
+
+    if (fallo != null) {
+      _avisar(fallo);
+      return;
+    }
+
+    // Quitar no devuelve la lista nueva —contesta la fila borrada—, así que se
+    // quita de la de aquí.
+    setState(() {
+      _frases = _frases.where((f) => f.id != frase.id).toList();
+      _frasesTocadas = true;
+    });
+  }
+
+  /// Abre el detalle de una nota: quién la tocó, cuándo, y borrarla.
+  ///
+  /// Se llega manteniendo pulsada la fila. En el front web hay que encender
+  /// antes un interruptor «Ver historial» para que el doble clic haga algo, y
+  /// un modo que hay que acordarse de encender es un modo que nadie enciende.
+  Future<void> _abrirDetalle(SubunidadModel subunidad) async {
+    final nota = widget.alumno.notaDe(subunidad.id);
+    if (nota == null || nota.id == 0) return;
+
+    final borrada = await mostrarDetalleDeNota(
+      context,
+      notaId: nota.id,
+      titulo: widget.alumno.nombreEnLista,
+      subtitulo: subunidad.definicion,
+    );
+
+    if (!borrada) return;
+
+    setState(() {
+      // El campo se vacía porque la fila ya no está. Y se apaga, porque
+      // `notas/update` sobre una nota borrada no tendría qué actualizar: la
+      // casilla vuelve al recargar el libro.
+      _campos[subunidad.id]?.text = '';
+      _original[subunidad.id] = null;
+      _hayQueRecargar = true;
+    });
+
+    _avisar('Nota borrada. Recarga el libro para que la casilla se vuelva a'
+        ' crear.');
+  }
+
   Future<bool> _confirmarSalida() async {
     if (_cuantasPendientes == 0) return true;
 
@@ -350,6 +476,8 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
   CambiosDeLaFicha get _resultado => CambiosDeLaFicha(
         notas: _guardadas,
         notaFinal: _definitivaTocada ? _notaFinal : null,
+        frases: _frasesTocadas ? _frases : null,
+        hayQueRecargar: _hayQueRecargar,
       );
 
   @override
@@ -378,6 +506,7 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
           children: [
             _buildCabecera(),
             _buildDefinitiva(),
+            _buildFrases(),
             if (widget.libro.unidades.isEmpty)
               _buildVacio()
             else
@@ -584,6 +713,90 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
     );
   }
 
+  /// Lo que se le dice al alumno además de la nota.
+  ///
+  /// El colegio las llama «información para el alumno» y salen en el boletín.
+  /// Vienen ya dentro de `notas/detailed`, así que enseñarlas no cuesta nada;
+  /// lo que se pide aparte, y solo si alguien va a poner una, es el catálogo.
+  ///
+  /// **Van al periodo de la barra de arriba, siempre.** El backend escribe
+  /// `periodo_id = $user->periodo_id` y no mira lo que se le mande, así que
+  /// ofrecer elegir el periodo aquí sería ofrecer algo que no se cumple.
+  Widget _buildFrases() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Información para el alumno',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (_puedeEditarNotas)
+                TextButton.icon(
+                  onPressed: _trayendoCatalogo ? null : _ponerFrase,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Poner'),
+                ),
+            ],
+          ),
+          if (_frases.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(right: 6, bottom: 6),
+              child: Text(
+                'Sin frases en este periodo.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            )
+          else
+            ..._frases.map(_buildFrase),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFrase(FraseDeAlumno frase) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4, right: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(frase.frase, style: const TextStyle(fontSize: 13)),
+                // Solo las del catálogo llevan tipo; una escrita a mano no
+                // tiene ninguno, y poner ahí «—» sería ruido.
+                if (frase.esDelCatalogo && frase.tipo.isNotEmpty)
+                  Text(
+                    frase.tipo,
+                    style: TextStyle(fontSize: 11, color: kPrimaryColor),
+                  ),
+              ],
+            ),
+          ),
+          if (_puedeEditarNotas)
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              visualDensity: VisualDensity.compact,
+              tooltip: 'Quitar',
+              onPressed: () => _quitarFrase(frase),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildUnidad(UnidadModel unidad) {
     final numero = widget.libro.unidades.indexOf(unidad) + 1;
 
@@ -657,18 +870,23 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$numero. ${subunidad.definicion}',
-                  style: const TextStyle(fontSize: 13),
-                ),
-                Text(
-                  porcentajeEscrito(subunidad.porcentaje),
-                  style: const TextStyle(fontSize: 11, color: Colors.black45),
-                ),
-              ],
+            // Mantener pulsado abre el detalle: quién tocó esta nota, cuándo, y
+            // borrarla. No hay modo que encender antes, al revés que en la web.
+            child: InkWell(
+              onLongPress: sinFila ? null : () => _abrirDetalle(subunidad),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$numero. ${subunidad.definicion}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  Text(
+                    porcentajeEscrito(subunidad.porcentaje),
+                    style: const TextStyle(fontSize: 11, color: Colors.black45),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
