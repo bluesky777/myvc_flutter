@@ -60,6 +60,10 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
   /// Las que no entraron en el último guardado, por id de alumno.
   Set<int> _fallidas = {};
 
+  /// Los alumnos cuya nota se borró aquí, por su índice en la lista. Su campo
+  /// se apaga: la fila ya no está y `notas/update` sobre ella contesta 422.
+  final Set<int> _borradas = {};
+
   bool guardando = false;
   int _hechas = 0;
 
@@ -268,6 +272,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
       // subunidad; hasta entonces queda vacía y sin nada que mandar.
       _campos[indice].text = '';
       _original[indice] = null;
+      _borradas.add(indice);
     });
 
     _avisar('Nota borrada. Recarga el libro para que la casilla se vuelva a'
@@ -383,7 +388,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     // Sin fila en `notas` no hay nada que actualizar. No debería pasar
     // —`notas/detailed` las crea al abrir el libro— pero si pasa, más vale un
     // campo apagado con su motivo que uno que acepta lo que se pierde.
-    final sinFila = (alumno.notaDe(widget.subunidad.id)?.id ?? 0) == 0;
+    final sinFila = (alumno.notaDe(widget.subunidad.id)?.id ?? 0) == 0 ||
+        _borradas.contains(indice);
     final editable = _puedeEditar && !sinFila && !guardando;
 
     return Container(

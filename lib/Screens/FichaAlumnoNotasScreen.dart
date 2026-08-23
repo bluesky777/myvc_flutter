@@ -111,8 +111,13 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
   bool _trayendoCatalogo = false;
 
   /// Encendido si se borró alguna nota: el backend recalcula la definitiva por
-  /// su cuenta y no dice con qué, así que lo que hay en memoria ya no vale.
+  /// su cuenta y la app no puede seguirle la cuenta, porque para saber el
+  /// promedio nuevo haría falta saber que esa casilla ya no existe.
   bool _hayQueRecargar = false;
+
+  /// Las subunidades cuya nota se borró aquí. Su campo se apaga: la fila ya no
+  /// está y `notas/update` sobre ella contesta 422.
+  final Set<int> _borradas = {};
 
   bool get _puedeEditarNotas =>
       ContextoAcademico.instancia.config.puedeEditarNotas;
@@ -197,6 +202,13 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
     final cambios = _pendientes;
     final tocaDefinitiva = _definitivaPendiente;
 
+    // Lo tecleado en la definitiva se lee **ahora**, antes de tocar nada. Al
+    // guardar las notas, el bloque de más abajo puede reescribir ese campo con
+    // la definitiva que recalculó el servidor, y entonces lo que se mandaría no
+    // sería lo que el docente escribió.
+    final definitivaEscrita =
+        tocaDefinitiva ? notaLeida(_definitiva.text) : null;
+
     if (cambios.isEmpty && !tocaDefinitiva) {
       _avisar('No hay nada que guardar.');
       return;
@@ -231,22 +243,41 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
             ' ${resultado.fallidas.length} fallaron.'
             ' ${resultado.motivo ?? ''}'.trim());
       }
+
+      // Guardar una nota cambia dos cosas y no una: `notas/update` recalcula
+      // además la definitiva del alumno, respetando las manuales y las
+      // recuperadas. Si aquí no se apuntara, la ficha seguiría enseñando la de
+      // antes justo debajo del promedio nuevo.
+      // Y no cuando el docente está poniendo él la definitiva: en ese caso la
+      // suya manda y además la deja manual, así que pintar el promedio
+      // recalculado un instante antes solo haría parpadear el campo.
+      final definitiva = _notaFinal;
+      if (resultado.guardadas > 0 && definitiva != null && !tocaDefinitiva) {
+        final alDia = definitiva.trasRecalcularse(_promedio);
+        if (!identical(alDia, definitiva)) {
+          setState(() {
+            _notaFinal = alDia;
+            _definitivaOriginal = alDia.nota;
+            _definitiva.text = notaEscrita(alDia.nota);
+            _definitivaTocada = true;
+          });
+        }
+      }
     }
 
     String? falloDefinitiva;
 
-    if (tocaDefinitiva) {
-      final escrita = notaLeida(_definitiva.text)!;
+    if (tocaDefinitiva && definitivaEscrita != null) {
       falloDefinitiva = await guardarDefinitiva(
         server,
         nfId: _notaFinal!.nfId,
-        nota: escrita,
+        nota: definitivaEscrita,
       );
 
       if (falloDefinitiva == null) {
         setState(() {
-          _notaFinal = _notaFinal!.trasCambiarLaNota(escrita);
-          _definitivaOriginal = escrita;
+          _notaFinal = _notaFinal!.trasCambiarLaNota(definitivaEscrita);
+          _definitivaOriginal = definitivaEscrita;
           _definitivaTocada = true;
         });
       }
@@ -422,6 +453,7 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
       // casilla vuelve al recargar el libro.
       _campos[subunidad.id]?.text = '';
       _original[subunidad.id] = null;
+      _borradas.add(subunidad.id);
       _hayQueRecargar = true;
     });
 
@@ -852,7 +884,8 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
     final cambiada = escrita != null && escrita != _original[subunidad.id];
     final fallo = _fallidas.contains(subunidad.id);
 
-    final sinFila = (widget.alumno.notaDe(subunidad.id)?.id ?? 0) == 0;
+    final sinFila = (widget.alumno.notaDe(subunidad.id)?.id ?? 0) == 0 ||
+        _borradas.contains(subunidad.id);
     final editable = _puedeEditarNotas && !sinFila && !guardando;
 
     final numero = unidad.subunidades.indexOf(subunidad) + 1;

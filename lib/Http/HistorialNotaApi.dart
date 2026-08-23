@@ -122,9 +122,12 @@ Future<HistorialDeNota> traerHistorialDeNota(
 /// deshacer «puse un 40 donde no había nada» sin dejar un cero que parezca una
 /// nota de verdad.
 ///
-/// Y al borrar, el backend **recalcula la definitiva** de ese alumno en esa
-/// asignatura, cosa que `notas/update` no hace. Así que después de esto, la
-/// definitiva que hay en memoria puede haberse quedado vieja.
+/// Al borrar, el backend **recalcula la definitiva** de ese alumno —igual que
+/// al actualizar una nota, respetando las manuales y las recuperadas—. Pero
+/// aquí la app no puede seguirle la cuenta: para saber el promedio nuevo haría
+/// falta saber que esa casilla ya no existe, y quien tiene el libro en memoria
+/// sigue teniéndola. Por eso borrar es lo único de la pantalla que obliga a
+/// recargar el libro.
 Future<String?> borrarNota(Server server, {required int notaId}) async {
   try {
     final res = await server.delete('/notas/destroy/$notaId');

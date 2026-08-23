@@ -219,4 +219,74 @@ void main() {
       expect(notaLeida('0'), 0);
     });
   });
+
+  group('guardar una nota recalcula la definitiva', () {
+    // `notas/update` no solo escribe la nota: al final llama a
+    // DefinitivasDeAsignatura::recalcularPorNota. Si la app no lo apuntara, la
+    // pestaña «Por alumno» seguiría enseñando la definitiva de antes.
+
+    LibroDeNotas libroConDefinitiva(NotaFinalDelLibro definitiva) {
+      final base = libroCon({5: 80, 6: 60});
+      return base.conNotaFinalDe(100, definitiva);
+    }
+
+    test('la automática pasa a ser el promedio nuevo, redondeado', () {
+      // El backend lo castea a DECIMAL(4,0), así que guarda un entero.
+      final libro = libroConDefinitiva(
+        const NotaFinalDelLibro(nfId: 77, nota: 70),
+      );
+
+      final despues = libro.conNotas([
+        const NotaPendiente(notaId: 906, alumnoId: 100, nota: 91),
+      ]);
+
+      // 50 % × 80 + 50 % × 91 = 85,5 → 86
+      expect(despues.promedioDe(despues.alumnos.first), closeTo(85.5, 0.001));
+      expect(despues.alumnos.first.notaFinal?.nota, 86);
+    });
+
+    test('la manual se respeta, que es lo que hace el backend', () {
+      final libro = libroConDefinitiva(
+        const NotaFinalDelLibro(nfId: 77, nota: 95, manual: true),
+      );
+
+      final despues = libro.conNotas([
+        const NotaPendiente(notaId: 906, alumnoId: 100, nota: 91),
+      ]);
+
+      expect(despues.alumnos.first.notaFinal?.nota, 95);
+    });
+
+    test('la recuperada también se respeta', () {
+      final libro = libroConDefinitiva(
+        const NotaFinalDelLibro(nfId: 77, nota: 60, recuperada: true),
+      );
+
+      final despues = libro.conNotas([
+        const NotaPendiente(notaId: 906, alumnoId: 100, nota: 91),
+      ]);
+
+      expect(despues.alumnos.first.notaFinal?.nota, 60);
+    });
+
+    test('a un alumno cuyas notas no cambiaron no se le toca la definitiva', () {
+      final libro = libroConDefinitiva(
+        const NotaFinalDelLibro(nfId: 77, nota: 70),
+      );
+
+      final despues = libro.conNotas(const []);
+
+      expect(despues.alumnos.first.notaFinal?.nota, 70);
+    });
+
+    test('sin fila de definitiva no se inventa una', () {
+      final libro = libroCon({5: 80, 6: 60});
+
+      final despues = libro.conNotas([
+        const NotaPendiente(notaId: 906, alumnoId: 100, nota: 91),
+      ]);
+
+      expect(despues.alumnos.first.notaFinal, isNull);
+    });
+  });
 }

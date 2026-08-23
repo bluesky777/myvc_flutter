@@ -113,9 +113,27 @@ class LibroDeNotas {
       alumnos: [
         for (final alumno in alumnos)
           porAlumno.containsKey(alumno.alumnoId)
-              ? alumno.con(porAlumno[alumno.alumnoId]!)
+              ? _alDia(alumno.con(porAlumno[alumno.alumnoId]!))
               : alumno,
       ],
+    );
+  }
+
+  /// Un alumno cuyas notas acaban de cambiar, con su definitiva también al día.
+  ///
+  /// Es la otra mitad de lo que hizo el servidor: cada `notas/update` recalcula
+  /// la definitiva del alumno. Sin esto, la pestaña «Por alumno» seguiría
+  /// enseñando la de antes hasta la siguiente recarga. Ver
+  /// [NotaFinalDelLibro.trasRecalcularse], que es donde están las reglas.
+  ///
+  /// El promedio se calcula contra `unidades`, que no cambian aquí, así que
+  /// preguntárselo a este mismo libro da el mismo número que daría el nuevo.
+  AlumnoDelLibro _alDia(AlumnoDelLibro alumno) {
+    final definitiva = alumno.notaFinal;
+    if (definitiva == null) return alumno;
+
+    return alumno.conNotaFinal(
+      definitiva.trasRecalcularse(promedioDe(alumno)),
     );
   }
 }
@@ -368,6 +386,22 @@ class NotaFinalDelLibro {
   /// Marcarla la vuelve además manual, que es lo anterior visto al derecho.
   NotaFinalDelLibro trasAlternarRecuperada(bool nuevo) =>
       copiaCon(recuperada: nuevo, manual: nuevo ? true : manual);
+
+  /// Cómo queda después de guardar una nota de subunidad.
+  ///
+  /// **`notas/update` recalcula la definitiva por su cuenta**, al final del
+  /// método y fuera del `try`. Así que guardar una nota cambia dos cosas y no
+  /// una, y si la app solo apuntara la primera, la pestaña «Por alumno» seguiría
+  /// enseñando la definitiva de antes hasta la siguiente recarga.
+  ///
+  /// El backend respeta las manuales y las recuperadas —las salta— y a las
+  /// demás les escribe el promedio **redondeado a entero**: la consulta lo
+  /// castea a `DECIMAL(4,0)`. Aquí se hace lo mismo para que lo que se ve sea
+  /// lo que hay guardado y no una aproximación parecida.
+  NotaFinalDelLibro trasRecalcularse(double promedio) {
+    if (manual || recuperada) return this;
+    return copiaCon(nota: promedio.roundToDouble(), desactualizada: false);
+  }
 
   factory NotaFinalDelLibro.fromJson(Map<String, dynamic> json) {
     return NotaFinalDelLibro(

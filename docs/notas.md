@@ -237,6 +237,24 @@ vale **1 cuando la definitiva guardada es más vieja que la última nota puesta*
 Se enseña solo si es manual, que es el único caso en que decir algo tiene
 sentido: la automática se recalcula sola.
 
+#### Guardar una nota cambia dos cosas, no una
+
+Salió al construir la fase 6 y obligó a corregir la 4. **`notas/update`
+recalcula además la definitiva del alumno**, al final del método y fuera del
+`try` —`DefinitivasDeAsignatura::recalcularPorNota`—. Respeta las manuales y
+las recuperadas, que las salta, y a las demás les escribe el promedio
+**redondeado a entero**: la consulta lo castea a `DECIMAL(4,0)`.
+
+Si la app apuntara solo la nota, la ficha enseñaría la definitiva vieja justo
+debajo del promedio nuevo, y la pestaña «Por alumno» seguiría con la de antes
+hasta la siguiente recarga. Así que `LibroDeNotas.conNotas` aplica las dos
+mitades, con la misma regla y el mismo redondeo. Tiene sus pruebas.
+
+Lo que la app **no** puede seguir es el recálculo que dispara **borrar** una
+nota: para saber el promedio nuevo haría falta saber que esa casilla ya no
+existe, y quien tiene el libro en memoria sigue teniéndola. Por eso borrar es lo
+único de la ficha que obliga a pagar otra vez la consulta cara.
+
 #### Dos formas de guardar en la misma pantalla, y es a propósito
 
 Los números —las notas de subunidad y la definitiva— se editan en local y salen
@@ -339,10 +357,14 @@ la forma de deshacer «puse un 40 donde no había nada» sin dejar un cero que
 parezca una nota de verdad.
 
 Y una consecuencia que sí obliga a recargar: **el borrado recalcula la
-definitiva** del alumno —`DefinitivasDeAsignatura::recalcular`—, cosa que
-`notas/update` no hace, y no dice con qué valor quedó. Es lo único de la ficha
-que la app no puede aplicar en memoria, así que es lo único que hace pagar otra
-vez la consulta cara.
+definitiva** del alumno. Actualizar una nota también lo hace y la app sí sabe
+seguirlo —ver «Guardar una nota cambia dos cosas»—, pero borrar no: para saber
+el promedio nuevo haría falta saber que la casilla ya no está, y el libro en
+memoria sigue teniéndola.
+
+De paso, un campo cuya nota se acaba de borrar se apaga. La fila ya no existe y
+`notas/update` sobre ella contesta un 422, así que dejarlo escribiendo sería
+prometer un guardado que no puede ocurrir.
 
 ### Lo que sigue fuera a propósito
 
