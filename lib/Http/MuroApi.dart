@@ -1,8 +1,12 @@
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Http/UnidadesApi.dart';
+import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaPeriodoModel.dart';
 import 'package:myvc_flutter/Models/PublicacionModel.dart';
+import 'package:myvc_flutter/Models/UnidadModel.dart';
+import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 /// Lo que trae el muro: las publicaciones y, si quien mira es acudiente, sus
@@ -96,10 +100,41 @@ Future<MuroCargado> traerMuro(Server server) async {
     return MuroCargado(publicaciones: const [], acudidos: const []);
   }
 
+  // Las clases de hoy viajan en este mismo cajón y no le cuestan una petición
+  // a nadie. Se guardan aquí, al leer el muro, para que la pantalla de notas
+  // las tenga sin volver a preguntar. Ver HorarioDeHoy.
+  HorarioDeHoy.instancia.tomar(_clasesDeHoy(cuerpo['horario_hoy']));
+
   return MuroCargado(
     publicaciones: _publicaciones(cuerpo['publicaciones']),
     acudidos: leerAcudidos(cuerpo['alumnos']),
   );
+}
+
+/// Las asignaturas que el docente dicta hoy, tal como las manda
+/// `ChangeAskedController::asignaturas_dia`: cada una con sus unidades y las
+/// subunidades de cada unidad.
+///
+/// Lista vacía cuando la clave no viene, que es lo que pasa con un alumno o un
+/// acudiente: no dictan nada, y eso no es un fallo.
+List<AsignaturaConUnidades> _clasesDeHoy(dynamic crudas) {
+  if (crudas is! List) return const [];
+
+  return crudas.whereType<Map>().map((cruda) {
+    final mapa = Map<String, dynamic>.from(cruda);
+    final unidades = mapa['unidades'];
+
+    return AsignaturaConUnidades(
+      asignatura: AsignaturaModel.fromJson(mapa),
+      unidades: unidades is List
+          ? (unidades
+              .whereType<Map>()
+              .map((u) => UnidadModel.fromJson(Map<String, dynamic>.from(u)))
+              .toList()
+            ..sort((a, b) => a.orden.compareTo(b.orden)))
+          : const [],
+    );
+  }).where((clase) => clase.asignatura.id != 0).toList();
 }
 
 List<PublicacionModel> _publicaciones(dynamic crudas) {

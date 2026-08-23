@@ -193,6 +193,62 @@ class AlumnoDisciplinaModel {
   bool tieneGravesEn(int periodo) =>
       cuantasSituaciones(periodo, 2) > 0 || cuantasSituaciones(periodo, 3) > 0;
 
+  /// Las situaciones de las que podría derivar una nueva de este tipo.
+  ///
+  /// Se sube de escalón: una de tipo 2 deriva de las de tipo 1, y una de tipo 3
+  /// de las de tipo 2. Una de tipo 1 no deriva de ninguna situación —viene de
+  /// las tardanzas, que no son situaciones—, así que la lista sale vacía.
+  ///
+  /// Qué periodos se ofrecen lo decide el colegio con `reinicia_por_periodo`:
+  ///
+  ///  - Si NO reinicia, la cuenta se arrastra todo el año y valen las de este
+  ///    periodo y las de los anteriores.
+  ///  - Si reinicia, cada periodo empieza de cero y solo valen las de este.
+  ///
+  /// Se dejan fuera las que ya cuelgan de OTRA situación: una situación se
+  /// absorbe una sola vez, y volver a engancharla la robaría de aquella sin
+  /// que nadie lo viera. Las que ya cuelgan de [absorbidasPor] sí salen, y
+  /// salen marcadas: son justo las que esa situación se llevó.
+  List<SituacionModel> candidatasParaDerivar({
+    required int tipo,
+    required int periodo,
+    required bool reiniciaPorPeriodo,
+    int? excluyendo,
+    int? absorbidasPor,
+  }) {
+    if (tipo <= 1) return const [];
+
+    final origen = tipo - 1;
+    final cuales = reiniciaPorPeriodo
+        ? [periodo]
+        : periodos.where((numero) => numero <= periodo);
+
+    final candidatas = <SituacionModel>[];
+    for (final numero in cuales) {
+      for (final situacion in situacionesDe(numero)) {
+        if (situacion.tipo != origen) continue;
+        if (situacion.id == excluyendo) continue;
+        if (situacion.absorbidaPor != null &&
+            situacion.absorbidaPor != absorbidasPor) {
+          continue;
+        }
+        candidatas.add(situacion);
+      }
+    }
+    return candidatas;
+  }
+
+  /// Las que hoy cuelgan de una situación dada.
+  List<SituacionModel> absorbidasPor(int situacionId) {
+    final suyas = <SituacionModel>[];
+    for (final numero in periodos) {
+      for (final situacion in situacionesDe(numero)) {
+        if (situacion.absorbidaPor == situacionId) suyas.add(situacion);
+      }
+    }
+    return suyas;
+  }
+
   /// Una copia con las fallas de uniforme de un periodo cambiadas.
   ///
   /// La pantalla de uniformes devuelve la lista como quedó, y esto la mete en

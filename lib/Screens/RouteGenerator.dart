@@ -3,6 +3,7 @@ import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
 import 'package:myvc_flutter/Screens/MisNotasScreen.dart';
 import 'package:myvc_flutter/Screens/MuroScreen.dart';
+import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
@@ -30,6 +31,9 @@ class RouteGenerator {
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());
+      case '/notas':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => NotasScreen());
       case '/unidades':
         return MaterialPageRoute(
             settings: settings, builder: (context) => UnidadesScreen());

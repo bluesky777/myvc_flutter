@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
+import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
 
 /// El año y el periodo con los que trabaja el usuario ahora mismo.
@@ -26,6 +27,15 @@ class ContextoAcademico extends ChangeNotifier {
   String? year;
   int? periodoId;
   int? numeroPeriodo;
+
+  /// Cómo está configurado el colegio, según la misma respuesta de /login.
+  ///
+  /// Va aquí y no en un sitio propio porque dos de esos ajustes son del
+  /// periodo —si los docentes pueden editar notas y si pueden nivelar—, así
+  /// que cambian con él. Colgados de aquí se releen en [refrescar] junto con
+  /// todo lo demás y no hay forma de que se queden con los del periodo
+  /// anterior; sueltos, habría que acordarse de releerlos.
+  ConfiguracionColegio config = const ConfiguracionColegio.vacia();
 
   /// Los años del colegio con sus periodos, para el cuadro de cambio.
   List<YearModel> years = [];
@@ -77,6 +87,7 @@ class ContextoAcademico extends ChangeNotifier {
     year = datos['year']?.toString();
     periodoId = _entero(datos['periodo_id']);
     numeroPeriodo = _entero(datos['numero_periodo']);
+    config = ConfiguracionColegio.deLogin(datos);
     notifyListeners();
   }
 
@@ -87,6 +98,7 @@ class ContextoAcademico extends ChangeNotifier {
     periodoId = null;
     numeroPeriodo = null;
     years = [];
+    config = const ConfiguracionColegio.vacia();
     notifyListeners();
   }
 

@@ -1,0 +1,258 @@
+# Notificaciones para alumnos y acudientes
+
+Plan para que un acudiente se entere de que a su hijo le pusieron notas, faltó a
+clase o le anotaron una situación, sin abrir la app a ver si hay algo nuevo — y
+sin que el hosting compartido lo pague. Escrito el 23 de agosto de 2026.
+
+## El problema, dicho en una línea
+
+Hay dos maneras de que un teléfono se entere de algo: **preguntar** o **que le
+avisen**. Preguntar es sondeo, y el sondeo es exactamente lo que un hosting
+compartido no aguanta: 400 acudientes preguntando cada cinco minutos son 115.000
+peticiones al día para decir «no, nada nuevo» el 99 % de las veces.
+
+Que le avisen es push, y el push **no lo entrega el servidor del colegio**: lo
+entrega Google. El servidor solo le dice a Google «avisa a estos», una vez.
+
+Todo este documento va de que esa frase —«una vez»— siga siendo verdad cuando
+haya 400 acudientes.
+
+## Qué se avisa
+
+Cinco tipos. Cada uno se puede apagar por separado, que es lo que se pidió.
+
+| Tipo | Se dispara con | Ejemplo del aviso |
+|---|---|---|
+| **Notas** | notas nuevas o cambiadas de ese alumno | «Laura tiene 4 notas nuevas en Matemáticas» |
+| **Asistencia** | una ausencia o una tardanza registrada hoy | «Se registró una ausencia de Juan hoy» |
+| **Disciplina** | una situación anotada | «Se anotó una situación de Juan. Ábrela para verla» |
+| **Muro** | una publicación nueva del colegio | «Nueva publicación: Salida pedagógica» |
+| **Colegio** | cierre de periodo, boletines listos, materias en riesgo | «El periodo cierra el viernes» |
+
+**Ninguna notificación lleva la nota dentro.** «Laura tiene 4 notas nuevas en
+Matemáticas», nunca «Laura sacó 45 en Matemáticas». Una notificación se ve en la
+pantalla bloqueada, en el bus, con gente al lado; y una nota de un menor no es
+algo que deba aparecer ahí. Para verla hay que abrir la app y estar
+identificado. Esto además evita el caso feo: el push llega aunque el colegio
+tenga las notas bloqueadas (`alumnos_can_see_notas = 0`), y sería absurdo que la
+notificación enseñara lo que la app niega.
+
+## Cómo se entrega: temas, no lista de dispositivos
+
+Firebase Cloud Messaging (gratis, sin cuota que preocupe) ofrece dos formas:
+
+**Por dispositivo.** El servidor guarda el token de cada teléfono en una tabla y
+envía a cada uno. Con 400 acudientes con dos dispositivos son 800 tokens que
+guardar, refrescar cuando caducan y limpiar cuando dejan de valer; y cada aviso
+es un lote de peticiones.
+
+**Por tema (*topic*).** El teléfono **se apunta él mismo** a un tema. El
+servidor publica en el tema y Google reparte. Una petición, tenga el tema tres
+dispositivos o tres mil. Cero tablas, cero tokens, cero limpieza.
+
+**Se usan temas.** No es solo más barato: es que la parte cara de la otra opción
+—guardar y mantener los tokens— caería justo sobre lo que hay que proteger.
+
+### Y aquí está el detalle que hay que hacer bien
+
+Si el tema se llamara `alumno_345`, cualquiera con la app podría apuntarse al
+`alumno_346` y recibir los avisos de un menor que no es suyo. El nombre del tema
+es, en la práctica, la única puerta.
+
+Por eso **el nombre del tema no se calcula en el teléfono: lo entrega el
+servidor al identificarse**, y es opaco:
+
+```
+tema = "a_" + HMAC-SHA256(alumno_id, secreto_del_colegio)   →   a_9f3c1e...
+```
+
+El acudiente recibe al entrar la lista de temas de sus acudidos, y nada más.
+Nadie puede derivar el de otro alumno sin el secreto, que vive en el servidor.
+Y como el contenido del aviso no dice nada —punto anterior—, incluso el peor
+caso, que se filtre un nombre de tema, entrega ruido y no datos.
+
+El tipo va como sufijo, y ahí está la clave de las preferencias:
+
+```
+a_9f3c1e…_notas        a_9f3c1e…_asistencia      a_9f3c1e…_disciplina
+colegio_muro           colegio_avisos
+```
+
+### Las preferencias viven en el teléfono
+
+Apagar «Notas» es `unsubscribeFromTopic`: una llamada a Google, **cero
+peticiones al servidor del colegio, cero filas en la base de datos, cero
+consultas al enviar**. El envío no tiene que filtrar por preferencias porque
+quien no quiere el aviso ya no está en el tema.
+
+El efecto secundario es correcto, además: las preferencias son **por
+dispositivo**. El acudiente puede querer los avisos de notas en su teléfono y no
+en la tableta que usa el niño. Con preferencias guardadas en el servidor eso no
+se puede.
+
+Una pantalla «Notificaciones» en el menú lateral, con cinco interruptores y una
+línea explicando qué manda cada uno.
+
+## Cuándo se envía: por cron, agrupado, nunca dentro de una petición
+
+Dos cosas que **no** se pueden hacer:
+
+**No enviar dentro de la petición del docente.** Si al guardar una nota el
+servidor llama a Google, el docente espera a que Google responda. Pasar una
+columna de 30 notas serían 30 llamadas a Google metidas en el camino crítico de
+30 peticiones. La app se sentiría rota y el servidor estaría ocupado
+esperando a un tercero.
+
+**No usar colas.** `QUEUE_CONNECTION` está en `sync`, que significa «ejecuta
+ahora mismo, aquí» — o sea, exactamente el problema de arriba con otro nombre.
+Una cola de verdad necesita un proceso vivo escuchando, y en hosting compartido
+no lo hay.
+
+Queda el cron, que casi todos los hostings compartidos sí dan:
+
+```mermaid
+sequenceDiagram
+    participant D as Docente
+    participant S as Servidor
+    participant BD as Base de datos
+    participant C as Cron (cada 15 min)
+    participant G as Firebase
+    participant T as Teléfono del acudiente
+
+    D->>S: PUT notas/update/{id} × 30
+    S->>BD: UPDATE notas + INSERT bitacoras
+    Note over S,D: responde ya; no habla con nadie más
+
+    C->>BD: SELECT de bitacoras desde la última marca
+    BD-->>C: 30 filas → 1 alumno, 1 asignatura
+    C->>G: 1 POST: tema a_9f3c1e…_notas
+    G->>T: «Laura tiene 4 notas nuevas en Matemáticas»
+    C->>BD: guarda la marca nueva
+```
+
+**Agrupar es lo que hace esto viable, y de paso lo hace mejor.** Un docente que
+pasa una columna genera 30 cambios en dos minutos. Sin agrupar son 30 avisos y
+el acudiente apaga las notificaciones para siempre. Agrupado por alumno y
+asignatura es uno: «4 notas nuevas en Matemáticas». Menos peticiones y menos
+molestia, la misma decisión.
+
+### De dónde salen los cambios sin inventar tablas
+
+Ya está todo registrado:
+
+| Tipo | Fuente | Consulta |
+|---|---|---|
+| Notas | `bitacoras` — cada `PUT notas/update/{id}` inserta una fila con `affected_element_type = 'Nota'`, `affected_user_id = alumno_id` y `created_at` | `WHERE id > :marca AND affected_element_type IN ('Nota','NF_UPDATE') GROUP BY affected_user_id` |
+| Asistencia | `ausencias.created_at` | agrupada por `alumno_id` |
+| Disciplina | las situaciones, por `created_at` | agrupada por `alumno_id` |
+| Muro | `publicaciones.created_at` | una fila basta |
+
+Una consulta agrupada por tipo, cuatro por ejecución. La marca —el último `id`
+de `bitacoras` procesado— es una fila en una tabla nueva de dos columnas, o un
+archivo; con `CACHE_DRIVER=file` sirve el propio caché de Laravel.
+
+### Lo que le cuesta al servidor
+
+Cada 15 minutos: cuatro `SELECT` con índice y **entre cero y unas pocas**
+llamadas a Google. En una jornada normal, con clases entre las 7 y las 14, la
+mayoría de ejecuciones no manda nada.
+
+96 ejecuciones al día. Comparado con los 115.000 sondeos del primer párrafo, es
+otra escala. Si 15 minutos resulta mucha espera para asistencia, ese tipo se
+puede subir a 5 minutos y dejar los demás en 15; sigue sin acercarse a nada
+preocupante.
+
+## Lo que hay que construir
+
+### En el backend — y esto necesita permiso
+
+**El backend es de solo lectura para esta app.** Nada de este apartado se hace
+sin que lo autorices, y conviene decidirlo antes de empezar por el lado Flutter,
+porque sin servidor no hay notificación que probar.
+
+1. Un endpoint que, al identificarse, devuelva **los temas** que le tocan a ese
+   usuario (los suyos y los de sus acudidos). Es la pieza de seguridad: la
+   derivación con HMAC vive aquí y en ningún otro sitio.
+2. Un comando de artisan, `notificaciones:enviar`, con las cuatro consultas, la
+   marca y el envío.
+3. La entrada de cron: `*/15 * * * * php artisan notificaciones:enviar`.
+4. Las credenciales: una cuenta de servicio de Firebase (un JSON) y su secreto
+   fuera del repositorio.
+
+Sobre el envío: la API HTTP v1 de FCM pide un token de OAuth firmado con la
+cuenta de servicio. **No hace falta añadir el SDK de Google**: se firma un JWT
+con `openssl_sign` y se pide el token con Guzzle —que ya está en el
+`composer.json`—, y el token se cachea la hora que dura. Una dependencia menos
+que mantener en un hosting donde actualizar es incómodo.
+
+> **A verificar antes de nada:** que el hosting permita **conexiones salientes
+> HTTPS** a `oauth2.googleapis.com` y `fcm.googleapis.com`. Algunos compartidos
+> las bloquean. Se comprueba con un `curl` desde el servidor, y si están
+> cerradas todo este plan cambia (ver la alternativa al final).
+
+### En la app
+
+Dependencias nuevas: `firebase_core`, `firebase_messaging` y
+`flutter_local_notifications` — esta última porque FCM no pinta nada si la app
+está abierta, y ahí hay que mostrarlo uno mismo.
+
+Y lo demás:
+
+- **Android**: `google-services.json`, y el permiso `POST_NOTIFICATIONS`, que
+  desde Android 13 hay que **pedir** en tiempo de ejecución. Se pide después de
+  entrar y con una frase que explique para qué, no a bocajarro al abrir por
+  primera vez: preguntado a secas, mucha gente dice que no y no vuelve a
+  aparecer.
+- **iOS**: una clave de APNs, que requiere cuenta de desarrollador de Apple de
+  pago. Si aún no la hay, esto sale primero en Android y en iOS después.
+- **Al entrar**: pedir los temas al servidor y suscribirse a los que el usuario
+  no haya apagado. **Al cerrar sesión**: desuscribirse de todos, sin falta —si
+  no, el teléfono de un colegio o el que se presta sigue recibiendo avisos del
+  alumno anterior—.
+- **Al tocar el aviso**: abrir la pantalla que toca —notas, asistencia,
+  disciplina, muro—, no solo la app. Es la diferencia entre un aviso útil y uno
+  que obliga a buscar.
+
+### Fuera del código
+
+- **La política de privacidad** ([politica-privacidad.md](politica-privacidad.md))
+  no menciona notificaciones y tendrá que decir que se usa Firebase Cloud
+  Messaging, qué se manda (nada personal en el cuerpo) y cómo se apagan.
+- **La ficha de Play** ([ficha-play.md](ficha-play.md)) y la sección de
+  seguridad de datos: hay que declarar el identificador de dispositivo que FCM
+  maneja.
+- Son de menores. Merece la pena que el colegio lo comunique a las familias
+  antes de encenderlo, aunque legalmente baste con la política.
+
+## Orden de trabajo
+
+```mermaid
+flowchart LR
+    V["0 · Verificar<br/>salidas HTTPS<br/>del hosting"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
+    B --> A["2 · App<br/>Firebase + permiso<br/>+ suscripción"]
+    A --> T["3 · Un solo tipo<br/>(Muro)<br/>de punta a punta"]
+    T --> P["4 · Pantalla de<br/>preferencias"]
+    P --> R["5 · Los otros<br/>cuatro tipos"]
+    R --> D["6 · Política y<br/>ficha de Play"]
+```
+
+El paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
+datos de nadie— porque el objetivo de esa fase es probar la tubería entera, no
+el contenido. Cuando llegue un aviso de muro a un teléfono real, los otros
+cuatro son la misma cañería con otra consulta.
+
+## Si el hosting no deja salir
+
+Plan B, sin push y sin sondeo: **«novedades al abrir»**. Un solo endpoint
+barato, `GET novedades`, que devuelve **contadores** desde la última vez que ese
+usuario miró —«3 notas nuevas, 1 ausencia»— y que la app pide **solo al abrirse
+o al volver del segundo plano**, nunca en un temporizador. Se pintan como puntos
+rojos en el menú.
+
+No avisa con el teléfono en el bolsillo, que es medio punto de todo esto. Pero
+es una consulta por sesión y por usuario en vez de una cada cinco minutos, y se
+puede montar sin Firebase, sin cron y sin cuenta de Apple.
+
+Merece la pena tenerlo presente también como **complemento**: los puntos rojos
+dentro de la app son útiles aunque el push funcione, porque contestan a «¿qué me
+perdí?» cuando el aviso se descartó sin leerlo.

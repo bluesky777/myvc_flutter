@@ -64,6 +64,13 @@ Escritas aquí para no descubrirlas dos veces.
     `count($dependencias)` sin comprobar antes que sea un array, y en PHP 8.3 `count(null)` es un
     TypeError: omitir la clave no guarda nada y devuelve un 500. El alta sí lo protege con
     `is_array`, así que la diferencia está solo en editar.
+11. **Lo que engancha una situación a otra es que la clave `asignado` ESTÉ, no lo que valga.** El
+    update hace `array_key_exists('asignado', ...)`. Mandar `asignado: false` para soltar
+    engancha, y `asignado: null` también, porque en PHP una clave con null existe. Lo que suelta
+    es el id a secas. Y solo se mandan las que cambian: soltar una que nunca colgó de esta le
+    borraría el enganche que tuviera con otra.
+12. **`deriva_de_tardanzas` solo se puede fijar al crear.** El UPDATE de `disciplina/update` no
+    nombra esa columna, así que mandarla al guardar no hace nada y no avisa.
 
 ### La trampa de los ordinales, en detalle
 
@@ -205,6 +212,29 @@ Las fallas del periodo, cada una con su fecha y hora y sus marcas —sin cámara
 uniforme, incompleto, cabello, accesorios, excusado— más la descripción. Crear, editar y
 eliminar. Las marcas van como `FilterChip`, que es lo que eran los `btn-checkbox` de la web.
 
+### De dónde viene una situación
+
+Es como el colegio convierte la reincidencia en una falta mayor: varias leves se vuelven una
+grave. Al enlazarlas, el backend le pone `become_id` a cada una apuntando a la nueva, y desde
+ese momento **dejan de contar por separado** — el contador del periodo las salta, porque ya se
+contaron dentro de esta.
+
+Las reglas son del front web y se respetan tal cual:
+
+- Solo aparece a partir del **tipo 2**: una de tipo 2 se alimenta de las de tipo 1, y una de
+  tipo 3 de las de tipo 2.
+- Una de **tipo 1 no deriva de ninguna situación**: viene de las tardanzas, que no son
+  situaciones y no se enganchan una a una. Para eso está el sí o no de `deriva_de_tardanzas`.
+- Qué periodos se ofrecen lo decide `reinicia_por_periodo`: si NO reinicia, valen las de este
+  periodo y las de los anteriores; si reinicia, solo las de este.
+- No se ofrecen las que ya cuelgan de otra situación — una se absorbe una sola vez—, pero sí las
+  que ya cuelgan de la que se está editando, y salen marcadas: si no aparecieran, editarla las
+  soltaría sin querer.
+
+Como con los ordinales, aquí no se guarda al marcar: el web llama a
+`cambiar-situacion-derivante` en el mismo instante en que se toca un chip, y esto espera al
+botón de Guardar.
+
 ## Los archivos
 
 **Nuevos**
@@ -218,6 +248,8 @@ eliminar. Las marcas van como `FilterChip`, que es lo que eran los `btn-checkbox
 - `lib/Http/UniformesApi.dart`
 - `lib/Widgets/SelectorGrupo.dart` — `CampoGrupo` + hoja con buscador
 - `lib/Widgets/SelectorOrdinales.dart` — `CampoOrdinales`
+- `lib/Widgets/SelectorSituaciones.dart` — de qué situaciones viene esta
+- `lib/Widgets/BarraPlegable.dart` — la barra que se pliega al desplazar
 - `lib/Widgets/CampoConSugerencias.dart` — el typeahead de la descripción
 - `lib/Screens/DisciplinaGrupoScreen.dart`
 - `lib/Screens/FichaDisciplinaScreen.dart`
@@ -252,18 +284,20 @@ flowchart LR
     F1["1 · Datos ✓<br/>modelos + APIs<br/>+ 21 pruebas"] --> F2["2 · Listado ✓<br/>grupo, resumen,<br/>menú y ruta"]
     F2 --> F3["3 · Ficha ✓<br/>del alumno"]
     F3 --> F4["4 · Crear y editar ✓<br/>situaciones"]
-    F4 --> F5["5 · Uniformes ✓"]
+    F4 --> F4b["4b · Derivantes ✓<br/>encadenar situaciones"]
+    F4b --> F5["5 · Uniformes ✓"]
     F5 -.->|"necesita<br/>endpoint nuevo"| F6["6 · Pantalla del<br/>alumno y acudiente"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
     style F2 fill:#e8f4e8,stroke:#5a8f5a
     style F3 fill:#e8f4e8,stroke:#5a8f5a
     style F4 fill:#e8f4e8,stroke:#5a8f5a
+    style F4b fill:#e8f4e8,stroke:#5a8f5a
     style F5 fill:#e8f4e8,stroke:#5a8f5a
     style F6 fill:#fff0e6,stroke:#c98a4b,stroke-dasharray: 5 3
 ```
 
-De la 1 a la 5, hechas en la rama `feat/disciplina`.
+De la 1 a la 5, la 4b incluida, hechas en la rama `feat/disciplina`.
 
 ## Lo que queda pendiente
 
@@ -285,7 +319,3 @@ la ficha del alumno en modo lectura.
 Los ordinales del manual (solo se leen), el botón «Ir a comportamiento», los informes e
 impresión, los observadores, «Situaciones por grupo» y «Nombre inmovible» —un apaño de tabla
 ancha que en un teléfono no significa nada—.
-
-Y las **situaciones derivantes**: el mecanismo por el que tres tardanzas se convierten en una
-falta tipo 1, con `dependencias` y `become_id`. Es el que más duele dejar fuera, porque los
-contadores ya dependen de él; entra como fase 4b si se decide que sí.

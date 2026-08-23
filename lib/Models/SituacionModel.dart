@@ -36,6 +36,18 @@ class SituacionModel {
   final int? registradaPor;
   final DateTime? registradaEl;
 
+  /// Que esta situación se puso por acumular tardanzas al colegio.
+  ///
+  /// Es la otra mitad de lo mismo que [absorbidaPor]: una situación puede
+  /// venir de otras situaciones —y entonces aquellas apuntan a esta— o de las
+  /// tardanzas, que no son situaciones y no se pueden encadenar una a una, así
+  /// que se marcan con este sí o no.
+  ///
+  /// **Solo se puede poner al crear.** `disciplina/update` no toca esta
+  /// columna: su UPDATE no la nombra, así que mandarla al guardar no hace
+  /// nada y no avisa.
+  final bool derivaDeTardanzas;
+
   /// La situación que absorbió a esta, cuando de varias leves salió una grave.
   ///
   /// Mientras esto no sea nulo, el backend NO la cuenta en `perN_cant_tX`:
@@ -66,6 +78,7 @@ class SituacionModel {
     this.profesorNombre,
     this.registradaPor,
     this.registradaEl,
+    this.derivaDeTardanzas = false,
     this.absorbidaPor,
     this.ordinalIds = const [],
   });
@@ -86,6 +99,7 @@ class SituacionModel {
       profesorNombre: _nombreDocente(json['profesor_nombre']),
       registradaPor: entero(json['added_by']),
       registradaEl: _fecha(json['created_at']),
+      derivaDeTardanzas: enteroO(json['deriva_de_tardanzas']) == 1,
       absorbidaPor: entero(json['become_id']),
       ordinalIds: _ordinales(json['proceso_ordinales']),
     );

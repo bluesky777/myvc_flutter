@@ -99,6 +99,15 @@ class MenuLateral extends StatelessWidget {
       ruta: '/panel',
     ));
 
+    // Notas antes que Unidades porque es lo que se hace a diario: las unidades
+    // se montan al empezar el periodo y las notas se pasan todas las semanas.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.edit_note_outlined,
+      texto: 'Notas',
+      ruta: '/notas',
+    ));
+
     opciones.add(_opcion(
       context,
       icono: Icons.menu_book_outlined,

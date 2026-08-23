@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Widgets/CampoConSugerencias.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/SelectorOrdinales.dart';
+import 'package:myvc_flutter/Widgets/SelectorSituaciones.dart';
 import 'package:myvc_flutter/constantes.dart';
 
 /// Con qué se abre el editor.
@@ -84,6 +85,16 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
   DocenteModel? docente;
   late List<int> ordinales;
 
+  /// Que esta situación se pone por acumular tardanzas al colegio.
+  late bool derivaDeTardanzas;
+
+  /// Las situaciones que esta se lleva por delante.
+  late List<int> derivaDe;
+
+  /// Las que ya colgaban de ella al abrir, para saber después qué cambió: al
+  /// backend solo se le mandan las que se enganchan y las que se sueltan.
+  late Set<int> derivabaDe;
+
   bool guardando = false;
   bool borrando = false;
 
@@ -111,6 +122,15 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
     tipo = actual?.tipo ?? 1;
     fecha = actual?.fecha;
     ordinales = [...?actual?.ordinalIds];
+    derivaDeTardanzas = actual?.derivaDeTardanzas ?? false;
+
+    derivabaDe = actual == null
+        ? const {}
+        : widget.args.alumno
+            .absorbidasPor(actual.id)
+            .map((situacion) => situacion.id)
+            .toSet();
+    derivaDe = [...derivabaDe];
     _descripcion.text = actual?.descripcion ?? '';
     _testigos.text = actual?.testigos ?? '';
     _descargo.text = actual?.descargo ?? '';
@@ -211,6 +231,7 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
                 elegidos: ordinales,
                 alCambiar: (nuevos) => setState(() => ordinales = nuevos),
               ),
+              _deQueViene(),
               const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -396,6 +417,62 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
     );
   }
 
+  /// De dónde viene esta situación: de tardanzas, o de otras situaciones.
+  ///
+  /// Es como el colegio convierte la reincidencia en una falta mayor. Solo
+  /// tiene sentido a partir del tipo 2: una de tipo 1 no viene de otra
+  /// situación, viene de las tardanzas, y para eso está el interruptor.
+  Widget _deQueViene() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _interruptorDeTardanzas(),
+        if (tipo > 1)
+          CampoSituacionesDerivantes(
+            candidatas: _candidatas,
+            elegidas: derivaDe,
+            config: config,
+            tipoOrigen: tipo - 1,
+            alCambiar: (nuevas) => setState(() => derivaDe = nuevas),
+          ),
+      ],
+    );
+  }
+
+  /// De qué situaciones puede venir esta, con las reglas del colegio.
+  List<SituacionModel> get _candidatas => widget.args.alumno.candidatasParaDerivar(
+        tipo: tipo,
+        periodo: widget.args.numeroPeriodo,
+        reiniciaPorPeriodo: config.reiniciaPorPeriodo,
+        excluyendo: situacion?.id,
+        absorbidasPor: situacion?.id,
+      );
+
+  /// El sí o no de «se puso por llegar tarde muchas veces».
+  ///
+  /// Editando se enseña apagado y con su explicación en vez de esconderlo:
+  /// `disciplina/update` no nombra esa columna en su UPDATE, así que mandarla
+  /// al guardar no haría nada y no avisaría. Vale más decir por qué no se
+  /// puede que dejar un interruptor que miente.
+  Widget _interruptorDeTardanzas() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+      child: SwitchListTile(
+        value: derivaDeTardanzas,
+        onChanged: creando
+            ? (valor) => setState(() => derivaDeTardanzas = valor)
+            : null,
+        title: Text('Deriva de tardanzas'),
+        subtitle: Text(
+          creando
+              ? 'Se pone por haber llegado tarde al colegio muchas veces'
+              : 'Esto solo se fija al crear la situación: el servidor no lo '
+                  'cambia al guardar.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _guardar() async {
     if (!(_formulario.currentState?.validate() ?? false)) return;
 
@@ -426,6 +503,8 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
             descargo: _limpio(_descargo),
             profesorId: docente?.profesorId,
             ordinalIds: ordinales,
+            derivaDeTardanzas: derivaDeTardanzas,
+            derivaDe: tipo > 1 ? derivaDe : const [],
           )
         : await actualizarSituacion(
             server,
@@ -438,6 +517,10 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
             testigos: _limpio(_testigos),
             descargo: _limpio(_descargo),
             profesorId: docente?.profesorId,
+            // Solo lo que cambió. Soltar una que nunca colgó de esta le
+            // borraría el enganche que tuviera con otra.
+            enlazar: _ahoraDerivaDe.difference(derivabaDe).toList(),
+            desenlazar: derivabaDe.difference(_ahoraDerivaDe).toList(),
           );
 
     setState(() => guardando = false);
@@ -458,6 +541,12 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
 
     Navigator.pop(context, resultado.alumno);
   }
+
+  /// De cuáles dice el formulario que viene, ahora mismo.
+  ///
+  /// Vacío si se bajó a tipo 1 mientras se editaba: ahí no hay situaciones de
+  /// las que derivar, y las que colgaban tienen que soltarse.
+  Set<int> get _ahoraDerivaDe => tipo > 1 ? derivaDe.toSet() : const {};
 
   /// Aplica a la tabla pivote lo que cambió, ordinal a ordinal.
   ///

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
@@ -168,6 +169,7 @@ class LoginController implements LoginBaseController {
   Future<void> _tirarLaSesion() async {
     AuthService.limpiar();
     ContextoAcademico.instancia.limpiar();
+    HorarioDeHoy.instancia.limpiar();
     await SesionGuardada.borrar();
   }
 
@@ -237,8 +239,11 @@ class LoginController implements LoginBaseController {
     // de quien acaba de salir.
     await SesionGuardada.borrar();
     // El año y el periodo son de quien entró: no pueden quedarse puestos para
-    // el docente siguiente, que es lo mismo que ya se cuida con el token.
+    // el docente siguiente, que es lo mismo que ya se cuida con el token. Y con
+    // ellos las clases de hoy, que si no le dirían al siguiente cuántas clases
+    // tenía el anterior.
     ContextoAcademico.instancia.limpiar();
+    HorarioDeHoy.instancia.limpiar();
 
     // Manda la casilla: si este dispositivo es de uno, cerrar sesión no tiene
     // por qué hacerle reescribir las credenciales. En el equipo compartido se

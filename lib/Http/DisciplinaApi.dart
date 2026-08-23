@@ -117,6 +117,8 @@ Future<GuardadoSituacion> crearSituacion(
   String? descargo,
   int? profesorId,
   List<int> ordinalIds = const [],
+  bool derivaDeTardanzas = false,
+  List<int> derivaDe = const [],
 }) {
   return _guardar(
     () => server.post('/disciplina/store', {
@@ -129,12 +131,16 @@ Future<GuardadoSituacion> crearSituacion(
       'descargo': descargo,
       'fecha_hora_aprox': _fecha(fecha),
       'profesor': _profesor(profesorId),
+      'deriva_de_tardanzas': derivaDeTardanzas ? 1 : 0,
       'selected_ordinales': [
         for (final id in ordinalIds) {'id': id}
       ],
-      // El alta sí protege el suyo con is_array, pero se manda igual para que
-      // las dos llamadas tengan la misma forma. Ver el aviso de actualizar().
-      'dependencias': const [],
+      // Las situaciones que esta se lleva por delante: el backend les pone
+      // `become_id` apuntando a la recién creada, y con eso dejan de contar
+      // por separado. Aquí basta el id.
+      'dependencias': [
+        for (final id in derivaDe) {'id': id}
+      ],
     }),
     'crear la situación',
   );
@@ -152,6 +158,9 @@ Future<GuardadoSituacion> crearSituacion(
 /// `count($dependencias)` sin comprobar antes que sea un array, y en PHP 8.3
 /// `count(null)` es un TypeError: omitir la clave no guarda nada y devuelve un
 /// 500. Es la diferencia entre este método y el de crear, que sí lo protege.
+///
+/// Tampoco toca `deriva_de_tardanzas`: su UPDATE no nombra esa columna, así
+/// que eso solo se fija al crear. Ver [crearSituacion].
 Future<GuardadoSituacion> actualizarSituacion(
   Server server, {
   required int situacionId,
@@ -163,6 +172,8 @@ Future<GuardadoSituacion> actualizarSituacion(
   String? testigos,
   String? descargo,
   int? profesorId,
+  List<int> enlazar = const [],
+  List<int> desenlazar = const [],
 }) {
   return _guardar(
     () => server.put('/disciplina/update', {
@@ -175,10 +186,30 @@ Future<GuardadoSituacion> actualizarSituacion(
       'descargo': descargo,
       'fecha_hora_aprox': _fecha(fecha),
       'profesor': _profesor(profesorId),
-      'dependencias': const [],
+      'dependencias': dependenciasParaElBackend(enlazar, desenlazar),
     }),
     'guardar la situación',
   );
+}
+
+/// Las situaciones que esta se lleva o suelta, como las lee el backend.
+///
+/// **Lo que decide es que la clave `asignado` ESTÉ, no lo que valga.** El
+/// backend hace `array_key_exists('asignado', ...)`: si está, engancha; si no
+/// está, suelta. Mandar `asignado: false` para soltar hace justo lo contrario,
+/// y mandar `asignado: null` también, porque en PHP una clave con null existe.
+/// Por eso las que se sueltan viajan con el id a secas.
+///
+/// Y solo van las que cambian. Soltar una que nunca estuvo enganchada aquí le
+/// borraría el `become_id` que tuviera con otra situación.
+List<Map<String, dynamic>> dependenciasParaElBackend(
+  List<int> enlazar,
+  List<int> desenlazar,
+) {
+  return [
+    for (final id in enlazar) {'id': id, 'asignado': true},
+    for (final id in desenlazar) {'id': id},
+  ];
 }
 
 /// Borra una situación. `PUT disciplina/destroy` — PUT, no DELETE, y con el id

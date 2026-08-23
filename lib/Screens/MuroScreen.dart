@@ -4,8 +4,10 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
+import 'package:myvc_flutter/constantes.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///
@@ -110,26 +112,89 @@ class _MuroScreenState extends State<MuroScreen> {
     }
 
     final publicaciones = muro!.publicaciones;
+    final acceso = _buildAccesoANotas();
 
     return RefreshIndicator(
       onRefresh: _cargar,
       child: publicaciones.isEmpty
-          ? _muroVacio()
+          ? _muroVacio(acceso)
           : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: publicaciones.length,
-              itemBuilder: (context, i) =>
-                  Publicacion(publicacion: publicaciones[i]),
+              // El acceso a notas va dentro de la lista y no flotando encima:
+              // un botón flotante tapa publicaciones, y en un muro largo eso
+              // estorba justo donde se está leyendo.
+              itemCount: publicaciones.length + (acceso == null ? 0 : 1),
+              itemBuilder: (context, i) {
+                if (acceso != null && i == 0) return acceso;
+                final indice = acceso == null ? i : i - 1;
+                return Publicacion(publicacion: publicaciones[indice]);
+              },
             ),
+    );
+  }
+
+  /// La puerta a las notas, para el docente, encima de las publicaciones.
+  ///
+  /// Con las clases de hoy dentro y no como un botón a secas: ese dato ya viene
+  /// en la misma respuesta del muro —no cuesta ninguna petición, ver
+  /// [HorarioDeHoy]— y convierte el botón en información. Cuando no se sabe
+  /// cuántas son, se dice «Notas» y ya.
+  Widget? _buildAccesoANotas() {
+    if (!AuthService.user.esDocente) return null;
+
+    final horario = HorarioDeHoy.instancia;
+    final cuantas = horario.cuantas;
+
+    final grupos = horario.clases
+        .map((c) => c.asignatura.abrevGrupo)
+        .where((abrev) => abrev.isNotEmpty)
+        .toSet()
+        .join(', ');
+
+    final String detalle;
+    if (!horario.seSabe) {
+      detalle = 'Poner y corregir notas';
+    } else if (cuantas == 0) {
+      detalle = 'Hoy no tienes clases';
+    } else {
+      detalle = '$cuantas ${cuantas == 1 ? 'clase' : 'clases'} hoy'
+          '${grupos.isEmpty ? '' : ' · $grupos'}';
+    }
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        onTap: () => Navigator.pushNamed(context, '/notas'),
+        leading: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: kPrimaryColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.edit_note_outlined, color: kPrimaryColor),
+        ),
+        title: const Text(
+          'Notas',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(detalle, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right),
+      ),
     );
   }
 
   /// Un muro sin nada. Tiene que poder tirarse hacia abajo igual, o el docente
   /// que entra el primer día del año se queda sin forma de recargar.
-  Widget _muroVacio() {
+  Widget _muroVacio(Widget? acceso) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
+        if (acceso != null) acceso,
         SizedBox(height: 120),
         Icon(Icons.forum_outlined, size: 56, color: Colors.black26),
         SizedBox(height: 12),

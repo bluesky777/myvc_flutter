@@ -282,6 +282,7 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
   Widget _fila(SituacionModel situacion) {
     final ordinales = situacion.ordinalesDe(catalogo);
     final registro = _quienRegistro(situacion);
+    final absorbidas = alumno.absorbidasPor(situacion.id).length;
 
     return InkWell(
       onTap: () => _abrirEditor(situacion: situacion),
@@ -311,6 +312,27 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
                 child: _Nota(
                   icono: Icons.call_merge,
                   texto: 'Derivó en otra situación, así que no cuenta aparte',
+                ),
+              ),
+            if (situacion.derivaDeTardanzas)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: _Nota(
+                  icono: Icons.schedule,
+                  texto: 'Se puso por acumular tardanzas al colegio',
+                ),
+              ),
+            if (absorbidas > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: _Nota(
+                  icono: Icons.call_received,
+                  // De dónde viene esta: se llevó por delante a otras, que
+                  // por eso dejaron de contar en su propio periodo.
+                  texto: absorbidas == 1
+                      ? 'Viene de otra situación, que ya no cuenta aparte'
+                      : 'Viene de $absorbidas situaciones, que ya no cuentan '
+                          'aparte',
                 ),
               ),
             if (situacion.profesorNombre != null)
