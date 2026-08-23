@@ -30,6 +30,57 @@ class LibroDeNotas {
       .where((a) => a.notaDe(subunidadId)?.puesta ?? false)
       .length;
 
+  /// El promedio automático de un alumno: sus notas ponderadas por el
+  /// porcentaje de la subunidad dentro de la unidad y el de la unidad dentro
+  /// del periodo.
+  ///
+  /// Se calcula aquí y no se espera al servidor porque en la ficha del alumno
+  /// tiene que moverse **mientras se escribe**: la gracia de nivelar es ver a
+  /// dónde llega el promedio antes de decidir la definitiva, y para eso no
+  /// sirve un número que solo se refresca al recargar el libro.
+  ///
+  /// Es la misma cuenta que hace `notas/detailed` en SQL
+  /// —`sum((u.porcentaje/100)*((s.porcentaje/100)*n.nota))`— y también la que
+  /// hace el front web en `promedioTotal`. Las casillas sin nota **no suman**,
+  /// igual que allí: en SQL un NULL no entra en el SUM.
+  ///
+  /// [sobrescritas] son las notas que el docente tiene escritas y todavía no
+  /// ha guardado, por id de subunidad. Una clave presente con valor nulo es
+  /// una casilla que se acaba de vaciar, y por eso se mira `containsKey` y no
+  /// si el valor es nulo.
+  double promedioDe(
+    AlumnoDelLibro alumno, {
+    Map<int, double?> sobrescritas = const {},
+  }) {
+    var suma = 0.0;
+
+    for (final unidad in unidades) {
+      for (final subunidad in unidad.subunidades) {
+        final nota = sobrescritas.containsKey(subunidad.id)
+            ? sobrescritas[subunidad.id]
+            : alumno.notaDe(subunidad.id)?.nota;
+
+        if (nota == null) continue;
+
+        suma += (unidad.porcentaje / 100) * (subunidad.porcentaje / 100) * nota;
+      }
+    }
+
+    return suma;
+  }
+
+  /// El mismo libro con la definitiva de un alumno cambiada.
+  LibroDeNotas conNotaFinalDe(int alumnoId, NotaFinalDelLibro nueva) {
+    return LibroDeNotas(
+      asignatura: asignatura,
+      unidades: unidades,
+      alumnos: [
+        for (final alumno in alumnos)
+          alumno.alumnoId == alumnoId ? alumno.conNotaFinal(nueva) : alumno,
+      ],
+    );
+  }
+
   /// El mismo libro con las notas que se acaban de guardar ya aplicadas.
   ///
   /// Existe para no volver a pedir `notas/detailed` al salir de una planilla:
@@ -113,6 +164,18 @@ class AlumnoDelLibro {
       }
     }
 
+    return copiaCon(notas: nuevas);
+  }
+
+  /// El mismo alumno con otra definitiva. Se usa al volver de la ficha, donde
+  /// se nivela y se marcan las dos banderas.
+  AlumnoDelLibro conNotaFinal(NotaFinalDelLibro nueva) =>
+      copiaCon(notaFinal: nueva);
+
+  AlumnoDelLibro copiaCon({
+    Map<int, NotaDelLibro>? notas,
+    NotaFinalDelLibro? notaFinal,
+  }) {
     return AlumnoDelLibro(
       alumnoId: alumnoId,
       nombres: nombres,
@@ -122,8 +185,8 @@ class AlumnoDelLibro {
       nee: nee,
       ausenciasCount: ausenciasCount,
       tardanzasCount: tardanzasCount,
-      notas: nuevas,
-      notaFinal: notaFinal,
+      notas: notas ?? this.notas,
+      notaFinal: notaFinal ?? this.notaFinal,
     );
   }
 
@@ -194,6 +257,11 @@ class NotaDelLibro {
 }
 
 /// La definitiva del alumno en la asignatura y el periodo.
+///
+/// Las dos banderas no son independientes, y quien las pinte tiene que saberlo:
+/// el backend las cruza al escribir. Las transiciones están en
+/// [trasCambiarLaNota], [trasAlternarManual] y [trasAlternarRecuperada], y son
+/// el único sitio donde esas reglas viven del lado de la app.
 class NotaFinalDelLibro {
   final int nfId;
   final double? nota;
@@ -207,13 +275,73 @@ class NotaFinalDelLibro {
   /// Si viene de una recuperación. Es independiente de [manual].
   final bool recuperada;
 
+  /// Si la nota guardada es más vieja que la última nota de subunidad.
+  ///
+  /// Solo dice algo cuando es manual: la automática se recalcula sola en cada
+  /// `notas/detailed`. El backend lo resuelve comparando los dos `updated_at`,
+  /// en la columna `nfinal_desactualizada`.
+  final bool desactualizada;
+
+  /// Quién la tocó por última vez, tal como lo devuelve el backend: el nombre
+  /// de usuario, no el del docente.
+  final String? actualizadaPor;
+
   const NotaFinalDelLibro({
     required this.nfId,
     this.nota,
     this.automatica,
     this.manual = false,
     this.recuperada = false,
+    this.desactualizada = false,
+    this.actualizadaPor,
   });
+
+  /// Sin fila en `notas_finales` no hay nada que nivelar.
+  ///
+  /// No debería pasar —`notas/detailed` la crea al abrir el libro— pero si
+  /// pasa, más vale un control apagado que uno que manda un `nf_id` de cero.
+  bool get existe => nfId != 0;
+
+  NotaFinalDelLibro copiaCon({
+    double? nota,
+    bool? manual,
+    bool? recuperada,
+    bool? desactualizada,
+  }) {
+    return NotaFinalDelLibro(
+      nfId: nfId,
+      nota: nota ?? this.nota,
+      automatica: automatica,
+      manual: manual ?? this.manual,
+      recuperada: recuperada ?? this.recuperada,
+      desactualizada: desactualizada ?? this.desactualizada,
+      actualizadaPor: actualizadaPor,
+    );
+  }
+
+  /// Cómo queda tras un `definitivas_periodos/update` que entró.
+  ///
+  /// **Manual, siempre.** El backend escribe `SET nota=?, manual=true` en la
+  /// misma sentencia: no existe cambiar el número dejándola automática. Y con
+  /// razón, porque si siguiera siendo automática el próximo `notas/detailed`
+  /// la borraría y la volvería a calcular.
+  ///
+  /// Y deja de estar desactualizada: acaba de escribirse.
+  NotaFinalDelLibro trasCambiarLaNota(double nueva) =>
+      copiaCon(nota: nueva, manual: true, desactualizada: false);
+
+  /// Cómo queda tras un `toggle-manual` que entró.
+  ///
+  /// Quitarle «manual» le quita también «recuperada», en la misma sentencia.
+  /// Una recuperada que no fuera manual se perdería al primer recálculo.
+  NotaFinalDelLibro trasAlternarManual(bool nuevo) =>
+      copiaCon(manual: nuevo, recuperada: nuevo ? recuperada : false);
+
+  /// Cómo queda tras un `toggle-recuperada` que entró.
+  ///
+  /// Marcarla la vuelve además manual, que es lo anterior visto al derecho.
+  NotaFinalDelLibro trasAlternarRecuperada(bool nuevo) =>
+      copiaCon(recuperada: nuevo, manual: nuevo ? true : manual);
 
   factory NotaFinalDelLibro.fromJson(Map<String, dynamic> json) {
     return NotaFinalDelLibro(
@@ -222,6 +350,13 @@ class NotaFinalDelLibro {
       automatica: _decimal(json['def_materia_auto']),
       manual: entero(json['manual']) == 1,
       recuperada: entero(json['recuperada']) == 1,
+      // `IF(nf.updated_at > max(notas.updated_at), FALSE, TRUE)`: vale 1
+      // cuando la definitiva guardada es más vieja que la última nota puesta.
+      // Ojo con el caso sin notas, donde la comparación es contra NULL y sale
+      // 1 igualmente; por eso quien la pinte solo la enseña si es manual, que
+      // es el único caso en que decir algo tiene sentido.
+      desactualizada: entero(json['nfinal_desactualizada']) == 1,
+      actualizadaPor: texto(json['updated_by_username']),
     );
   }
 }
@@ -413,6 +548,31 @@ Future<String?> guardarNota(
   } catch (err) {
     return 'No se pudo guardar: $err';
   }
+}
+
+/// Cómo se escribe una nota dentro de un campo: sin decimales cuando es
+/// redonda.
+///
+/// Las notas llegan como decimales del servidor —un 85 puede venir como
+/// '85.0'—, y un campo que dice «85.0» invita a borrar el punto antes de
+/// escribir encima.
+String notaEscrita(double? nota) {
+  if (nota == null) return '';
+  return nota == nota.roundToDouble()
+      ? nota.toStringAsFixed(0)
+      : nota.toString();
+}
+
+/// Lo que hay escrito en un campo de nota, o null si está vacío.
+///
+/// También null cuando no se entiende lo tecleado, y entonces no se manda: es
+/// mejor dejar la nota sin guardar y que se vea, que mandar un número
+/// inventado. La coma se acepta como separador decimal porque es la que trae
+/// el teclado en español.
+double? notaLeida(String crudo) {
+  final limpio = crudo.trim().replaceAll(',', '.');
+  if (limpio.isEmpty) return null;
+  return double.tryParse(limpio);
 }
 
 /// Un decimal del backend, o null si no vino.

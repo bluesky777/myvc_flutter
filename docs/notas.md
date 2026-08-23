@@ -11,12 +11,15 @@ Falta justo el medio: poner la nota.
 
 ## Estado
 
+El mapa de todos los frentes está en [estado.md](estado.md); esta tabla es la de
+este.
+
 | Fase | Qué | Estado |
 |---|---|---|
 | 1 | La sesión completa: [ConfiguracionColegio](../lib/Utils/ConfiguracionColegio.dart) | **hecha** |
 | 2 | Asignaturas con filtro «Hoy» + tarjeta en el muro | **hecha** |
 | 3 | La planilla del indicador (casos A y B) | **hecha** |
-| 4 | La ficha del alumno (casos C y E) | pendiente |
+| 4 | La ficha del alumno (casos C y E) | **hecha** |
 | 5 | Notas perdidas | pendiente |
 | 6 | Frases, historial, borrar nota | pendiente |
 
@@ -25,7 +28,8 @@ Lo hecho vive en:
 - [ConfiguracionColegio.dart](../lib/Utils/ConfiguracionColegio.dart) — los ajustes que ya venían en /login y nadie leía.
 - [HorarioDeHoy.dart](../lib/Utils/HorarioDeHoy.dart) y [FiltroAsignaturas.dart](../lib/Utils/FiltroAsignaturas.dart) — qué clases toca hoy y con qué filtro se dejó la pantalla.
 - [LibroNotasApi.dart](../lib/Http/LibroNotasApi.dart) — el libro, y el guardado por lotes.
-- [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart) → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart).
+- [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart), con sus dos pestañas → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart) y [FichaAlumnoNotasScreen.dart](../lib/Screens/FichaAlumnoNotasScreen.dart).
+- [DefinitivasApi.dart](../lib/Http/DefinitivasApi.dart) — nivelar, y las tres trampas de las banderas.
 
 ---
 
@@ -182,11 +186,67 @@ sequenceDiagram
 
 La traspuesta: un alumno, y debajo sus unidades con sus subunidades y la nota de
 cada una, el promedio automático, la definitiva real, y los interruptores
-«manual» y «recuperada». Se edita igual y se guarda igual.
+«manual» y «recuperada».
 
 La definitiva y sus dos interruptores van por endpoints distintos y con su
 propio permiso (`profes_pueden_nivelar`, no `profes_pueden_editar_notas`):
-`DefinitivasPeriodosApi` → `actualizar`, `toggleManual`, `toggleRecuperada`.
+`definitivas_periodos/update`, `toggle-manual`, `toggle-recuperada`. Y el permiso
+se niega con un **400**, no con un 403 —`User::pueden_modificar_definitivas`
+aborta así—, de modo que ahí un 400 no es «petición mal hecha» sino «no te
+dejan».
+
+**El promedio se calcula en la app, no se espera al servidor.** La gracia de
+nivelar es ver a dónde llega el promedio *antes* de decidir la definitiva, y
+para eso no sirve un número que solo se refresca al recargar el libro. Es la
+misma cuenta que hace `notas/detailed` en SQL y la que hace el front web en
+`promedioTotal`; las casillas sin nota no suman, igual que allí, porque en SQL
+un NULL no entra en el `SUM`.
+
+#### Las tres trampas de las dos banderas
+
+`manual` y `recuperada` parecen dos interruptores independientes y no lo son: el
+backend cruza sus efectos dentro de la misma sentencia SQL. Están en
+[DefinitivasApi](../lib/Http/DefinitivasApi.dart), cada una con su prueba.
+
+```mermaid
+flowchart TD
+    U["Cambiar la nota<br/>definitivas_periodos/update"] --> M1["...y queda MANUAL<br/><i>SET nota=?, manual=true</i>"]
+    R["Marcar RECUPERADA<br/>toggle-recuperada"] --> M2["...y queda MANUAL"]
+    Q["Quitar MANUAL<br/>toggle-manual"] --> Q2["...y deja de ser RECUPERADA"]
+
+    M1 --> POR["Porque una definitiva no manual<br/>la borra y la recalcula<br/>el próximo notas/detailed"]
+    M2 --> POR
+    Q2 --> POR
+
+    style POR fill:#fff0e6,stroke:#c98a4b
+```
+
+Las tres salen de lo mismo: `notas/detailed` **borra y vuelve a insertar** la
+definitiva de todo alumno que no la tenga manual ni recuperada. Una nota
+nivelada que no estuviera marcada se perdería sola al abrir el libro, así que el
+backend no deja que esa combinación exista. La app no lo esconde: lo dice al
+guardar —«queda marcada como manual, así que el sistema ya no la
+recalculará»—, porque callarlo haría que el siguiente recálculo que no ocurre
+pareciera un fallo.
+
+Y un cuarto detalle, este de solo lectura: la columna `nfinal_desactualizada`
+vale **1 cuando la definitiva guardada es más vieja que la última nota puesta**.
+Se enseña solo si es manual, que es el único caso en que decir algo tiene
+sentido: la automática se recalcula sola.
+
+#### Dos formas de guardar en la misma pantalla, y es a propósito
+
+Los números —las notas de subunidad y la definitiva— se editan en local y salen
+al pulsar Guardar, igual que en la planilla y por lo mismo. Los dos
+interruptores se mandan al tocarlos, y no es incoherencia: son peticiones
+diminutas y, sobre todo, **el servidor cruza sus efectos**, así que lo que hay
+que pintar es lo que de verdad quedó, y eso solo se sabe preguntando.
+
+Al guardar van **primero las notas y después la definitiva**. La definitiva que
+se escribe es la que el docente decidió *viendo* el promedio que sale de esas
+notas; mandarla antes dejaría un instante en que la fila nivelada es más vieja
+que las notas de las que salió, que es justo lo que el backend marca como
+desactualizada.
 
 ### 1.7 El bloqueo del periodo
 

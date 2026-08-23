@@ -77,7 +77,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     for (final alumno in _alumnos) {
       final nota = alumno.notaDe(widget.subunidad.id)?.nota;
       _original.add(nota);
-      _campos.add(TextEditingController(text: _escrito(nota)));
+      _campos.add(TextEditingController(text: notaEscrita(nota)));
       _focos.add(FocusNode());
     }
   }
@@ -99,27 +99,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     if (mounted) super.setState(fn);
   }
 
-  /// Cómo se escribe una nota en el campo: sin decimales cuando es redonda.
-  ///
-  /// Las notas llegan como decimales del servidor —un 85 puede venir como
-  /// '85.0'—, y un campo que dice «85.0» invita a borrar el punto antes de
-  /// escribir.
-  static String _escrito(double? nota) {
-    if (nota == null) return '';
-    return nota == nota.roundToDouble()
-        ? nota.toStringAsFixed(0)
-        : nota.toString();
-  }
-
   /// Lo que hay escrito ahora en ese campo, o null si está vacío.
-  ///
-  /// Null cuando no se entiende lo tecleado, y entonces no se manda: es mejor
-  /// dejarla sin guardar y que se vea, que mandar un número inventado.
-  double? _leido(int indice) {
-    final crudo = _campos[indice].text.trim().replaceAll(',', '.');
-    if (crudo.isEmpty) return null;
-    return double.tryParse(crudo);
-  }
+  double? _leido(int indice) => notaLeida(_campos[indice].text);
 
   /// Las notas que cambiaron y se pueden guardar.
   ///
@@ -158,7 +139,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
 
     setState(() {
       for (var i = 0; i < _campos.length; i++) {
-        _campos[i].text = _escrito(valor);
+        _campos[i].text = notaEscrita(valor);
       }
     });
   }
