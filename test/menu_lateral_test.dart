@@ -88,5 +88,35 @@ void main() {
       expect(find.text('Unidades'), findsNothing);
       expect(find.text('Asistencias'), findsNothing);
     });
+
+    testWidgets('el docente llega a Notas, a las perdidas y a Configuración',
+        (WidgetTester tester) async {
+      AuthService.user = UserAutenticado(username: 'x', tipo: 'Profesor');
+
+      await montar(tester);
+
+      expect(find.text('Notas'), findsOneWidget);
+      expect(find.text('Notas perdidas'), findsOneWidget);
+      expect(find.text('Disciplina'), findsOneWidget);
+      // La ve todo el personal aunque solo un administrador pueda mover los
+      // interruptores: la mitad de su gracia es explicarle a un docente por
+      // qué hoy no puede editar notas.
+      expect(find.text('Configuración'), findsOneWidget);
+    });
+
+    testWidgets('a un acudiente no se le ofrece nada del personal',
+        (WidgetTester tester) async {
+      // No es solo pudor: todas esas pantallas piden endpoints con
+      // `auth.personal`, que a un acudiente le responden 403. Ofrecérselas
+      // sería ofrecerle una pantalla de error.
+      AuthService.user = UserAutenticado(username: 'x', tipo: 'Acudiente');
+
+      await montar(tester);
+
+      expect(find.text('Notas'), findsNothing);
+      expect(find.text('Notas perdidas'), findsNothing);
+      expect(find.text('Disciplina'), findsNothing);
+      expect(find.text('Configuración'), findsNothing);
+    });
   });
 }

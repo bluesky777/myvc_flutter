@@ -11,21 +11,28 @@ Falta justo el medio: poner la nota.
 
 ## Estado
 
+El mapa de todos los frentes está en [estado.md](estado.md); esta tabla es la de
+este.
+
 | Fase | Qué | Estado |
 |---|---|---|
 | 1 | La sesión completa: [ConfiguracionColegio](../lib/Utils/ConfiguracionColegio.dart) | **hecha** |
 | 2 | Asignaturas con filtro «Hoy» + tarjeta en el muro | **hecha** |
 | 3 | La planilla del indicador (casos A y B) | **hecha** |
-| 4 | La ficha del alumno (casos C y E) | pendiente |
-| 5 | Notas perdidas | pendiente |
-| 6 | Frases, historial, borrar nota | pendiente |
+| 4 | La ficha del alumno (casos C y E) | **hecha** |
+| 5 | Notas perdidas | **hecha** |
+| 6 | Frases, historial, borrar nota | **hecha** |
 
 Lo hecho vive en:
 
 - [ConfiguracionColegio.dart](../lib/Utils/ConfiguracionColegio.dart) — los ajustes que ya venían en /login y nadie leía.
 - [HorarioDeHoy.dart](../lib/Utils/HorarioDeHoy.dart) y [FiltroAsignaturas.dart](../lib/Utils/FiltroAsignaturas.dart) — qué clases toca hoy y con qué filtro se dejó la pantalla.
 - [LibroNotasApi.dart](../lib/Http/LibroNotasApi.dart) — el libro, y el guardado por lotes.
-- [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart) → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart).
+- [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart), con sus dos pestañas → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart) y [FichaAlumnoNotasScreen.dart](../lib/Screens/FichaAlumnoNotasScreen.dart).
+- [DefinitivasApi.dart](../lib/Http/DefinitivasApi.dart) — nivelar, y las tres trampas de las banderas.
+- [NotasPerdidasApi.dart](../lib/Http/NotasPerdidasApi.dart) y [NotasPerdidasScreen.dart](../lib/Screens/NotasPerdidasScreen.dart) — lo que llevan perdido, y arreglarlo.
+- [FrasesApi.dart](../lib/Http/FrasesApi.dart), [FraseModel.dart](../lib/Models/FraseModel.dart) y [SelectorFrases.dart](../lib/Widgets/SelectorFrases.dart) — la información para el alumno.
+- [HistorialNotaApi.dart](../lib/Http/HistorialNotaApi.dart) y [HojaDetalleNota.dart](../lib/Widgets/HojaDetalleNota.dart) — de dónde viene una nota, y borrarla.
 
 ---
 
@@ -182,11 +189,85 @@ sequenceDiagram
 
 La traspuesta: un alumno, y debajo sus unidades con sus subunidades y la nota de
 cada una, el promedio automático, la definitiva real, y los interruptores
-«manual» y «recuperada». Se edita igual y se guarda igual.
+«manual» y «recuperada».
 
 La definitiva y sus dos interruptores van por endpoints distintos y con su
 propio permiso (`profes_pueden_nivelar`, no `profes_pueden_editar_notas`):
-`DefinitivasPeriodosApi` → `actualizar`, `toggleManual`, `toggleRecuperada`.
+`definitivas_periodos/update`, `toggle-manual`, `toggle-recuperada`. Y el permiso
+se niega con un **400**, no con un 403 —`User::pueden_modificar_definitivas`
+aborta así—, de modo que ahí un 400 no es «petición mal hecha» sino «no te
+dejan».
+
+**El promedio se calcula en la app, no se espera al servidor.** La gracia de
+nivelar es ver a dónde llega el promedio *antes* de decidir la definitiva, y
+para eso no sirve un número que solo se refresca al recargar el libro. Es la
+misma cuenta que hace `notas/detailed` en SQL y la que hace el front web en
+`promedioTotal`; las casillas sin nota no suman, igual que allí, porque en SQL
+un NULL no entra en el `SUM`.
+
+#### Las tres trampas de las dos banderas
+
+`manual` y `recuperada` parecen dos interruptores independientes y no lo son: el
+backend cruza sus efectos dentro de la misma sentencia SQL. Están en
+[DefinitivasApi](../lib/Http/DefinitivasApi.dart), cada una con su prueba.
+
+```mermaid
+flowchart TD
+    U["Cambiar la nota<br/>definitivas_periodos/update"] --> M1["...y queda MANUAL<br/><i>SET nota=?, manual=true</i>"]
+    R["Marcar RECUPERADA<br/>toggle-recuperada"] --> M2["...y queda MANUAL"]
+    Q["Quitar MANUAL<br/>toggle-manual"] --> Q2["...y deja de ser RECUPERADA"]
+
+    M1 --> POR["Porque una definitiva no manual<br/>la borra y la recalcula<br/>el próximo notas/detailed"]
+    M2 --> POR
+    Q2 --> POR
+
+    style POR fill:#fff0e6,stroke:#c98a4b
+```
+
+Las tres salen de lo mismo: `notas/detailed` **borra y vuelve a insertar** la
+definitiva de todo alumno que no la tenga manual ni recuperada. Una nota
+nivelada que no estuviera marcada se perdería sola al abrir el libro, así que el
+backend no deja que esa combinación exista. La app no lo esconde: lo dice al
+guardar —«queda marcada como manual, así que el sistema ya no la
+recalculará»—, porque callarlo haría que el siguiente recálculo que no ocurre
+pareciera un fallo.
+
+Y un cuarto detalle, este de solo lectura: la columna `nfinal_desactualizada`
+vale **1 cuando la definitiva guardada es más vieja que la última nota puesta**.
+Se enseña solo si es manual, que es el único caso en que decir algo tiene
+sentido: la automática se recalcula sola.
+
+#### Guardar una nota cambia dos cosas, no una
+
+Salió al construir la fase 6 y obligó a corregir la 4. **`notas/update`
+recalcula además la definitiva del alumno**, al final del método y fuera del
+`try` —`DefinitivasDeAsignatura::recalcularPorNota`—. Respeta las manuales y
+las recuperadas, que las salta, y a las demás les escribe el promedio
+**redondeado a entero**: la consulta lo castea a `DECIMAL(4,0)`.
+
+Si la app apuntara solo la nota, la ficha enseñaría la definitiva vieja justo
+debajo del promedio nuevo, y la pestaña «Por alumno» seguiría con la de antes
+hasta la siguiente recarga. Así que `LibroDeNotas.conNotas` aplica las dos
+mitades, con la misma regla y el mismo redondeo. Tiene sus pruebas.
+
+Lo que la app **no** puede seguir es el recálculo que dispara **borrar** una
+nota: para saber el promedio nuevo haría falta saber que esa casilla ya no
+existe, y quien tiene el libro en memoria sigue teniéndola. Por eso borrar es lo
+único de la ficha que obliga a pagar otra vez la consulta cara.
+
+#### Dos formas de guardar en la misma pantalla, y es a propósito
+
+Los números —las notas de subunidad y la definitiva— se editan en local y salen
+al pulsar Guardar, igual que en la planilla y por lo mismo. Los dos
+interruptores se mandan al tocarlos, y no es incoherencia: son peticiones
+diminutas y, sobre todo, **el servidor cruza sus efectos**, así que lo que hay
+que pintar es lo que de verdad quedó, y eso solo se sabe preguntando.
+
+Al guardar van **primero las notas y después la definitiva**. La definitiva que
+se escribe es la que el docente decidió *viendo* el promedio que sale de esas
+notas; mandarla antes dejaría un instante en que la fila nivelada es más vieja
+que las notas de las que salió, que es justo lo que el backend marca como
+desactualizada.
 
 ### 1.7 El bloqueo del periodo
 
@@ -234,13 +315,59 @@ Ya vienen en la respuesta; solo hay que leerlos. Con
 [JsonBackend](../lib/Utils/JsonBackend.dart), que es lo que hay para no fiarse
 del tipo que devuelva PDO.
 
-### 1.9 Lo que no entra en la primera versión
+### 1.9 Lo que llegó después de la primera versión — fase 6
 
-- **Frases** («información para el alumno»): es su propio subsistema con su
-  catálogo. Fase 2.
-- **Historial de la nota** (doble clic en el web): útil pero no diario. Fase 2.
-- **Borrar una nota**: `DELETE notas/destroy/{id}` existe. No es diario y es
-  destructivo. Fase 2, con confirmación.
+Las tres cosas que se dejaron fuera del arranque, y cómo quedaron.
+
+**Frases** («información para el alumno»). Son dos tablas y no conviene
+confundirlas: `frases` es el catálogo del año, que escribe el colegio —más de
+cuatrocientas filas en producción—, y `frases_asignatura` es lo que se le pone a
+un alumno concreto en una asignatura y un periodo. Tres cosas que importan:
+
+- **Las que ya tiene un alumno no se piden**: vienen dentro de `notas/detailed`,
+  en `alumno.frases`. El catálogo sí es una petición aparte, y se hace **la
+  primera vez que alguien va a poner una**, no al abrir la ficha: son
+  cuatrocientas filas que la mayoría de las visitas no llega a mirar.
+- **El periodo no se puede elegir.** `FrasesAsignaturaController` escribe
+  siempre `periodo_id = $user->periodo_id`, o sea el de la barra de arriba, y no
+  mira lo que se le mande. Ofrecer elegirlo sería ofrecer algo que no se cumple.
+- **Poner devuelve la lista entera recalculada; quitar no.** El `store` contesta
+  todas las frases del alumno y el `destroy` solo la fila borrada, así que al
+  poner se pinta lo que dice el backend y al quitar se saca de la lista de aquí.
+
+**Historial de la nota.** `PUT historiales/nota-detalle {nota_id}` sobre las
+`bitacoras` que ya escribía cada `notas/update`. Se llega **manteniendo pulsada
+la nota**, en la planilla y en la ficha. En la web hay que encender antes un
+interruptor «Ver historial» para que el doble clic haga algo, y un modo que hay
+que acordarse de encender es un modo que nadie enciende.
+
+Un detalle al leerlo: la bitácora guarda las notas en columnas
+`..._value_int`, así que un 85,5 quedó registrado como 85. El historial dice
+quién y cuándo con precisión, y el cuánto con la del entero; enseñar decimales
+que nadie guardó sería inventarlos.
+
+**Borrar una nota.** `DELETE notas/destroy/{id}`, dentro de la misma hoja del
+historial y con confirmación. Vive ahí y no suelto en la lista a propósito:
+borrar es raro y destructivo, así que hay que abrir algo primero, y de paso se
+ve lo que se va a perder antes de perderlo.
+
+El diálogo dice que la casilla vuelve, porque si no, borrar da miedo de más:
+`notas/detailed` la vuelve a crear con la nota por defecto de la subunidad. Es
+la forma de deshacer «puse un 40 donde no había nada» sin dejar un cero que
+parezca una nota de verdad.
+
+Y una consecuencia que sí obliga a recargar: **el borrado recalcula la
+definitiva** del alumno. Actualizar una nota también lo hace y la app sí sabe
+seguirlo —ver «Guardar una nota cambia dos cosas»—, pero borrar no: para saber
+el promedio nuevo haría falta saber que la casilla ya no está, y el libro en
+memoria sigue teniéndola.
+
+De paso, un campo cuya nota se acaba de borrar se apaga. La fila ya no existe y
+`notas/update` sobre ella contesta un 422, así que dejarlo escribiendo sería
+prometer un guardado que no puede ocurrir.
+
+### Lo que sigue fuera a propósito
+
 - **Ausencias y tardanzas dentro del libro**: no se traen. Se enlaza a
   [AsistenciaClaseScreen](../lib/Screens/AsistenciaClaseScreen.dart), que ya
   hace eso mejor que una columna dentro de una tabla.
@@ -345,6 +472,27 @@ perdido, por grupo, asignatura, unidad y subunidad.
 - **Jerarquía plegable**, no la tabla del web: grupo → asignatura → alumno →
   sus notas perdidas, cada nivel con su recuento («4 alumnos», «7 notas»). Al
   abrir, el primer grupo desplegado y el resto cerrado.
+
+**Lo que se aprendió al construirla**, y que el plan no decía:
+
+- **El filtro por periodo corta de abajo arriba.** Quedarse solo con las notas
+  del periodo deja alumnos con cero notas, asignaturas con cero alumnos y grupos
+  con cero asignaturas. Hay que ir podando hacia arriba: una lista de cajas
+  vacías es peor que no filtrar. Es lo mismo que hace el front web en
+  `selectFiltrarPeriodo`, y tiene su prueba.
+- **Los chips se ofrecen solo de los periodos que tienen algo.** Enseñar los
+  cuatro siempre es ofrecer filtros que dejan la pantalla en blanco, y una
+  pantalla en blanco se lee como un fallo de la app. Con un solo periodo con
+  pérdidas, la fila de chips ni aparece.
+- **La foto del alumno no está donde parece.** La consulta de alumnos solo trae
+  `foto_id`; el nombre del archivo, ya resuelto al de por defecto según el sexo,
+  viene dentro de `userData`. Y cuando el alumno no tiene cuenta de usuario,
+  `Alumno::userData` devuelve `{"": null}` en vez de un objeto vacío, así que
+  hay que comprobar que sea un mapa antes de leerlo.
+- **Se guarda nota a nota, con su botón**, y no con un Guardar general como en
+  la planilla. Aquí no se pasa una columna: se corrigen una o dos notas sueltas
+  que alguien recuperó, y cada una vive en un sitio distinto del árbol. El botón
+  solo aparece cuando el campo cambió.
 
 ---
 

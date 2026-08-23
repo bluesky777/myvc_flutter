@@ -3,8 +3,11 @@ import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
+import 'package:myvc_flutter/Screens/FichaAlumnoNotasScreen.dart';
 import 'package:myvc_flutter/Screens/PlanillaScreen.dart';
+import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -17,8 +20,10 @@ import 'package:myvc_flutter/constantes.dart';
 /// el de los indicadores, que es el del trabajo diario: se acaba la clase, se
 /// entra al indicador del quiz y se pasan las treinta notas de una columna.
 ///
-/// El otro eje —un alumno y todas sus notas— es la pantalla del acudiente que
-/// pregunta, y llega después.
+/// El otro eje —un alumno y todas sus notas— es la segunda pestaña: la del
+/// acudiente que pregunta y la de nivelar al cerrar el periodo. **Las dos
+/// pestañas son la misma matriz leída por sus dos lados**, con los mismos datos
+/// ya cargados: cambiar de pestaña no pide nada al servidor.
 ///
 /// Todo cuelga de una sola llamada a `PUT notas/detailed`, que es cara: se pide
 /// al abrir, se guarda en memoria y solo se vuelve a pedir tirando hacia abajo.
@@ -100,19 +105,67 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     setState(() => libro = actual.conNotas(guardadas));
   }
 
+  /// Abre la ficha de un alumno y aplica lo que se haya guardado allí.
+  ///
+  /// Igual que con la planilla, sin volver a pedir `notas/detailed`: la ficha
+  /// devuelve las notas que entraron y, si se tocó, la definitiva tal como
+  /// quedó después de que el backend cruzara sus dos banderas.
+  Future<void> _abrirFicha(AlumnoDelLibro alumno) async {
+    final actual = libro;
+    if (actual == null) return;
+
+    final cambios = await Navigator.of(context).push<CambiosDeLaFicha>(
+      MaterialPageRoute(
+        builder: (_) => FichaAlumnoNotasScreen(libro: actual, alumno: alumno),
+      ),
+    );
+
+    if (cambios == null || !cambios.hayAlgo) return;
+
+    setState(() {
+      var nuevo = actual.conNotas(cambios.notas);
+      if (cambios.notaFinal != null) {
+        nuevo = nuevo.conNotaFinalDe(alumno.alumnoId, cambios.notaFinal!);
+      }
+      if (cambios.frases != null) {
+        nuevo = nuevo.conFrasesDe(alumno.alumnoId, cambios.frases!);
+      }
+      libro = nuevo;
+    });
+
+    // Borrar una nota es lo único que deja al libro con datos que la app no
+    // puede recalcular: el backend rehace la definitiva por su cuenta y no dice
+    // con qué valor. Ahí sí toca pagar la consulta cara.
+    if (cambios.hayQueRecargar) await _cargar();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
-      appBar: AppBar(
-        title: TituloPantalla(
-          titulo: widget.asignatura.materia,
-          subtitulo: widget.asignatura.nombreGrupo,
+    // Dos pestañas y no dos pantallas: es el mismo libro ya cargado, leído por
+    // sus dos ejes. Separarlas en pantallas obligaría a traer `notas/detailed`
+    // dos veces, y es la consulta más cara del proyecto.
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF4F5F7),
+        appBar: AppBar(
+          title: TituloPantalla(
+            titulo: widget.asignatura.materia,
+            subtitulo: widget.asignatura.nombreGrupo,
+          ),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Por ${_config.subunidad.toLowerCase()}'),
+              const Tab(text: 'Por alumno'),
+            ],
+          ),
         ),
+        body: _buildCuerpo(),
       ),
-      body: _buildCuerpo(),
     );
   }
+
+  ConfiguracionColegio get _config => ContextoAcademico.instancia.config;
 
   Widget _buildCuerpo() {
     if (cargando && libro == null) {
@@ -134,8 +187,17 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     }
 
     final actual = libro!;
-    final config = ContextoAcademico.instancia.config;
-    final aviso = config.avisoDeBloqueo;
+
+    return TabBarView(
+      children: [
+        _buildPorIndicador(actual),
+        _buildPorAlumno(actual),
+      ],
+    );
+  }
+
+  Widget _buildPorIndicador(LibroDeNotas actual) {
+    final aviso = _config.avisoDeBloqueo;
 
     return RefreshIndicator(
       onRefresh: _cargar,
@@ -148,7 +210,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
             Padding(
               padding: const EdgeInsets.all(32),
               child: Text(
-                'Esta asignatura no tiene ${config.unidades.toLowerCase()}'
+                'Esta asignatura no tiene ${_config.unidades.toLowerCase()}'
                 ' en el periodo. Se crean en la pantalla de Unidades.',
                 textAlign: TextAlign.center,
               ),
@@ -156,6 +218,87 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
           else
             ...actual.unidades.map((u) => _buildUnidad(actual, u)),
         ],
+      ),
+    );
+  }
+
+  /// El eje del alumno: cada uno con su promedio y su definitiva.
+  ///
+  /// Se enseñan los dos números y no solo la definitiva porque son cosas
+  /// distintas y el docente decide mirándolos juntos: el promedio es lo que
+  /// dan las notas y la definitiva es lo que va al boletín, que puede estar
+  /// nivelada. Cuando difieren, la marca de al lado dice por qué.
+  Widget _buildPorAlumno(LibroDeNotas actual) {
+    if (actual.alumnos.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Text(
+          'Este grupo no tiene alumnos matriculados.',
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _cargar,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
+        itemCount: actual.alumnos.length,
+        itemBuilder: (contexto, indice) =>
+            _buildFilaAlumno(actual, actual.alumnos[indice]),
+      ),
+    );
+  }
+
+  Widget _buildFilaAlumno(LibroDeNotas actual, AlumnoDelLibro alumno) {
+    final promedio = actual.promedioDe(alumno);
+    final definitiva = alumno.notaFinal?.nota;
+    final marcas = [
+      if (alumno.notaFinal?.manual ?? false) 'a mano',
+      if (alumno.notaFinal?.recuperada ?? false) 'recuperada',
+    ];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onTap: () => _abrirFicha(alumno),
+        leading: AvatarPersona(
+          nombre: alumno.nombreEnLista,
+          fotoNombre: alumno.fotoNombre,
+          radio: 20,
+        ),
+        title: Text(
+          alumno.nombreEnLista,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            // Los asistentes en cursiva, como en el front web: no están
+            // matriculados y conviene notarlo.
+            fontStyle:
+                alumno.estado == 'ASIS' ? FontStyle.italic : FontStyle.normal,
+          ),
+        ),
+        subtitle: Text(
+          'Promedio ${promedio.toStringAsFixed(1)}'
+          '${marcas.isEmpty ? '' : ' · ${marcas.join(' · ')}'}',
+          style: const TextStyle(fontSize: 11),
+        ),
+        trailing: Text(
+          definitiva == null ? '—' : notaEscrita(definitiva),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _config.esPerdida(definitiva)
+                ? Colors.red[700]
+                : Colors.black87,
+          ),
+        ),
       ),
     );
   }
@@ -191,7 +334,6 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
   }
 
   Widget _buildUnidad(LibroDeNotas actual, UnidadModel unidad) {
-    final config = ContextoAcademico.instancia.config;
     final numero = actual.unidades.indexOf(unidad) + 1;
 
     return Container(
@@ -226,7 +368,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
               child: Text(
-                'Sin ${config.subunidades.toLowerCase()}',
+                'Sin ${_config.subunidades.toLowerCase()}',
                 style: const TextStyle(fontSize: 12, color: Colors.black54),
               ),
             )

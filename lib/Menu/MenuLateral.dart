@@ -108,6 +108,16 @@ class MenuLateral extends StatelessWidget {
       ruta: '/notas',
     ));
 
+    // Debajo de Notas porque es la misma tarea vista al revés: allí se ponen
+    // y aquí se repasa lo que quedó por debajo de la mínima. No es diaria
+    // —se mira al acercarse el cierre— pero se llega desde el mismo sitio.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.trending_down,
+      texto: 'Notas perdidas',
+      ruta: '/notas-perdidas',
+    ));
+
     opciones.add(_opcion(
       context,
       icono: Icons.menu_book_outlined,
@@ -125,6 +135,16 @@ class MenuLateral extends StatelessWidget {
       icono: Icons.gavel_outlined,
       texto: 'Disciplina',
       ruta: '/disciplina',
+    ));
+
+    // La última, y para todo el personal aunque casi todo lo que hay dentro
+    // solo lo pueda mover un administrador: la mitad de su gracia es explicarle
+    // a un docente por qué hoy no puede editar notas, o qué significa un 85.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.settings_outlined,
+      texto: 'Configuración',
+      ruta: '/configuracion',
     ));
 
     return opciones;

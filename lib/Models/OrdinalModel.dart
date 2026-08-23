@@ -1,4 +1,5 @@
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Utils/TextoPlano.dart';
 
 /// Un ordinal del manual de convivencia: el artículo que tipifica una
 /// situación.
@@ -63,27 +64,7 @@ class OrdinalModel {
   /// Busca en el número y en la descripción a la vez, sin acentos ni
   /// mayúsculas: el docente tanto escribe «uniforme» como «tipo I», y no tiene
   /// por qué saber cuál de los dos campos es.
-  bool coincideCon(String busqueda) {
-    final aguja = _plano(busqueda);
-    if (aguja.isEmpty) return true;
-
-    return _plano(rotulo).contains(aguja);
-  }
-
-  /// El texto sin acentos, en minúsculas y con los espacios apretados.
-  ///
-  /// Sin quitar acentos, buscar «situacion» no encontraría «Situación», que es
-  /// justo como está escrito el manual.
-  static String _plano(String texto) {
-    var plano = texto.toLowerCase().trim();
-
-    const acentos = {
-      'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
-    };
-    acentos.forEach((con, sin) => plano = plano.replaceAll(con, sin));
-
-    return plano.replaceAll(RegExp(r'\s+'), ' ');
-  }
+  bool coincideCon(String busqueda) => coincideConBusqueda(rotulo, busqueda);
 
   @override
   String toString() => '(OrdinalModel) $rotulo';

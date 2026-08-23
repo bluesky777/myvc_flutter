@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -59,6 +60,10 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
   /// Las que no entraron en el último guardado, por id de alumno.
   Set<int> _fallidas = {};
 
+  /// Los alumnos cuya nota se borró aquí, por su índice en la lista. Su campo
+  /// se apaga: la fila ya no está y `notas/update` sobre ella contesta 422.
+  final Set<int> _borradas = {};
+
   bool guardando = false;
   int _hechas = 0;
 
@@ -77,7 +82,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     for (final alumno in _alumnos) {
       final nota = alumno.notaDe(widget.subunidad.id)?.nota;
       _original.add(nota);
-      _campos.add(TextEditingController(text: _escrito(nota)));
+      _campos.add(TextEditingController(text: notaEscrita(nota)));
       _focos.add(FocusNode());
     }
   }
@@ -99,27 +104,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     if (mounted) super.setState(fn);
   }
 
-  /// Cómo se escribe una nota en el campo: sin decimales cuando es redonda.
-  ///
-  /// Las notas llegan como decimales del servidor —un 85 puede venir como
-  /// '85.0'—, y un campo que dice «85.0» invita a borrar el punto antes de
-  /// escribir.
-  static String _escrito(double? nota) {
-    if (nota == null) return '';
-    return nota == nota.roundToDouble()
-        ? nota.toStringAsFixed(0)
-        : nota.toString();
-  }
-
   /// Lo que hay escrito ahora en ese campo, o null si está vacío.
-  ///
-  /// Null cuando no se entiende lo tecleado, y entonces no se manda: es mejor
-  /// dejarla sin guardar y que se vea, que mandar un número inventado.
-  double? _leido(int indice) {
-    final crudo = _campos[indice].text.trim().replaceAll(',', '.');
-    if (crudo.isEmpty) return null;
-    return double.tryParse(crudo);
-  }
+  double? _leido(int indice) => notaLeida(_campos[indice].text);
 
   /// Las notas que cambiaron y se pueden guardar.
   ///
@@ -158,7 +144,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
 
     setState(() {
       for (var i = 0; i < _campos.length; i++) {
-        _campos[i].text = _escrito(valor);
+        _campos[i].text = notaEscrita(valor);
       }
     });
   }
@@ -259,6 +245,38 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
         fotoNombre: alumno.fotoNombre,
       ),
     );
+  }
+
+  /// Abre el detalle de la nota de ese alumno: quién la tocó, cuándo, y
+  /// borrarla.
+  ///
+  /// Manteniendo pulsado el número, que es donde está la nota. El toque corto
+  /// sobre la foto y el nombre ya lleva a la asistencia, así que el gesto largo
+  /// va sobre la otra mitad de la fila y los dos no se pisan.
+  Future<void> _abrirDetalle(int indice) async {
+    final alumno = _alumnos[indice];
+    final nota = alumno.notaDe(widget.subunidad.id);
+    if (nota == null || nota.id == 0) return;
+
+    final borrada = await mostrarDetalleDeNota(
+      context,
+      notaId: nota.id,
+      titulo: alumno.nombreEnLista,
+      subtitulo: widget.subunidad.definicion,
+    );
+
+    if (!borrada) return;
+
+    setState(() {
+      // La casilla vuelve al recargar el libro con la nota por defecto de la
+      // subunidad; hasta entonces queda vacía y sin nada que mandar.
+      _campos[indice].text = '';
+      _original[indice] = null;
+      _borradas.add(indice);
+    });
+
+    _avisar('Nota borrada. Recarga el libro para que la casilla se vuelva a'
+        ' crear.');
   }
 
   @override
@@ -370,7 +388,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     // Sin fila en `notas` no hay nada que actualizar. No debería pasar
     // —`notas/detailed` las crea al abrir el libro— pero si pasa, más vale un
     // campo apagado con su motivo que uno que acepta lo que se pierde.
-    final sinFila = (alumno.notaDe(widget.subunidad.id)?.id ?? 0) == 0;
+    final sinFila = (alumno.notaDe(widget.subunidad.id)?.id ?? 0) == 0 ||
+        _borradas.contains(indice);
     final editable = _puedeEditar && !sinFila && !guardando;
 
     return Container(
@@ -443,40 +462,46 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            child: TextField(
-              controller: _campos[indice],
-              focusNode: _focos[indice],
-              enabled: editable,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              // El último cierra el teclado; los demás bajan al siguiente.
-              textInputAction: indice == _alumnos.length - 1
-                  ? TextInputAction.done
-                  : TextInputAction.next,
-              onSubmitted: (_) => _siguiente(indice),
-              // Al enfocar, el contenido queda seleccionado: se escribe encima
-              // sin tener que borrar.
-              onTap: () => _campos[indice].selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: _campos[indice].text.length,
-              ),
-              onChanged: (_) => setState(() {}),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: perdida ? Colors.red[700] : Colors.black87,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: sinFila ? '—' : null,
-                border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                filled: perdida,
-                fillColor: perdida ? const Color(0xFFFFEBEE) : null,
+          // Mantener pulsado el número abre el detalle de la nota: quién la
+          // tocó, cuándo, y borrarla.
+          GestureDetector(
+            onLongPress: sinFila ? null : () => _abrirDetalle(indice),
+            child: SizedBox(
+              width: 64,
+              child: TextField(
+                controller: _campos[indice],
+                focusNode: _focos[indice],
+                enabled: editable,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+                // El último cierra el teclado; los demás bajan al siguiente.
+                textInputAction: indice == _alumnos.length - 1
+                    ? TextInputAction.done
+                    : TextInputAction.next,
+                onSubmitted: (_) => _siguiente(indice),
+                // Al enfocar, el contenido queda seleccionado: se escribe
+                // encima sin tener que borrar.
+                onTap: () => _campos[indice].selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _campos[indice].text.length,
+                ),
+                onChanged: (_) => setState(() {}),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: perdida ? Colors.red[700] : Colors.black87,
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: sinFila ? '—' : null,
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  filled: perdida,
+                  fillColor: perdida ? const Color(0xFFFFEBEE) : null,
+                ),
               ),
             ),
           ),
