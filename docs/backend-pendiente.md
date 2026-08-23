@@ -152,6 +152,63 @@ pide el token con Guzzle, que ya está en el `composer.json`.
 
 ---
 
+## Cómo arrancar la sesión que hace esto
+
+Se trabaja **desde dentro del backend** —`cd ~/DESARROLLOS/8myvc && claude`—, no
+desde la sesión de Flutter: ese repo tiene su `CLAUDE.md`, su
+`docs/migracion/ESTADO-ACTUAL.md` y su docker con las pruebas, y hacerlo desde
+fuera se salta sus convenciones.
+
+El texto de arranque, para pegar tal cual:
+
+```
+Vengo de la app (myvc_flutter). Joseth autorizó el 24 ago 2026 hacer aquí tres
+cosas que la app necesita y no se pueden resolver desde el lado Flutter.
+
+Lee primero, en este orden:
+  1. docs/migracion/ESTADO-ACTUAL.md (de este repo)
+  2. ~/DESARROLLOS/myvc_flutter/docs/backend-pendiente.md — los tres contratos,
+     con la evidencia que los justifica y lo ya investigado
+
+Hazlas en este orden, cada una con sus tests y actualizando ESTADO-ACTUAL.md en
+el mismo commit:
+
+1. PUT notas/lote. Lo que ahorra NO son las peticiones: cada notas/update llama
+   a recalcularPorNota -> recalcular(), que agrega TODAS las notas de la
+   asignatura y el periodo y sólo después se queda con un alumno. Una columna de
+   30 notas son 30 agregados de la asignatura entera. El lote debe recalcular
+   UNA vez por par (asignatura, periodo), al final y fuera de la transacción de
+   escritura. Ya comprobado: pueden_editar_notas() acepta un array de periodos y
+   los cruza con AND, así que el permiso se comprueba una sola vez y antes de
+   escribir nada; la bitácora debe ser idéntica a la de putUpdate, y
+   bitacoras.historial_id admite null (putUpdate lo resuelve con un cross join y
+   por eso revienta con 422 si el usuario no tiene historial).
+
+2. GET disciplina/mis-fichas/{alumno_id?} con la guarda que YA existe,
+   boletin.propio:sin-paz-y-salvo. Debe devolver {alumno, config, ordinales} con
+   `alumno` en la MISMA forma que un elemento de PUT disciplina/alumnos: así la
+   app reutiliza AlumnoDisciplinaModel y FichaDisciplinaScreen tal cual, en modo
+   lectura, y esa pantalla ya está escrita y probada. Sin `grupos` ni
+   `descripciones_typeahead`: eso es del editor y aquí no se escribe.
+
+3. Las tres piezas de notificaciones (endpoint de temas con HMAC, comando
+   notificaciones:enviar, entrada de cron). El paso 0 está CERRADO y las cuatro
+   comprobaciones salieron bien el 24 ago: el hosting sale por HTTPS a
+   oauth2.googleapis.com y fcm.googleapis.com, ejecuta artisan (Laravel 13.26.1,
+   PHP 8.4.24 en /usr/local/bin/php) y el cron dispara. El plan entero, con el
+   porqué de cada decisión, está en ~/DESARROLLOS/myvc_flutter/docs/notificaciones.md.
+   El cron NO es uno: cada colegio es un directorio con su .env y su base, y son
+   dieciséis, así que va un bucle secuencial con $HOME.
+
+Y una restricción de despliegue que hay que dejar anotada donde toque: `app/` es
+copia por colegio y myvc_flutter es UNA sola app para los dieciséis. La app no
+puede llamar a notas/lote hasta que esté desplegado en todos, o gastaría un 404
+antes de caer al método viejo. Avísame cuando esté desplegado y hago el lado
+Flutter.
+```
+
+---
+
 ## Y una cosa que NO se pide
 
 `NotasController::putSubunidad` tiene el SQL roto —`'.$sub_id.'` dentro de una
