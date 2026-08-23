@@ -12,7 +12,7 @@ Están ordenadas por lo que dan a cambio de lo que cuestan.
 flowchart LR
     A["1 · PUT notas/lote<br/>quita carga al servidor"] --> A1["30 peticiones → 1<br/>y 30 agregados → 1"]
     B["2 · GET disciplina/mis-fichas<br/>desbloquea una pantalla"] --> B1["el alumno y el acudiente<br/>ven sus situaciones"]
-    C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 comprobado ✓</i>"]
+    C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 cerrado ✓</i>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
     style B fill:#fff0e6,stroke:#c98a4b
@@ -138,10 +138,13 @@ El plan entero, con el porqué de cada decisión, está en
 
 **El paso 0 ya está comprobado, el 24 de agosto de 2026, y sale bien:** el
 hosting deja salir por HTTPS a `oauth2.googleapis.com` y a `fcm.googleapis.com`
-—los dos contestan— y ejecuta artisan (Laravel 13.26.1). O sea que el push es
-viable y no hace falta el plan B. Falta solo confirmar que se puede programar el
-cron, y ese cron **no es uno, es un bucle sobre los dieciséis colegios**: cada
-uno es un directorio con su `.env` y su base. El detalle, en
+—los dos contestan— y ejecuta artisan (Laravel 13.26.1). Y **el cron dispara**, comprobado con
+una tarea de prueba que corrió cuatro veces. O sea que el push es viable, no
+hace falta el plan B y **no queda nada por comprobar**: lo que falta es escribir
+las tres piezas.
+
+Ese cron **no es uno, es un bucle sobre los dieciséis colegios**: cada uno es un
+directorio con su `.env` y su base. El detalle, en
 [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 
 No hace falta añadir el SDK de Google: se firma un JWT con `openssl_sign` y se

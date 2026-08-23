@@ -194,7 +194,7 @@ sí:
 |---|---|---|
 | ¿Sale el servidor por HTTPS a Google? | `curl` a `oauth2.googleapis.com/token` y a `fcm.googleapis.com` | **sí** — los dos contestan `404` |
 | ¿Ejecuta artisan? | `php artisan --version` | **sí** — Laravel 13.26.1 |
-| ¿Puede programar cron? | `crontab -l` | **probablemente** — el comando existe y no protesta, pero sin tareas puestas eso no lo demuestra |
+| ¿Puede programar cron? | una tarea de prueba de cada minuto | **sí** — programada por consola, visible en cPanel y **ejecutada**: cuatro pasadas en el log |
 | ¿Con qué PHP? | `which php` · `php -v` | `/usr/local/bin/php`, **PHP 8.4.24** — el mismo del shell, y la versión que pide el backend |
 
 Sobre el `404`: **es la respuesta correcta para esta comprobación.** Un 404 es
@@ -203,18 +203,25 @@ que se quería saber. Lo que delataría un bloqueo sería que se quedara colgado
 un `Could not resolve host`, o un `Connection refused`. Pedir esas URLs sin
 credenciales y sin el método correcto **tiene** que dar 404.
 
-Queda confirmar el cron de verdad, que es programar una tarea de un minuto y
-mirar si corre:
+**Las cuatro son que sí, así que este plan sale entero y el plan B del final
+queda descartado como camino principal.**
+
+El cron se confirmó programando una tarea de cada minuto y mirando que corriera
+—que es lo único que lo demuestra: aparecer en la lista de cPanel solo prueba
+que está apuntada—:
 
 ```
 ( crontab -l 2>/dev/null; echo 'MAILTO=""'; \
   echo '* * * * * /usr/local/bin/php -v >> $HOME/cron-prueba.log 2>&1' ) | crontab -
 ```
 
-Sin `crontab -e`, que abre `vi` y es donde se atasca uno. Si a los dos minutos
-`~/cron-prueba.log` tiene la versión de PHP repetida, cron corre. Si el archivo
-no existe, hay que mirar en cPanel → *Advanced* → **Cron Jobs**, porque algunos
-hostings solo lo permiten por la interfaz.
+Sin `crontab -e`, que abre `vi` y es donde se atasca uno. A los dos minutos el
+log tenía la versión de PHP cuatro veces. Después se borra la tarea, que es más
+cómodo con el enlace *Delete* de cPanel → *Advanced* → **Cron Jobs**.
+
+De paso quedó comprobado que **las dos vías valen**: una tarea metida por
+consola con `crontab -` aparece en la interfaz de cPanel y se puede editar y
+borrar desde ahí.
 
 **La ruta absoluta del binario importa** —y por eso se midió—: cron arranca con
 un `PATH` mínimo y casi nunca encuentra `php` a secas. Es el fallo clásico de
@@ -301,6 +308,12 @@ el contenido. Cuando llegue un aviso de muro a un teléfono real, los otros
 cuatro son la misma cañería con otra consulta.
 
 ## Si el hosting no deja salir
+
+> **Descartado como camino principal el 24 de agosto de 2026**, porque se
+> comprobó que sí deja: ver «Lo comprobado en el servidor». Se conserva escrito
+> por lo que dice el último párrafo —los puntos rojos siguen valiendo la pena
+> aunque el push funcione— y porque el día que un colegio nuevo tenga otro
+> hosting, esta es la salida.
 
 Plan B, sin push y sin sondeo: **«novedades al abrir»**. Un solo endpoint
 barato, `GET novedades`, que devuelve **contadores** desde la última vez que ese

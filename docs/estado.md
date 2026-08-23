@@ -16,7 +16,7 @@ flowchart LR
     D --> D6["fase 6 ⛔<br/>falta endpoint"]
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
-    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 ✓<br/>falta el trabajo<br/>en el backend"]
+    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -53,10 +53,13 @@ desbloquearlos, y está redactado para poder decidir sin volver a investigar.
   `dis_procesos` llevan `auth.personal`, que a un alumno le responde 403. El
   detalle, en [disciplina.md](disciplina.md) → «Lo que queda pendiente».
 - **Notificaciones.** Cuelgan de tres cosas del servidor: un endpoint de temas,
-  un comando de artisan y una entrada de cron. **El paso 0 ya está comprobado y
-  sale bien**: el hosting deja salir por HTTPS a Google y ejecuta artisan
-  (Laravel 13.26.1). Falta confirmar el cron programando una tarea de prueba.
-  Ver [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
+  un comando de artisan y una entrada de cron. **El paso 0 está cerrado y las
+  cuatro comprobaciones salieron bien** (24 ago 2026): el hosting sale por HTTPS
+  a Google, ejecuta artisan (Laravel 13.26.1 sobre PHP 8.4.24 en
+  `/usr/local/bin/php`) y **el cron dispara**, comprobado con una tarea de
+  prueba. El plan B sin push queda descartado. Lo que falta es escribir las tres
+  piezas, y eso es trabajo de backend. Ver
+  [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 - **Un `PUT notas/lote`.** No existe y es la mejora de carga más grande de todo
   el plan: no solo convierte treinta peticiones en una, sino **treinta agregados
   de la asignatura entera en uno**. Cada `notas/update` recalcula la definitiva,
