@@ -136,7 +136,7 @@ El plan entero, con el porqué de cada decisión, está en
    `dis_procesos`, `publicaciones`—, una marca de por dónde iba, y el envío.
 3. **La línea de cron**: `*/15 * * * * php artisan notificaciones:enviar`.
 
-**El paso 0 ya está comprobado, el 24 de agosto de 2026, y sale bien:** el
+**El paso 0 ya está comprobado, el 23 de agosto de 2026, y sale bien:** el
 hosting deja salir por HTTPS a `oauth2.googleapis.com` y a `fcm.googleapis.com`
 —los dos contestan— y ejecuta artisan (Laravel 13.26.1). Y **el cron dispara**, comprobado con
 una tarea de prueba que corrió cuatro veces. O sea que el push es viable, no
@@ -162,7 +162,7 @@ fuera se salta sus convenciones.
 El texto de arranque, para pegar tal cual:
 
 ```
-Vengo de la app (myvc_flutter). Joseth autorizó el 24 ago 2026 hacer aquí tres
+Vengo de la app (myvc_flutter). Joseth autorizó el 23 ago 2026 hacer aquí tres
 cosas que la app necesita y no se pueden resolver desde el lado Flutter.
 
 Lee primero, en este orden:
@@ -193,7 +193,7 @@ el mismo commit:
 
 3. Las tres piezas de notificaciones (endpoint de temas con HMAC, comando
    notificaciones:enviar, entrada de cron). El paso 0 está CERRADO y las cuatro
-   comprobaciones salieron bien el 24 ago: el hosting sale por HTTPS a
+   comprobaciones salieron bien el 23 ago: el hosting sale por HTTPS a
    oauth2.googleapis.com y fcm.googleapis.com, ejecuta artisan (Laravel 13.26.1,
    PHP 8.4.24 en /usr/local/bin/php) y el cron dispara. El plan entero, con el
    porqué de cada decisión, está en ~/DESARROLLOS/myvc_flutter/docs/notificaciones.md.

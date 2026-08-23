@@ -185,9 +185,9 @@ con `openssl_sign` y se pide el token con Guzzle —que ya está en el
 `composer.json`—, y el token se cachea la hora que dura. Una dependencia menos
 que mantener en un hosting donde actualizar es incómodo.
 
-### Lo comprobado en el servidor — 24 de agosto de 2026
+### Lo comprobado en el servidor — 23 de agosto de 2026
 
-El paso 0 del plan, hecho. Dos de las tres respuestas están, y las dos son que
+El paso 0 del plan, cerrado. Las cuatro respuestas están, y las cuatro son que
 sí:
 
 | Pregunta | Comprobación | Resultado |
@@ -293,7 +293,7 @@ Y lo demás:
 
 ```mermaid
 flowchart LR
-    V["0 · Verificar el hosting ✓<br/>salidas HTTPS y artisan<br/><i>falta confirmar cron</i>"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
+    V["0 · Verificar el hosting ✓<br/>salidas HTTPS, artisan<br/>y cron — cerrado"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
     B --> A["2 · App<br/>Firebase + permiso<br/>+ suscripción"]
     A --> T["3 · Un solo tipo<br/>(Muro)<br/>de punta a punta"]
     T --> P["4 · Pantalla de<br/>preferencias"]
@@ -301,15 +301,15 @@ flowchart LR
     R --> D["6 · Política y<br/>ficha de Play"]
 ```
 
-El paso 0 está hecho salvo la confirmación del cron; ver «Lo comprobado en el
-servidor». El paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
+El paso 0 está cerrado, el cron incluido; ver «Lo comprobado en el servidor». El
+paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
 datos de nadie— porque el objetivo de esa fase es probar la tubería entera, no
 el contenido. Cuando llegue un aviso de muro a un teléfono real, los otros
 cuatro son la misma cañería con otra consulta.
 
 ## Si el hosting no deja salir
 
-> **Descartado como camino principal el 24 de agosto de 2026**, porque se
+> **Descartado como camino principal el 23 de agosto de 2026**, porque se
 > comprobó que sí deja: ver «Lo comprobado en el servidor». Se conserva escrito
 > por lo que dice el último párrafo —los puntos rojos siguen valiendo la pena
 > aunque el push funcione— y porque el día que un colegio nuevo tenga otro

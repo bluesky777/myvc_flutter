@@ -5,8 +5,9 @@ actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
 **Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
-4, 5 y 6 de notas y la pantalla de configuración— está en la rama
-`feat/notas`, sin fusionar todavía a `main`.
+4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`,
+y con ello **no queda trabajo pendiente que dependa solo de la app**: los tres
+frentes abiertos esperan al backend.
 
 ## Los frentes abiertos
 
@@ -38,9 +39,9 @@ Cuando se desbloquee alguno, el orden es:
 
 1. **Disciplina, la pantalla del alumno y del acudiente**, en cuanto exista
    `GET disciplina/mis-fichas`. Es corta: la ficha del alumno en modo lectura.
-2. **Notificaciones**, empezando por el paso 0 —comprobar con un `curl` que el
-   hosting deje salir a Google— y por el tipo más tonto, el del muro, para
-   probar la tubería entera antes de llenarla.
+2. **Notificaciones**, en cuanto estén las tres piezas del servidor. El paso 0
+   ya está cerrado, así que se entra directo por el tipo más tonto, el del
+   muro, para probar la tubería entera antes de llenarla.
 
 ## Lo que está bloqueado, y por qué
 
@@ -54,7 +55,7 @@ desbloquearlos, y está redactado para poder decidir sin volver a investigar.
   detalle, en [disciplina.md](disciplina.md) → «Lo que queda pendiente».
 - **Notificaciones.** Cuelgan de tres cosas del servidor: un endpoint de temas,
   un comando de artisan y una entrada de cron. **El paso 0 está cerrado y las
-  cuatro comprobaciones salieron bien** (24 ago 2026): el hosting sale por HTTPS
+  cuatro comprobaciones salieron bien** (23 ago 2026): el hosting sale por HTTPS
   a Google, ejecuta artisan (Laravel 13.26.1 sobre PHP 8.4.24 en
   `/usr/local/bin/php`) y **el cron dispara**, comprobado con una tarea de
   prueba. El plan B sin push queda descartado. Lo que falta es escribir las tres
@@ -128,7 +129,11 @@ podría llamarlos.
 
 ### Notificaciones — [notificaciones.md](notificaciones.md)
 
-Solo el plan, y bloqueado. El paso 0 es un `curl` desde el servidor.
+Solo el plan, y bloqueado en el servidor. **El paso 0 está cerrado**: el
+hosting sale a Google, ejecuta artisan y el cron dispara. Falta escribir el
+endpoint de temas, el comando `notificaciones:enviar` y la línea de cron; el
+lado Flutter —Firebase, permiso y suscripción— no se puede empezar sin el
+endpoint que entrega los temas.
 
 ### Publicación en Google Play
 
