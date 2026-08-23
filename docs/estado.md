@@ -13,7 +13,7 @@ flowchart LR
     D["Disciplina<br/>docs/disciplina.md"] --> D5["fases 1–5 ✓"]
     D --> D6["fase 6 ⛔<br/>falta endpoint"]
     N["Notas<br/>docs/notas.md"] --> N4["fases 1–4 ✓"]
-    N --> N56["fases 5 y 6 ○"]
+    N --> N56["fase 6 ○"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["sin empezar ○"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["⛔ necesita<br/>trabajo en el backend"]
 
@@ -29,10 +29,8 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-1. **Notas, fase 5 — notas perdidas.** El backend está listo y no hay que
-   tocarlo. Ver [notas.md §4](notas.md).
-2. **Notas, fase 6 — frases, historial y borrar nota.** Ver [notas.md §1.9](notas.md).
-3. **La pantalla de configuración.** El plan entero está en
+1. **Notas, fase 6 — frases, historial y borrar nota.** Ver [notas.md §1.9](notas.md).
+2. **La pantalla de configuración.** El plan entero está en
    [configuracion.md](configuracion.md); no se ha escrito una línea de código.
 
 ## Lo que está bloqueado, y por qué
@@ -76,7 +74,7 @@ flowchart LR
 | 2 | Asignaturas con filtro «Hoy» + tarjeta en el muro | hecha |
 | 3 | La planilla del indicador (casos A y B) | hecha |
 | 4 | La ficha del alumno (casos C y E) | hecha |
-| 5 | Notas perdidas | **pendiente** |
+| 5 | Notas perdidas | hecha |
 | 6 | Frases, historial, borrar nota | **pendiente** |
 
 El camino en la app: menú ▸ Notas → [NotasScreen](../lib/Screens/NotasScreen.dart)
@@ -87,6 +85,10 @@ dos pestañas sobre el mismo libro ya cargado:
   trabajo diario: una casilla y los treinta alumnos.
 - **Por alumno** → [FichaAlumnoNotasScreen](../lib/Screens/FichaAlumnoNotasScreen.dart),
   el acudiente que pregunta y el nivelar de fin de periodo.
+
+Y aparte, menú ▸ Notas perdidas →
+[NotasPerdidasScreen](../lib/Screens/NotasPerdidasScreen.dart): el árbol de lo
+que llevan por debajo de la mínima, del año entero y en una sola petición.
 
 ### Disciplina — [disciplina.md](disciplina.md)
 

@@ -108,6 +108,16 @@ class MenuLateral extends StatelessWidget {
       ruta: '/notas',
     ));
 
+    // Debajo de Notas porque es la misma tarea vista al revés: allí se ponen
+    // y aquí se repasa lo que quedó por debajo de la mínima. No es diaria
+    // —se mira al acercarse el cierre— pero se llega desde el mismo sitio.
+    opciones.add(_opcion(
+      context,
+      icono: Icons.trending_down,
+      texto: 'Notas perdidas',
+      ruta: '/notas-perdidas',
+    ));
+
     opciones.add(_opcion(
       context,
       icono: Icons.menu_book_outlined,

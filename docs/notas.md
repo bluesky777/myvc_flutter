@@ -20,7 +20,7 @@ este.
 | 2 | Asignaturas con filtro «Hoy» + tarjeta en el muro | **hecha** |
 | 3 | La planilla del indicador (casos A y B) | **hecha** |
 | 4 | La ficha del alumno (casos C y E) | **hecha** |
-| 5 | Notas perdidas | pendiente |
+| 5 | Notas perdidas | **hecha** |
 | 6 | Frases, historial, borrar nota | pendiente |
 
 Lo hecho vive en:
@@ -30,6 +30,7 @@ Lo hecho vive en:
 - [LibroNotasApi.dart](../lib/Http/LibroNotasApi.dart) — el libro, y el guardado por lotes.
 - [NotasScreen.dart](../lib/Screens/NotasScreen.dart) → [LibroAsignaturaScreen.dart](../lib/Screens/LibroAsignaturaScreen.dart), con sus dos pestañas → [PlanillaScreen.dart](../lib/Screens/PlanillaScreen.dart) y [FichaAlumnoNotasScreen.dart](../lib/Screens/FichaAlumnoNotasScreen.dart).
 - [DefinitivasApi.dart](../lib/Http/DefinitivasApi.dart) — nivelar, y las tres trampas de las banderas.
+- [NotasPerdidasApi.dart](../lib/Http/NotasPerdidasApi.dart) y [NotasPerdidasScreen.dart](../lib/Screens/NotasPerdidasScreen.dart) — lo que llevan perdido, y arreglarlo.
 
 ---
 
@@ -405,6 +406,27 @@ perdido, por grupo, asignatura, unidad y subunidad.
 - **Jerarquía plegable**, no la tabla del web: grupo → asignatura → alumno →
   sus notas perdidas, cada nivel con su recuento («4 alumnos», «7 notas»). Al
   abrir, el primer grupo desplegado y el resto cerrado.
+
+**Lo que se aprendió al construirla**, y que el plan no decía:
+
+- **El filtro por periodo corta de abajo arriba.** Quedarse solo con las notas
+  del periodo deja alumnos con cero notas, asignaturas con cero alumnos y grupos
+  con cero asignaturas. Hay que ir podando hacia arriba: una lista de cajas
+  vacías es peor que no filtrar. Es lo mismo que hace el front web en
+  `selectFiltrarPeriodo`, y tiene su prueba.
+- **Los chips se ofrecen solo de los periodos que tienen algo.** Enseñar los
+  cuatro siempre es ofrecer filtros que dejan la pantalla en blanco, y una
+  pantalla en blanco se lee como un fallo de la app. Con un solo periodo con
+  pérdidas, la fila de chips ni aparece.
+- **La foto del alumno no está donde parece.** La consulta de alumnos solo trae
+  `foto_id`; el nombre del archivo, ya resuelto al de por defecto según el sexo,
+  viene dentro de `userData`. Y cuando el alumno no tiene cuenta de usuario,
+  `Alumno::userData` devuelve `{"": null}` en vez de un objeto vacío, así que
+  hay que comprobar que sea un mapa antes de leerlo.
+- **Se guarda nota a nota, con su botón**, y no con un Guardar general como en
+  la planilla. Aquí no se pasa una columna: se corrigen una o dos notas sueltas
+  que alguien recuperó, y cada una vive en un sitio distinto del árbol. El botón
+  solo aparece cuando el campo cambió.
 
 ---
 
