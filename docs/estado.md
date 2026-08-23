@@ -4,7 +4,9 @@ El mapa para retomar el trabajo sin que nadie tenga que contar nada. Se
 actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
-**Última actualización: 23 de agosto de 2026.**
+**Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
+4, 5 y 6 de notas y la pantalla de configuración— está en la rama
+`feat/notas`, sin fusionar todavía a `main`.
 
 ## Los frentes abiertos
 

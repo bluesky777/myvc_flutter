@@ -248,8 +248,9 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
       // además la definitiva del alumno, respetando las manuales y las
       // recuperadas. Si aquí no se apuntara, la ficha seguiría enseñando la de
       // antes justo debajo del promedio nuevo.
-      // Y no cuando el docente está poniendo él la definitiva: en ese caso la
-      // suya manda y además la deja manual, así que pintar el promedio
+      //
+      // Salvo cuando el docente está poniendo él la definitiva: entonces la
+      // suya manda —y además la deja manual—, así que pintar el promedio
       // recalculado un instante antes solo haría parpadear el campo.
       final definitiva = _notaFinal;
       if (resultado.guardadas > 0 && definitiva != null && !tocaDefinitiva) {
