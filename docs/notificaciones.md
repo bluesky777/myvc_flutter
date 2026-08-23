@@ -75,8 +75,23 @@ El tipo va como sufijo, y ahí está la clave de las preferencias:
 
 ```
 a_9f3c1e…_notas        a_9f3c1e…_asistencia      a_9f3c1e…_disciplina
-colegio_muro           colegio_avisos
+c_4b2d7a…_muro         c_4b2d7a…_avisos
 ```
+
+### Los temas del colegio también llevan prefijo
+
+Los dos últimos no son de un alumno sino de todo el colegio, y aun así **no
+pueden llamarse `colegio_muro` a secas**. El motivo es que los temas viven en el
+proyecto de Firebase, y **el proyecto es uno solo para los dieciséis colegios**:
+es una sola app, un solo `com.micolevirtual.app`, un solo `google-services.json`.
+Un tema llamado `colegio_muro` sería el mismo tema para los dieciséis, y una
+publicación del muro de un colegio le llegaría a las familias de los otros
+quince.
+
+Así que llevan el identificador del colegio, derivado igual que el del alumno
+—`c_` + HMAC del identificador del colegio— y entregado por el mismo endpoint de
+temas. No es secreto como el del alumno —qué colegio es no lo esconde nadie—,
+pero derivarlo igual evita tener dos formas de nombrar temas.
 
 ### Las preferencias viven en el teléfono
 
@@ -254,6 +269,45 @@ Dos detalles más de cPanel: algunos no dejan bajar de los 15 minutos, que da
 igual porque es la frecuencia del plan; y por defecto mandan **un correo por
 ejecución**, que se apaga con `MAILTO=""` en la primera línea del crontab o
 redirigiendo la salida.
+
+### En Firebase — la consola, y lo que cuesta
+
+**No cuesta nada.** Cloud Messaging figura como «sin coste» en los dos planes de
+Firebase, el gratuito (Spark) y el de pago (Blaze), y **el gratuito no pide
+método de pago**. No hay que activar facturación, no hay tarjeta que meter y no
+hay tramo a partir del cual empiece a cobrar: enviar por temas es gratis tenga
+el tema tres dispositivos o tres mil. Lo que sí se paga está fuera de Firebase y
+ya estaba contado: los USD 25 de una vez de Play Console y, **solo si se quiere
+iOS**, los USD 99 al año del programa de desarrollador de Apple, que es de donde
+sale la clave de APNs.
+
+**Un proyecto, no dieciséis.** Es una sola app con un solo identificador,
+`com.micolevirtual.app`, así que hay un proyecto de Firebase y un
+`google-services.json`. Lo que separa a un colegio de otro es el nombre del
+tema, no el proyecto — ver «Los temas del colegio también llevan prefijo».
+
+Los pasos, en orden:
+
+1. **Crear el proyecto** en `console.firebase.google.com`. Google Analytics se
+   puede desactivar: es gratis, pero no lo usamos y añade condiciones que no
+   hacen falta.
+2. **Registrar la app de Android** con el paquete `com.micolevirtual.app`, y
+   bajar el `google-services.json` a `android/app/`. La huella SHA-1 que pide es
+   opcional aquí —hace falta para inicio de sesión con Google, no para FCM—,
+   pero ya está medida en [publicacion-play.md](publicacion-play.md) §8.
+3. **La cuenta de servicio**, que es lo que usa el servidor para firmar el
+   token: *Configuración del proyecto ▸ Cuentas de servicio ▸ Generar nueva
+   clave privada*. Sale un JSON. Ese archivo va **fuera del repositorio** y en
+   los dieciséis directorios de colegio hace falta el mismo, porque el proyecto
+   de Firebase es uno.
+4. **iOS, solo cuando haya cuenta de Apple.** Una clave de APNs (`.p8`) subida a
+   Firebase y la app de iOS registrada con su *bundle id*. Sin eso, en iOS no
+   llega nada; en Android sí, y por eso este plan sale primero en Android.
+
+El `google-services.json` **no es un secreto** —va dentro del APK, cualquiera lo
+puede sacar— y por eso no protege nada por sí mismo: lo que protege es que el
+nombre del tema no se pueda adivinar. El JSON de la cuenta de servicio **sí** es
+un secreto, y ese es el que nunca sale del servidor.
 
 ### En la app
 
