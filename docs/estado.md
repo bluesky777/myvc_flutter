@@ -44,6 +44,10 @@ Cuando se desbloquee alguno, el orden es:
 
 ## Lo que está bloqueado, y por qué
 
+Los tres, con su contrato ya escrito y la evidencia que lo justifica, están en
+**[backend-pendiente.md](backend-pendiente.md)**: es lo que hay que aprobar para
+desbloquearlos, y está redactado para poder decidir sin volver a investigar.
+
 - **Disciplina, la pantalla del alumno y del acudiente.** Hace falta un
   `GET disciplina/mis-fichas` que hoy no existe: todas las rutas que tocan
   `dis_procesos` llevan `auth.personal`, que a un alumno le responde 403. El
@@ -53,9 +57,11 @@ Cuando se desbloquee alguno, el orden es:
   es de solo lectura para esta app. Antes de nada hay que comprobar que el
   hosting deje salir por HTTPS a Google. Ver
   [notificaciones.md](notificaciones.md).
-- **Un `PUT notas/lote`.** No existe y sería la mejora de carga más grande de
-  todo el plan de notas: convertiría treinta peticiones en una. Anotado en
-  [notas.md §1.5](notas.md).
+- **Un `PUT notas/lote`.** No existe y es la mejora de carga más grande de todo
+  el plan: no solo convierte treinta peticiones en una, sino **treinta agregados
+  de la asignatura entera en uno**. Cada `notas/update` recalcula la definitiva,
+  y ese recálculo agrega toda la asignatura antes de quedarse con un alumno. El
+  contrato, en [backend-pendiente.md](backend-pendiente.md).
 
 ## Cómo se trabaja aquí
 
