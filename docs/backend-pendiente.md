@@ -209,6 +209,55 @@ Flutter.
 
 ---
 
+## Lo que la app necesita que NO se rompa
+
+Esto no es una petición: es lo contrario. Son endpoints que **hoy funcionan** y
+que alguien está a punto de estrechar por seguridad, con razón. Queda escrito
+para que el recorte se haga sabiendo qué se rompe.
+
+### `GET contratos` — el mínimo para alumno y acudiente
+
+Lo trajo la sesión del front web el 23 de agosto de 2026: `contratos` responde
+200 a un alumno y a un acudiente, y devuelve de cada docente el documento de
+identidad, el barrio, la dirección de casa, el fijo y el móvil. Se va a recortar
+por rol, y hace bien.
+
+**De los treinta y tantos campos, esta app lee cuatro:**
+
+    profesor_id · nombre_completo · foto_nombre · user_id
+
+Se parsea en tres sitios y en ninguno más: `traerDocentesDelColegio()` de
+[UnidadesApi](../lib/Http/UnidadesApi.dart), `traerDocentesPorProfesor()` de
+[NotasApi](../lib/Http/NotasApi.dart) y
+[AsistenciaClaseScreen](../lib/Screens/AsistenciaClaseScreen.dart).
+`traerNombresPorUsuario()` no es una cuarta llamada: reindexa la misma respuesta
+por `user_id`, porque `added_by` y `created_by` guardan la numeración de usuario
+y no la de profesor.
+
+**Con rol de alumno o acudiente se llama desde una sola pantalla**, `/mis-notas`,
+y lo único que hace con ella es poner **el nombre del titular del grupo** —el
+boletín trae `titular_id` y no su nombre—. Así que ahí bastan `profesor_id` y
+`nombre_completo`; `foto_nombre` solo si algún día se quiere el avatar.
+
+**Ninguno de los campos sensibles se pinta en ninguna pantalla**, comprobado con
+un `grep` sobre todo `lib/`. No hay una decisión previa de enseñar el móvil del
+profesor que haya que respetar: quitar esos campos es quitar lo que nadie lee.
+
+**Lo que sí rompería es cerrarlo con un 403.** No tumba la pantalla —el mapa de
+docentes va en un `catch` y se queda vacío— pero deja a todo alumno y acudiente
+sin el nombre de su titular, en los dieciséis colegios a la vez.
+
+### `GET perfiles/username/{u}` — hoy no limita a cuáles
+
+Medido por el front web el mismo día: contesta 200 **a cualquier docente para
+cualquier usuario**; la guarda solo estrecha a alumnos y acudientes. No lo
+llamamos, así que no nos afecta hoy. Queda anotado porque el día que haya una
+pantalla de personal que consulte fichas, no hay nada que limite **cuáles** — y
+eso hay que decidirlo antes de escribirla, no después.
+
+`GET perfiles/usernames`, que devuelve los 2.355 nombres de usuario del colegio
+a cualquiera con sesión, **esta app no lo llama**: cero referencias en `lib/`.
+
 ## Y una cosa que NO se pide
 
 `NotasController::putSubunidad` tiene el SQL roto —`'.$sub_id.'` dentro de una

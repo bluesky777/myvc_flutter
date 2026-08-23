@@ -47,7 +47,10 @@ Cuando se desbloquee alguno, el orden es:
 
 Los tres, con su contrato ya escrito y la evidencia que lo justifica, están en
 **[backend-pendiente.md](backend-pendiente.md)**: es lo que hay que aprobar para
-desbloquearlos, y está redactado para poder decidir sin volver a investigar.
+desbloquearlos, y está redactado para poder decidir sin volver a investigar. Ahí
+está también lo contrario —**«Lo que la app necesita que NO se rompa»**—, con el
+mínimo de `contratos` para alumno y acudiente, que el backend está a punto de
+recortar por seguridad.
 
 - **Disciplina, la pantalla del alumno y del acudiente.** Hace falta un
   `GET disciplina/mis-fichas` que hoy no existe: todas las rutas que tocan
