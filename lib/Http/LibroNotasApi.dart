@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/FraseModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 /// El libro de notas de una asignatura en el periodo: sus unidades y sus
 /// alumnos con la nota de cada casilla.
@@ -488,6 +489,58 @@ Future<LibroDeNotas> traerLibroDe(
   );
 }
 
+/// La definitiva de un alumno tal como quedó después de guardar un lote.
+///
+/// La calcula el mismo recalculador que la escribe, así que usarla es dejar de
+/// tener dos verdades: hoy la app repinta la suya y el servidor la suya, y sólo
+/// coinciden mientras nadie toque una nota manual o recuperada.
+class DefinitivaDelLote {
+  final int alumnoId;
+  final int asignaturaId;
+  final int periodoId;
+
+  /// Null cuando el alumno todavía no tiene fila de definitiva. No es cero:
+  /// «sin definitiva» y «definitiva de cero» se pintan distinto.
+  final double? nota;
+
+  final bool manual;
+  final bool recuperada;
+
+  const DefinitivaDelLote({
+    required this.alumnoId,
+    required this.asignaturaId,
+    required this.periodoId,
+    this.nota,
+    this.manual = false,
+    this.recuperada = false,
+  });
+
+  factory DefinitivaDelLote.fromJson(Map<String, dynamic> json) {
+    return DefinitivaDelLote(
+      alumnoId: enteroO(json['alumno_id']),
+      asignaturaId: enteroO(json['asignatura_id']),
+      periodoId: enteroO(json['periodo_id']),
+      nota: _decimal(json['nota']),
+      manual: _bandera(json['manual']),
+      recuperada: _bandera(json['recuperada']),
+    );
+  }
+}
+
+/// Un sí o un no del servidor, venga como venga.
+///
+/// El resto del archivo lo resuelve con `entero(x) == 1`, y aquí no vale: los
+/// listados se arman con `DB::select` y sus columnas llegan como número o como
+/// cadena según decida PDO, pero **`notas/lote` construye su respuesta en PHP
+/// con un `(bool)` delante**, así que `manual` llega como `true` de verdad y
+/// `entero(true)` no es 1. Aceptar las tres formas es más barato que acordarse
+/// de cuál es cuál.
+
+bool _bandera(dynamic valor) {
+  if (valor is bool) return valor;
+  return entero(valor) == 1;
+}
+
 /// Una nota que el docente cambió y todavía no ha salido de la app.
 class NotaPendiente {
   final int notaId;
@@ -512,10 +565,18 @@ class ResultadoGuardado {
   /// El primer motivo que dio el servidor, para explicarlo una vez y no treinta.
   final String? motivo;
 
+  /// Las definitivas tal como quedaron, cuando el servidor las devuelve.
+  ///
+  /// Sólo llega por `notas/lote`: guardando de una en una nadie las dice, y la
+  /// app se queda con la suya calculada. Vacía, entonces, no significa «no hay
+  /// definitivas» sino «este camino no las trae».
+  final List<DefinitivaDelLote> definitivas;
+
   const ResultadoGuardado({
     required this.guardadas,
     this.fallidas = const [],
     this.motivo,
+    this.definitivas = const [],
   });
 
   bool get todoBien => fallidas.isEmpty;
@@ -541,8 +602,17 @@ Future<ResultadoGuardado> guardarNotas(
   Server server,
   List<NotaPendiente> cambios, {
   void Function(int hechas, int total)? avance,
+  /// Por qué camino. Lo decide el interruptor, y se puede forzar **sólo desde
+  /// las pruebas**: con una constante a secas, el camino nuevo no se podría
+  /// probar hasta el día que se encienda, que es justo cuando ya no hay margen
+  /// para descubrir que no funciona.
+  bool? enLote,
 }) async {
   if (cambios.isEmpty) return const ResultadoGuardado(guardadas: 0);
+
+  if (enLote ?? Interruptores.notasLote) {
+    return _guardarEnLote(server, cambios, avance: avance);
+  }
 
   final fallidas = <NotaPendiente>[];
   var guardadas = 0;
@@ -583,6 +653,105 @@ Future<ResultadoGuardado> guardarNotas(
     guardadas: guardadas,
     fallidas: fallidas,
     motivo: motivo,
+  );
+}
+
+/// Cuántas notas van en cada petición de `notas/lote`.
+///
+/// **El servidor corta en 200, y pasarse no recorta: aborta el lote entero con
+/// un 422.** O sea que el troceo no es una optimización, es la condición para
+/// que esto funcione — y el propio controlador dejó escrito que daba por hecha
+/// una capacidad de partir en tandas que el cliente **no tenía**.
+///
+/// Cien y no doscientas, a propósito: deja margen para que alguien baje el tope
+/// del servidor sin rompernos. Una columna de un grupo grande son cuarenta y
+/// cinco notas, así que en la práctica sigue siendo una sola petición y el
+/// margen no cuesta nada.
+const int _porLote = 100;
+
+/// Guarda todas las notas con `PUT notas/lote`, en tandas.
+///
+/// Devuelve lo mismo que el camino de una en una —incluidas las fallidas con su
+/// motivo— para que la pantalla no tenga que saber por cuál de los dos fue.
+Future<ResultadoGuardado> _guardarEnLote(
+  Server server,
+  List<NotaPendiente> cambios, {
+  void Function(int hechas, int total)? avance,
+}) async {
+  final porId = {for (final cambio in cambios) cambio.notaId: cambio};
+
+  var guardadas = 0;
+  final fallidas = <NotaPendiente>[];
+  final definitivas = <DefinitivaDelLote>[];
+  String? motivo;
+  var procesadas = 0;
+
+  // En tandas y en fila, no a la vez: el lote existe para quitarle trabajo al
+  // servidor, y mandarle tres tandas en paralelo sería devolvérselo por otro
+  // lado. Con cien por tanda, una columna cabe en una.
+  for (var desde = 0; desde < cambios.length; desde += _porLote) {
+    final hasta =
+        desde + _porLote < cambios.length ? desde + _porLote : cambios.length;
+    final tanda = cambios.sublist(desde, hasta);
+
+    try {
+      final res = await server.put('/notas/lote', {
+        'notas': [
+          for (final cambio in tanda)
+            {'id': cambio.notaId, 'nota': cambio.nota},
+        ],
+      });
+
+      if (res.statusCode >= 300) {
+        // Una tanda rechazada entera —el 422 del tope, un periodo cerrado, un
+        // 404 si esto se encendió antes de tiempo— no puede llevarse por
+        // delante lo que ya entró en las anteriores: sus notas se marcan como
+        // fallidas y el docente las reintenta sin volver a teclear.
+        fallidas.addAll(tanda);
+        motivo ??= res.statusCode == 400 || res.statusCode == 403
+            ? 'No tienes permiso para editar notas en este periodo.'
+            : motivoDeRechazo(
+                res.body,
+                respaldo: 'El servidor respondió ${res.statusCode}.',
+              );
+        procesadas += tanda.length;
+        avance?.call(procesadas, cambios.length);
+        continue;
+      }
+
+      final cuerpo = jsonDecode(res.body);
+      if (cuerpo is! Map) throw const FormatException('respuesta inesperada');
+
+      guardadas += enteroO(cuerpo['guardadas']);
+
+      for (final cruda in (cuerpo['fallidas'] as List? ?? const [])) {
+        if (cruda is! Map) continue;
+        // Sin id no se puede saber de quién era, así que no se puede marcar la
+        // casilla; el motivo sí sirve y se conserva.
+        final suya = porId[entero(cruda['id'])];
+        if (suya != null) fallidas.add(suya);
+        motivo ??= texto(cruda['motivo']);
+      }
+
+      for (final cruda in (cuerpo['definitivas'] as List? ?? const [])) {
+        if (cruda is! Map) continue;
+        definitivas
+            .add(DefinitivaDelLote.fromJson(Map<String, dynamic>.from(cruda)));
+      }
+    } catch (err) {
+      fallidas.addAll(tanda);
+      motivo ??= 'No se pudo guardar: $err';
+    }
+
+    procesadas += tanda.length;
+    avance?.call(procesadas, cambios.length);
+  }
+
+  return ResultadoGuardado(
+    guardadas: guardadas,
+    fallidas: fallidas,
+    motivo: motivo,
+    definitivas: definitivas,
   );
 }
 
