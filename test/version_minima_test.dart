@@ -174,7 +174,7 @@ void main() {
       expect(find.textContaining('la 12'), findsOneWidget);
     });
 
-    testWidgets('no tiene salida: ni «ahora no» ni «continuar»',
+    testWidgets('no deja seguir usando este colegio: ni «ahora no» ni «continuar»',
         (WidgetTester tester) async {
       // Es lo que la hace servir para algo: si con la versión vieja se puede
       // seguir entrando, el endpoint viejo sigue haciendo falta.
@@ -186,7 +186,23 @@ void main() {
 
       expect(find.textContaining('Ahora no'), findsNothing);
       expect(find.textContaining('Continuar'), findsNothing);
-      expect(find.textContaining('Cerrar'), findsNothing);
+    });
+
+    testWidgets('pero sí deja salir a otro colegio, que no es lo mismo',
+        (WidgetTester tester) async {
+      // La distinción es el fondo de esta pantalla: no se puede seguir usando
+      // el colegio que bloquea —eso haría inútil el bloqueo— pero sí se puede
+      // salir de él. Quien tiene sesión guardada del colegio atrasado ni
+      // siquiera llega al login, así que sin este botón se queda encerrado por
+      // un colegio que ni siquiera es el que quería usar. Y la tienda no le
+      // sirve si la versión que ese colegio exige todavía no ha salido.
+      VersionMinima.nuestra = 11;
+      VersionMinima.tomarDe({'version_minima_app': 12});
+
+      await tester.pumpWidget(const MaterialApp(home: ActualizarScreen()));
+      await tester.pump();
+
+      expect(find.textContaining('otro colegio'), findsOneWidget);
     });
   });
 }

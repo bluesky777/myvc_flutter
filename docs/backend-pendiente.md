@@ -213,6 +213,14 @@ adivinarlo sería justo lo contrario de lo que hace fiable esta comprobación.
 **La defensa contra el dedazo está en el servidor**: ese número se sube una vez
 por retirada, con la misma ceremonia que un despliegue.
 
+**Y esto es lo que hay que leer antes de tocar ese número, no después:** un `99`
+donde iba un `9` **deja al colegio entero fuera de la app hasta que alguien
+vuelva a tocar el servidor**. Desde el teléfono no hay arreglo —la app hace lo
+que se le dijo— y la única salida que ofrece la pantalla es salir e ingresar en
+**otro** colegio, que solo le sirve a quien tenga cuenta en dos. No es un motivo
+para no hacerlo; es el motivo por el que ese campo no se edita a la ligera ni se
+copia de un colegio a otro sin mirar.
+
 **La pantalla de entrar es la única que se deja pasar bloqueado**, y no es una
 rendija. Son dieciséis colegios con una sola app y **el número lo pone cada
 colegio en su servidor**, así que quien tenga cuenta en dos puede estar

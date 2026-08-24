@@ -1,18 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Lo que se ve cuando esta versión de la app ya no la acepta el colegio.
 ///
-/// **No tiene salida, y es a propósito.** Un aviso que se puede cerrar no
-/// permite retirar nada: si con la versión vieja se puede seguir entrando, el
-/// endpoint viejo sigue haciendo falta y no se ha comprado nada. Lo decidió
-/// Joseth el 23 de agosto de 2026 sabiendo eso. Ver
+/// **No deja seguir usando este colegio, y es a propósito.** Un aviso que se
+/// puede cerrar no permite retirar nada: si con la versión vieja se puede
+/// seguir entrando, el endpoint viejo sigue haciendo falta y no se ha comprado
+/// nada. Lo decidió Joseth el 23 de agosto de 2026 sabiendo eso. Ver
 /// [VersionMinima] y docs/backend-pendiente.md §4.
 ///
-/// Lo que sí tiene es el motivo escrito. Alguien a quien se le cierra la app
+/// **Pero sí deja salir a otro colegio, que no es lo mismo.** Son dieciséis
+/// colegios con una sola app y el número lo pone cada uno en su servidor: quien
+/// tiene cuenta en dos puede estar bloqueado por el que va atrasado y no por el
+/// otro. Y el bloqueo se decide al arrancar, así que con sesión guardada del
+/// colegio atrasado no se llega ni al login. Sin ese botón, la única oferta era
+/// la tienda —que no sirve de nada si la versión que ese colegio exige todavía
+/// no ha salido, o si el número está mal puesto—, y la persona se quedaba
+/// encerrada por un colegio que ni siquiera es el que quería usar.
+///
+/// Lo demás que tiene es el motivo escrito. Alguien a quien se le cierra la app
 /// de golpe merece saber que no es un error suyo ni un fallo de red, y qué
 /// hacer para volver a entrar.
 class ActualizarScreen extends StatelessWidget {
@@ -72,7 +82,23 @@ class ActualizarScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, color: Colors.black54),
                   ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
+                // La única salida, y no es una rendija: son dieciséis colegios
+                // con una sola app y el número lo pone cada uno, así que quien
+                // tiene cuenta en dos puede estar bloqueado por el que va
+                // atrasado y no por el otro. Sin esto se quedaba encerrado por
+                // un colegio que ni siquiera es el que quería usar.
+                //
+                // No debilita el bloqueo: salir borra la sesión y el número
+                // —`logout()` llama a VersionMinima.limpiar()—, y entrar lo
+                // vuelve a leer. Si el colegio nuevo también lo exige, la
+                // puerta se cierra otra vez.
+                TextButton(
+                  onPressed: () => _cambiarDeColegio(context),
+                  child: const Text('¿Tienes cuenta en otro colegio? '
+                      'Salir e ingresar en otro'),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   _laLetraPequena(),
                   textAlign: TextAlign.center,
@@ -96,6 +122,21 @@ class ActualizarScreen extends StatelessWidget {
 
     return 'Tienes la versión $nuestra y el colegio pide la $exigida o una '
         'más nueva.';
+  }
+
+  /// Cierra la sesión de este colegio y vuelve a la pantalla de entrar.
+  ///
+  /// Hace falta porque el bloqueo se decide al arrancar: quien tiene sesión
+  /// guardada del colegio atrasado ni siquiera llega al login, y sin esto la
+  /// pantalla de actualizar solo le ofrecía la tienda —que no sirve de nada si
+  /// la versión que el colegio exige todavía no ha salido, o si el número está
+  /// mal puesto—.
+  Future<void> _cambiarDeColegio(BuildContext context) async {
+    await LoginController().logout();
+
+    if (!context.mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 
   Future<void> _abrir(BuildContext context, String url) async {
