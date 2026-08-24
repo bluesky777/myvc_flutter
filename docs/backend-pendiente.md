@@ -198,6 +198,7 @@ decir *por qué* hay que actualizar. Sin él, la app pone un texto genérico.
 | El campo no es un entero positivo | **entra** |
 | No hay red, o el servidor no contesta | **entra** |
 | Ya está dentro trabajando | **no se le echa**; se comprueba al arrancar y al entrar |
+| Está bloqueado y tiene cuenta en otro colegio | **puede llegar al login**; ver abajo |
 
 **Las cuatro filas de «entra» son la parte importante del contrato, no la letra
 pequeña.** Un campo mal puesto en el `.env` de un colegio no puede dejar a ese
@@ -211,6 +212,15 @@ bloquea**, y tiene que hacerlo: desde el cliente no hay forma de distinguir un
 adivinarlo sería justo lo contrario de lo que hace fiable esta comprobación.
 **La defensa contra el dedazo está en el servidor**: ese número se sube una vez
 por retirada, con la misma ceremonia que un despliegue.
+
+**La pantalla de entrar es la única que se deja pasar bloqueado**, y no es una
+rendija. Son dieciséis colegios con una sola app y **el número lo pone cada
+colegio en su servidor**, así que quien tenga cuenta en dos puede estar
+bloqueado por el que va atrasado y no por el otro; sin esa salida no le quedaría
+forma de llegar a la pantalla de entrar. No debilita nada, porque entrar vuelve
+a leer el número: si el colegio nuevo también lo exige, la puerta se cierra otra
+vez en cuanto se sale del login. Y al cerrar sesión el número se olvida, por lo
+mismo: es del colegio del que se sale, no de este teléfono.
 
 **Y bloquear de verdad, no sugerir.** Un aviso que se puede cerrar no permite
 retirar nada, que es justo para lo que existe esto: si la versión vieja puede

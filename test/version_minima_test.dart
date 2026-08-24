@@ -96,25 +96,45 @@ void main() {
     Route<dynamic> ruta(String nombre) =>
         RouteGenerator.generateRoute(RouteSettings(name: nombre));
 
-    testWidgets('con la versión corta, cualquier ruta lleva a actualizar',
-        (WidgetTester tester) async {
-      // La comprobación vive en el router y no en cada pantalla: una puerta
-      // que se mira en veinte sitios es una puerta que un día se queda sin
-      // mirar en uno.
+    // Se mira el nombre de la ruta que sale y no se monta la pantalla: montar
+    // '/login' o '/muro' de verdad pide los blocs y la sesión, y lo que se
+    // comprueba aquí es la puerta, no lo que hay detrás. Que detrás está la
+    // pantalla de actualizar lo fija la prueba de más abajo.
+    test('con la versión corta, se desvía a actualizar', () {
       VersionMinima.nuestra = 11;
       VersionMinima.tomarDe({'version_minima_app': 12});
 
-      for (final nombre in ['/muro', '/notas', '/usuarios', '/login', '/']) {
-        await tester.pumpWidget(MaterialApp(home: Builder(
-          builder: (_) => Navigator(
-            onGenerateRoute: (_) => ruta(nombre),
-          ),
-        )));
-        await tester.pump();
-
-        expect(find.byType(ActualizarScreen), findsOneWidget,
-            reason: '$nombre tenía que llevar a la pantalla de actualizar');
+      for (final nombre in ['/muro', '/notas', '/usuarios', '/disciplina']) {
+        expect(ruta(nombre).settings.name, '/actualizar',
+            reason: '$nombre tenía que desviarse');
       }
+    });
+
+    test('el login se deja pasar, para quien tiene dos colegios', () {
+      // Son dieciséis colegios y una sola app, y el número lo pone cada
+      // colegio en su servidor. Sin esta salida, a quien le bloquee el primero
+      // no le quedaría forma de llegar a la pantalla de entrar para usar el
+      // segundo, que sí acepta su versión. No debilita nada: entrar vuelve a
+      // leer el número, y si el colegio nuevo también lo exige, la puerta se
+      // cierra otra vez en cuanto se sale del login.
+      VersionMinima.nuestra = 11;
+      VersionMinima.tomarDe({'version_minima_app': 12});
+
+      expect(ruta('/login').settings.name, '/login');
+      expect(ruta('/').settings.name, '/');
+    });
+
+    testWidgets('y lo que se monta al desviar es la pantalla de actualizar',
+        (WidgetTester tester) async {
+      VersionMinima.nuestra = 11;
+      VersionMinima.tomarDe({'version_minima_app': 12});
+
+      await tester.pumpWidget(MaterialApp(home: Builder(
+        builder: (_) => Navigator(onGenerateRoute: (_) => ruta('/muro')),
+      )));
+      await tester.pump();
+
+      expect(find.byType(ActualizarScreen), findsOneWidget);
     });
 
     testWidgets('con la versión al día no estorba', (WidgetTester tester) async {

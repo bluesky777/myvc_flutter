@@ -28,7 +28,17 @@ class RouteGenerator {
     // Y no bloquea por sospecha: `bloquea` solo dice que sí cuando el servidor
     // mandó un número que se entiende y esta app se queda corta. Ver
     // VersionMinima.
-    if (VersionMinima.bloquea && settings.name != '/actualizar') {
+    //
+    // El login se deja pasar, y no es una rendija: son dieciséis colegios con
+    // una sola app, y el número lo pone cada colegio en su servidor. Sin esto,
+    // a quien tenga cuenta en dos y le bloquee el primero no le quedaría forma
+    // de llegar a la pantalla de entrar para usar el segundo, que sí acepta su
+    // versión. No debilita nada, porque entrar vuelve a leer el número: si el
+    // colegio nuevo también lo exige, la puerta se cierra otra vez al salir
+    // del login.
+    const fuera = ['/actualizar', '/login', '/'];
+
+    if (VersionMinima.bloquea && !fuera.contains(settings.name)) {
       return MaterialPageRoute(
         settings: const RouteSettings(name: '/actualizar'),
         builder: (context) => const ActualizarScreen(),

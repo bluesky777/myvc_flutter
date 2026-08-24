@@ -289,6 +289,10 @@ class LoginController implements LoginBaseController {
     // tenía el anterior.
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
+    // La versión mínima es de un colegio, no de este teléfono: son dieciséis
+    // colegios y una sola app, y el que se queda es el número del colegio del
+    // que se acaba de salir.
+    VersionMinima.limpiar();
 
     // Manda la casilla: si este dispositivo es de uno, cerrar sesión no tiene
     // por qué hacerle reescribir las credenciales. En el equipo compartido se
