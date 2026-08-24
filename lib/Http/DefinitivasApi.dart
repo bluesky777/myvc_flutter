@@ -1,4 +1,5 @@
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Las definitivas del periodo: la nota consolidada de un alumno en una
 /// asignatura, la que acaba en el boletín.
@@ -95,6 +96,15 @@ Future<String?> _pedir(
     // es profesor ni superusuario.
     if (res.statusCode == 400 || res.statusCode == 403) {
       return 'No tienes permiso para nivelar en este periodo.';
+    }
+    // 422 es la escala, y el motivo viene en el cuerpo. Aquí duele más que en
+    // la planilla: nivelar se hace con el periodo cerrándose encima, y quedarse
+    // mirando un número sin saber qué nota sí cabe es perder la tarde.
+    if (res.statusCode == 422) {
+      return motivoDeRechazo(
+        res.body,
+        respaldo: 'La nota no cabe en la escala del año.',
+      );
     }
     if (res.statusCode >= 300) {
       return 'El servidor respondió ${res.statusCode}.';

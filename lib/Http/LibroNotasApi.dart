@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/FraseModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// El libro de notas de una asignatura en el periodo: sus unidades y sus
 /// alumnos con la nota de cada casilla.
@@ -587,9 +588,16 @@ Future<ResultadoGuardado> guardarNotas(
 
 /// Guarda una nota. Devuelve null si entró, o el motivo si no.
 ///
-/// `PUT notas/update/{id}`. El backend comprueba el permiso contra el periodo
-/// de esa nota concreta y responde 400 cuando el periodo está cerrado, así que
-/// ese código no es «petición mal hecha»: es «no te dejan».
+/// `PUT notas/update/{id}`. Dos códigos significan cosas distintas y ninguno
+/// es «petición mal hecha»:
+///
+/// - **400** es el permiso: el backend lo comprueba contra el periodo de esa
+///   nota concreta y responde 400 cuando está cerrado. O sea, «no te dejan».
+/// - **422 es la escala**, desde que se valida en el servidor. Y ahí el motivo
+///   viaja en el cuerpo —«la nota 105 no cabe en la escala del año»—, que es lo
+///   único que le dice al docente qué escribir en su lugar. Antes se tiraba y
+///   se le enseñaba «El servidor respondió 422.», que no es un mensaje: es un
+///   número y una llamada al colegio.
 Future<String?> guardarNota(
   Server server, {
   required int notaId,
@@ -600,6 +608,12 @@ Future<String?> guardarNota(
 
     if (res.statusCode == 400 || res.statusCode == 403) {
       return 'No tienes permiso para editar notas en este periodo.';
+    }
+    if (res.statusCode == 422) {
+      return motivoDeRechazo(
+        res.body,
+        respaldo: 'La nota no cabe en la escala del año.',
+      );
     }
     if (res.statusCode >= 300) {
       return 'El servidor respondió ${res.statusCode}.';
