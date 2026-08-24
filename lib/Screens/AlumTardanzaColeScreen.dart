@@ -16,6 +16,7 @@ import 'package:myvc_flutter/Widgets/FondoFalta.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
@@ -147,7 +148,7 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
         // Tirar hacia abajo recarga: es la única forma de volver a pedir la
         // lista ahora que ya no se rehace sola en cada toque.
         return RefreshIndicator(
-          onRefresh: _recargarAlumnos,
+          onRefresh: Analitica.refresco('tardanzas-colegio', _recargarAlumnos),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: _buildListaGrupos(),

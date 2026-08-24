@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "276868175794",
+    "project_id": "micolevirtual-mobile",
+    "storage_bucket": "micolevirtual-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276868175794:android:2c59ff7c9718aed38df6ab",
+        "android_client_info": {
+          "package_name": "com.micolevirtual.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdssKFpiAmb8MPQAAaIkbx5npcGFhGltE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

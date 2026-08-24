@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// La planilla de un indicador: los alumnos del grupo y su nota en esa casilla.
 ///
@@ -78,6 +79,14 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
   @override
   void initState() {
     super.initState();
+
+    // La pregunta que motivó la analítica: ¿de verdad quitó el portátil de en
+    // medio? La hora es la que la contesta —abrirla a las 9 de la mañana es
+    // usarla en clase; a las 10 de la noche es corregir en casa, que ya se
+    // hacía en la web—. Ver docs/analitica.md.
+    Analitica.evento('planilla_abierta', datos: {
+      'hora_del_dia': DateTime.now().hour,
+    });
 
     for (final alumno in _alumnos) {
       final nota = alumno.notaDe(widget.subunidad.id)?.nota;
@@ -167,6 +176,13 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
       cambios,
       avance: (hechas, _) => setState(() => _hechas = hechas),
     );
+
+    // Cuántas de golpe, no cuáles ni de quién: pasar una columna entera desde
+    // el móvil es lo que hay que saber, y para eso basta el número.
+    Analitica.evento('notas_guardadas', datos: {
+      'cuantas': resultado.guardadas,
+      'fallidas': resultado.fallidas.length,
+    });
 
     // Lo que entró pasa a ser lo nuevo «original»: así, si el docente vuelve a
     // pulsar Guardar, no se remanda lo que ya está puesto.

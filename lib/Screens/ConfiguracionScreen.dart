@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Cómo está configurado el colegio: se ve todo y se edita lo que cambia a
 /// menudo.
@@ -178,7 +179,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
     ];
 
     return RefreshIndicator(
-      onRefresh: _cargar,
+      onRefresh: Analitica.refresco('configuracion', _cargar),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [

@@ -5,6 +5,15 @@
 # avisa de nada, solo tapa a las que sí importan.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # `build/` es salida, no código nuestro. Al entrar Firebase apareció ahí
+    # `build/ios/SourcePackages/` —la copia que hace Swift Package Manager de
+    # las fuentes del paquete—, y con ella 135 avisos de estilo sobre código de
+    # terceros. Un `flutter analyze` que nunca está limpio deja de servir para
+    # lo que sirve, que es enterarse de lo que sí es nuestro.
+    - build/**
+
 linter:
   rules:
     # Esta app se escribió con constructores sin `const`. Ponerlos todos es un

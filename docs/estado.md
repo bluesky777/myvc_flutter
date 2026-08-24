@@ -6,8 +6,9 @@ miente, es un fallo tan real como una prueba en rojo.
 
 **Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
 4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`.
-Los tres frentes viejos esperan al backend; el que sí se puede empezar ya es
-**[la analítica](analitica.md)**, que no depende del servidor para nada.
+Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
+hecha** —Firebase, los eventos y las dos propiedades— y lo que le queda no es
+código: la política de privacidad y el formulario de seguridad de datos.
 
 ## Los frentes abiertos
 
@@ -18,24 +19,25 @@ flowchart LR
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
-    A["Analítica<br/>docs/analitica.md"] --> A0["○ plan escrito<br/>se puede empezar ya"]
+    A["Analítica<br/>docs/analitica.md"] --> A0["código hecho ✓<br/>falta la política<br/>de privacidad"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#ffe6e6,stroke:#c04b4b
     style P0 fill:#ffe6e6,stroke:#c04b4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
-    style A0 fill:#fff9e6,stroke:#c9a94b
+    style A0 fill:#ffe6e6,stroke:#c04b4b
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
 
 ## Qué sigue, en orden
 
-**Lo único que se puede hacer sin esperar a nadie es
-[la analítica](analitica.md)**: pasos 2 a 5 de ese documento, que son de app y
-no tocan el servidor. El paso 1 es de consola —crear el proyecto de Firebase,
-el mismo de las notificaciones— y ese no lo puede hacer una sesión de código.
+**Lo único pendiente que no espera a nadie es el texto legal de la analítica**:
+la política de privacidad dice hoy, en dos sitios, que la app no incorpora
+herramientas de analítica, y eso dejó de ser verdad. Hay que reescribirlo antes
+de enviar la app a revisión, no después. Ver
+[analitica.md](analitica.md) → «Lo que hay que cambiar fuera del código».
 
 Los otros dos frentes —la pantalla de disciplina del alumno y las
 notificaciones— necesitan trabajo en el backend, y el backend es de solo lectura
@@ -145,13 +147,18 @@ endpoint que entrega los temas.
 
 ### Analítica — [analitica.md](analitica.md)
 
-Solo el plan, y **no está bloqueado por nadie**: es lo único del mapa que se
-puede empezar hoy. Google Analytics de Firebase, gratis, con dos reglas que
-mandan sobre el resto —ni un dato que identifique a una persona, y el
-identificador de publicidad apagado y su permiso fuera del *bundle*—. Antes de
-empezar hay que arreglar los ocho `push` sin `RouteSettings`, o las pantallas
-que más interesan saldrían como huecos. Y la política de privacidad **dice hoy
-en dos sitios que no hay analítica**: eso se reescribe en el mismo paso.
+**El código está hecho.** Google Analytics de Firebase sobre el proyecto
+`micolevirtual-mobile`, gratis, con dos reglas que mandan sobre el resto: ni un
+dato que identifique a una persona, y el identificador de publicidad apagado con
+su permiso fuera del *bundle* —para que [publicacion-play.md](publicacion-play.md)
+§9 pueda seguir diciendo «solo `INTERNET`»—. Mide **solo en Android**: en
+Firebase hay una sola app registrada, y en web la analítica es un no-op para no
+romper un sitio donde la app hoy funciona.
+
+Todo pasa por [Analitica](../lib/Utils/Analitica.dart), que es el único archivo
+que habla con Firebase y donde vive la regla de qué se puede mandar.
+
+Lo que falta es **el texto legal**, y bloquea la publicación en Play.
 
 ### Publicación en Google Play
 

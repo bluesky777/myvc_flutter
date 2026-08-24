@@ -405,6 +405,9 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
     final actualizado = await Navigator.push<AlumnoDisciplinaModel>(
       context,
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'situacion-editor'),
         builder: (_) => SituacionEditorScreen(
           args: SituacionEditorArgs(
             alumno: alumno,
@@ -437,6 +440,9 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
     final devueltas = await Navigator.push<List<UniformeModel>>(
       context,
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'disciplina-uniformes'),
         builder: (_) => UniformesAlumnoScreen(
           args: UniformesAlumnoArgs(
             alumnoId: alumno.alumnoId,

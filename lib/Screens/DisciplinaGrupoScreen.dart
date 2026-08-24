@@ -21,6 +21,7 @@ import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorGrupo.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// La disciplina de un grupo: quién lleva qué, en los cuatro periodos.
@@ -396,7 +397,7 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _cargarAlumnos,
+      onRefresh: Analitica.refresco('disciplina-grupo', _cargarAlumnos),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: lista.length,
@@ -564,6 +565,9 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
     final actualizado = await Navigator.push<AlumnoDisciplinaModel>(
       context,
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'ficha-disciplina'),
         builder: (_) => FichaDisciplinaScreen(
           args: FichaDisciplinaArgs(
             alumno: alumno,
@@ -597,6 +601,9 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
     final actualizado = await Navigator.push<AlumnoDisciplinaModel>(
       context,
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'situacion-editor'),
         builder: (_) => SituacionEditorScreen(
           args: SituacionEditorArgs(
             alumno: alumno,
@@ -630,6 +637,9 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
     final devueltas = await Navigator.push<List<UniformeModel>>(
       context,
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'disciplina-uniformes'),
         builder: (_) => UniformesAlumnoScreen(
           args: UniformesAlumnoArgs(
             alumnoId: alumno.alumnoId,

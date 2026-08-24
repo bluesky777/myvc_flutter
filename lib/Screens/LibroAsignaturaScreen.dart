@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// El libro de notas de una asignatura, por indicador.
 ///
@@ -93,6 +94,9 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
 
     final guardadas = await Navigator.of(context).push<List<NotaPendiente>>(
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'planilla'),
         builder: (_) => PlanillaScreen(
           libro: actual,
           unidad: unidad,
@@ -116,6 +120,9 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
 
     final cambios = await Navigator.of(context).push<CambiosDeLaFicha>(
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'ficha-alumno-notas'),
         builder: (_) => FichaAlumnoNotasScreen(libro: actual, alumno: alumno),
       ),
     );
@@ -200,7 +207,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     final aviso = _config.avisoDeBloqueo;
 
     return RefreshIndicator(
-      onRefresh: _cargar,
+      onRefresh: Analitica.refresco('libro-por-indicador', _cargar),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
@@ -240,7 +247,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _cargar,
+      onRefresh: Analitica.refresco('libro-por-alumno', _cargar),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 8, bottom: 24),
         itemCount: actual.alumnos.length,

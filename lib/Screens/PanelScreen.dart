@@ -4,6 +4,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PanelScreen extends StatefulWidget {
@@ -124,7 +125,7 @@ class _PanelScreen extends State<PanelScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _traerGrupos,
+      onRefresh: Analitica.refresco('panel', _traerGrupos),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: _buildListaGrupos(),

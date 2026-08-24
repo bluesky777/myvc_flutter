@@ -1,5 +1,32 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- El SDK de Analytics declara SOLO el permiso del identificador de
+         publicidad, aunque esta app no tenga un anuncio. Aquí no se quiere: no
+         hay publicidad, no hay perfiles y es una app de menores. Hacen falta
+         las dos piezas, no una: este tools:node lo saca del manifiesto
+         fusionado, y el meta-data de abajo apaga la recogida. Sin la primera,
+         el permiso llega al bundle y Play lo señala en seguridad de datos; y
+         publicacion-play.md §9 dice «solo INTERNET, no hay que justificar
+         nada», que es algo que conviene que siga siendo verdad.
+         Ver docs/analitica.md → «Lo que se apaga a propósito». -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+
+    <!-- Y las dos del Privacy Sandbox que trae el mismo SDK: el identificador
+         de publicidad nuevo y la atribución de anuncios. Se van por lo mismo
+         que la de arriba —no hay anuncios que atribuir—, y comprobado en el
+         manifiesto fusionado, no supuesto.
+
+         NO se quitan ACCESS_NETWORK_STATE ni WAKE_LOCK, que también entran con
+         Firebase: esas son funcionales —mirar si hay red antes de subir un lote
+         de eventos, y no dormirse a mitad—, y quitarlas rompería la subida en
+         vez de proteger a nadie. Ninguna de las dos pide nada al usuario. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
+        tools:node="remove" />
 
     <application
         android:label="Mi Cole Virtual"
@@ -27,6 +54,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- La otra mitad de lo de arriba: apaga la recogida del identificador
+             de publicidad en el propio SDK. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

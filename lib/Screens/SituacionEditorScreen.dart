@@ -15,6 +15,7 @@ import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/SelectorOrdinales.dart';
 import 'package:myvc_flutter/Widgets/SelectorSituaciones.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Con qué se abre el editor.
 class SituacionEditorArgs {
@@ -529,6 +530,11 @@ class _SituacionEditorScreenState extends State<SituacionEditorScreen> {
       _avisar(resultado.error!);
       return;
     }
+
+    // El tipo —leve, grave, gravísima— y nada más: ni el alumno, ni el grupo,
+    // ni un carácter de la descripción, que es texto libre sobre un menor.
+    Analitica.evento(creando ? 'situacion_creada' : 'situacion_editada',
+        datos: {'tipo': tipo});
 
     if (!mounted) return;
 

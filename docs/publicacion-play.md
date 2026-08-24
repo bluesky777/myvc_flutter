@@ -283,11 +283,36 @@ que Play Console te mostrará como «clave de subida» cuando subas el primero.
 | `targetSdk` reciente (API 35+) | **36** — lo pone el SDK de Flutter 3.44 |
 | Formato App Bundle, no APK | ✅ `flutter build appbundle` |
 | 64 bits | ✅ Flutter compila arm64 y x86_64 |
-| Permisos justificados | Solo `INTERNET` — no hay que justificar nada |
+| Permisos justificados | `INTERNET`, y tres que trae Firebase — ver abajo |
 | Firma con clave propia | ✅ configurada |
 
 `minSdk` es 24 (Android 7). Nada que declarar, pero deja fuera teléfonos muy
 viejos; si en el colegio los hay, hay que bajarlo a mano y probar.
+
+### Los permisos, ahora que entró Firebase
+
+Esta tabla decía «solo `INTERNET`» y **dejó de ser verdad al añadir la
+analítica**. Medido en el manifiesto fusionado del *build*, no supuesto:
+
+| Permiso | De dónde | ¿Se queda? |
+|---|---|---|
+| `INTERNET` | nuestro | sí |
+| `ACCESS_NETWORK_STATE` | Firebase | **sí** — mirar si hay red antes de subir eventos |
+| `WAKE_LOCK` | Firebase | **sí** — no dormirse a mitad de una subida |
+| `…finsky…BIND_GET_INSTALL_REFERRER_SERVICE` | Firebase | sí — de dónde vino la instalación |
+| `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | Flutter | sí, es interna y ya estaba |
+| `com.google.android.gms.permission.AD_ID` | Firebase | **quitado** |
+| `ACCESS_ADSERVICES_AD_ID` | Firebase | **quitado** |
+| `ACCESS_ADSERVICES_ATTRIBUTION` | Firebase | **quitado** |
+
+**Los tres quitados son los de publicidad**, y se van porque esta app no tiene
+anuncios y es de menores; el cómo está en [analitica.md](analitica.md) → «Lo que
+se apaga a propósito». Los que se quedan son funcionales o internos, **ninguno
+es de los que Android pide al usuario** —todos son de nivel normal, sin diálogo
+de permiso—, así que en el teléfono no se nota ningún cambio.
+
+Aun así, ya no se puede contestar «solo internet» en el formulario de seguridad
+de datos: hay que declarar los datos de uso y diagnóstico que recoge Analytics.
 
 ## 10. Cuánto se demora
 
