@@ -8,7 +8,9 @@ miente, es un fallo tan real como una prueba en rojo.
 4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`.
 Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
 hecha entera** —Firebase, los eventos, el interruptor para apagarla y la
-política de privacidad reescrita—; de ella solo queda un ajuste de consola.
+política de privacidad reescrita—; de ella solo queda un ajuste de consola. Lo
+recién abierto es **[la pantalla de usuarios](usuarios.md)**: su fase 1 está
+hecha y lo demás espera ocho cosas del servidor.
 
 ## Los frentes abiertos
 
@@ -20,6 +22,9 @@ flowchart LR
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
     A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
+    U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓"]
+    U --> U2["fases 2–4 ⛔<br/>faltan endpoints<br/>y una guarda"]
+    V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -27,6 +32,9 @@ flowchart LR
     style P0 fill:#ffe6e6,stroke:#c04b4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
     style A0 fill:#e8f4e8,stroke:#5a8f5a
+    style U1 fill:#e8f4e8,stroke:#5a8f5a
+    style U2 fill:#ffe6e6,stroke:#c04b4b
+    style V1 fill:#fff0e6,stroke:#c98a4b
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
@@ -37,21 +45,26 @@ flowchart LR
 una cosa, y es de consola: confirmar en Analytics que la retención a nivel de
 usuario está en dos meses, que es lo que promete la política de privacidad.
 
-Los otros dos frentes —la pantalla de disciplina del alumno y las
-notificaciones— necesitan trabajo en el backend, y el backend es de solo lectura
-para esta app. Ver «Lo que está bloqueado». Cuando se desbloquee alguno, el
-orden es:
+Los otros frentes —la pantalla de disciplina del alumno, las notificaciones y
+lo que le falta a la de usuarios— necesitan trabajo en el backend, y el backend
+es de solo lectura para esta app. Ver «Lo que está bloqueado». Cuando se
+desbloquee alguno, el orden es:
 
 1. **Disciplina, la pantalla del alumno y del acudiente**, en cuanto exista
    `GET disciplina/mis-fichas`. Es corta: la ficha del alumno en modo lectura.
 2. **Notificaciones**, en cuanto estén las tres piezas del servidor. El paso 0
    ya está cerrado, así que se entra directo por el tipo más tonto, el del
    muro, para probar la tubería entera antes de llenarla.
+3. **Usuarios, lo que le falta**, y por trozos según vaya llegando: cada cosa
+   apagada tiene su interruptor y se enciende con una palabra. El primero no
+   es un endpoint sino una guarda —la de `perfiles/guardar-username`—, y ese
+   va por delante de todo porque es un fallo en producción y no una función
+   que falte. Ver [usuarios.md](usuarios.md).
 
 ## Lo que está bloqueado, y por qué
 
-Los tres, con su contrato ya escrito y la evidencia que lo justifica, están en
-**[backend-pendiente.md](backend-pendiente.md)**: es lo que hay que aprobar para
+Los tres primeros, con su contrato ya escrito y la evidencia que lo justifica,
+están en **[backend-pendiente.md](backend-pendiente.md)**: es lo que hay que aprobar para
 desbloquearlos, y está redactado para poder decidir sin volver a investigar. Ahí
 está también lo contrario —**«Lo que la app necesita que NO se rompa»**—, con el
 mínimo de `contratos` para alumno y acudiente, que el backend está a punto de
@@ -74,6 +87,17 @@ recortar por seguridad.
   de la asignatura entera en uno**. Cada `notas/update` recalcula la definitiva,
   y ese recálculo agrega toda la asignatura antes de quedarse con un alumno. El
   contrato, en [backend-pendiente.md](backend-pendiente.md).
+- **Usuarios, todo menos la fase 1.** Ocho cosas del servidor —el último acceso,
+  los roles por lista, «Otros», dos masivas por grupo y tres columnas que
+  faltan—, **todas sin autorizar todavía**. Y dos que no eran funciones sino
+  arreglos, **ya escritas en el backend y sin desplegar**: la guarda de
+  `PUT perfiles/guardar-username/{id}` —que hoy deja a cualquiera de los 51
+  docentes renombrar cualquier cuenta, la de un superusuario incluida— y el
+  alcance de `alumnos/cambiar-claves`, que le cambiaba la contraseña también a
+  los retirados del grupo y a las cuentas borradas. **Nada se enciende en la app
+  hasta que esté en los dieciséis colegios**, que no es lo mismo que escrito. El
+  contrato entero, en [usuarios.md](usuarios.md) → «Lo que falta en el
+  servidor».
 
 ## Cómo se trabaja aquí
 
@@ -142,6 +166,46 @@ hosting sale a Google, ejecuta artisan y el cron dispara. Falta escribir el
 endpoint de temas, el comando `notificaciones:enviar` y la línea de cron; el
 lado Flutter —Firebase, permiso y suscripción— no se puede empezar sin el
 endpoint que entrega los temas.
+
+### Usuarios — [usuarios.md](usuarios.md)
+
+**Fase 1 hecha**: menú ▸ Usuarios →
+[UsuariosScreen](../lib/Screens/UsuariosScreen.dart), y solo para quien
+administra cuentas —superusuario, `Admin` o `Secretario`—. Se entra por tipo
+—alumnos, acudientes, profesores, otros— y por grupo, y **nunca se pide más de
+un grupo a la vez**: la pantalla que sustituye traía las 2.279 personas del
+colegio con tres consultas por fila para sus roles.
+
+Funciona hoy: los listados de alumnos, acudientes —con sus acudidos— y
+docentes —con sus años contratados—, ponerle una contraseña a una persona y
+ponerle una a todo un grupo de alumnos. **Cuatro cosas están apagadas** con su
+interruptor en
+[PendientesUsuarios](../lib/Http/UsuariosApi.dart): los roles, el último
+acceso, «Otros» y dos de las masivas por grupo. Y una quinta, cambiar el nombre
+de usuario, que no está apagada por falta de endpoint sino porque el que hay
+deja a cualquier docente renombrar la cuenta de un superusuario — está avisado
+al backend y va por delante de la pantalla.
+
+### La versión mínima — [backend-pendiente.md](backend-pendiente.md) §4
+
+**El lado de la app está hecho** (24 ago 2026):
+[VersionMinima](../lib/Utils/VersionMinima.dart) y
+[ActualizarScreen](../lib/Screens/ActualizarScreen.dart). El número llega en la
+respuesta de `POST /login` —un campo, no una ruta— y si esta versión se queda
+corta no se entra a ninguna parte: la puerta está en el router, no en cada
+pantalla.
+
+**Y está dormida**, que es lo que la hace inofensiva de publicar: hoy ningún
+colegio manda el campo, así que se comporta exactamente igual que no tenerla.
+Lo que falta es que el backend lo mande, y eso está en la lista de Joseth.
+
+**Por qué importa más de lo que parece.** Es lo único que permite retirar un
+endpoint: sin esto, un teléfono con la versión vieja sigue llamando a la ruta
+vieja indefinidamente y nadie se entera, así que **retirar cualquier cosa
+depende de que dieciséis colegios se actualicen por su cuenta**. Dos planes del
+backend —la fase 7 de la auditoría y la 5 del 00— estaban parados en eso. Ahora
+pasan de «sin fecha y sin forma» a «sin fecha, pero con la forma escrita»: la
+fecha sigue sin poder existir porque **la app no está publicada todavía**.
 
 ### Analítica — [analitica.md](analitica.md)
 

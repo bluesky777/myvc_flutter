@@ -8,6 +8,9 @@ import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/PrivacidadScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
+import 'package:myvc_flutter/Screens/UsuariosScreen.dart';
+import 'package:myvc_flutter/Screens/ActualizarScreen.dart';
+import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
@@ -17,7 +20,35 @@ import 'AlumTardanzaColeScreen.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
+    // Antes que nada, y para todas las rutas: si esta versión ya no la acepta
+    // el colegio, no se entra a ninguna parte. Va aquí y no en cada pantalla
+    // porque una puerta que se comprueba en veinte sitios es una puerta que un
+    // día se queda sin comprobar en uno.
+    //
+    // Y no bloquea por sospecha: `bloquea` solo dice que sí cuando el servidor
+    // mandó un número que se entiende y esta app se queda corta. Ver
+    // VersionMinima.
+    //
+    // El login se deja pasar, y no es una rendija: son dieciséis colegios con
+    // una sola app, y el número lo pone cada colegio en su servidor. Sin esto,
+    // a quien tenga cuenta en dos y le bloquee el primero no le quedaría forma
+    // de llegar a la pantalla de entrar para usar el segundo, que sí acepta su
+    // versión. No debilita nada, porque entrar vuelve a leer el número: si el
+    // colegio nuevo también lo exige, la puerta se cierra otra vez al salir
+    // del login.
+    const fuera = ['/actualizar', '/login', '/'];
+
+    if (VersionMinima.bloquea && !fuera.contains(settings.name)) {
+      return MaterialPageRoute(
+        settings: const RouteSettings(name: '/actualizar'),
+        builder: (context) => const ActualizarScreen(),
+      );
+    }
+
     switch (settings.name) {
+      case '/actualizar':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const ActualizarScreen());
       // '/' es el login: es donde cae quien abre la app sin sesión, y antes lo
       // resolvía el `home:` de MaterialApp, que se quitó para poder arrancar en
       // otra pantalla al recuperar la sesión.
@@ -56,6 +87,9 @@ class RouteGenerator {
       case '/configuracion':
         return MaterialPageRoute(
             settings: settings, builder: (context) => ConfiguracionScreen());
+      case '/usuarios':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => UsuariosScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());

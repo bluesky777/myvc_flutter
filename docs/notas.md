@@ -537,7 +537,38 @@ de solo lectura para esta app—, quedan anotadas:
    vez a `notas/detailed`** —que sí usa la versión correcta, con parámetros
    ligados— al abrir la asignatura, y a partir de ahí trabaja en local.
 
-2. **`horario_manana` ignora `show_materias_todas`** y se calcula como
+2. **No existe la nota con decimales, en ninguna parte.** `notas.nota`,
+   `notas_finales.nota`, `unidades.porcentaje`, `subunidades.porcentaje` y
+   `subunidades.nota_default` son **`int`** en el esquema, las cinco. No es que
+   la bitácora pierda los decimales al registrarlos —el comentario de
+   [HistorialNotaApi](../lib/Http/HistorialNotaApi.dart) decía eso y estaba mal,
+   ya corregido—: **es la columna de la nota la que se los come**, para todos, y
+   el boletín incluido.
+
+   **Y esta app tenía el mismo fallo que el front web, hasta el 23 de agosto de
+   2026.** Los cinco campos de nota traían el teclado con coma y dejaban
+   escribirla, así que un docente podía teclear «85,5»; la app lo mandaba como
+   `85.5`, el servidor lo metía en la columna entera —donde queda 85— y **la
+   pantalla seguía enseñando 85,5 hasta que alguien recargaba**. El docente veía
+   una nota que no estaba guardada, y se enteraba al día siguiente o nunca.
+
+   **Arreglado por el teclado, y no redondeando al guardar.** Lo decidió Joseth
+   el mismo día, y el motivo es el que ya estaba escrito en `notaLeida`:
+   redondear es la app cambiando un número que escribió una persona. Si un 85,5
+   tiene que ser 86, lo decide quien pone la nota. El teclado y el filtro viven
+   en un solo sitio —[TecladoDeNota](../lib/Utils/TecladoDeNota.dart)— con el
+   porqué al lado, y el filtro **rechaza la edición entera** en vez de borrar el
+   separador: con `digitsOnly`, pegar «85.5» dejaría **855**, que es una nota
+   real, distinta y peor que la que se pegó.
+
+   Lo que **no** cambió: `notaLeida` y `notaEscrita` siguen entendiendo la coma.
+   Leen también lo que viene del servidor y los promedios que la app calcula
+   para enseñar, y esos sí son fraccionarios.
+
+   Lo levantó la sesión del front web, que tiene el mismo fallo medido en sus
+   pantallas —y además anuncia «Cambiada: 85,5» mientras la columna guarda 85—.
+
+3. **`horario_manana` ignora `show_materias_todas`** y se calcula como
    `$dia + 1`, que el sábado da 7 y no encaja con ningún `case`, así que el
    filtro queda vacío y salen todas. No afecta a este plan porque la app usa
    `horario_hoy`, pero si algún día se añade «Mañana» hay que contar con ello.

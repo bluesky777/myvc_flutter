@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
@@ -10,6 +9,7 @@ import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 
 /// La planilla de un indicador: los alumnos del grupo y su nota en esa casilla.
 ///
@@ -350,10 +350,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
             width: 70,
             child: TextField(
               controller: _aTodos,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
+              keyboardType: tecladoDeNota,
+              inputFormatters: formateadoresDeNota,
               textAlign: TextAlign.center,
               decoration: const InputDecoration(
                 isDense: true,
@@ -488,11 +486,8 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
                 controller: _campos[indice],
                 focusNode: _focos[indice],
                 enabled: editable,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
+                keyboardType: tecladoDeNota,
+                inputFormatters: formateadoresDeNota,
                 // El último cierra el teclado; los demás bajan al siguiente.
                 textInputAction: indice == _alumnos.length - 1
                     ? TextInputAction.done

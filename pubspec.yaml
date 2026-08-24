@@ -30,6 +30,8 @@ dependencies:
   path_provider: ^2.1.5
   firebase_core: ^4.13.0
   firebase_analytics: ^12.4.6
+  package_info_plus: ^10.2.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

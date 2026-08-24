@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
@@ -14,6 +13,7 @@ import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 
 /// Qué llevan perdido los alumnos de un docente, y arreglarlo desde aquí.
 ///
@@ -461,11 +461,8 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
             child: TextField(
               controller: campo,
               enabled: _puedeEditar && !ocupada,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
+              keyboardType: tecladoDeNota,
+              inputFormatters: formateadoresDeNota,
               onTap: () => campo.selection = TextSelection(
                 baseOffset: 0,
                 extentOffset: campo.text.length,

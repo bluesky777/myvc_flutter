@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:myvc_flutter/Http/DefinitivasApi.dart';
 import 'package:myvc_flutter/Http/FrasesApi.dart';
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
@@ -14,6 +13,7 @@ import 'package:myvc_flutter/Widgets/HojaDetalleNota.dart';
 import 'package:myvc_flutter/Widgets/SelectorFrases.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 
 /// Lo que la ficha devuelve al libro, para no volver a pedir `notas/detailed`.
 class CambiosDeLaFicha {
@@ -653,11 +653,8 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
                   enabled: _puedeNivelar &&
                       (actual?.existe ?? false) &&
                       !guardando,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
+                  keyboardType: tecladoDeNota,
+                  inputFormatters: formateadoresDeNota,
                   onTap: () => _definitiva.selection = TextSelection(
                     baseOffset: 0,
                     extentOffset: _definitiva.text.length,
@@ -929,11 +926,8 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
             child: TextField(
               controller: campo,
               enabled: editable,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
+              keyboardType: tecladoDeNota,
+              inputFormatters: formateadoresDeNota,
               onTap: () => campo.selection = TextSelection(
                 baseOffset: 0,
                 extentOffset: campo.text.length,

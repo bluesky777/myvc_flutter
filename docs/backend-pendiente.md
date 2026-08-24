@@ -152,6 +152,117 @@ pide el token con Guzzle, que ya está en el `composer.json`.
 
 ---
 
+## 4. La versión mínima — un campo, no una ruta
+
+**El lado de la app está hecho; falta la mitad del servidor.** Joseth autorizó
+el 24 de agosto de 2026 que la app compruebe la versión y que **bloquee** —ver
+[VersionMinima](../lib/Utils/VersionMinima.dart) y
+[ActualizarScreen](../lib/Screens/ActualizarScreen.dart)—. Lo que falta es que
+el backend **mande el número**, y hasta que lo mande esto es código dormido:
+sin el campo no se bloquea a nadie, que es justo lo que lo hace inofensivo de
+publicar.
+
+**El problema no es de esta app, es de todos.** `myvc_flutter` **no comprueba en
+ninguna parte** que su versión siga siendo aceptable. Un teléfono con la versión
+del año pasado sigue llamando a los mismos endpoints indefinidamente y nadie se
+entera. Mientras eso sea así, **retirar cualquier endpoint depende de que
+dieciséis colegios se actualicen por su cuenta**: es la condición de entrada de
+la fase 7 de `18-auditoria.md` y de la fase 5 de `00`, y por eso esas fases hoy
+no tienen fecha —que no es lo mismo que tenerla lejos—.
+
+### Lo que se pide: un campo en una respuesta que ya existe
+
+    POST /login  →  { ..., "version_minima_app": 12 }
+
+**Un entero, el `versionCode`** —el `+N` de `pubspec.yaml`—, no la versión con
+puntos: es el número que Play compara y el único que no admite interpretación.
+
+**Y en `login`, no en una ruta nueva.** Cuesta cero peticiones y cero rutas: la
+app ya llama a `POST /login` en los dos únicos momentos donde el dato sirve
+—`LoginController` al entrar con usuario y contraseña, y
+`ContextoAcademico.refrescar()` al recuperar la sesión guardada al arrancar—.
+Una ruta nueva sería una petición más en cada arranque, en un hosting
+compartido, para leer un número que cambia dos veces al año. Si aun así se
+prefiere ruta aparte, la app se adapta; pero entonces que sea cacheable.
+
+Opcional, y solo si sale gratis: `"version_minima_mensaje": "..."`, para poder
+decir *por qué* hay que actualizar. Sin él, la app pone un texto genérico.
+
+### Lo que hace la app, y lo que NO hace pase lo que pase
+
+| Situación | Qué hace |
+|---|---|
+| Su `versionCode` ≥ el mínimo | nada, ni un aviso |
+| Su `versionCode` < el mínimo | pantalla que explica y lleva a Play. **No deja entrar** |
+| El campo no viene | **entra** |
+| El campo no es un entero positivo | **entra** |
+| No hay red, o el servidor no contesta | **entra** |
+| Ya está dentro trabajando | **no se le echa**; se comprueba al arrancar y al entrar |
+| Está bloqueado y tiene cuenta en otro colegio | **puede llegar al login**; ver abajo |
+
+**Las cuatro filas de «entra» son la parte importante del contrato, no la letra
+pequeña.** Un campo mal puesto en el `.env` de un colegio no puede dejar a ese
+colegio entero fuera de la app: el fallo por defecto tiene que ser dejar pasar.
+Bloquear es lo excepcional y solo con un número que se entienda.
+
+**Y «absurdo» no se puede programar**, así que lo implementado es lo único que
+sí: **no es un entero positivo → entra**. Un número altísimo —999999999— **sí
+bloquea**, y tiene que hacerlo: desde el cliente no hay forma de distinguir un
+`.env` con un dedazo de un colegio que de verdad exige la última versión, y
+adivinarlo sería justo lo contrario de lo que hace fiable esta comprobación.
+**La defensa contra el dedazo está en el servidor**: ese número se sube una vez
+por retirada, con la misma ceremonia que un despliegue.
+
+**Y esto es lo que hay que leer antes de tocar ese número, no después:** un `99`
+donde iba un `9` **deja al colegio entero fuera de la app hasta que alguien
+vuelva a tocar el servidor**. Desde el teléfono no hay arreglo —la app hace lo
+que se le dijo— y la única salida que ofrece la pantalla es salir e ingresar en
+**otro** colegio, que solo le sirve a quien tenga cuenta en dos. No es un motivo
+para no hacerlo; es el motivo por el que ese campo no se edita a la ligera ni se
+copia de un colegio a otro sin mirar.
+
+**La pantalla de entrar es la única que se deja pasar bloqueado**, y no es una
+rendija. Son dieciséis colegios con una sola app y **el número lo pone cada
+colegio en su servidor**, así que quien tenga cuenta en dos puede estar
+bloqueado por el que va atrasado y no por el otro; sin esa salida no le quedaría
+forma de llegar a la pantalla de entrar. No debilita nada, porque entrar vuelve
+a leer el número: si el colegio nuevo también lo exige, la puerta se cierra otra
+vez en cuanto se sale del login. Y al cerrar sesión el número se olvida, por lo
+mismo: es del colegio del que se sale, no de este teléfono.
+
+**Y bloquear de verdad, no sugerir.** Un aviso que se puede cerrar no permite
+retirar nada, que es justo para lo que existe esto: si la versión vieja puede
+seguir entrando, el endpoint viejo sigue haciendo falta. La contrapartida es que
+el número hay que subirlo con cuidado —una vez por retirada, no en cada
+publicación— y eso es de quien despliega, no de la app.
+
+### Lo que costó del lado Flutter, ya hecho
+
+Dos dependencias —`package_info_plus`, que lee el `versionCode` del paquete
+instalado, y `url_launcher` para llevar a Play— y tres enganches.
+
+Lo del `versionCode` merece una línea: se lee del paquete y no de una constante
+en el código **porque una constante se queda vieja el día que alguien publique
+sin acordarse de subirla**, que es exactamente el fallo que esto viene a evitar.
+
+Los enganches son los tres sitios por los que pasa una respuesta de `/login`:
+`tomarUsuarioDe` —que comparten entrar con contraseña y recuperar la sesión
+guardada— y `ContextoAcademico.refrescar`, que es la única llamada a `/login`
+que la app hace ya estando dentro, y por tanto donde se entera de que el colegio
+subió el número sin tener que salir y volver a entrar.
+
+**La comprobación vive en el router**, no en cada pantalla: una puerta que se
+mira en veinte sitios es una puerta que un día se queda sin mirar en uno.
+
+### Lo que esto desbloquea, para que se vea qué se compra
+
+Con esto, retirar un endpoint pasa a ser comprobable: se publica la versión que
+ya no lo llama, se sube el mínimo, y el servidor sabe que nadie por debajo entra.
+Sin esto, la única forma honesta es mirar el reparto por versión de Play Console
+y decidir a ojo — que también vale, pero es un dato de tienda y no un contrato.
+
+---
+
 ## Cómo arrancar la sesión que hace esto
 
 Se trabaja **desde dentro del backend** —`cd ~/DESARROLLOS/8myvc && claude`—, no
@@ -257,6 +368,69 @@ eso hay que decidirlo antes de escribirla, no después.
 
 `GET perfiles/usernames`, que devuelve los 2.355 nombres de usuario del colegio
 a cualquiera con sesión, **esta app no lo llama**: cero referencias en `lib/`.
+
+### `historiales/nota-detalle` — el historial de una nota
+
+Lo levantó la sesión del front web el 23 de agosto de 2026: la auditoría del
+backend se está reescribiendo (`docs/migracion/18-auditoria.md`, sesión
+`8myvc-7b`), con cuatro rutas `auditoria/*` nuevas, y entre lo que se retiraría
+está esta. **En la fase 5 no se retira nada** —las nuevas son aditivas y los
+alias siguen— y la retirada es una fase 7 cuya condición de entrada no es
+«desplegado en los dieciséis» sino **«Flutter publicado y adoptado»**. Esto es
+lo que la app puede decir de eso, comprobado sobre el código y no sobre la
+memoria.
+
+**Qué usa la app, exactamente.** Una ruta, no dos: `PUT historiales/nota-detalle`
+con `{nota_id}`, en [HistorialNotaApi](../lib/Http/HistorialNotaApi.dart), y se
+llama desde un solo sitio —[HojaDetalleNota](../lib/Widgets/HojaDetalleNota.dart),
+la hoja que se abre tocando una casilla del libro—. De la respuesta lee siete
+campos y ni uno más:
+
+    cambios[].bit_id · old_value · new_value · creado_por · created_at
+    nota.creado_por · nota.modificado_por
+
+**`historiales/nota-final-detalle` esta app NO la llama**: cero referencias en
+`lib/`, comprobado con grep. Retirarla no nos toca.
+
+**Y sobre «publicado y adoptado», la respuesta honesta es que hoy no hay número,
+por dos razones que conviene separar.**
+
+La primera: **la app todavía no está publicada.** `pubspec.yaml` dice
+`version: 1.0.0+1` y no ha subido nunca a Play. El camino está en
+[publicacion-play.md](publicacion-play.md) y lo que marca el calendario no es la
+revisión sino el requisito de la cuenta personal: **doce probadores durante
+catorce días seguidos** antes de poder pedir producción. Las actualizaciones
+posteriores sí son rápidas —de horas a tres días de revisión—.
+
+La segunda, y es la que de verdad importa para planificar una retirada: **la app
+no tiene forma de obligar a nadie a actualizarse.** No hay comprobación de
+versión mínima en ninguna parte de `lib/`. O sea que «adoptada» no es una fecha
+que llegue sola: un teléfono con la versión vieja sigue llamando a
+`nota-detalle` indefinidamente, y nadie se entera. Solo hay dos maneras de que
+esa condición se pueda cumplir de verdad, y las dos son decisiones que no toma
+esta sesión:
+
+1. **Que la app aprenda a exigir una versión mínima** —el servidor dice cuál es
+   la más vieja que acepta y la app manda a actualizar—. Es trabajo de la app y
+   de un endpoint diminuto, y hasta que exista, cualquier plan de retirada de
+   cualquier endpoint depende de la buena voluntad de dieciséis colegios.
+2. **Que la retirada se decida mirando Play Console**, que enseña el reparto de
+   usuarios por versión. Es un dato de tienda: lo tiene Joseth, no el código.
+
+**Lo que se pide, entonces:** que `nota-detalle` siga contestando con los mismos
+alias hasta que las dos cosas se cumplan —una versión de Flutter que lea la ruta
+nueva, publicada, y el reparto de Play diciendo que la vieja ya no se usa—, y
+que cuando exista la tabla de `auditoria/entidad/{tipo}/{id}` nos lleguen los
+nombres de campo. Portar `HistorialNotaApi` es corto: son siete campos y un
+único sitio que los pinta.
+
+**Un detalle del esquema nuevo que sale de aquí.** La bitácora de hoy guarda las
+notas como enteros —las columnas se llaman `..._value_int`—, así que **un 85,5
+quedó registrado como 85**, y la app lo enseña como entero a propósito: enseñar
+decimales que no se guardaron sería inventarlos. Si la tabla nueva guarda
+decimales, el historial viejo y el nuevo **no son comparables**, y eso lo van a
+tener que decir las dos pantallas, la de la app y la del front web. No es un
+problema del cambio: es una cicatriz que el cambio hace visible.
 
 ## Y una cosa que NO se pide
 

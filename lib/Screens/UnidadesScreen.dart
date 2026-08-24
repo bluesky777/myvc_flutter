@@ -11,6 +11,7 @@ import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 
 /// Las unidades con las que un docente evalúa cada asignatura en el periodo.
 ///
@@ -1045,8 +1046,8 @@ class _CuadroUnidadState extends State<_CuadroUnidad> {
             ),
             TextFormField(
               controller: _porcentaje,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: tecladoDeNota,
+              inputFormatters: formateadoresDeNota,
               decoration: const InputDecoration(
                 labelText: 'Porcentaje',
                 suffixText: '%',
@@ -1056,8 +1057,8 @@ class _CuadroUnidadState extends State<_CuadroUnidad> {
             if (esSubunidad)
               TextFormField(
                 controller: _notaDefault,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: tecladoDeNota,
+                inputFormatters: formateadoresDeNota,
                 decoration: const InputDecoration(
                   labelText: 'Nota por defecto',
                   helperText: 'Con la que arranca cada alumno',

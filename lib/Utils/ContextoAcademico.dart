@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
+import 'package:myvc_flutter/Utils/VersionMinima.dart';
 
 /// El año y el periodo con los que trabaja el usuario ahora mismo.
 ///
@@ -182,6 +183,11 @@ class ContextoAcademico extends ChangeNotifier {
       if (datos is! Map) return 'Se cambió, pero el servidor no dijo con qué.';
 
       tomarDelLogin(Map<String, dynamic>.from(datos));
+
+      // La misma respuesta trae la versión mínima, y esta es la única llamada
+      // a /login que hace la app ya estando dentro: es donde se entera de que
+      // el colegio subió el número sin tener que salir y volver a entrar.
+      VersionMinima.tomarDe(datos);
 
       // La sesión guardada tiene una copia de esta misma respuesta, y acaba de
       // quedarse vieja: el periodo es otro. Sin esto, recargar la página

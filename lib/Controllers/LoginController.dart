@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
@@ -200,6 +201,7 @@ class LoginController implements LoginBaseController {
 
   Future<void> _tirarLaSesion() async {
     AuthService.limpiar();
+    VersionMinima.limpiar();
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
     await SesionGuardada.borrar();
@@ -228,6 +230,12 @@ class LoginController implements LoginBaseController {
 
     // El año y el periodo con los que entra. De aquí cuelga todo lo demás.
     ContextoAcademico.instancia.tomarDelLogin(datos);
+
+    // Y si esta versión de la app todavía vale. Va aquí porque este
+    // método es el único sitio por el que pasan las dos formas de
+    // entrar —con usuario y contraseña, y recuperando la sesión
+    // guardada—, así que ninguna se lo salta. Ver VersionMinima.
+    VersionMinima.tomarDe(datos);
   }
 
   /// El cuerpo como mapa, o null si no vino JSON —una página de error de nginx,
@@ -281,6 +289,10 @@ class LoginController implements LoginBaseController {
     // tenía el anterior.
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
+    // La versión mínima es de un colegio, no de este teléfono: son dieciséis
+    // colegios y una sola app, y el que se queda es el número del colegio del
+    // que se acaba de salir.
+    VersionMinima.limpiar();
 
     // Manda la casilla: si este dispositivo es de uno, cerrar sesión no tiene
     // por qué hacerle reescribir las credenciales. En el equipo compartido se
