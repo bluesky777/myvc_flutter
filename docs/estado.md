@@ -5,9 +5,9 @@ actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
 **Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
-4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`,
-y con ello **no queda trabajo pendiente que dependa solo de la app**: los tres
-frentes abiertos esperan al backend.
+4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`.
+Los tres frentes viejos esperan al backend; el que sí se puede empezar ya es
+**[la analítica](analitica.md)**, que no depende del servidor para nada.
 
 ## Los frentes abiertos
 
@@ -18,24 +18,29 @@ flowchart LR
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
+    A["Analítica<br/>docs/analitica.md"] --> A0["○ plan escrito<br/>se puede empezar ya"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#ffe6e6,stroke:#c04b4b
     style P0 fill:#ffe6e6,stroke:#c04b4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
+    style A0 fill:#fff9e6,stroke:#c9a94b
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
 
 ## Qué sigue, en orden
 
-**No queda nada pendiente que dependa solo de la app.** Los dos frentes que
-siguen abiertos —la pantalla de disciplina del alumno y las notificaciones—
-necesitan trabajo en el backend, y el backend es de solo lectura para esta app.
-Ver «Lo que está bloqueado».
+**Lo único que se puede hacer sin esperar a nadie es
+[la analítica](analitica.md)**: pasos 2 a 5 de ese documento, que son de app y
+no tocan el servidor. El paso 1 es de consola —crear el proyecto de Firebase,
+el mismo de las notificaciones— y ese no lo puede hacer una sesión de código.
 
-Cuando se desbloquee alguno, el orden es:
+Los otros dos frentes —la pantalla de disciplina del alumno y las
+notificaciones— necesitan trabajo en el backend, y el backend es de solo lectura
+para esta app. Ver «Lo que está bloqueado». Cuando se desbloquee alguno, el
+orden es:
 
 1. **Disciplina, la pantalla del alumno y del acudiente**, en cuanto exista
    `GET disciplina/mis-fichas`. Es corta: la ficha del alumno en modo lectura.
@@ -137,6 +142,16 @@ hosting sale a Google, ejecuta artisan y el cron dispara. Falta escribir el
 endpoint de temas, el comando `notificaciones:enviar` y la línea de cron; el
 lado Flutter —Firebase, permiso y suscripción— no se puede empezar sin el
 endpoint que entrega los temas.
+
+### Analítica — [analitica.md](analitica.md)
+
+Solo el plan, y **no está bloqueado por nadie**: es lo único del mapa que se
+puede empezar hoy. Google Analytics de Firebase, gratis, con dos reglas que
+mandan sobre el resto —ni un dato que identifique a una persona, y el
+identificador de publicidad apagado y su permiso fuera del *bundle*—. Antes de
+empezar hay que arreglar los ocho `push` sin `RouteSettings`, o las pantallas
+que más interesan saldrían como huecos. Y la política de privacidad **dice hoy
+en dos sitios que no hay analítica**: eso se reescribe en el mismo paso.
 
 ### Publicación en Google Play
 

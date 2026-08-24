@@ -7,6 +7,12 @@ Ver [publicacion-play.md](publicacion-play.md) para el proceso completo, y
 [politica-privacidad.md](politica-privacidad.md) para el texto que hay que
 publicar en la web antes de enviar a revisión.
 
+**El formulario de seguridad de datos cambia** si entran la analítica o las
+notificaciones: la primera obliga a declarar datos de uso y diagnóstico
+compartidos con un tercero y no vinculados a la identidad
+([analitica.md](analitica.md)); las segundas, el identificador de dispositivo de
+FCM ([notificaciones.md](notificaciones.md)).
+
 ## Nombre de la app
 
 *Máximo 30 caracteres.*

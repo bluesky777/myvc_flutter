@@ -10,6 +10,14 @@ colegio** antes de subirlo: aquí se describe con fidelidad lo que la app hace,
 pero quién responde legalmente por esos datos es una decisión que no está en el
 código.
 
+> **⚠ Este texto deja de ser cierto en cuanto entre la analítica.** Dice en dos
+> sitios —«Lo que NO recogemos» y «Con quién los compartimos»— que la app no
+> incorpora herramientas de analítica. Hay que reescribir esos dos párrafos
+> **antes** de mandarlo a revisar, no después: ver
+> [analitica.md](analitica.md) → «Lo que hay que cambiar fuera del código». Lo
+> mismo con las notificaciones, que añaden el identificador de dispositivo de
+> FCM ([notificaciones.md](notificaciones.md)).
+
 ---
 
 ## Política de privacidad de Mi Cole Virtual
