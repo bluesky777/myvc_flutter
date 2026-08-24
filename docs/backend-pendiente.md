@@ -154,9 +154,13 @@ pide el token con Guzzle, que ya está en el `composer.json`.
 
 ## 4. La versión mínima — un campo, no una ruta
 
-**Propuesta, no acuerdo.** Está pendiente de que Joseth diga que sí; se escribe
-aquí porque la pidió la coordinación de la noche del 23 de agosto de 2026 y
-porque sin esto hay tres planes de tres repositorios que no se pueden cerrar.
+**El lado de la app está hecho; falta la mitad del servidor.** Joseth autorizó
+el 24 de agosto de 2026 que la app compruebe la versión y que **bloquee** —ver
+[VersionMinima](../lib/Utils/VersionMinima.dart) y
+[ActualizarScreen](../lib/Screens/ActualizarScreen.dart)—. Lo que falta es que
+el backend **mande el número**, y hasta que lo mande esto es código dormido:
+sin el campo no se bloquea a nadie, que es justo lo que lo hace inofensivo de
+publicar.
 
 **El problema no es de esta app, es de todos.** `myvc_flutter` **no comprueba en
 ninguna parte** que su versión siga siendo aceptable. Un teléfono con la versión
@@ -191,7 +195,7 @@ decir *por qué* hay que actualizar. Sin él, la app pone un texto genérico.
 | Su `versionCode` ≥ el mínimo | nada, ni un aviso |
 | Su `versionCode` < el mínimo | pantalla que explica y lleva a Play. **No deja entrar** |
 | El campo no viene | **entra** |
-| El campo viene ilegible, negativo o absurdo | **entra** |
+| El campo no es un entero positivo | **entra** |
 | No hay red, o el servidor no contesta | **entra** |
 | Ya está dentro trabajando | **no se le echa**; se comprueba al arrancar y al entrar |
 
@@ -200,21 +204,37 @@ pequeña.** Un campo mal puesto en el `.env` de un colegio no puede dejar a ese
 colegio entero fuera de la app: el fallo por defecto tiene que ser dejar pasar.
 Bloquear es lo excepcional y solo con un número que se entienda.
 
+**Y «absurdo» no se puede programar**, así que lo implementado es lo único que
+sí: **no es un entero positivo → entra**. Un número altísimo —999999999— **sí
+bloquea**, y tiene que hacerlo: desde el cliente no hay forma de distinguir un
+`.env` con un dedazo de un colegio que de verdad exige la última versión, y
+adivinarlo sería justo lo contrario de lo que hace fiable esta comprobación.
+**La defensa contra el dedazo está en el servidor**: ese número se sube una vez
+por retirada, con la misma ceremonia que un despliegue.
+
 **Y bloquear de verdad, no sugerir.** Un aviso que se puede cerrar no permite
 retirar nada, que es justo para lo que existe esto: si la versión vieja puede
 seguir entrando, el endpoint viejo sigue haciendo falta. La contrapartida es que
 el número hay que subirlo con cuidado —una vez por retirada, no en cada
 publicación— y eso es de quien despliega, no de la app.
 
-### Lo que cuesta del lado Flutter
+### Lo que costó del lado Flutter, ya hecho
 
-Poco, y hay un detalle que decidir: **la app hoy no sabe su propio número de
-build**. Se resuelve con `package_info_plus`, que lo lee del paquete instalado y
-no puede desincronizarse; la alternativa —una constante en el código -- se
-queda vieja el día que alguien publique sin acordarse, que es exactamente el
-fallo que esto viene a evitar. Una dependencia más, de las de siempre.
+Dos dependencias —`package_info_plus`, que lee el `versionCode` del paquete
+instalado, y `url_launcher` para llevar a Play— y tres enganches.
 
-Lo demás es una comprobación en dos sitios y una pantalla sin salida.
+Lo del `versionCode` merece una línea: se lee del paquete y no de una constante
+en el código **porque una constante se queda vieja el día que alguien publique
+sin acordarse de subirla**, que es exactamente el fallo que esto viene a evitar.
+
+Los enganches son los tres sitios por los que pasa una respuesta de `/login`:
+`tomarUsuarioDe` —que comparten entrar con contraseña y recuperar la sesión
+guardada— y `ContextoAcademico.refrescar`, que es la única llamada a `/login`
+que la app hace ya estando dentro, y por tanto donde se entera de que el colegio
+subió el número sin tener que salir y volver a entrar.
+
+**La comprobación vive en el router**, no en cada pantalla: una puerta que se
+mira en veinte sitios es una puerta que un día se queda sin mirar en uno.
 
 ### Lo que esto desbloquea, para que se vea qué se compra
 

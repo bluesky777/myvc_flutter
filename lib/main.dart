@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
+import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -40,6 +41,11 @@ void main() async {
         ? HydratedStorageDirectory.web
         : HydratedStorageDirectory((await getApplicationDocumentsDirectory()).path),
   );
+
+  // Qué versión es esta. Antes de restaurar la sesión, porque restaurarla es
+  // lo que lee la versión mínima que exige el colegio y las dos se comparan.
+  // Si falla, `nuestra` se queda en null y no se bloquea a nadie.
+  await VersionMinima.arrancar();
 
   // Antes de pintar nada: si hay una sesión guardada y sigue valiendo, se
   // recupera. Es lo que hace que recargar la página en la web no tire al
