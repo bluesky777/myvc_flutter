@@ -11,6 +11,28 @@ import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 
+/// Lo que la planilla devuelve al libro cuando se sale de ella.
+///
+/// Antes devolvía sólo la lista de notas. Ahora también las definitivas, porque
+/// `notas/lote` las trae calculadas por el mismo recalculador que las escribe:
+/// sin ellas, la pestaña «Por alumno» seguía enseñando la definitiva que la app
+/// se había calculado sola, y las dos sólo coinciden mientras nadie tenga una
+/// manual o una recuperada.
+///
+/// Vacía cuando se guardó de una en una: ese camino no las trae, y eso no es un
+/// fallo. Ver [ResultadoGuardado.definitivas].
+class CambiosDeLaPlanilla {
+  const CambiosDeLaPlanilla({
+    this.notas = const [],
+    this.definitivas = const [],
+  });
+
+  final List<NotaPendiente> notas;
+  final List<DefinitivaDelLote> definitivas;
+
+  bool get hayAlgo => notas.isNotEmpty || definitivas.isNotEmpty;
+}
+
 /// La planilla de un indicador: los alumnos del grupo y su nota en esa casilla.
 ///
 /// Es la pantalla del trabajo diario —se acaba la clase y se pasan las treinta
@@ -70,6 +92,12 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
 
   /// Todo lo que se ha guardado en esta pantalla, para devolverlo al salir.
   final List<NotaPendiente> _guardadas = [];
+
+  /// Las definitivas que el servidor devolvió, por alumno.
+  ///
+  /// Un mapa y no una lista: pasando dos veces la misma columna, la segunda
+  /// definitiva de un alumno es la buena y la primera ya no dice nada.
+  final Map<int, DefinitivaDelLote> _definitivas = {};
 
   bool get _puedeEditar =>
       ContextoAcademico.instancia.config.puedeEditarNotas;
@@ -183,6 +211,10 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
       'cuantas': resultado.guardadas,
       'fallidas': resultado.fallidas.length,
     });
+
+    for (final definitiva in resultado.definitivas) {
+      _definitivas[definitiva.alumnoId] = definitiva;
+    }
 
     // Lo que entró pasa a ser lo nuevo «original»: así, si el docente vuelve a
     // pulsar Guardar, no se remanda lo que ya está puesto.
@@ -309,7 +341,10 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
         if (yaSalio) return;
         if (!await _confirmarSalida()) return;
         if (!mounted) return;
-        navegador.pop(_guardadas);
+        navegador.pop(CambiosDeLaPlanilla(
+          notas: _guardadas,
+          definitivas: _definitivas.values.toList(),
+        ));
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF4F5F7),

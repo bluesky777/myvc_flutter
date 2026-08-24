@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 /// Un servidor de mentira que apunta lo que le mandan y contesta lo que se le
@@ -221,6 +222,104 @@ void main() {
       const resultado = ResultadoGuardado(guardadas: 3);
 
       expect(resultado.definitivas, isEmpty);
+    });
+  });
+
+  group('aplicar una definitiva del lote sobre el libro', () {
+    LibroDeNotas libroCon(NotaFinalDelLibro? notaFinal) {
+      return LibroDeNotas(
+        asignatura: AsignaturaModel(
+          id: 7,
+          grupoId: 2,
+          materia: 'Matemáticas',
+          aliasMateria: 'Mat',
+          nombreGrupo: 'Décimo B',
+          abrevGrupo: '10-B',
+        ),
+        unidades: const [],
+        alumnos: [
+          AlumnoDelLibro(
+            alumnoId: 31,
+            nombres: 'Dámaris',
+            apellidos: 'Gómez Pico',
+            notaFinal: notaFinal,
+          ),
+        ],
+      );
+    }
+
+    const conFila = NotaFinalDelLibro(
+      nfId: 4400,
+      nota: 70,
+      automatica: 70,
+      actualizadaPor: 'agomez',
+    );
+
+    test('conserva el nf_id, o se pierde el botón de nivelar', () {
+      // notas/lote no devuelve nf_id. Construir una NotaFinalDelLibro nueva
+      // dejaría nf_id en cero, y `existe` mira justamente eso para apagar el
+      // control: se habría perdido el botón por refrescar un número.
+      final libro = libroCon(conFila).conDefinitivaDelLote(
+        const DefinitivaDelLote(
+          alumnoId: 31,
+          asignaturaId: 7,
+          periodoId: 3,
+          nota: 85,
+          manual: true,
+        ),
+      );
+
+      final quedo = libro.alumnos.single.notaFinal!;
+      expect(quedo.nota, 85);
+      expect(quedo.manual, isTrue);
+      expect(quedo.nfId, 4400, reason: 'el nf_id tiene que sobrevivir');
+      expect(quedo.existe, isTrue);
+      // Tampoco las pierde: el lote no las manda y la app ya las tenía.
+      expect(quedo.automatica, 70);
+      expect(quedo.actualizadaPor, 'agomez');
+    });
+
+    test('una definitiva sin nota no pisa la que había', () {
+      // Después de escribir, el recalculador siempre deja fila. Un null ahí es
+      // «no tiene definitiva», no «vale cero», y pisarla haría que una materia
+      // pareciera perdida.
+      final libro = libroCon(conFila).conDefinitivaDelLote(
+        const DefinitivaDelLote(
+          alumnoId: 31,
+          asignaturaId: 7,
+          periodoId: 3,
+          nota: null,
+        ),
+      );
+
+      expect(libro.alumnos.single.notaFinal!.nota, 70);
+    });
+
+    test('un alumno sin fila se queda como estaba', () {
+      // Sin nf_id no hay nada que nivelar; notas/detailed la creará al recargar.
+      final libro = libroCon(null).conDefinitivaDelLote(
+        const DefinitivaDelLote(
+          alumnoId: 31,
+          asignaturaId: 7,
+          periodoId: 3,
+          nota: 85,
+        ),
+      );
+
+      expect(libro.alumnos.single.notaFinal, isNull);
+    });
+
+    test('una definitiva de otro alumno no toca a este', () {
+      final libro = libroCon(conFila).conDefinitivaDelLote(
+        const DefinitivaDelLote(
+          alumnoId: 999,
+          asignaturaId: 7,
+          periodoId: 3,
+          nota: 10,
+        ),
+      );
+
+      expect(libro.alumnos.single.notaFinal!.nota, 70);
     });
   });
 }

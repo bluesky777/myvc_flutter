@@ -92,7 +92,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     final actual = libro;
     if (actual == null) return;
 
-    final guardadas = await Navigator.of(context).push<List<NotaPendiente>>(
+    final cambios = await Navigator.of(context).push<CambiosDeLaPlanilla>(
       MaterialPageRoute(
         // Con nombre para que la analítica no la vea como un hueco: el
         // observador de pantallas solo registra las rutas que lo tienen.
@@ -105,9 +105,22 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
       ),
     );
 
-    if (guardadas == null || guardadas.isEmpty) return;
-    setState(() => libro = actual.conNotas(guardadas));
+    if (cambios == null || !cambios.hayAlgo) return;
+
+    setState(() {
+      var nuevo = actual.conNotas(cambios.notas);
+
+      // Y la definitiva que devolvió el servidor, cuando la devolvió: sin esto,
+      // la pestaña «Por alumno» seguía enseñando la que la app se calcula sola.
+      for (final definitiva in cambios.definitivas) {
+        nuevo = nuevo.conDefinitivaDelLote(definitiva);
+      }
+
+      libro = nuevo;
+    });
   }
+
+
 
   /// Abre la ficha de un alumno y aplica lo que se haya guardado allí.
   ///

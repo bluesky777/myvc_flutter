@@ -82,9 +82,13 @@ las tres cambian lo que la app tenía que hacer:
   sigue siendo una sola petición.
 - **La respuesta trae `definitivas`**, que este documento no pedía: la
   definitiva de cada alumno tocado, calculada por el mismo recalculador que la
-  escribe. Se parsea y viaja en `ResultadoGuardado.definitivas`. Falta
-  **usarla en las pantallas**, que es lo que quitará las dos verdades: hoy,
-  después de pasar una columna, la definitiva que se ve es la que calcula la app.
+  escribe. Se parsea, viaja en `ResultadoGuardado.definitivas` y **ya se usa**:
+  la planilla la devuelve al libro y `LibroDeNotas.conDefinitivaDelLote` la
+  aplica. Eso quita las dos verdades — antes, después de pasar una columna, la
+  definitiva de la pestaña «Por alumno» era la que la app se calculaba sola.
+  Se copia **encima de la fila que ya existe**, porque el lote no devuelve el
+  `nf_id` y una fila con `nf_id` cero apaga el control de nivelar: se habría
+  perdido el botón por refrescar un número.
 - **`manual` y `recuperada` llegan como booleanos de verdad**, no como el `1/0`
   de PDO que usa el resto del archivo, porque esta respuesta la arma PHP con un
   `(bool)` delante. Leerlas con `entero(x) == 1` pintaría una definitiva manual

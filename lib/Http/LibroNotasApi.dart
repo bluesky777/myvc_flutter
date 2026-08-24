@@ -96,6 +96,41 @@ class LibroDeNotas {
     );
   }
 
+  /// El mismo libro con una definitiva del servidor aplicada encima.
+  ///
+  /// Se **copia sobre la fila que ya existe** en vez de construir una
+  /// `NotaFinalDelLibro` nueva, porque `notas/lote` no devuelve el `nf_id` —ni
+  /// la automática, ni quién la tocó—, y una fila con `nf_id` cero apaga el
+  /// control de nivelar: se perdería el botón por refrescar un número.
+  ///
+  /// Devuelve el libro tal cual en dos casos, y los dos a propósito:
+  ///
+  /// - **La definitiva viene sin nota.** Después de escribir, el recalculador
+  ///   siempre deja fila, así que un null ahí significa «este alumno no tiene
+  ///   definitiva» y no «vale cero». Pisar la que hubiera sería inventarse un
+  ///   dato en la dirección peligrosa: la que hace que una materia parezca
+  ///   perdida.
+  /// - **El alumno no tenía fila.** Sin `nf_id` no hay nada que nivelar, y
+  ///   `notas/detailed` la creará en la próxima carga.
+  LibroDeNotas conDefinitivaDelLote(DefinitivaDelLote nueva) {
+    if (nueva.nota == null) return this;
+
+    final actual = alumnos
+        .where((alumno) => alumno.alumnoId == nueva.alumnoId)
+        .firstOrNull
+        ?.notaFinal;
+    if (actual == null) return this;
+
+    return conNotaFinalDe(
+      nueva.alumnoId,
+      actual.copiaCon(
+        nota: nueva.nota,
+        manual: nueva.manual,
+        recuperada: nueva.recuperada,
+      ),
+    );
+  }
+
   /// El mismo libro con las notas que se acaban de guardar ya aplicadas.
   ///
   /// Existe para no volver a pedir `notas/detailed` al salir de una planilla:
