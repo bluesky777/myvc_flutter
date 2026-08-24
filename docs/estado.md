@@ -24,6 +24,7 @@ flowchart LR
     A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints<br/>y una guarda"]
+    V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -33,6 +34,7 @@ flowchart LR
     style A0 fill:#e8f4e8,stroke:#5a8f5a
     style U1 fill:#e8f4e8,stroke:#5a8f5a
     style U2 fill:#ffe6e6,stroke:#c04b4b
+    style V1 fill:#fff0e6,stroke:#c98a4b
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
@@ -183,6 +185,27 @@ acceso, «Otros» y dos de las masivas por grupo. Y una quinta, cambiar el nombr
 de usuario, que no está apagada por falta de endpoint sino porque el que hay
 deja a cualquier docente renombrar la cuenta de un superusuario — está avisado
 al backend y va por delante de la pantalla.
+
+### La versión mínima — [backend-pendiente.md](backend-pendiente.md) §4
+
+**El lado de la app está hecho** (24 ago 2026):
+[VersionMinima](../lib/Utils/VersionMinima.dart) y
+[ActualizarScreen](../lib/Screens/ActualizarScreen.dart). El número llega en la
+respuesta de `POST /login` —un campo, no una ruta— y si esta versión se queda
+corta no se entra a ninguna parte: la puerta está en el router, no en cada
+pantalla.
+
+**Y está dormida**, que es lo que la hace inofensiva de publicar: hoy ningún
+colegio manda el campo, así que se comporta exactamente igual que no tenerla.
+Lo que falta es que el backend lo mande, y eso está en la lista de Joseth.
+
+**Por qué importa más de lo que parece.** Es lo único que permite retirar un
+endpoint: sin esto, un teléfono con la versión vieja sigue llamando a la ruta
+vieja indefinidamente y nadie se entera, así que **retirar cualquier cosa
+depende de que dieciséis colegios se actualicen por su cuenta**. Dos planes del
+backend —la fase 7 de la auditoría y la 5 del 00— estaban parados en eso. Ahora
+pasan de «sin fecha y sin forma» a «sin fecha, pero con la forma escrita»: la
+fecha sigue sin poder existir porque **la app no está publicada todavía**.
 
 ### Analítica — [analitica.md](analitica.md)
 
