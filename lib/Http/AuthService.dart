@@ -74,6 +74,21 @@ class UserAutenticado {
   bool get esEspecial =>
       esAdmin || roles.any((rol) => rol.startsWith('coord'));
 
+  /// Quien administra las cuentas del colegio.
+  ///
+  /// Es el mismo criterio que `Autoriza::esAdministrativo` en el servidor
+  /// —superusuario, `Admin` o `Secretario`—, y por eso incluye un rol que hoy
+  /// no tiene nadie: el `Secretario` se creó el 21 de agosto de 2026 sin
+  /// dárselo a ninguna cuenta. La razón de existir de ese rol es justamente
+  /// esto: una secretaria docente que arregla usuarios y contraseñas sin ser
+  /// superusuaria.
+  ///
+  /// **Y como siempre, esto es alcance y no permiso.** Decide qué enseña el
+  /// menú; lo que niega de verdad es la guarda del backend, que en algunas de
+  /// estas operaciones pide más —ver docs/usuarios.md—.
+  bool get administraCuentas =>
+      isSuperuser || tieneRol('admin') || tieneRol('secretario');
+
   /// Quien puede comentar una publicación del muro.
   ///
   /// Los alumnos y los acudientes leen; escriben los del colegio. Los cargos de

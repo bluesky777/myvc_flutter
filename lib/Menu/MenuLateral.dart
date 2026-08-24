@@ -138,6 +138,21 @@ class MenuLateral extends StatelessWidget {
       ruta: '/disciplina',
     ));
 
+    // Solo para quien administra cuentas —superusuario, Admin o Secretario—, y
+    // aquí sí se esconde de verdad en vez de enseñarla en gris como
+    // Configuración. La diferencia es qué se ve dentro: Configuración le
+    // explica a un docente por qué hoy no puede editar notas, y esto es el
+    // listado con el nombre de usuario y el celular de las familias de un
+    // grupo. Un docente no tiene nada que mirar ahí.
+    if (usuario.administraCuentas) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.manage_accounts_outlined,
+        texto: 'Usuarios',
+        ruta: '/usuarios',
+      ));
+    }
+
     // La última, y para todo el personal aunque casi todo lo que hay dentro
     // solo lo pueda mover un administrador: la mitad de su gracia es explicarle
     // a un docente por qué hoy no puede editar notas, o qué significa un 85.

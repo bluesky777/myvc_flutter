@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/PrivacidadScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
+import 'package:myvc_flutter/Screens/UsuariosScreen.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
@@ -56,6 +57,9 @@ class RouteGenerator {
       case '/configuracion':
         return MaterialPageRoute(
             settings: settings, builder: (context) => ConfiguracionScreen());
+      case '/usuarios':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => UsuariosScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());

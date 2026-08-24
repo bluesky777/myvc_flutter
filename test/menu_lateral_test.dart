@@ -6,7 +6,24 @@ import 'package:myvc_flutter/Menu/MenuLateral.dart';
 void main() {
   setUp(AuthService.limpiar);
 
+  /// Monta el menú en un lienzo alto.
+  ///
+  /// Alto a propósito. En la pantalla de 800x600 que traen las pruebas, el menú
+  /// de un administrativo ya no cabe —Inicio, Asistencias, Notas, Notas
+  /// perdidas, Unidades, Disciplina, Usuarios, Configuración, Privacidad y
+  /// cerrar sesión—, y un `ListView` no construye lo que no se ve: la última
+  /// fila «no aparece» y la prueba falla con una cara engañosa, como si la
+  /// opción no estuviera puesta.
+  ///
+  /// Pasó al añadir «Usuarios», y con un `drag` volvería a pasar en cuanto el
+  /// menú creciera otra vez. Con el lienzo alto, estas pruebas vuelven a ser
+  /// sobre quién ve qué y no sobre cuántos píxeles mide la lista.
   Future<void> montar(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(MaterialApp(home: MenuLateral()));
     await tester.pump();
   }
