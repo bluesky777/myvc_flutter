@@ -120,6 +120,27 @@ sostiene en producción, encender la validación no le rompe el día a nadie. Un
 nota histórica que ya no se puede volver a guardar es distinta de una que se
 escribe hoy, así que merece mirarse contra la base real.
 
+### Un agujero de la versión mínima, sin decidir
+
+**Un colegio que suba `version_minima_app` no bloquea a nadie que ya tenga
+sesión guardada** — y ésa es la gente que usa la app todos los días.
+
+Al arrancar, `restaurar()` lee el cuerpo de `/login` **guardado en disco** la
+última vez que esa persona tecleó su contraseña; la comprobación del token se
+hace con `GET /years` y no con `/login`, a propósito, porque el login está
+limitado a cinco por minuto y por IP. Y la app **no refresca**: no hay ninguna
+llamada a `auth/refresh`, así que el punto por el que la API entrega un mínimo
+nuevo sin que el usuario salga y vuelva no lo ejerce nadie desde aquí.
+
+Salió el 24 ago 2026 al confirmarle el contrato a la sesión de la API, que
+había escrito un caso de prueba dando por cubierto ese camino.
+
+**La decisión es de Joseth**, porque el arreglo cuesta una petición más en algún
+sitio y eso es justo lo que este proyecto evita en un hosting compartido. Las
+opciones: volver a guardar el cuerpo de `/login` cada cierto tiempo, o releer el
+mínimo dentro de alguna llamada barata que ya se haga. Mientras tanto, la puerta
+existe pero **sólo se cierra en la cara de quien vuelve a entrar**.
+
 ## Cómo se trabaja aquí
 
 - **Rama por frente**, con el nombre de lo que hace: `feat/disciplina`,
