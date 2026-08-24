@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:myvc_flutter/Utils/PreferenciasAnalitica.dart';
 
 /// La analítica de uso, y el único sitio que habla con Firebase Analytics.
 ///
@@ -42,6 +43,22 @@ class Analitica {
   static bool get disponible =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
+  /// Si el dueño de este teléfono no la ha apagado.
+  ///
+  /// Se lee del disco al arrancar y se conserva aquí para que consultarla no
+  /// sea `async`: los sitios que cuentan algo —el `initState` de una pantalla,
+  /// el guardado de una columna de notas— no pueden esperar a `SharedPreferences`
+  /// solo para decidir si mandan un evento.
+  ///
+  /// Arranca en `true` para que el valor de partida no dependa de que el disco
+  /// conteste a tiempo; si estaba apagada, [aplicarPreferencia] lo corrige unos
+  /// milisegundos después, y de todas formas el propio SDK ya tiene guardado
+  /// del arranque anterior que la recogida está apagada.
+  static bool _activa = true;
+
+  /// Si ahora mismo se está midiendo. Es lo que pinta el interruptor.
+  static bool get activa => _activa;
+
   /// Enciende la analítica. Se llama una vez, después de `Firebase.initializeApp`.
   ///
   /// Si Firebase no está en pie, se queda apagada y no dice nada. El `try` no
@@ -56,6 +73,29 @@ class Analitica {
     } catch (_) {
       _analytics = null;
     }
+  }
+
+  /// Lee del disco si este teléfono quiere aparecer, y se lo dice al SDK.
+  ///
+  /// Se llama al arrancar, justo después de [arrancar]. Se hace en dos pasos
+  /// —encender y luego aplicar— porque leer el disco es `async` y el arranque
+  /// no debe esperar a esto para seguir montando la app.
+  static Future<void> aplicarPreferencia() async {
+    _activa = await PreferenciasAnalitica.activa();
+    _intentarSiempre(
+      () => _analytics?.setAnalyticsCollectionEnabled(_activa),
+    );
+  }
+
+  /// Enciende o apaga las estadísticas en este dispositivo, y lo recuerda.
+  ///
+  /// Apagarlas es de verdad: `setAnalyticsCollectionEnabled(false)` corta la
+  /// recogida en el propio SDK y **el SDK lo recuerda entre arranques**, así
+  /// que no queda un hueco entre que la app abre y esta preferencia se lee.
+  static Future<void> cambiar(bool valor) async {
+    _activa = valor;
+    await PreferenciasAnalitica.setActiva(valor);
+    _intentarSiempre(() => _analytics?.setAnalyticsCollectionEnabled(valor));
   }
 
   /// El observador que registra los cambios de pantalla.
@@ -154,11 +194,26 @@ class Analitica {
     return (host == null || host.isEmpty) ? servidor : host;
   }
 
+  /// Manda algo, si hay a quién y si este teléfono quiere aparecer.
+  ///
+  /// La comprobación de [_activa] es un cinturón sobre el tirante: apagar ya
+  /// corta la recogida dentro del SDK. Está porque el interruptor tiene que ser
+  /// creíble, y que ni siquiera se construya el evento es más fácil de afirmar
+  /// —y de leer aquí— que fiarse de lo que hace Google por dentro.
+  static void _intentar(Future<void>? Function() accion) {
+    if (!_activa) return;
+    _intentarSiempre(accion);
+  }
+
   /// Ejecuta sin esperar y sin dejar que un fallo suba.
   ///
   /// Que Google no conteste, o que el paquete cambie de idea sobre qué acepta,
   /// no puede ser nunca la razón de que una pantalla se caiga.
-  static void _intentar(Future<void>? Function() accion) {
+  ///
+  /// No mira [_activa] a propósito: por aquí pasa justamente la llamada que
+  /// **apaga** la recogida, y filtrarla por la preferencia que acaba de
+  /// cambiar la dejaría sin efecto.
+  static void _intentarSiempre(Future<void>? Function() accion) {
     if (_analytics == null) return;
     try {
       accion()?.catchError((_) {});

@@ -26,6 +26,10 @@ void main() async {
     try {
       await Firebase.initializeApp();
       Analitica.arrancar();
+      // Y respetar lo que este teléfono decidió la última vez. Va después de
+      // arrancar y no antes porque quien lo apaga es el SDK, y para eso tiene
+      // que existir. Ver PrivacidadScreen.
+      await Analitica.aplicarPreferencia();
     } catch (_) {
       // Sin analítica, y sin ruido para quien solo quiere entrar.
     }

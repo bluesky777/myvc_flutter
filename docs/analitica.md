@@ -77,6 +77,31 @@ razones, y cualquiera de las tres basta:
 - `colegio` — cuál de los dieciséis. Sin esto, dieciséis colegios se mezclan en
   un solo número y ninguno se puede mirar por separado.
 
+### Y se puede apagar
+
+Menú ▸ **Privacidad** → [PrivacidadScreen](../lib/Screens/PrivacidadScreen.dart):
+un interruptor, y debajo qué se manda y qué no, escrito entero.
+
+**Va en su propia pantalla y no dentro de Configuración**, aunque suene a que
+ahí es su sitio. Configuración es del colegio —periodos, escala, quién puede
+editar notas— y el menú **solo se la ofrece al personal**: la rama de alumno y
+acudiente sale antes. Meter ahí el interruptor habría sido escribirlo para que
+la mitad de la gente no pudiera verlo, que es peor que no tenerlo. Hay una
+prueba por rol que lo fija.
+
+La preferencia es **del dispositivo**, no de la cuenta: la guarda
+[PreferenciasAnalitica](../lib/Utils/PreferenciasAnalitica.dart) en el teléfono,
+igual que se decidió para las notificaciones y por lo mismo —cero filas en la
+base del colegio, cero consultas—. Apagar llama a
+`setAnalyticsCollectionEnabled(false)`, que el SDK recuerda entre arranques, así
+que no queda un hueco midiendo entre que la app abre y la preferencia se lee del
+disco. Y por encima, `Analitica` no construye ni un evento mientras esté
+apagada: el interruptor tiene que ser creíble sin depender de lo que Google haga
+por dentro.
+
+Cuando entren las notificaciones, sus cinco interruptores son de la misma clase
+—preferencias del dispositivo— y esta es la pantalla donde encajan.
+
 `colegio` es una institución, no una persona. Aun así conviene decirlo: en un
 colegio pequeño, «rol = docente, colegio = X» puede ser poca gente. Por eso no
 se añade ninguna tercera dimensión —ni grupo, ni asignatura, ni jornada— que al
@@ -163,8 +188,10 @@ dato agregado no caduca con esa opción.
 | `flutter build apk` | ✓ compila |
 | Dónde mide | **solo en Android**; en web y en las pruebas es un no-op |
 | Eventos puestos | los seis de la tabla de arriba |
-| Pruebas | `test/analitica_test.dart`, 3 |
-| Política de privacidad | ⛔ **sigue diciendo que no hay analítica** |
+| Apagarla | menú ▸ Privacidad, para **todos** los roles |
+| Pruebas | 7 en `analitica_test.dart` + 5 de menú, por rol |
+| Política de privacidad | ✓ reescrita |
+| Retención en la consola | ⛔ falta confirmar que está en 2 meses |
 
 **El `google-services.json` va al repositorio a propósito.** No es un secreto:
 viaja dentro del APK y cualquiera lo extrae. Lo que protege una app de Firebase

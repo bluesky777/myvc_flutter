@@ -7,8 +7,8 @@ miente, es un fallo tan real como una prueba en rojo.
 **Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
 4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`.
 Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
-hecha** —Firebase, los eventos y las dos propiedades— y lo que le queda no es
-código: la política de privacidad y el formulario de seguridad de datos.
+hecha entera** —Firebase, los eventos, el interruptor para apagarla y la
+política de privacidad reescrita—; de ella solo queda un ajuste de consola.
 
 ## Los frentes abiertos
 
@@ -19,25 +19,23 @@ flowchart LR
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
-    A["Analítica<br/>docs/analitica.md"] --> A0["código hecho ✓<br/>falta la política<br/>de privacidad"]
+    A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#ffe6e6,stroke:#c04b4b
     style P0 fill:#ffe6e6,stroke:#c04b4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
-    style A0 fill:#ffe6e6,stroke:#c04b4b
+    style A0 fill:#e8f4e8,stroke:#5a8f5a
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
 
 ## Qué sigue, en orden
 
-**Lo único pendiente que no espera a nadie es el texto legal de la analítica**:
-la política de privacidad dice hoy, en dos sitios, que la app no incorpora
-herramientas de analítica, y eso dejó de ser verdad. Hay que reescribirlo antes
-de enviar la app a revisión, no después. Ver
-[analitica.md](analitica.md) → «Lo que hay que cambiar fuera del código».
+**No queda trabajo de app que no espere a nadie.** De la analítica solo falta
+una cosa, y es de consola: confirmar en Analytics que la retención a nivel de
+usuario está en dos meses, que es lo que promete la política de privacidad.
 
 Los otros dos frentes —la pantalla de disciplina del alumno y las
 notificaciones— necesitan trabajo en el backend, y el backend es de solo lectura
@@ -158,7 +156,13 @@ romper un sitio donde la app hoy funciona.
 Todo pasa por [Analitica](../lib/Utils/Analitica.dart), que es el único archivo
 que habla con Firebase y donde vive la regla de qué se puede mandar.
 
-Lo que falta es **el texto legal**, y bloquea la publicación en Play.
+Se puede apagar: menú ▸ **Privacidad**, y esa opción la ven **todos** los
+roles —Configuración no servía, que el menú se la ofrece solo al personal—. La
+preferencia es del dispositivo y no de la cuenta, igual que se decidió para las
+notificaciones.
+
+La política de privacidad ya está reescrita. Falta solo confirmar en la consola
+que la retención está en dos meses.
 
 ### Publicación en Google Play
 

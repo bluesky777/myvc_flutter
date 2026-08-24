@@ -1,7 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/PreferenciasAnalitica.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('la analítica', () {
     test('arrancar sin Firebase detrás la deja apagada, no reventada', () {
       // Este es el caso que de verdad ocurre: `FirebaseAnalytics.instance`
@@ -33,5 +39,43 @@ void main() {
         Analitica.olvidar();
       }, returnsNormally);
     });
+  });
+
+  group('el interruptor de apagarla', () {
+    test('viene encendido, que es como sale de fábrica', () async {
+      expect(await PreferenciasAnalitica.activa(), isTrue);
+    });
+
+    test('apagarlo se recuerda en el disco', () async {
+      await PreferenciasAnalitica.setActiva(false);
+      expect(await PreferenciasAnalitica.activa(), isFalse);
+
+      await PreferenciasAnalitica.setActiva(true);
+      expect(await PreferenciasAnalitica.activa(), isTrue);
+    });
+
+    test('apagarlo deja a la analítica diciendo que está apagada', () async {
+      await Analitica.cambiar(false);
+      expect(Analitica.activa, isFalse);
+
+      await Analitica.cambiar(true);
+      expect(Analitica.activa, isTrue);
+    });
+
+    test('al arrancar se respeta lo que este teléfono había dejado dicho',
+        () async {
+      // El caso que importa: la app se cierra apagada y se vuelve a abrir. Si
+      // `aplicarPreferencia` no leyera el disco, volvería a medir sola y el
+      // interruptor sería un adorno.
+      SharedPreferences.setMockInitialValues({
+        PreferenciasAnalitica.claveActiva: false,
+      });
+
+      await Analitica.aplicarPreferencia();
+
+      expect(Analitica.activa, isFalse);
+    });
+
+    tearDown(() => Analitica.cambiar(true));
   });
 }

@@ -11,16 +11,14 @@ pero quién responde legalmente por esos datos es una decisión que no está en 
 código.
 
 > **La analítica ya está dentro de la app** y este texto la describe: ver «Datos
-> de uso de la aplicación». Dos cosas que hay que hacer para que lo escrito aquí
-> sea verdad y no una intención:
+> de uso de la aplicación», que además dice cómo apagarla, porque el
+> interruptor existe —menú ▸ Privacidad—.
 >
-> 1. **En la consola de Analytics, poner la retención a nivel de usuario en 2
->    meses** (*Administrar ▸ Configuración de datos ▸ Retención de datos*). El
->    texto dice 2 meses; por defecto Google trae ese valor, pero conviene
->    confirmarlo y no fiarse.
-> 2. **Decidir si habrá un interruptor para apagarla.** Hoy no lo hay, y el
->    texto lo dice tal cual. Si se quiere, es media hora de trabajo y entonces
->    hay que cambiar ese párrafo. Ver [analitica.md](analitica.md).
+> **Queda una cosa por hacer para que lo escrito aquí sea verdad y no una
+> intención:** en la consola de Analytics, poner la retención a nivel de usuario
+> en 2 meses (*Administrar ▸ Configuración de datos ▸ Retención de datos*). El
+> texto promete dos meses; por defecto Google trae ese valor, pero conviene
+> confirmarlo y no fiarse.
 >
 > **Falta todavía lo de las notificaciones**, que cuando entren añaden el
 > identificador de dispositivo de FCM ([notificaciones.md](notificaciones.md)).
@@ -81,9 +79,12 @@ la aplicación lo tiene desactivado y ni siquiera pide el permiso para leerlo. E
 identificador de la instalación desaparece si usted borra los datos de la
 aplicación o la desinstala.
 
-Hoy **no hay dentro de la aplicación una opción para desactivar estas
-estadísticas**. Si prefiere no aparecer en ellas, la vía es desinstalar la
-aplicación y entrar por la página web del colegio.
+**Puede desactivarlas cuando quiera.** En el menú de la aplicación, en
+**Privacidad**, hay un interruptor para dejar de enviar estadísticas de uso.
+Apagarlo tiene efecto inmediato y la aplicación lo recuerda; el resto de la
+aplicación sigue funcionando igual. El ajuste es **de ese dispositivo**: si
+usted usa la aplicación en el teléfono y en una tableta, tendrá que apagarlo en
+cada uno.
 
 **Lo que NO recogemos.** La aplicación no accede a su cámara, micrófono,
 contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de
