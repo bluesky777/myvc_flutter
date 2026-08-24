@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +17,23 @@ import 'Bloc/login_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // La analítica, antes de nada, para que el arranque también se cuente. Si
+  // Firebase falla —sin red al abrir, un google-services.json que no llegó al
+  // build— la app tiene que arrancar igual: saber cuánta gente la usa no puede
+  // ser el motivo de que no se pueda usar. Ver docs/analitica.md.
+  if (Analitica.disponible) {
+    try {
+      await Firebase.initializeApp();
+      Analitica.arrancar();
+      // Y respetar lo que este teléfono decidió la última vez. Va después de
+      // arrancar y no antes porque quien lo apaga es el SDK, y para eso tiene
+      // que existir. Ver PrivacidadScreen.
+      await Analitica.aplicarPreferencia();
+    } catch (_) {
+      // Sin analítica, y sin ruido para quien solo quiere entrar.
+    }
+  }
 
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: kIsWeb
@@ -86,6 +105,8 @@ class MyApp extends StatelessWidget {
         RouteGenerator.generateRoute(RouteSettings(name: ruta)),
       ],
       navigatorKey: navigatorKey,
+      // Vacío cuando no hay analítica, que es siempre en web y en las pruebas.
+      navigatorObservers: Analitica.observadores,
       onGenerateRoute: RouteGenerator.generateRoute,
     );
   }

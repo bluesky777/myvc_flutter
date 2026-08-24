@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Las faltas de un alumno en el año, periodo a periodo.
 ///
@@ -267,7 +268,7 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
     final year = ContextoAcademico.instancia.year;
 
     return RefreshIndicator(
-      onRefresh: _cargar,
+      onRefresh: Analitica.refresco('mi-asistencia', _cargar),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [

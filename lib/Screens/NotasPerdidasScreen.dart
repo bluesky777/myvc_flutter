@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Qué llevan perdido los alumnos de un docente, y arreglarlo desde aquí.
 ///
@@ -72,6 +73,9 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
   @override
   void initState() {
     super.initState();
+    // Se construyó entera y no se sabe si le sirve a alguien. Sin parámetros:
+    // que se abra es toda la pregunta.
+    Analitica.evento('notas_perdidas_abierta');
     _arrancar();
   }
 
@@ -236,7 +240,7 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
     final visibles = _visibles;
 
     return RefreshIndicator(
-      onRefresh: _arrancar,
+      onRefresh: Analitica.refresco('notas-perdidas', _arrancar),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [

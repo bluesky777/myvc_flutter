@@ -12,6 +12,7 @@ import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Por dónde se entra a poner notas: las asignaturas del docente.
 ///
@@ -149,6 +150,9 @@ class _NotasScreenState extends State<NotasScreen> {
   void _abrir(AsignaturaConUnidades fila) {
     Navigator.of(context).push(
       MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'libro-asignatura'),
         builder: (_) => LibroAsignaturaScreen(
           asignatura: fila.asignatura,
           profesorId: esDocente ? null : docenteElegido?.profesorId,
@@ -198,7 +202,7 @@ class _NotasScreenState extends State<NotasScreen> {
     final visibles = _visibles;
 
     return RefreshIndicator(
-      onRefresh: _arrancar,
+      onRefresh: Analitica.refresco('notas', _arrancar),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [

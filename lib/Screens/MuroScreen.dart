@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///
@@ -115,7 +116,7 @@ class _MuroScreenState extends State<MuroScreen> {
     final acceso = _buildAccesoANotas();
 
     return RefreshIndicator(
-      onRefresh: _cargar,
+      onRefresh: Analitica.refresco('muro', _cargar),
       child: publicaciones.isEmpty
           ? _muroVacio(acceso)
           : ListView.builder(

@@ -119,4 +119,39 @@ void main() {
       expect(find.text('Configuración'), findsNothing);
     });
   });
+  group('Privacidad', () {
+    // El interruptor de las estadísticas vive ahí dentro, y apagarlo no puede
+    // ser un privilegio del personal: un acudiente es igual de dueño de su
+    // teléfono que un coordinador. Configuración no servía —el menú corta
+    // antes para alumnos y acudientes—, y por eso es una opción aparte.
+    for (final caso in [
+      ('un alumno', UserAutenticado(username: 'a', tipo: 'Alumno')),
+      ('un acudiente', UserAutenticado(username: 'b', tipo: 'Acudiente')),
+      ('un docente', UserAutenticado(username: 'c', tipo: 'Profesor')),
+      ('un administrador',
+          UserAutenticado(username: 'd', tipo: 'Usuario', isSuperuser: true)),
+    ]) {
+      testWidgets('la ve ${caso.$1}', (WidgetTester tester) async {
+        AuthService.user = caso.$2;
+
+        await montar(tester);
+
+        expect(find.text('Privacidad'), findsOneWidget);
+      });
+    }
+
+    testWidgets('y un alumno sigue sin ver lo que no es suyo',
+        (WidgetTester tester) async {
+      // Que Privacidad se cuele en la rama de alumno no puede haber abierto de
+      // paso las opciones del personal.
+      AuthService.user = UserAutenticado(username: 'a', tipo: 'Alumno');
+
+      await montar(tester);
+
+      expect(find.text('Privacidad'), findsOneWidget);
+      expect(find.text('Disciplina'), findsNothing);
+      expect(find.text('Configuración'), findsNothing);
+      expect(find.text('Notas perdidas'), findsNothing);
+    });
+  });
 }

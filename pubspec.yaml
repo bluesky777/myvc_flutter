@@ -28,6 +28,8 @@ dependencies:
   equatable: ^2.0.8
   hydrated_bloc: ^11.0.0
   path_provider: ^2.1.5
+  firebase_core: ^4.13.0
+  firebase_analytics: ^12.4.6
 
 dev_dependencies:
   flutter_test:

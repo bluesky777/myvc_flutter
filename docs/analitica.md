@@ -1,7 +1,9 @@
 # Analítica: saber si la app se usa, sin recoger a nadie
 
-Plan para poner Google Analytics (el de Firebase) en la app. Escrito el 23 de
-agosto de 2026, a petición de Joseth.
+Google Analytics (el de Firebase) en la app. Escrito el 23 de agosto de 2026 a
+petición de Joseth, y **construido el mismo día**: el proyecto de Firebase es
+`micolevirtual-mobile` y la app de Android está registrada. Lo que queda es de
+consola y de texto legal, no de código; ver «Cómo está ahora mismo».
 
 ## Para qué, en una línea
 
@@ -65,7 +67,7 @@ razones, y cualquiera de las tres basta:
 | `planilla_abierta` | `hora_del_dia` | ¿en clase, o por la noche corrigiendo? |
 | `notas_perdidas_abierta` | — | ¿le sirve a alguien esa pantalla? |
 | `situacion_creada` | `tipo` (1, 2 o 3) | ¿se usa disciplina desde el teléfono? |
-| `refresco_manual` | `pantalla` | dónde la gente no se fía de lo que ve |
+| `refresco_manual` | `pantalla` | dónde la gente no se fía de lo que ve (los diez `RefreshIndicator`) |
 
 **Propiedades de usuario**, dos, y ninguna identifica a nadie:
 
@@ -75,6 +77,31 @@ razones, y cualquiera de las tres basta:
 - `colegio` — cuál de los dieciséis. Sin esto, dieciséis colegios se mezclan en
   un solo número y ninguno se puede mirar por separado.
 
+### Y se puede apagar
+
+Menú ▸ **Privacidad** → [PrivacidadScreen](../lib/Screens/PrivacidadScreen.dart):
+un interruptor, y debajo qué se manda y qué no, escrito entero.
+
+**Va en su propia pantalla y no dentro de Configuración**, aunque suene a que
+ahí es su sitio. Configuración es del colegio —periodos, escala, quién puede
+editar notas— y el menú **solo se la ofrece al personal**: la rama de alumno y
+acudiente sale antes. Meter ahí el interruptor habría sido escribirlo para que
+la mitad de la gente no pudiera verlo, que es peor que no tenerlo. Hay una
+prueba por rol que lo fija.
+
+La preferencia es **del dispositivo**, no de la cuenta: la guarda
+[PreferenciasAnalitica](../lib/Utils/PreferenciasAnalitica.dart) en el teléfono,
+igual que se decidió para las notificaciones y por lo mismo —cero filas en la
+base del colegio, cero consultas—. Apagar llama a
+`setAnalyticsCollectionEnabled(false)`, que el SDK recuerda entre arranques, así
+que no queda un hueco midiendo entre que la app abre y la preferencia se lee del
+disco. Y por encima, `Analitica` no construye ni un evento mientras esté
+apagada: el interruptor tiene que ser creíble sin depender de lo que Google haga
+por dentro.
+
+Cuando entren las notificaciones, sus cinco interruptores son de la misma clase
+—preferencias del dispositivo— y esta es la pantalla donde encajan.
+
 `colegio` es una institución, no una persona. Aun así conviene decirlo: en un
 colegio pequeño, «rol = docente, colegio = X» puede ser poca gente. Por eso no
 se añade ninguna tercera dimensión —ni grupo, ni asignatura, ni jornada— que al
@@ -82,18 +109,26 @@ cruzarse deje a una persona sola en una casilla.
 
 ## Lo que se apaga a propósito
 
-### El identificador de publicidad
+### Los permisos de publicidad — y son tres, no uno
 
-El SDK de Analytics **añade solo** el permiso
-`com.google.android.gms.permission.AD_ID` al manifiesto, aunque la app no tenga
-un solo anuncio. Aquí no se quiere: no hay publicidad, no hay perfiles y es una
-app de menores, así que se apaga y se quita el permiso.
+El SDK de Analytics **añade solo** permisos de publicidad al manifiesto, aunque
+la app no tenga un anuncio. Aquí no se quieren: no hay publicidad, no hay
+perfiles y es una app de menores.
+
+Lo que casi todas las guías dicen es que hay que quitar
+`com.google.android.gms.permission.AD_ID`. **Eso ya no basta.** Medido en el
+manifiesto fusionado de un *build* de verdad, el SDK de hoy trae **tres**: ese y
+los dos del Privacy Sandbox de Android.
 
 En `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <manifest xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+                     tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+                     tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
                      tools:node="remove" />
     <application>
         <meta-data android:name="google_analytics_adid_collection_enabled"
@@ -102,15 +137,37 @@ En `android/app/src/main/AndroidManifest.xml`:
 </manifest>
 ```
 
-Las dos cosas, no una: el `meta-data` apaga la recogida, y el `tools:node`
-impide que el permiso llegue al *bundle*. Si solo se pone el primero, el permiso
-sigue declarado y Play lo señala en el formulario de seguridad de datos — y
-declarar un permiso de publicidad en una app de colegio es exactamente lo que no
-queremos explicar.
+El `meta-data` apaga la recogida y los `tools:node` impiden que los permisos
+lleguen al *bundle*. Hacen falta las dos cosas: solo con el `meta-data`, los
+permisos siguen declarados y Play los señala — y declarar permisos de publicidad
+en una app de colegio es exactamente lo que no queremos explicar.
 
-Hoy [publicacion-play.md](publicacion-play.md) §9 puede decir «solo `INTERNET` —
-no hay que justificar nada». **Eso hay que mantenerlo cierto**, y esta es la
-forma.
+**Cómo se comprueba**, que es lo único que vale aquí:
+
+```
+flutter build apk --debug
+grep -o 'uses-permission android:name="[^"]*"' \
+  build/app/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml \
+  | sort -u
+```
+
+Y quedan cinco, ninguno de publicidad y **ninguno de los que Android pide al
+usuario** —son todos de nivel normal, sin diálogo—:
+
+| Permiso | Por qué se queda |
+|---|---|
+| `INTERNET` | nuestro, de siempre |
+| `ACCESS_NETWORK_STATE` | mirar si hay red antes de subir un lote de eventos |
+| `WAKE_LOCK` | no dormirse a mitad de una subida |
+| `…BIND_GET_INSTALL_REFERRER_SERVICE` | de dónde vino la instalación |
+| `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | interna de Flutter, ya estaba |
+
+Los dos primeros son funcionales: quitarlos rompería la subida en vez de
+proteger a nadie.
+
+**Ojo con lo que esto cambia en Play.** [publicacion-play.md](publicacion-play.md)
+§9 decía «solo `INTERNET` — no hay que justificar nada», y **eso dejó de ser
+verdad**: ya está corregido allí, con esta misma tabla.
 
 ### La retención de datos
 
@@ -119,7 +176,37 @@ defecto y se puede subir a 14. **Se deja en 2.** Las preguntas de este documento
 son sobre tendencias agregadas, no sobre seguir a nadie durante un año, y el
 dato agregado no caduca con esa opción.
 
-## Una trampa del código que hay que arreglar antes
+## Cómo está ahora mismo
+
+| | |
+|---|---|
+| Proyecto de Firebase | `micolevirtual-mobile`, app de Android `com.micolevirtual.app` |
+| `google-services.json` | en `android/app/`, **en el repositorio** |
+| Paquetes | `firebase_core` y `firebase_analytics` |
+| Permisos de publicidad | los **tres** fuera del *bundle*, comprobado en el manifiesto fusionado |
+| Permisos que quedan | 5, ninguno de los que Android pide al usuario |
+| `flutter build apk` | ✓ compila |
+| Dónde mide | **solo en Android**; en web y en las pruebas es un no-op |
+| Eventos puestos | los seis de la tabla de arriba |
+| Apagarla | menú ▸ Privacidad, para **todos** los roles |
+| Pruebas | 7 en `analitica_test.dart` + 5 de menú, por rol |
+| Política de privacidad | ✓ reescrita |
+| Retención en la consola | ⛔ falta confirmar que está en 2 meses |
+
+**El `google-services.json` va al repositorio a propósito.** No es un secreto:
+viaja dentro del APK y cualquiera lo extrae. Lo que protege una app de Firebase
+no es esconder ese archivo —es imposible— sino las reglas del lado del
+servidor. El que **sí** es secreto es el JSON de la cuenta de servicio, el de
+las notificaciones, y ese no entra aquí ni entrará.
+
+**En web no se mide, y es a propósito.** En Firebase hay registrada una sola
+app, la de Android. `Firebase.initializeApp()` sin opciones explícitas no
+encuentra proyecto en la web, así que encenderla ahí habría roto un sitio donde
+la app hoy funciona. `Analitica` se queda callada y la app se comporta igual que
+siempre. Si se quiere medir también la web, hay que registrar la app web en la
+consola y generar `firebase_options.dart`; entonces es cambiar una línea.
+
+## Una trampa del código, ya arreglada
 
 `FirebaseAnalyticsObserver` registra `screen_view` leyendo el **nombre** de la
 ruta. Y en esta app hay **ocho `MaterialPageRoute` fuera de
@@ -133,14 +220,31 @@ grep -rn "MaterialPageRoute(" lib/Screens/*.dart | grep -v RouteGenerator   → 
 
 Son justo las pantallas que más interesa medir: la ficha de disciplina, el
 editor de situación, los uniformes, la planilla, la ficha de notas del alumno.
-Con el observador tal cual, **saldrían todas como huecos**: se vería entrar a
-`/disciplina` y desaparecer.
+Con el observador tal cual, **habrían salido todas como huecos**: se vería
+entrar a `/disciplina` y desaparecer.
 
 Es a propósito que no tengan ruta con nombre —[disciplina.md](disciplina.md) lo
 explica: reciben modelos ya cargados y devuelven el alumno recalculado, y por
-una ruta con nombre eso viaja como `Object?`—. La salida no es darles ruta, es
-ponerles `settings: const RouteSettings(name: 'ficha-disciplina')` al `push`.
-Ocho líneas, ningún cambio de comportamiento.
+una ruta con nombre eso viaja como `Object?`—. Así que la salida no fue darles
+ruta, sino `settings: const RouteSettings(name: …)` en los ocho `push`. Ocho
+líneas, ningún cambio de comportamiento, y ahora son ocho y ocho.
+
+**Al añadir una pantalla nueva que se abra con `push`, hay que ponerle el
+`settings`.** Es lo único de esto que hay que recordar.
+
+## Y otra que salió al probar
+
+`Analitica.arrancar()` no estaba protegido, y `FirebaseAnalytics.instance`
+**lanza `[core/no-app]` en cuanto se toca sin haber inicializado Firebase**. Lo
+tapaba el `try` de `main.dart`, así que en producción no se habría notado — pero
+significaba que el único sitio que impedía que la analítica tumbara el arranque
+estaba fuera de la clase que debía garantizarlo.
+
+Lo encontró `test/analitica_test.dart`, y no de casualidad: en `flutter test` la
+plataforma se presenta como Android, así que la prueba recorre exactamente el
+camino que recorrería un teléfono donde `initializeApp` fallara —sin red al
+abrir, o un `google-services.json` que no llegó al *build*—. Ahora se protege
+sola, y hay tres pruebas que lo fijan.
 
 ## Lo que hay que cambiar fuera del código
 
@@ -173,25 +277,28 @@ baste con la política.
 
 ```mermaid
 flowchart LR
-    F["1 · Firebase<br/>activar Analytics<br/>en el proyecto"] --> D["2 · Dependencias<br/>firebase_core +<br/>firebase_analytics"]
-    D --> M["3 · Manifiesto<br/>quitar AD_ID"]
-    M --> R["4 · Los ocho push<br/>con RouteSettings"]
-    R --> E["5 · Los eventos<br/>y las dos propiedades"]
-    E --> P["6 · Política y<br/>ficha de Play"]
+    F["1 · Firebase ✓<br/>proyecto y app<br/>de Android"] --> D["2 · Dependencias ✓<br/>firebase_core +<br/>firebase_analytics"]
+    D --> M["3 · Manifiesto ✓<br/>AD_ID fuera"]
+    M --> R["4 · Los ocho push ✓<br/>con RouteSettings"]
+    R --> E["5 · Los eventos ✓<br/>y las dos propiedades"]
+    E --> P["6 · Política y<br/>ficha de Play ⛔"]
 
-    style F fill:#fff0e6,stroke:#c98a4b
-    style P fill:#fff0e6,stroke:#c98a4b
+    style F fill:#e8f4e8,stroke:#5a8f5a
+    style D fill:#e8f4e8,stroke:#5a8f5a
+    style M fill:#e8f4e8,stroke:#5a8f5a
+    style R fill:#e8f4e8,stroke:#5a8f5a
+    style E fill:#e8f4e8,stroke:#5a8f5a
+    style P fill:#ffe6e6,stroke:#c04b4b
 ```
 
-El paso 1 es de consola y no lo puede hacer esta sesión: hay que crear el
-proyecto de Firebase —**el mismo de las notificaciones, uno solo para los
-dieciséis colegios**— y bajar el `google-services.json`. Del 2 al 5 es trabajo
-de app, y no depende del backend para nada: **es lo único del roadmap que se
-puede empezar sin esperar al servidor.**
+**Del 1 al 5 están hechos.** Queda el 6, que no es código: la política de
+privacidad y el formulario de seguridad de datos de Play, y los dos hay que
+tocarlos antes de enviar la app a revisión.
 
-Si Analytics se activa al crear el proyecto, el paso 1 sale gratis: es una
-casilla en el asistente. Si el proyecto ya existe sin Analytics, se añade desde
-*Configuración del proyecto ▸ Integraciones*.
+Y queda, cuando se quiera, comprobar en la consola que los eventos llegan:
+*Analytics ▸ DebugView* los enseña en directo con la app corriendo en un
+teléfono. Es la única forma de saber que la tubería está entera, igual que en
+las notificaciones el paso 3 era mandar un aviso de muro de verdad.
 
 ## Lo que esto NO es
 

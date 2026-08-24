@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
@@ -102,7 +103,35 @@ class LoginController implements LoginBaseController {
       await preferences.remove(PreferenciasSesion.clavePassword);
     }
 
+    _contarSesion();
+
     return 'Token recibido';
+  }
+
+  /// Le dice a la analítica qué clase de usuario entró y de qué colegio.
+  ///
+  /// Las dos únicas dimensiones que se guardan, y ninguna identifica a nadie:
+  /// ver [Analitica.sesion] y docs/analitica.md.
+  ///
+  /// El orden importa porque los roles se solapan —un administrador suele ser
+  /// también docente—: alumno y acudiente primero, porque son los que tienen
+  /// una app distinta; y de los del personal, administrador antes que docente,
+  /// porque un coordinador ve todos los grupos y su uso no se parece al de
+  /// quien da clase.
+  void _contarSesion() {
+    final usuario = AuthService.user;
+
+    final rol = usuario.esAlumno
+        ? 'alumno'
+        : usuario.esAcudiente
+            ? 'acudiente'
+            : usuario.esAdmin
+                ? 'admin'
+                : usuario.esDocente
+                    ? 'docente'
+                    : 'otro';
+
+    Analitica.sesion(rol: rol, servidor: Server.urlServer);
   }
 
   /// Vuelve a abrir la sesión guardada, si la hay y si sigue valiendo.
@@ -135,7 +164,10 @@ class LoginController implements LoginBaseController {
       return false;
     }
 
-    return _tokenSigueValiendo();
+    final vale = await _tokenSigueValiendo();
+    if (vale) _contarSesion();
+
+    return vale;
   }
 
   /// Si el servidor todavía acepta el token guardado.
@@ -235,6 +267,11 @@ class LoginController implements LoginBaseController {
   @override
   Future<String> logout() async {
     AuthService.limpiar();
+    // Y el rol y el colegio de la analítica: en un teléfono prestado o en el
+    // del colegio, si no, las pantallas del siguiente se contarían bajo el rol
+    // del anterior. Es el mismo cuidado que AuthService.limpiar() tiene con el
+    // token.
+    Analitica.olvidar();
     // Y el token del disco, o el próximo arranque entraría solo con la sesión
     // de quien acaba de salir.
     await SesionGuardada.borrar();

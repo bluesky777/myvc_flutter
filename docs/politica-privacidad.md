@@ -10,13 +10,18 @@ colegio** antes de subirlo: aquí se describe con fidelidad lo que la app hace,
 pero quién responde legalmente por esos datos es una decisión que no está en el
 código.
 
-> **⚠ Este texto deja de ser cierto en cuanto entre la analítica.** Dice en dos
-> sitios —«Lo que NO recogemos» y «Con quién los compartimos»— que la app no
-> incorpora herramientas de analítica. Hay que reescribir esos dos párrafos
-> **antes** de mandarlo a revisar, no después: ver
-> [analitica.md](analitica.md) → «Lo que hay que cambiar fuera del código». Lo
-> mismo con las notificaciones, que añaden el identificador de dispositivo de
-> FCM ([notificaciones.md](notificaciones.md)).
+> **La analítica ya está dentro de la app** y este texto la describe: ver «Datos
+> de uso de la aplicación», que además dice cómo apagarla, porque el
+> interruptor existe —menú ▸ Privacidad—.
+>
+> **Queda una cosa por hacer para que lo escrito aquí sea verdad y no una
+> intención:** en la consola de Analytics, poner la retención a nivel de usuario
+> en 2 meses (*Administrar ▸ Configuración de datos ▸ Retención de datos*). El
+> texto promete dos meses; por defecto Google trae ese valor, pero conviene
+> confirmarlo y no fiarse.
+>
+> **Falta todavía lo de las notificaciones**, que cuando entren añaden el
+> identificador de dispositivo de FCM ([notificaciones.md](notificaciones.md)).
 
 ---
 
@@ -51,23 +56,73 @@ el que trabaja.
 docentes— permite registrar: calificaciones, asistencia a clase, tardanzas y
 ausencias a la institución, anotaciones de disciplina y porte del uniforme.
 
+**Datos de uso de la aplicación.** Para saber qué partes de la aplicación se
+usan de verdad y cuáles no, y poder mejorarla, recogemos estadísticas de uso con
+Google Analytics para Firebase, un servicio de Google. Se registra qué pantallas
+se abren y cuándo, acciones contadas —por ejemplo, que se guardaron veintiocho
+calificaciones de una vez, o que se abrió la planilla de un indicador— y los
+datos técnicos que Google recoge por su cuenta: el modelo del dispositivo, la
+versión de Android, el idioma, el país y un identificador aleatorio que Google
+asigna a esa instalación de la aplicación.
+
+**Estas estadísticas no dicen quién es usted.** No se envía su nombre, su
+documento, su nombre de usuario, ninguna calificación, ninguna anotación de
+disciplina ni el nombre de su grupo. Los únicos dos rasgos que se guardan junto
+a ellas son **el tipo de usuario** —alumno, acudiente, docente o
+administrador— y **de qué colegio se trata**, y son los que permiten distinguir,
+por ejemplo, si son los docentes o los acudientes quienes no encuentran una
+pantalla. Ni Google ni nosotros podemos saber, a partir de esas estadísticas, a
+qué persona corresponden.
+
+Ese identificador aleatorio **no es el identificador de publicidad de Android**:
+la aplicación lo tiene desactivado y ni siquiera pide el permiso para leerlo. El
+identificador de la instalación desaparece si usted borra los datos de la
+aplicación o la desinstala.
+
+**Puede desactivarlas cuando quiera.** En el menú de la aplicación, en
+**Privacidad**, hay un interruptor para dejar de enviar estadísticas de uso.
+Apagarlo tiene efecto inmediato y la aplicación lo recuerda; el resto de la
+aplicación sigue funcionando igual. El ajuste es **de ese dispositivo**: si
+usted usa la aplicación en el teléfono y en una tableta, tendrá que apagarlo en
+cada uno.
+
 **Lo que NO recogemos.** La aplicación no accede a su cámara, micrófono,
-contactos, ubicación, archivos ni agenda. No pide ningún permiso del sistema
-salvo el de acceso a internet. No usa publicidad, no incorpora herramientas de
-analítica ni de seguimiento, y no crea perfiles publicitarios.
+contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de
+esas cosas: los permisos que declara son técnicos —comprobar si hay conexión,
+por ejemplo— y ninguno da acceso a información personal guardada en su
+dispositivo. **No hay publicidad, no se lee el identificador de publicidad y no
+se crean perfiles publicitarios.** Tampoco vendemos ni cedemos a nadie la
+información académica.
 
 ### Para qué los usamos
 
-Únicamente para prestar el servicio académico: mostrarle la información que le
-corresponde según su rol y permitir a los docentes registrar la que la
-institución les pide llevar. No se usan para ningún otro fin.
+**Los datos académicos y de su perfil, únicamente para prestar el servicio
+académico**: mostrarle la información que le corresponde según su rol y permitir
+a los docentes registrar la que la institución les pide llevar. No se usan para
+ningún otro fin.
+
+**Las estadísticas de uso, únicamente para mejorar la aplicación**: saber qué
+pantallas se usan, cuáles sobran y dónde la gente se atasca, para decidir qué
+corregir y qué construir después. No se usan para evaluar ni supervisar a
+ninguna persona —no llevan datos que permitan identificarla—, no se cruzan con
+la información académica y no se emplean con fines publicitarios.
 
 ### Con quién los compartimos
 
-**Con nadie fuera de su colegio.** La aplicación se comunica exclusivamente con
-el servidor de la institución educativa a la que usted pertenece. No vendemos,
-alquilamos ni cedemos datos a terceros, y no hay servicios de publicidad,
-analítica ni redes sociales integrados en la aplicación.
+**La información académica, con nadie fuera de su colegio.** Sus calificaciones,
+su asistencia, sus anotaciones de disciplina y sus datos de perfil viajan
+exclusivamente entre la aplicación y el servidor de la institución educativa a
+la que usted pertenece. No los vendemos, no los alquilamos y no los cedemos a
+terceros.
+
+**Las estadísticas de uso, con Google.** Es el único tercero que interviene, y
+solo para eso: recibe lo descrito en «Datos de uso de la aplicación» y las
+procesa por encargo nuestro, sujeto a sus propias condiciones de tratamiento de
+datos. Google no recibe ninguna calificación, ningún nombre y ningún dato que
+permita identificar a un estudiante.
+
+No hay servicios de publicidad ni de redes sociales integrados en la
+aplicación.
 
 ### Cómo los protegemos
 
@@ -89,6 +144,10 @@ obligaciones legales de archivo que le apliquen. La credencial de sesión
 guardada en el teléfono se borra al cerrar sesión o al desinstalar la
 aplicación.
 
+Las estadísticas de uso asociadas a una instalación se conservan **dos meses**,
+que es el plazo más corto que permite el servicio; pasado ese tiempo solo quedan
+totales agregados, en los que ya no se distingue ninguna instalación.
+
 ### Datos de menores de edad
 
 Buena parte de la información que la aplicación muestra corresponde a
@@ -99,6 +158,12 @@ momento.
 
 Los estudiantes menores de edad no crean cuentas por su cuenta: las credenciales
 las entrega el colegio.
+
+Las estadísticas de uso descritas arriba se recogen igual en el teléfono de un
+estudiante que en el de un docente, y en ninguno de los dos casos llevan datos
+que permitan identificar a la persona. **No se elabora ningún perfil de un
+menor, no se le muestra publicidad y no se lee ningún identificador
+publicitario de su dispositivo.**
 
 ⟨Si el colegio tiene un aviso de privacidad o un formato de autorización
 firmado por los acudientes, enlazarlo aquí.⟩

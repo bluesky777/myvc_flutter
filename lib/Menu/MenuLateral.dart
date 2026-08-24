@@ -87,6 +87,7 @@ class MenuLateral extends StatelessWidget {
           texto: 'Asistencia',
           ruta: '/mi-asistencia',
         ),
+        _opcionPrivacidad(context),
       ]);
       return opciones;
     }
@@ -147,7 +148,24 @@ class MenuLateral extends StatelessWidget {
       ruta: '/configuracion',
     ));
 
+    opciones.add(_opcionPrivacidad(context));
+
     return opciones;
+  }
+
+  /// La última para todo el mundo, y **para todo el mundo de verdad**.
+  ///
+  /// Va aparte en vez de al lado de «Configuración» porque esa es del colegio y
+  /// solo la ve el personal, y esto lo tiene que poder apagar quien sea dueño
+  /// del teléfono: un acudiente igual que un coordinador. Es la única opción
+  /// que aparece en las dos ramas de este menú, y por eso se escribe una vez.
+  Widget _opcionPrivacidad(BuildContext context) {
+    return _opcion(
+      context,
+      icono: Icons.privacy_tip_outlined,
+      texto: 'Privacidad',
+      ruta: '/privacidad',
+    );
   }
 
   Widget _opcion(
