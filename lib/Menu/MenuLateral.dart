@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 /// El menú lateral, uno solo para toda la app.
 ///
@@ -87,6 +88,16 @@ class MenuLateral extends StatelessWidget {
           texto: 'Asistencia',
           ruta: '/mi-asistencia',
         ),
+        // Detrás del interruptor: `disciplina/mis-fichas` está fusionado en el
+        // backend pero no desplegado en los dieciséis colegios, y ofrecer una
+        // opción de menú que termina en 404 es peor que no tenerla.
+        if (Interruptores.disciplinaMisFichas)
+          _opcion(
+            context,
+            icono: Icons.gavel_outlined,
+            texto: 'Disciplina',
+            ruta: '/mi-disciplina',
+          ),
         _opcionPrivacidad(context),
       ]);
       return opciones;
