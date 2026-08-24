@@ -22,6 +22,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/CuentaDeUsuarioModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Lo que la pantalla sabe hacer y todavía no puede.
 ///
@@ -396,28 +397,3 @@ Future<String?> _mandar(
   }
 }
 
-/// El `message` con el que Laravel explica un 4xx, si lo hay y se puede enseñar.
-///
-/// Null cuando no lo trae, cuando el cuerpo no es JSON —sin `Accept:
-/// application/json` el servidor puede contestar la página de error en HTML— o
-/// cuando lo que trae no cabe en un aviso. Ese último corte no es cosmético: un
-/// volcado de excepción con la traza dentro es JSON perfectamente válido, y
-/// enseñárselo a una secretaria en un `SnackBar` no le dice nada y sí enseña de
-/// más.
-String? loQueDijoElServidor(dynamic cuerpo) {
-  if (cuerpo is! String || cuerpo.trim().isEmpty) return null;
-
-  try {
-    final leido = jsonDecode(cuerpo);
-    if (leido is! Map) return null;
-
-    final mensaje = '${leido['message'] ?? ''}'.trim();
-
-    if (mensaje.isEmpty || mensaje.length > 160) return null;
-    if (mensaje.contains('\n')) return null;
-
-    return mensaje;
-  } catch (_) {
-    return null;
-  }
-}
