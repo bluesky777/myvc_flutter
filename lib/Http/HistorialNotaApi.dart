@@ -32,10 +32,19 @@ class CambioDeNota {
   factory CambioDeNota.fromJson(Map<String, dynamic> json) {
     return CambioDeNota(
       id: enteroO(json['bit_id']),
-      // La bitácora guarda las notas como enteros —las columnas se llaman
-      // `..._value_int`—, así que un 85,5 quedó ahí registrado como 85. El
-      // historial dice quién y cuándo con precisión, y el cuánto con la del
-      // entero; enseñar decimales que no se guardaron sería inventarlos.
+      // Enteros, y **la bitácora no tiene la culpa**. Sus columnas se llaman
+      // `..._value_int`, sí, pero es que `notas.nota` es `int` en el esquema:
+      // los decimales no se pierden al registrarlos, es que **no existen en
+      // ninguna parte** —ni en `notas`, ni en `notas_finales`, ni en los
+      // porcentajes de unidades y subunidades—. Un 85,5 nunca fue un 85,5.
+      //
+      // Se dice así de claro porque el comentario anterior invitaba a
+      // «arreglar» la bitácora para que guardara decimales, y eso no arreglaría
+      // nada: el que se los come es la columna de la nota. Comprobado con el
+      // backend el 23 de agosto de 2026.
+      //
+      // El historial dice quién y cuándo con precisión, y el cuánto con la del
+      // entero; enseñar decimales que nunca se guardaron sería inventarlos.
       anterior: entero(json['old_value']),
       nueva: entero(json['new_value']),
       quien: '${json['creado_por'] ?? ''}'.trim(),
