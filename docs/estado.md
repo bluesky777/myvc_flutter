@@ -4,8 +4,10 @@ El mapa para retomar el trabajo sin que nadie tenga que contar nada. Se
 actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
-**Última actualización: 23 de agosto de 2026.** Lo último construido —las fases
-4, 5 y 6 de notas y la pantalla de configuración— ya está fusionado en `main`.
+**Última actualización: 24 de agosto de 2026.** **Todo lo construido está
+fusionado en `main` y no queda ninguna rama suelta**: las fases 4, 5 y 6 de
+notas, la configuración, la analítica, la pantalla de usuarios, la versión
+mínima y el 422 de la escala. Nada subido a ningún remoto.
 Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
 hecha entera** —Firebase, los eventos, el interruptor para apagarla y la
 política de privacidad reescrita—; de ella solo queda un ajuste de consola. Lo
@@ -98,6 +100,25 @@ recortar por seguridad.
   hasta que esté en los dieciséis colegios**, que no es lo mismo que escrito. El
   contrato entero, en [usuarios.md](usuarios.md) → «Lo que falta en el
   servidor».
+
+### El 422 de la escala — hecho, y esperando al servidor
+
+La escala de notas **pasa a validarse en el servidor**: `PUT notas/update` y la
+definitiva manual contestarán **422** donde hoy dan 200, con el motivo dentro
+del cuerpo, y en `notas/lote` el mismo texto vuelve en `fallidas[].motivo`.
+
+El lado de la app ya está: los dos sitios que enseñaban «El servidor respondió
+422.» ahora enseñan lo que el servidor dijo, y lo traduce un solo sitio,
+[MensajesDelServidor](../lib/Http/MensajesDelServidor.dart). Sus dos recortes no
+son cosméticos —descarta la página de error en HTML y los volcados de excepción,
+que son JSON válido con `message` dentro— y tienen prueba cada uno.
+
+**Falta desplegarlo en el servidor**, y antes de eso conviene una comprobación
+que no es de código: el backend midió **92 notas fuera de rango en su base
+local**, todas de los años 1 a 5 y ninguna en los cuatro recientes. Si eso se
+sostiene en producción, encender la validación no le rompe el día a nadie. Una
+nota histórica que ya no se puede volver a guardar es distinta de una que se
+escribe hoy, así que merece mirarse contra la base real.
 
 ## Cómo se trabaja aquí
 
