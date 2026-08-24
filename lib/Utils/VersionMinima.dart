@@ -18,7 +18,19 @@ import 'package:package_info_plus/package_info_plus.dart';
 /// y no una ruta nueva que costaría una petición más en cada arranque, en un
 /// hosting compartido, para leer un entero que cambia dos veces al año.
 ///
-///     POST /login  →  { ..., "version_minima_app": 12 }
+///     POST /login  →  { ..., "version_minima_app": 1 }
+///
+/// **El ejemplo dice 1 a propósito, y no un número redondo cualquiera.** Ese
+/// valor es el `versionCode` —el `+N` del `pubspec`—, y ahora mismo la app
+/// publicada es el **1**: `version: 1.0.0+1`, y ni siquiera está en Play. Un
+/// colegio que copie un «12» de un ejemplo bloquea a todos sus usuarios de
+/// golpe **y no hay ninguna versión a la que puedan actualizar**: la pantalla
+/// de bloqueo les manda a la tienda y en la tienda no hay nada. Desde aquí no
+/// se distingue ese caso de un colegio que de verdad exige la última.
+///
+/// El número que se ponga tiene que ser el de una versión **que exista en la
+/// tienda**. Lo mismo queda escrito en el `.env.example` del backend, que es lo
+/// que lee quien rellena el valor.
 ///
 /// **Lo que de verdad define esta clase es cuándo NO bloquea**, y esa es la
 /// parte que no se puede tocar sin pensarlo dos veces:
