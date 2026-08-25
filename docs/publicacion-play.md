@@ -90,13 +90,16 @@ opt-in que te da la consola.
 | Campo | Valor |
 |---|---|
 | Nombre | `Mi Cole Virtual` (máx. 30 caracteres) |
-| Idioma predeterminado | Español (Colombia) |
+| Idioma predeterminado | **Español (Latinoamérica), es-419** — el que la consola trae por defecto. «Español (Colombia)» no existe en el catálogo de Play: solo hay es-419, España y Estados Unidos |
 | App o juego | App |
 | Gratis o de pago | **Gratis** — y ojo, de gratis a pago *no se puede cambiar* después |
 
-El `applicationId` no se escribe aquí: sale del primer `.aab` que subas, y es
-**`com.micolevirtual.app`**. **Es irreversible.** Una vez subido el primer
-bundle, esa app en Play queda casada con ese identificador para siempre;
+El `applicationId` **se escribe en este mismo formulario** —campo «Nombre del
+paquete», con un botón de *Comprobar disponibilidad*— y es
+**`com.micolevirtual.app`**. (La consola cambió: antes se deducía del primer
+`.aab` que subieras.) Tiene que quedar idéntico al del bundle y al registrado en
+la verificación, o Play rechaza la subida. **Es irreversible.** Esa app en Play
+queda casada con ese identificador para siempre;
 cambiarlo significa publicar una app distinta y perder instalaciones y reseñas.
 
 Nació siendo `com.app.micolevirtual.myvc_flutter` y se cambió antes de la
@@ -210,9 +213,9 @@ La firma ya está montada en el repo. `android/app/build.gradle.kts` lee
 máquina:
 
 ```properties
-storeFile=/Users/tu-usuario/claves-android/micolevirtual-upload.jks
+storeFile=/Users/tu-usuario/myvc-release.jks
 storePassword=...
-keyAlias=upload
+keyAlias=myvc
 keyPassword=...
 ```
 
@@ -224,9 +227,9 @@ Para generar el almacén, si hay que rehacerlo:
 ```bash
 JDK="/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin"
 "$JDK/keytool" -genkeypair -v \
-  -keystore ~/claves-android/micolevirtual-upload.jks \
+  -keystore ~/myvc-release.jks \
   -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias upload
+  -alias myvc
 ```
 
 Y el bundle:
@@ -247,34 +250,146 @@ consola después de subir.
 lo hayas borrado. Hoy va en `1.0.0+1`; la siguiente subida es `1.0.0+2` (o
 `1.0.1+2` si además cambia lo que ve el usuario).
 
-### Las dos claves que no hay que confundir
+### Una sola clave, a propósito
+
+Play App Signing, por defecto, funciona con **dos** claves: tú firmas el `.aab`
+con una de *subida*, Play se la quita y vuelve a firmar la app con la clave de
+*firma* real, que guarda Google. Eso tiene una ventaja: si pierdes la de subida,
+no pierdes la app.
+
+**Aquí no se usa así**, y la razón es que Mi Cole Virtual se reparte por **dos
+canales**: Google Play y APK directo (enlace en la web del colegio, WhatsApp).
+Si Play firmara con una clave suya, el APK de Play y el APK directo llevarían
+firmas distintas para el mismo `com.micolevirtual.app`. Android trata eso como
+apps incompatibles: quien instaló el directo no puede actualizar desde Play sin
+desinstalar —perdiendo sesión y datos locales— y al revés igual.
 
 ```mermaid
 flowchart LR
-    K["micolevirtual-upload.jks<br/>clave de SUBIDA<br/>la tienes tú"] -->|firma el .aab| P["Play Console"]
-    P -->|"la quita y<br/>vuelve a firmar"| G["clave de FIRMA<br/>la guarda Google"]
-    G --> D["Lo que se instala<br/>en el teléfono"]
+    K["myvc-release.jks<br/>la tienes tú"] -->|"pepk.jar"| P["Play App Signing<br/>Google guarda copia"]
+    K -->|"firma directa"| A["APK directo"]
+    P --> D["APK desde Play"]
+    A --> T["Misma firma:<br/>se actualizan<br/>entre sí"]
+    D --> T
 
     style K fill:#e6f0ff,stroke:#4b7ac9
-    style G fill:#ffe6e6,stroke:#c94b4b
+    style T fill:#e6ffe6,stroke:#4bc94b
 ```
 
-Con **Play App Signing** (activado por defecto), Google guarda la clave de
-firma real y tú solo manejas la de subida. Eso significa que si pierdes
-`micolevirtual-upload.jks`, **no se pierde la app**: se pide a Google un
-reemplazo de la clave de subida. Aun así, guárdala en un gestor de contraseñas
-junto con su contraseña, y haz una copia fuera del portátil. Nunca la metas al
-repositorio: `android/.gitignore` ya excluye `key.properties`, `*.jks` y
-`*.keystore`.
+Por eso, **al crear la app en Play Console hay que subir esta misma clave** con
+`pepk.jar` — *Firma de la app → «Exportar y subir una clave desde un almacén de
+claves de Java»*— en vez de dejar que Google genere una. Esa opción **solo se
+ofrece al crear la app**; después es muy engorroso cambiarla.
+
+El precio de la decisión: como la clave de subida y la de firma pasan a ser la
+misma, perder `myvc-release.jks` sí duele. El canal de Play se salvaría —Google
+tiene su copia— pero el de APK directo no: no podrías firmar una actualización
+que acepten los teléfonos que instalaron por fuera. Copia del `.jks` y de sus
+contraseñas en un gestor de contraseñas, y otra fuera del portátil.
+
+### Verificación de desarrolladores de Android
+
+Aparte de Play, Google exige registrar el nombre del paquete en *Play Console →
+Verificación de desarrolladores de Android*, para que la app pueda instalarse en
+dispositivos Android certificados. Se hace una vez:
+
+1. **Nombre del paquete**: `com.micolevirtual.app`; **nombre descriptivo**:
+   `Mi Cole Virtual`.
+2. **Agrega una clave** → pega el SHA-256. El campo es un `textarea` y **no
+   tolera saltos de línea ni espacios finales**: si pegas de más, responde
+   «Huella digital del certificado SHA-256 no válida» aunque el valor sea bueno.
+
+Hecho el 24 de agosto de 2026: paquete registrado y huella verificada.
+
+### Subir tu propia clave a Play App Signing (`pepk`)
+
+**Dónde está.** Google ha movido esta pantalla varias veces; a agosto de 2026 la
+ruta es **Protegido con Play → Protección de Play Store → Firma de apps**. No
+está en «Configuración avanzada» ni en «Integridad de la app», aunque el menú
+sugiera lo contrario. En la documentación en inglés esa sección se llama *Play
+Store distribution*, traducida en la consola como «Protección de Play Store».
+
+**Hasta cuándo se puede.** Las apps nuevas quedan inscritas automáticamente con
+una clave generada por Google (clásica + poscuántica). Se puede reemplazar con
+**«Cambiar clave»** mientras **ninguna versión haya llegado a pruebas abiertas
+ni a producción**. Las pruebas internas y cerradas *no* cierran la puerta: se
+puede arrancar la prueba cerrada de 14 días sin haber resuelto todavía la clave.
+
+**El comando.** En *Preferencias de firma de apps* → «Exportar y subir una clave
+desde un almacén de claves Java», descarga la clave pública de encriptación y
+`pepk.jar`. El ejemplo que muestra la consola usa `foo.keystore` / `foo` como
+marcadores; el real es:
+
+```bash
+JAVA="/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java"
+"$JAVA" -jar ~/Downloads/pepk.jar \
+  --keystore="$HOME/myvc-release.jks" \
+  --alias=myvc \
+  --keystore-pass="..." --key-pass="..." \
+  --output="$HOME/Downloads/myvc-signing-key.zip" \
+  --include-cert \
+  --rsa-aes-encryption \
+  --encryption-key-path="$HOME/Downloads/encryption_public_key.pem"
+```
+
+⚠️ **`pepk` no acepta contraseñas por tubería.** Sin `--keystore-pass` /
+`--key-pass` las pide por `System.console()`, y eso revienta con
+`NullPointerException` en cualquier terminal sin TTY (un script, un agente).
+Pasarlas por argumento es la única vía no interactiva.
+
+Antes de subir el ZIP conviene comprobar que el certificado que lleva dentro es
+el que crees:
+
+```bash
+unzip -o -q ~/Downloads/myvc-signing-key.zip -d /tmp/pepkcheck
+openssl x509 -in /tmp/pepkcheck/certificate.pem -noout -fingerprint -sha256
+```
+
+**Sin clave de carga separada, a propósito.** El diálogo ofrece, como paso 5
+opcional, crear una clave de carga distinta de la de firma. Aquí **no se hizo**,
+y la razón es la misma que obligó a subir la clave propia: como hay canal de APK
+directo, la clave de firma se necesita a mano en cada build y nunca va a estar
+guardada offline. Una clave de carga aparte no protegería de nada real. Además
+ese paso 5 solo se ofrece *antes* de guardar; después queda únicamente el
+trámite de «solicitar que se restablezca la clave de carga», con soporte de por
+medio.
+
+Consecuencia directa: **`myvc-release.jks` es la única copia que existe fuera de
+Google.** Perderla no tumba el canal de Play —Google tiene la suya— pero sí deja
+el canal de APK directo sin forma de publicar una actualización que acepten los
+teléfonos ya instalados. Gestor de contraseñas con el archivo adjunto, y copia
+en otro sitio.
+
+### Ojo con «Verificación del instalador»
+
+En *Protegido con Play → Protección automática* hay un interruptor,
+**«Verificación del instalador»**, **activado por defecto**. Le muestra un aviso
+a quien instale la app desde una fuente que no sea Play, pidiéndole que la baje
+de la ficha de Play Store.
+
+Con distribución por APK directo eso estorba: cada acudiente que instale desde
+la web del colegio o por WhatsApp vería ese aviso. **Si se mantiene el canal
+directo, hay que apagarlo.**
 
 ### Cómo está ahora mismo
 
-La clave ya existe en `~/claves-android/micolevirtual-upload.jks` (alias
-`upload`, PKCS12, válida hasta 2054) y `android/key.properties` ya apunta a
-ella. El bundle de `build/app/outputs/bundle/release/app-release.aab` está
-firmado con esa clave —no con la de depuración—, huella SHA1
-`BC:89:D3:CF:DE:C2:3C:88:82:3F:36:6C:2F:1D:35:71:2F:79:06:D6`. Esa huella es la
-que Play Console te mostrará como «clave de subida» cuando subas el primero.
+| | |
+|---|---|
+| Keystore | `~/myvc-release.jks`, alias `myvc`, PKCS12, permisos `600` |
+| Validez | hasta el 9 de enero de 2054 |
+| `android/key.properties` | apunta a él, fuera de git |
+| Certificado público | `~/myvc-cert.der` y `~/myvc-cert.pem` |
+| SHA-1 | `BF:BC:95:1C:D1:2A:19:1A:2C:12:60:2D:42:8A:3F:2A:AC:A9:42:CA` |
+| SHA-256 | `61:44:AF:9F:7D:C9:48:86:AE:47:9C:8B:2B:90:06:36:17:BD:BE:93:3F:AF:27:FD:AE:A8:B7:37:11:B9:8E:81` |
+| Bundle | `build/app/outputs/bundle/release/app-release.aab`, 58 MB, firmado y verificado contra esa huella |
+| Verificación de desarrolladores | ✅ paquete registrado, huella verificada (24 ago 2026) |
+| Play App Signing | ✅ usa **esta misma clave**, subida con `pepk` el 24 ago 2026 |
+| Clave de carga | la misma que la de firma (ver arriba) |
+
+> **Hubo un keystore anterior**, `~/claves-android/micolevirtual-upload.jks`
+> (alias `upload`, del 20 de agosto), que es el que describía este documento
+> antes. Quedó **descartado** el 24 de agosto de 2026 a favor del de arriba. No
+> se borró, pero no se usa: no lo confundas al escribir `key.properties`.
 
 ## 9. Requisitos técnicos, a día de hoy
 
