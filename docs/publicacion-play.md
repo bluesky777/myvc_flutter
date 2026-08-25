@@ -141,6 +141,21 @@ tienda.
 Capturas de tablet no son obligatorias, pero sin ellas Play marca la app como
 «no optimizada para tablets» y la esconde en esos dispositivos.
 
+### La casilla de IA, al guardar la ficha
+
+Al enviar la ficha, Play pide una **«Declaración de recursos de IA»** con dos
+opciones: *No etiquetar recursos* o *Etiquetar los recursos como creados o
+editados con IA*. **Pregunta por las imágenes de la ficha —ícono, capturas,
+gráfico destacado, vídeo—, no por lo que hace la app por dentro.** Un texto de
+descripción escrito con ayuda de un modelo no cuenta; una imagen generada o
+retocada con IA, sí, aunque sea solo el fondo del gráfico destacado.
+
+Aquí: las capturas son fotos de la app corriendo en un emulador y el ícono sale
+del de iOS, así que por ese lado no había nada que etiquetar. **El gráfico
+destacado sí se hizo con IA**, así que la ficha va con *«Etiquetar los recursos
+como creados o editados con IA»* y ese recurso marcado, y solo ese (25 ago
+2026). Declarar de más no penaliza; declarar de menos sí.
+
 ## 6. Contenido de la app: qué contestar
 
 **Policy → App content**. Son siete formularios; estos son los que tienen

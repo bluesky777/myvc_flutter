@@ -4,10 +4,10 @@ El mapa para retomar el trabajo sin que nadie tenga que contar nada. Se
 actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
-**Última actualización: 24 de agosto de 2026.** **Todo lo construido está
-fusionado en `main` y no queda ninguna rama suelta**: las fases 4, 5 y 6 de
-notas, la configuración, la analítica, la pantalla de usuarios, la versión
-mínima y el 422 de la escala. Nada subido a ningún remoto.
+**Última actualización: 25 de agosto de 2026.** **Todo lo construido está
+fusionado en `main`, empujado a `origin` y no queda ninguna rama suelta**: las
+fases 4, 5 y 6 de notas, la configuración, la analítica, la pantalla de
+usuarios, la versión mínima y el 422 de la escala.
 Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
 hecha entera** —Firebase, los eventos, el interruptor para apagarla y la
 política de privacidad reescrita—; de ella solo queda un ajuste de consola. Lo
@@ -27,6 +27,8 @@ flowchart LR
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints<br/>y una guarda"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
+    T["Tablets"] --> T0["sin empezar ○<br/>hoy es el layout<br/>de teléfono estirado"]
+    I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -37,6 +39,8 @@ flowchart LR
     style U1 fill:#e8f4e8,stroke:#5a8f5a
     style U2 fill:#ffe6e6,stroke:#c04b4b
     style V1 fill:#fff0e6,stroke:#c98a4b
+    style T0 fill:#f0f0f5,stroke:#8a8aa0
+    style I0 fill:#f0f0f5,stroke:#8a8aa0
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
@@ -270,7 +274,69 @@ notificaciones.
 La política de privacidad ya está reescrita. Falta solo confirmar en la consola
 que la retención está en dos meses.
 
+### Tablets — el layout de teléfono, estirado
+
+**Sin empezar, y no bloquea nada.** Salió al sacar las capturas de la ficha de
+Play el 25 de agosto de 2026, en un emulador de Pixel Tablet: la app **funciona**
+en tablet, pero no tiene ningún layout propio. Es la interfaz de teléfono
+ocupando todo el ancho.
+
+Dónde se nota y dónde no, medido y no supuesto:
+
+| Pantalla | Cómo queda |
+|---|---|
+| Notas «por alumno», asistencia, disciplina | **Bien.** Son listas, y a lo ancho caben 15 alumnos en vez de 7 |
+| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo |
+| Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados |
+| Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más |
+
+Lo que haría falta el día que se aborde: un ancho máximo para los formularios y
+las fichas —que un campo de texto de 1.500 px no lo lee nadie— y, en las
+pantallas de detalle, aprovechar el hueco con dos columnas o con un patrón
+maestro-detalle, que es el que pide a gritos la navegación
+grupo → alumno → ficha.
+
+Las capturas de tablet que se subieron a Play son de las tres pantallas que sí
+quedan bien, a propósito. Sirven para que Play no marque la app como «no
+optimizada para tablets», pero eso es quitar una etiqueta, no resolver el fondo.
+
+### Algo de IA en la app — una idea, todavía sin forma
+
+**Sin empezar, y sin decidir qué.** Lo pidió Joseth el 25 de agosto de 2026,
+mientras se enviaba la ficha de Play: quiere aprender a agregarle a la app
+alguna función con IA. Queda anotado aquí para que no se pierda; cuando se
+aborde, lo primero no es escribir código sino elegir el «qué», porque eso es lo
+que decide todo lo demás.
+
+Las tres cosas que ya se saben, y que estrechan el campo antes de empezar:
+
+- **El hosting compartido no puede ser el que llame al modelo.** Cualquier cosa
+  que se cocine en el servidor hereda el problema de siempre: ni sondeo, ni
+  consultas caras repetidas. Y **el backend es de solo lectura para esta app**,
+  así que lo que necesite servidor hay que pedirlo, como todo lo demás.
+- **No pueden salir datos de menores hacia un tercero.** Hoy la ficha de Play y
+  la política de privacidad prometen que las notas, la asistencia y las
+  anotaciones no salen del servidor del colegio. Mandarle a un modelo el nombre
+  o las notas de un alumno rompe esa promesa, y obliga a rehacer
+  [politica-privacidad.md](politica-privacidad.md), la ficha y el formulario de
+  seguridad de datos. Lo que sí cabe sin tocar nada es lo que no lleva datos
+  personales dentro.
+- **La ficha de Play tiene su propia casilla de IA**, y es de recursos —ícono,
+  capturas, gráfico destacado—, no de la app. Ver
+  [publicacion-play.md](publicacion-play.md) §5.
+
+Cuando le llegue el turno se le abre su `docs/ia.md`, como todos los frentes.
+
 ### Publicación en Google Play
+
+**La ficha está armada y en «Lista para enviar a revisión»** (25 ago 2026):
+textos, ícono, gráfico destacado y capturas de teléfono y tablet, con la
+declaración de recursos de IA contestada —el gráfico destacado se hizo con IA y
+va etiquetado; el resto, no—. No se envía sola: se revisa junto con la primera
+versión que se suba. Lo que sigue son los siete formularios de «Contenido de la
+app» —el de seguridad de datos ya tiene sus respuestas escritas en
+[seguridad-datos-play.md](seguridad-datos-play.md)—, la política de privacidad
+viva en su URL, y el `.aab` en prueba cerrada con los doce probadores.
 
 [publicacion-play.md](publicacion-play.md) tiene la guía, y
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)

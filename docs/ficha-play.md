@@ -106,15 +106,25 @@ Consulta nuestra política de privacidad en https://micolevirtual.com/privacidad
 | Sitio web | https://micolevirtual.com |
 | Política de privacidad | https://micolevirtual.com/privacidad |
 
-## Imágenes: qué falta
+## Imágenes — subidas el 25 de agosto de 2026
 
 | Recurso | Requisito | Estado |
 |---|---|---|
 | Ícono de ficha | 512×512 PNG 32-bit, **sin alfa** | ✅ `~/icono-play-512.png`, sacado del de iOS (`Icon-App-1024x1024@1x.png`, que Apple ya exige sin alfa) |
-| Gráfico destacado | 1024×500 PNG o JPG | ❌ no existe |
-| Capturas de teléfono | mín. 2, máx. 8; lado entre 320 y 3840 px | ❌ no existen |
-| Capturas de tablet | opcionales | sin ellas, Play marca la app como «no optimizada para tablets» |
+| Gráfico destacado | 1024×500 PNG o JPG | ✅ subido, **hecho con IA y etiquetado como tal** en la declaración de recursos |
+| Capturas de teléfono | mín. 2, máx. 8; lado entre 320 y 3840 px | ✅ subidas, sacadas de la app corriendo en un emulador |
+| Capturas de tablet | opcionales | ✅ subidas, las tres pantallas que quedan bien en tablet (ver [estado.md](estado.md) → «Tablets») |
 
 Las capturas que más venden esta app, en este orden: el panel al entrar, las
 notas de un alumno, el registro de asistencia de un grupo, y la ficha de
 disciplina.
+
+**La declaración de recursos de IA** pregunta por estas imágenes, no por la app
+ni por los textos. Como el gráfico destacado se hizo con IA, la ficha va con
+*«Etiquetar los recursos como creados o editados con IA»* y **solo ese recurso
+marcado**: el ícono y las capturas no lo llevan. Si algún día se rehace el
+gráfico sin IA, hay que volver aquí y cambiar la respuesta.
+
+Con eso, la ficha quedó en **«Lista para enviar a revisión»**. Eso no la envía:
+se revisa junto con la primera versión que se suba, así que lo que sigue no es
+de la ficha sino de [publicacion-play.md](publicacion-play.md) §6 en adelante.
