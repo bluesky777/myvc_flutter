@@ -52,16 +52,16 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
       final recordar = await PreferenciasSesion.guardarDatos();
       String? guardadoUsername =
           preferences.getString(PreferenciasSesion.claveUsername);
-      String? guardadoPassword =
-          preferences.getString(PreferenciasSesion.clavePassword);
 
-      final usuario = recordar && guardadoUsername != null ? guardadoUsername : '';
-      final clave = recordar && guardadoPassword != null ? guardadoPassword : '';
+      final usuario =
+          recordar && guardadoUsername != null ? guardadoUsername : '';
 
       setState(() {
         guardarDatos = recordar;
         usenameController.text = usuario;
-        passwordController.text = clave;
+        // La contraseña no se rellena porque ya no se guarda. Quien tenía
+        // sesión abierta no pasa por aquí; quien no, la teclea una vez.
+        passwordController.text = '';
       });
     });
   }

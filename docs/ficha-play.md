@@ -74,12 +74,15 @@ SI ERES ALUMNO
 
 TU COLEGIO, TUS DATOS
 
-Mi Cole Virtual se conecta únicamente con el servidor de tu institución. La
-información no sale de ahí: no hay publicidad, no hay analítica, no hay
-seguimiento y no se comparte nada con terceros.
+Mi Cole Virtual se conecta únicamente con el servidor de tu institución. Las
+notas, la asistencia y las anotaciones no salen de ahí: no hay publicidad y no
+se venden ni se comparten tus datos con terceros.
+
+Para saber qué pantallas se usan y detectar fallos, la app usa Google
+Analytics. No le manda tu nombre ni tus notas, y puedes apagarlo cuando quieras
+desde el menú.
 
 La app no pide acceso a tu cámara, tus contactos, tus archivos ni tu ubicación.
-El único permiso que necesita es el de conexión a internet.
 
 En equipos compartidos puedes desmarcar la casilla de recordar sesión, y
 entonces no se guarda nada en el dispositivo.
@@ -107,7 +110,7 @@ Consulta nuestra política de privacidad en https://micolevirtual.com/privacidad
 
 | Recurso | Requisito | Estado |
 |---|---|---|
-| Ícono de ficha | 512×512 PNG 32-bit, **sin alfa** | ❌ el original mide 360×360 y lleva alfa |
+| Ícono de ficha | 512×512 PNG 32-bit, **sin alfa** | ✅ `~/icono-play-512.png`, sacado del de iOS (`Icon-App-1024x1024@1x.png`, que Apple ya exige sin alfa) |
 | Gráfico destacado | 1024×500 PNG o JPG | ❌ no existe |
 | Capturas de teléfono | mín. 2, máx. 8; lado entre 320 y 3840 px | ❌ no existen |
 | Capturas de tablet | opcionales | sin ellas, Play marca la app como «no optimizada para tablets» |

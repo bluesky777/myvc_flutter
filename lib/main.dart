@@ -9,6 +9,7 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
@@ -46,6 +47,11 @@ void main() async {
   // lo que lee la versión mínima que exige el colegio y las dos se comparan.
   // Si falla, `nuestra` se queda en null y no se bloquea a nadie.
   await VersionMinima.arrancar();
+
+  // Las versiones hasta la 1.0.0+2 guardaban la contraseña en claro en
+  // shared_preferences. Se borra al arrancar y no al entrar, porque quien ya
+  // tiene la sesión abierta puede pasar meses sin volver a ver el login.
+  await PreferenciasSesion.purgarPasswordHeredada();
 
   // Antes de pintar nada: si hay una sesión guardada y sigue valiendo, se
   // recupera. Es lo que hace que recargar la página en la web no tire al

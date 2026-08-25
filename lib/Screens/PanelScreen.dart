@@ -5,7 +5,7 @@ import 'package:myvc_flutter/Menu/MenuLateral.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myvc_flutter/Utils/PreferenciaGrupo.dart';
 
 class PanelScreen extends StatefulWidget {
   const PanelScreen({super.key});
@@ -146,8 +146,7 @@ class _PanelScreen extends State<PanelScreen> {
               child: Text(grupo.abrev),
             ),
             onTap: () async {
-              final preferences = await SharedPreferences.getInstance();
-              await preferences.setString('grupoSelected', grupo.toRawJson());
+              await PreferenciaGrupo.guardar(grupo);
               // El context aquí es el del itemBuilder, no el del State: hay
               // que preguntarle a él si sigue montado.
               if (!context.mounted) return;

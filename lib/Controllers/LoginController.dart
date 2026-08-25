@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Utils/EsquemaServidor.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,8 +34,8 @@ class LoginController implements LoginBaseController {
     String servidorElegido,
   ) async {
     if (isLocal) {
-      bool hasHttp = servidorElegido.contains('http');
-      servidorElegido = hasHttp ? servidorElegido : 'http://$servidorElegido';
+      // https, salvo si apunta a la red local. Ver EsquemaServidor.
+      servidorElegido = conEsquema(servidorElegido);
     }
 
     var server = Server();
@@ -96,12 +97,13 @@ class LoginController implements LoginBaseController {
     final preferences = await SharedPreferences.getInstance();
 
     if (await PreferenciasSesion.guardarDatos()) {
+      // El usuario, para no volver a teclearlo. La contraseña no: entrar sin
+      // teclear nada ya lo resuelve el token que se acaba de guardar, así que
+      // dejarla en claro no compraba nada. Ver PreferenciasSesion.
       await preferences.setString(PreferenciasSesion.claveUsername, username);
-      await preferences.setString(PreferenciasSesion.clavePassword, password);
     } else {
       // El equipo es compartido: no queda rastro para el docente siguiente.
       await preferences.remove(PreferenciasSesion.claveUsername);
-      await preferences.remove(PreferenciasSesion.clavePassword);
     }
 
     _contarSesion();
@@ -300,7 +302,6 @@ class LoginController implements LoginBaseController {
     if (!await PreferenciasSesion.guardarDatos()) {
       final preferences = await SharedPreferences.getInstance();
       await preferences.remove(PreferenciasSesion.claveUsername);
-      await preferences.remove(PreferenciasSesion.clavePassword);
     }
 
     return "";

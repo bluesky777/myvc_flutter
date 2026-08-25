@@ -9,6 +9,7 @@ import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
+import 'package:myvc_flutter/Utils/PreferenciaGrupo.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/ControlOcupado.dart';
@@ -17,7 +18,6 @@ import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumTardanzaColeScreen extends StatefulWidget {
   const AlumTardanzaColeScreen({super.key});
@@ -78,14 +78,12 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   }
 
   void traerGrupo() {
-    SharedPreferences.getInstance().then((SharedPreferences preferences) {
-      String? grupoString = preferences.getString('grupoSelected');
-
+    PreferenciaGrupo.leer().then((guardado) {
       if (!mounted) return;
 
-      if (grupoString != null) {
+      if (guardado != null) {
         setState(() {
-          grupo = GrupoModel.fromRawJson(grupoString);
+          grupo = guardado;
           _alumnosFuture = traerAlumnosModel();
         });
       } else {

@@ -56,7 +56,11 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
   /// Con clave propia y no la de la pantalla de asistencias: son dos trabajos
   /// distintos y quien pasa la lista de 6-A no tiene por qué acabar anotando
   /// disciplina en 6-A.
-  static const _clavePreferencia = 'disciplinaGrupo';
+  /// Lleva el id del usuario, como [PreferenciaFiltroAsignaturas] y
+  /// [PreferenciaGrupo]: en el equipo compartido de la entrada, una clave a
+  /// secas dejaba puesto el grupo del docente anterior.
+  static String _clavePreferencia() =>
+      'disciplinaGrupo.${AuthService.user.id ?? 0}';
 
   DatosDisciplina? datos;
   List<GrupoModel> grupos = [];
@@ -211,7 +215,7 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
   Future<GrupoModel?> _grupoGuardado(List<GrupoModel> disponibles) async {
     try {
       final preferencias = await SharedPreferences.getInstance();
-      final id = preferencias.getInt(_clavePreferencia);
+      final id = preferencias.getInt(_clavePreferencia());
       if (id == null) return null;
 
       for (final candidato in disponibles) {
@@ -264,7 +268,7 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
 
     try {
       final preferencias = await SharedPreferences.getInstance();
-      await preferencias.setInt(_clavePreferencia, elegido.id);
+      await preferencias.setInt(_clavePreferencia(), elegido.id);
     } catch (_) {
       // Que no se recuerde el grupo no impide mirarlo ahora.
     }
