@@ -172,7 +172,15 @@ no tienen fecha —que no es lo mismo que tenerla lejos—.
 
 ### Lo que se pide: un campo en una respuesta que ya existe
 
-    POST /login  →  { ..., "version_minima_app": 12 }
+    POST /login  →  { ..., "version_minima_app": 1 }
+
+> **El ejemplo dice 1 y no un número redondo, a propósito.** La app publicada
+> es el `versionCode` **1** —`version: 1.0.0+1`— y ni siquiera está en Play. Un
+> colegio que copie un «12» de cualquier ejemplo **bloquea a todos sus usuarios
+> de golpe y no hay ninguna versión a la que puedan actualizar**: la pantalla
+> de bloqueo les manda a la tienda y en la tienda no hay nada. Desde el cliente
+> no se distingue eso de un colegio que de verdad exige la última. El número
+> que se ponga tiene que ser el de una versión **que exista en la tienda**.
 
 **Un entero, el `versionCode`** —el `+N` de `pubspec.yaml`—, no la versión con
 puntos: es el número que Play compara y el único que no admite interpretación.
