@@ -65,10 +65,34 @@ Lo de la respuesta no es capricho: la app ya sabe reintentar solo lo que falló
 sin que el docente vuelva a teclear nada, y para eso necesita saber **cuáles**
 fallaron. Que un lote entero se caiga por una nota sería peor que lo de ahora.
 
-**Lo que cambia en la app cuando exista.** Poco, y está preparado:
-`guardarNotas` de [LibroNotasApi](../lib/Http/LibroNotasApi.dart) ya recibe la
-lista de cambios y devuelve `ResultadoGuardado` con las fallidas dentro. Es
-cambiar el cuerpo de esa función y borrar el `_aLaVez = 3`.
+**Existe, y el lado de la app está escrito** (24 ago 2026). Vive en
+`_guardarEnLote` de [LibroNotasApi](../lib/Http/LibroNotasApi.dart), detrás de
+`Interruptores.notasLote`, **apagado**: se enciende el día que el endpoint esté
+desplegado en los dieciséis colegios, no el día que se fusione. Ver
+[Interruptores](../lib/Utils/Interruptores.dart).
+
+Tres cosas salieron de leer el controlador en vez de fiarse de este contrato, y
+las tres cambian lo que la app tenía que hacer:
+
+- **El lote tiene tope de 200, y pasarse no recorta: aborta el lote entero con
+  un 422.** El propio controlador dejó anotado que el número se justificó
+  «dando por hecha una capacidad del cliente que no existe» — ningún cliente
+  partía en tandas. Ahora la app trocea de **cien en cien**, con margen por
+  debajo del tope para que bajarlo no la rompa. Una columna de cuarenta y cinco
+  sigue siendo una sola petición.
+- **La respuesta trae `definitivas`**, que este documento no pedía: la
+  definitiva de cada alumno tocado, calculada por el mismo recalculador que la
+  escribe. Se parsea, viaja en `ResultadoGuardado.definitivas` y **ya se usa**:
+  la planilla la devuelve al libro y `LibroDeNotas.conDefinitivaDelLote` la
+  aplica. Eso quita las dos verdades — antes, después de pasar una columna, la
+  definitiva de la pestaña «Por alumno» era la que la app se calculaba sola.
+  Se copia **encima de la fila que ya existe**, porque el lote no devuelve el
+  `nf_id` y una fila con `nf_id` cero apaga el control de nivelar: se habría
+  perdido el botón por refrescar un número.
+- **`manual` y `recuperada` llegan como booleanos de verdad**, no como el `1/0`
+  de PDO que usa el resto del archivo, porque esta respuesta la arma PHP con un
+  `(bool)` delante. Leerlas con `entero(x) == 1` pintaría una definitiva manual
+  como automática.
 
 ---
 
