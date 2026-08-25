@@ -28,6 +28,24 @@ class FichaDisciplinaArgs {
   final int grupoId;
   final int periodoInicial;
 
+  /// La misma ficha, sin nada que escriba. Es como la ven el alumno y el
+  /// acudiente.
+  ///
+  /// No se quitan sólo los botones de crear y editar: también dejan de ser
+  /// pulsables los contadores de uniformes y de faltas. **Sus pantallas no son
+  /// de sólo lectura**, y todo lo que hay detrás —`uniformes/*`, `ausencias/*`—
+  /// lleva `auth.personal`, así que a un alumno le responderían 403. Ofrecer un
+  /// camino que termina en un error es peor que no ofrecerlo: los números se
+  /// siguen viendo, que es lo que la familia viene a mirar.
+  final bool soloLectura;
+
+  /// Qué hacer al tocar la hamburguesa, cuando esta ficha **es** una pantalla
+  /// del menú y no algo abierto desde otra.
+  ///
+  /// Null cuando se llega por `push` desde el listado del grupo: ahí lo que
+  /// toca arriba a la izquierda es la flecha de volver, y Flutter ya la pone.
+  final VoidCallback? alAbrirMenu;
+
   FichaDisciplinaArgs({
     required this.alumno,
     required this.datos,
@@ -35,6 +53,8 @@ class FichaDisciplinaArgs {
     required this.periodoInicial,
     this.docentes = const [],
     this.nombresPorUsuario = const {},
+    this.soloLectura = false,
+    this.alAbrirMenu,
   });
 }
 
@@ -114,6 +134,12 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
       child: Scaffold(
         appBar: AppBar(
           titleSpacing: 0,
+          leading: widget.args.alAbrirMenu == null
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: widget.args.alAbrirMenu,
+                ),
           title: Row(
             children: [
               AvatarPersona(
@@ -131,11 +157,13 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _abrirEditor(),
-          icon: Icon(Icons.add),
-          label: Text('Nueva situación'),
-        ),
+        floatingActionButton: widget.args.soloLectura
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: () => _abrirEditor(),
+                icon: Icon(Icons.add),
+                label: Text('Nueva situación'),
+              ),
         body: ListView(
           padding: const EdgeInsets.only(bottom: 96),
           children: [
@@ -208,7 +236,7 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
               icono: Icons.checkroom_outlined,
               rotulo: 'Uniforme',
               cuantos: alumno.cuantosUniformes(periodo),
-              alTocar: _abrirUniformes,
+              alTocar: widget.args.soloLectura ? null : _abrirUniformes,
             ),
           ),
           const SizedBox(width: 8),
@@ -218,7 +246,7 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
               rotulo: 'Tardanzas',
               color: kColorTardanza,
               cuantos: alumno.cuantasFaltas(periodo, TipoFalta.tardanza),
-              alTocar: _abrirFaltas,
+              alTocar: widget.args.soloLectura ? null : _abrirFaltas,
             ),
           ),
           const SizedBox(width: 8),
@@ -228,7 +256,7 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
               rotulo: 'Ausencias',
               color: kColorAusencia,
               cuantos: alumno.cuantasFaltas(periodo, TipoFalta.ausencia),
-              alTocar: _abrirFaltas,
+              alTocar: widget.args.soloLectura ? null : _abrirFaltas,
             ),
           ),
         ],
@@ -285,7 +313,9 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
     final absorbidas = alumno.absorbidasPor(situacion.id).length;
 
     return InkWell(
-      onTap: () => _abrirEditor(situacion: situacion),
+      onTap: widget.args.soloLectura
+          ? null
+          : () => _abrirEditor(situacion: situacion),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Column(
@@ -494,7 +524,9 @@ class _Ficha extends StatelessWidget {
   final IconData icono;
   final String rotulo;
   final int cuantos;
-  final VoidCallback alTocar;
+  /// Null en modo lectura: el número se sigue viendo y deja de llevar a una
+  /// pantalla que respondería 403.
+  final VoidCallback? alTocar;
   final Color? color;
 
   @override

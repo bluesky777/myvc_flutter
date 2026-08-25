@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/NotasPerdidasScreen.dart';
 import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
+import 'package:myvc_flutter/Screens/MiDisciplinaScreen.dart';
 import 'package:myvc_flutter/Screens/PrivacidadScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/UsuariosScreen.dart';
@@ -65,6 +66,10 @@ class RouteGenerator {
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());
+      case '/mi-disciplina':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const MiDisciplinaScreen());
       case '/privacidad':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const PrivacidadScreen());

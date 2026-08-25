@@ -75,6 +75,69 @@ Future<DatosDisciplina> traerDatosDeDisciplina(Server server) async {
   );
 }
 
+/// La ficha de disciplina del propio alumno, o la de un acudido.
+///
+/// `GET disciplina/mis-fichas/{alumno_id?}`, con la guarda `boletin.propio` en
+/// modo `sin-paz-y-salvo`: retener el boletín de quien debe es una cosa y
+/// esconderle a una familia la situación disciplinaria de su hijo es otra.
+///
+/// **El id no es opcional para un acudiente.** Sin él, el backend sólo sabe de
+/// quién hablar si quien pregunta es el propio alumno; a un acudiente le
+/// responde **400**. Por eso [MiDisciplinaScreen] le pregunta de qué acudido
+/// antes de llamar, igual que hacen «Mis notas» y «Asistencia».
+///
+/// El año lo decide el backend **a partir del alumno y no de quien pregunta**,
+/// que es lo único que hace que esto sirva para un acudiente cuyo año de
+/// usuario no tiene por qué ser el del acudido.
+///
+/// `config` puede venir null —esa lectura no crea la fila del año a propósito,
+/// porque una lectura que escribe deja de ser de sólo lectura— y entonces valen
+/// los valores por defecto de [ConfigDisciplinaModel], que son los nombres
+/// genéricos de los tres tipos.
+Future<MiFichaDisciplina> traerMisFichas(
+  Server server, {
+  int? alumnoId,
+}) async {
+  final ruta = alumnoId == null
+      ? '/disciplina/mis-fichas'
+      : '/disciplina/mis-fichas/$alumnoId';
+
+  final res = await server.get(ruta);
+
+  if (res.statusCode >= 300) {
+    throw Exception(mensajeDeFallo(res.statusCode, 'ver la ficha'));
+  }
+
+  final cuerpo = jsonDecode(res.body);
+  if (cuerpo is! Map || cuerpo['alumno'] is! Map) {
+    throw Exception('El servidor no devolvió la ficha.');
+  }
+
+  return MiFichaDisciplina(
+    alumno: AlumnoDisciplinaModel.fromJson(
+      Map<String, dynamic>.from(cuerpo['alumno'] as Map),
+    ),
+    datos: DatosDisciplina(
+      config: cuerpo['config'] is Map
+          ? ConfigDisciplinaModel.fromJson(
+              Map<String, dynamic>.from(cuerpo['config'] as Map))
+          : ConfigDisciplinaModel(),
+      ordinales: _lista(cuerpo['ordinales'], OrdinalModel.fromJson),
+    ),
+  );
+}
+
+/// La ficha propia y lo que hace falta para pintarla.
+///
+/// Sin `grupos` ni `descripciones_typeahead`: eso es del editor, y aquí no se
+/// escribe nada.
+class MiFichaDisciplina {
+  final AlumnoDisciplinaModel alumno;
+  final DatosDisciplina datos;
+
+  const MiFichaDisciplina({required this.alumno, required this.datos});
+}
+
 /// Los alumnos del grupo con su año entero de disciplina.
 ///
 /// `PUT disciplina/alumnos {grupo_id, year_id}`. Vienen ya ordenados por

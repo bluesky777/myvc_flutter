@@ -286,7 +286,7 @@ flowchart LR
     F3 --> F4["4 · Crear y editar ✓<br/>situaciones"]
     F4 --> F4b["4b · Derivantes ✓<br/>encadenar situaciones"]
     F4b --> F5["5 · Uniformes ✓"]
-    F5 -.->|"necesita<br/>endpoint nuevo"| F6["6 · Pantalla del<br/>alumno y acudiente"]
+    F5 --> F6["6 · Pantalla del alumno ✓<br/>y del acudiente<br/><i>tras interruptor</i>"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
     style F2 fill:#e8f4e8,stroke:#5a8f5a
@@ -294,12 +294,12 @@ flowchart LR
     style F4 fill:#e8f4e8,stroke:#5a8f5a
     style F4b fill:#e8f4e8,stroke:#5a8f5a
     style F5 fill:#e8f4e8,stroke:#5a8f5a
-    style F6 fill:#fff0e6,stroke:#c98a4b,stroke-dasharray: 5 3
+    style F6 fill:#e8f4e8,stroke:#5a8f5a
 ```
 
 De la 1 a la 5, la 4b incluida, hechas en la rama `feat/disciplina`.
 
-## Lo que queda pendiente
+## La fase 6, hecha y esperando despliegue
 
 **La pantalla del alumno y del acudiente.** Necesita un endpoint que hoy no existe. Se
 comprobó: en todo el backend solo cuatro controladores tocan `dis_procesos` —`Disciplina`,
@@ -313,6 +313,32 @@ Hace falta algo como `GET disciplina/mis-fichas`: solo las situaciones del propi
 sus ordinales ya resueltos, sin los cuarenta compañeros, sin las notas y sin el boletín, con
 una guarda de propiedad al estilo de `boletin.propio`. Cuando exista, la pantalla es corta: es
 la ficha del alumno en modo lectura.
+
+**Ya existe, y la pantalla está escrita** (24 ago 2026). El endpoint está en el backend con la
+guarda `boletin.propio:sin-paz-y-salvo` y devuelve `{alumno, config, ordinales}`, con `alumno`
+en la misma forma que un elemento de `PUT disciplina/alumnos` — que era el motivo de pedirlo
+así.
+
+**Detrás de `Interruptores.disciplinaMisFichas`, apagado**: está fusionado en el backend pero
+no desplegado en los dieciséis colegios, y una opción de menú que termina en 404 es peor que
+no tenerla.
+
+Es [MiDisciplinaScreen](../lib/Screens/MiDisciplinaScreen.dart), y **no es una pantalla
+nueva**: carga y delega en `FichaDisciplinaScreen` con `soloLectura: true`. Escribir otra para
+enseñar exactamente lo mismo habrían sido dos sitios donde arreglar el mismo fallo.
+
+Tres cosas que salieron al hacerla:
+
+1. **Sin id, un acudiente recibe 400.** El backend sólo deduce el alumno del token cuando quien
+   pregunta es el propio alumno. Así que el acudiente elige acudido antes, con la misma hoja
+   que ya usan «Mis notas» y «Asistencia».
+2. **El año lo decide el backend a partir del alumno, no de quien pregunta.** Es lo único que
+   hace que esto sirva para un acudiente cuyo año de usuario no tiene por qué ser el del
+   acudido.
+3. **En modo lectura no basta con quitar los botones de crear y editar.** También dejan de ser
+   pulsables los contadores de uniformes y de faltas: sus pantallas escriben, y todo lo que hay
+   detrás —`uniformes/*`, `ausencias/*`— lleva `auth.personal` y le respondería 403 a un
+   alumno. Los números se siguen viendo, que es lo que la familia viene a mirar.
 
 ## Lo que se deja fuera a propósito
 
