@@ -336,14 +336,20 @@ Cuando le llegue el turno se le abre su `docs/ia.md`, como todos los frentes.
 
 ### Publicación en Google Play
 
-**La ficha está armada y en «Lista para enviar a revisión»** (25 ago 2026):
-textos, ícono, gráfico destacado y capturas de teléfono y tablet, con la
-declaración de recursos de IA contestada —el gráfico destacado se hizo con IA y
-va etiquetado; el resto, no—. No se envía sola: se revisa junto con la primera
-versión que se suba. Lo que sigue son los siete formularios de «Contenido de la
-app» —el de seguridad de datos ya tiene sus respuestas escritas en
-[seguridad-datos-play.md](seguridad-datos-play.md)—, la política de privacidad
-viva en su URL, y el `.aab` en prueba cerrada con los doce probadores.
+**Enviada a revisión el 25 de agosto de 2026.** Trece cambios: la ficha entera
+—textos, ícono, gráfico destacado y capturas de teléfono y tablet, con el
+gráfico etiquetado como hecho con IA—, los formularios de contenido de la app,
+la política de privacidad viva en `micolevirtual.com/privacidad.html`, y la
+primera versión `1.0.0 (3)` en el canal de prueba cerrada, con los 28 correos de
+verificadores cargados y las credenciales del revisor comprobadas contra el
+servidor de Demo.
+
+**Lo que sigue no depende de nosotros hasta que Google conteste**, y luego:
+mandarle el enlace de opt-in a los 28 —hacen falta **12 aceptaciones**, y
+aceptar es un acto de cada persona, no basta con estar en la lista—, y de ahí
+**14 días seguidos** antes de poder pedir acceso a producción. El mensaje de
+invitación importa más de lo que parece: el fallo típico es abrir el enlace con
+una cuenta de Google distinta a la registrada.
 
 [publicacion-play.md](publicacion-play.md) tiene la guía, y
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)
