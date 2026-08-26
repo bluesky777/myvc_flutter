@@ -158,6 +158,13 @@ existe pero **sólo se cierra en la cara de quien vuelve a entrar**.
   arman con `DB::select` y SQL a pelo, así que los tipos los decide PDO: el lado
   Flutter lee el JSON con [JsonBackend](../lib/Utils/JsonBackend.dart) en vez de
   fiarse.
+- **Probar en web contra un colegio de verdad pide bajar el CORS.** Los
+  servidores solo permiten su propio origen —`access-control-allow-origin:
+  https://demo.micolevirtual.com`—, así que desde `localhost` el navegador
+  bloquea la respuesta y la app enseña «No se pudo conectar», que es el mismo
+  mensaje que da un servidor caído. Para que la prueba valga:
+  `flutter run -d chrome --web-browser-flag="--disable-web-security"`. En el
+  celular no pasa, porque ahí no hay navegador de por medio.
 - **Antes de commitear**: `flutter analyze` sin avisos y `flutter test` en verde.
   Con `--concurrency=2` si la máquina va justa; a pelo se queda sin memoria.
 

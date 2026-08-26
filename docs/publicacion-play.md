@@ -199,6 +199,16 @@ todo lo que esa cuenta vea— y a **mantenerla viva mientras la app esté
 publicada**: cada actualización se vuelve a revisar, y si alguien borra esa
 cuenta, la siguiente versión rebota.
 
+Hay una cuenta de docente en el **colegio Demo** (`demo.micolevirtual.com`),
+comprobada el 25 de agosto de 2026. **El usuario y la contraseña no se escriben
+aquí** —este repositorio está en GitHub—: viven en «Acceso a la app» de Play
+Console y en el gestor de contraseñas.
+
+Y las instrucciones para el revisor **no pueden ser solo usuario y contraseña**:
+la app arranca pidiendo elegir colegio de una lista, y el revisor no tiene cómo
+adivinar cuál. El primer paso escrito tiene que ser *«elige Demo en la lista de
+colegios»*. Sin eso no entra aunque las credenciales sean perfectas.
+
 **Seguridad de los datos (Data Safety).** La app *sí* recoge datos. Lo que
 manda al servidor y guarda en el teléfono:
 
