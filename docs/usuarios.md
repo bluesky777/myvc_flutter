@@ -6,10 +6,16 @@ tiene usuario». Hoy eso se hace desde la plataforma web, y es **la única tarea
 administrativa que sí es diaria** —por eso viene a la app y los ordinales del
 manual no, ver [configuracion.md](configuracion.md)—.
 
-**Estado: fase 1 hecha, con cinco cosas apagadas esperando al servidor.** Lo
-apagado y el porqué, en «[Lo que está apagado](#lo-que-está-apagado-y-por-qué)».
-Nada se enciende hasta que lo que espera esté **desplegado en los dieciséis
-colegios**, que no es lo mismo que escrito.
+**Estado: fase 1 hecha, y desde el 26 de agosto de 2026 con el nombre de usuario
+encendido.** Quedan tres cosas apagadas esperando al servidor; lo apagado y el
+porqué, en «[Lo que está apagado](#lo-que-está-apagado-y-por-qué)». Nada se
+enciende hasta que lo que espera esté **desplegado en los quince colegios**, que
+no es lo mismo que escrito ni que fusionado.
+
+**Son quince y no dieciséis desde el 25 de agosto de 2026**: uno se dio de baja y
+se borró del servidor, y además nunca estuvo en ninguna tanda porque no tenía ni
+repositorio git ni aplicación. La cifra no es un detalle de redacción: es la
+condición de encendido, y escrita como «los dieciséis» no se puede cumplir nunca.
 
 ## La pantalla que se viene a sustituir
 
@@ -145,16 +151,24 @@ la de abajo:
 | **El colegio entero** — `cambiar-usuarios/*` | superusuario o secretario hoy; pendiente de confirmar |
 
 O sea que lo que esta pantalla necesitaba —que un secretario pueda arreglar las
-cuentas de un grupo— **ya está resuelto en el backend**, en una rama sin
-fusionar y sin desplegar.
+cuentas de un grupo— **ya está resuelto y desplegado**: va en el commit
+`0e7208c`, dentro de la tanda `eb95cbc` que corre en los quince desde el 25 ago
+2026. Y no pasó de superusuario a «superusuario o secretario» sino a
+**`esAdministrativo`**, que es el criterio ordenado por alcance: la de un grupo
+pedía más que la del colegio entero, que son 1.280 alumnos.
+
+Hoy eso no le da el botón a nadie nuevo —cero `Secretario` en la base, y los diez
+`Admin` son los mismos diez `is_superuser`—, pero **la app no debe cablear
+`is_superuser` para pintarlo**. No lo hace: usa `administraCuentas`, que es
+superusuario, `admin` o `secretario`.
 
 La app no lo decide ni lo puede arreglar, y por eso **la pantalla ya no escribe
 en su código quién puede hacer cada cosa**: cuando el servidor dice que no, lo
 dice con el criterio exacto dentro del 403 —`Autoriza::exigir` corta con su
 mensaje— y la app enseña ese, no uno suyo. Una frase escrita en la app envejece
-sin avisar el día que se despliega un cambio de guarda, y los dieciséis colegios
-no se actualizan a la vez. La nuestra queda de respaldo, para cuando el servidor
-no explica nada.
+sin avisar el día que se despliega un cambio de guarda, y los quince colegios no
+se actualizan a la vez. La nuestra queda de respaldo, para cuando el servidor no
+explica nada.
 
 ### Y hoy la contraseña de grupo alcanza a más gente de la que se ve
 
@@ -166,13 +180,16 @@ borradas**. Que no era intención lo demuestra el vecino y no una opinión: el
 docblock de esa función argumenta largo sobre *quién* puede llamarla y ni una
 línea sobre *a quién* alcanza.
 
-**Ya está arreglado en el backend, y sin desplegar.** Con el arreglo filtra
-MATR/ASIS, deja fuera las borradas y contesta `{"resultado": "Cambiadas",
-"cambiadas": 31}`, con lo que **el número cuadra con la lista que la pantalla
-pinta**: era justo el caso de «31 de 34». Mientras no esté en los dieciséis, la
-confirmación no promete un número y avisa de a quién más alcanza. El número, en
-cambio, no cuelga de ningún interruptor: se lee de la respuesta si viene, así
-que aparece solo el día que el servidor lo mande.
+**Arreglado y desplegado desde el 25 de agosto de 2026** —commit `0e7208c`,
+dentro de la tanda `eb95cbc`—: filtra MATR/ASIS, deja fuera las borradas y
+contesta `{"resultado": "Cambiadas", "cambiadas": 31}`, con lo que **el número
+cuadra con la lista que la pantalla pinta**: era justo el caso de «31 de 34».
+
+`PendientesUsuarios.cambiarClavesArreglado` **se encendió el 26 ago 2026**, y lo
+único que cambia es una frase: la confirmación ya no avisa de a quién más
+alcanza, porque ya no alcanza a nadie más. El número, en cambio, nunca colgó de
+un interruptor: se lee de la respuesta si viene, así que aparece solo cuando el
+servidor lo manda.
 
 ## De dónde sale cada dato
 
@@ -263,50 +280,58 @@ de 34» pero no cuáles tres, que es justo lo que va a preguntar quien lo hizo.
 
 Cinco interruptores en un solo sitio, [PendientesUsuarios](../lib/Http/UsuariosApi.dart).
 Cada uno se enciende con una palabra el día que su motivo desaparezca — y ese
-día no es cuando el backend lo escriba, sino **cuando esté desplegado en los
-dieciséis colegios**: `app/` es copia por colegio y myvc_flutter es una sola app
-para todos.
+día no es cuando el backend lo escriba **ni cuando lo fusione**, sino **cuando
+esté desplegado en los quince colegios**: `app/` es copia por colegio y
+myvc_flutter es una sola app para todos.
 
-| Apagado | Motivo | Se enciende cuando |
+Y «desplegado» se comprueba por el **hash de la tanda**, no por `main`: lo que
+corre en los quince es el commit que Joseth verificó igual en todos, y `main` va
+por delante. Preguntar «¿está en `main`?» es la pregunta equivocada, y es la que
+tuvo dos de estos apagados tres días de más.
+
+| Interruptor | Motivo por el que se apagó | Estado |
 |---|---|---|
-| Cambiar el nombre de usuario | **Es una puerta abierta en el servidor** (abajo) | la guarda arreglada esté desplegada |
-| Los roles de cada persona | no hay de dónde sacarlos sin traer las 2.279 | exista lo del punto 2 |
-| El último acceso | no existe | exista lo del punto 1 |
-| Documento como usuario, y contraseña a un grupo de acudientes | no existen | existan los puntos 6 y 7 |
-| El aviso de a quién más alcanza la contraseña de grupo | hoy alcanza a retirados y borrados | el arreglo esté desplegado |
+| Cambiar el nombre de usuario | **Era una puerta abierta en el servidor** (abajo) | **encendido** 26 ago 2026 |
+| El aviso de a quién más alcanza la contraseña de grupo | alcanzaba a retirados y borrados | **encendido** 26 ago 2026 |
+| Los roles de cada persona | no hay de dónde sacarlos sin traer las 2.279 | apagado — falta el punto 2 |
+| El último acceso | no existe | apagado — falta el punto 1 |
+| Documento como usuario, y contraseña a un grupo de acudientes | no existen | apagado — faltan los puntos 6 y 7 |
 
 Lo que **no** lleva interruptor, a propósito: el número de cuántas contraseñas
 cambiaron y el motivo con el que el servidor rechaza algo. Los dos se leen de la
 respuesta si vienen, así que valen igual antes y después del despliegue y no hay
 nada que acordarse de encender.
 
-**Lo del nombre de usuario merece su párrafo, porque es lo único que se apaga por
-una razón que no es «todavía no existe».** `PUT perfiles/guardar-username/{id}`
-está desplegado y funciona, y lleva `persona.propia:user_id`; ese guard deja
+**Lo del nombre de usuario merece su párrafo, porque fue lo único que se apagó
+por una razón que no era «todavía no existe».** `PUT perfiles/guardar-username/{id}`
+estaba desplegado y funcionaba, y lleva `persona.propia:user_id`; ese guard deja
 pasar de largo a todo el que no sea alumno ni acudiente
-(`ExigirPersonaPropia.php:80-82`), y el controlador solo comprueba que el nombre
-no venga vacío (`PerfilesController.php:241-253`). O sea que **cualquiera de los
-51 docentes le cambia el nombre de usuario a cualquier cuenta, incluida la de un
-superusuario**, y como `users.username` es `UNIQUE`, eso deja a alguien fuera del
-sistema en una petición. Es el hermano de `reset-password`, donde la revisión sí
-ancló el objetivo, y que se quedó sin hacer.
+(`ExigirPersonaPropia.php:80-82`), y el controlador solo comprobaba que el nombre
+no viniera vacío. O sea que **cualquiera de los 51 docentes le cambiaba el nombre
+de usuario a cualquier cuenta, incluida la de un superusuario**, y como
+`users.username` es `UNIQUE`, eso dejaba a alguien fuera del sistema en una
+petición. Es el hermano de `reset-password`, donde la revisión sí ancló el
+objetivo, y que se había quedado sin hacer.
 
 Lo encontró esta sesión leyendo el backend para escribir la pantalla, lo confirmó
 línea por línea la sesión del backend, y fue a Joseth **como cosa aparte y por
 delante de esta pantalla**.
 
-**Ya está arreglado, y sin desplegar.** Quedó anclado al objetivo, copiando el
-criterio del hermano `reset-password`: un superusuario a cualquiera; cada quien
-el suyo —un alumno sigue pudiendo cambiarse el nombre de usuario—; un docente
-con `profes_can_edit_alumnos`, solo el de un alumno; y 403 para todo lo demás. Y
-de paso, **un nombre ocupado ahora contesta 422** en vez del 500 de MySQL que
-salía antes, que es lo que hace falta para poder enseñar «ese nombre ya está en
-uso» en lugar de un error genérico.
+**Arreglado y desplegado desde el 25 de agosto de 2026**, commit `0e7208c` dentro
+de la tanda `eb95cbc`. Quedó anclado al objetivo, copiando el criterio del
+hermano `reset-password`: un superusuario a cualquiera; cada quien el suyo —un
+alumno sigue pudiendo cambiarse el nombre de usuario—; un docente con
+`profes_can_edit_alumnos`, solo el de un alumno; y 403 para todo lo demás. Y de
+paso, **un nombre ocupado contesta 422** en vez del 500 de MySQL que salía antes
+—mirando también entre los borrados, porque el nombre de una cuenta borrada sigue
+ocupado—, que es lo que hace falta para enseñar «ese nombre ya está en uso» en
+lugar de un error genérico.
 
-Hasta que eso esté en los dieciséis, el botón sigue apagado: **la primera versión
-de esta pantalla no puede ser el cliente cómodo de una escalada de
-privilegios**. Encenderlo es cambiar `cambiarUsername` a `true`, y hay una prueba
-que se pone en rojo si alguien lo hace sin querer.
+**El botón se encendió el 26 de agosto de 2026.** Y hay una trampa que conviene
+dejar escrita, porque es la que lo tuvo apagado tres días de más: **la ruta sigue
+diciendo `persona.propia:user_id`**. No es un olvido — lo que cierra el agujero
+está dentro del método, no en el middleware. Quien vaya a comprobar la guarda
+leyendo `routes/` verá el guard viejo y sacará la conclusión falsa.
 
 ## Las fases
 
@@ -315,7 +340,7 @@ que se pone en rojo si alguien lo hace sin querer.
 | 1 | El armazón: tipos, grupo, listados de alumnos, acudientes y docentes, ficha con contraseña, y la contraseña para un grupo de alumnos | hecha |
 | 2 | Roles y último acceso en la ficha y en la lista | esperando los puntos 1 y 2 |
 | 3 | «Otros», agrupados por rol | esperando el punto 8 |
-| 4 | Las dos de grupo que faltan, y el nombre de usuario | esperando los puntos 6 y 7, y la guarda |
+| 4 | Las dos de grupo que faltan, y el nombre de usuario | el nombre de usuario, hecho ✓; las dos de grupo esperan los puntos 6 y 7 |
 
 ## Lo que esta pantalla no hace, a propósito
 

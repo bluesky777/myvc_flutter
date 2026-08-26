@@ -53,11 +53,15 @@ List<NotaPendiente> notas(int cuantas) {
 void main() {
   test('el interruptor viene apagado, que es lo que protege a los rezagados',
       () {
-    // Es una sola app para dieciséis colegios. Encender esto antes de que el
+    // Es una sola app para quince colegios. Encender esto antes de que el
     // endpoint esté desplegado en TODOS gasta un 404 en los que van
     // rezagados, y el fallo sale en la pantalla que usan todos los días.
+    //
+    // `PUT notas/lote` entró en la misma tanda desplegada que `mis-fichas`, así
+    // que la condición está cumplida — pero esto toca la pantalla del trabajo
+    // diario de un docente y se enciende cuando Joseth lo decida, no de paso.
+    // Ver docs/backend-pendiente.md §1.
     expect(Interruptores.notasLote, isFalse);
-    expect(Interruptores.disciplinaMisFichas, isFalse);
   });
 
   group('guardar en lote', () {

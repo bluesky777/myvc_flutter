@@ -283,24 +283,31 @@ void main() {
   });
 
   group('los interruptores de lo que falta', () {
-    test('vienen todos apagados', () {
-      // El de `cambiarUsername` es el que importa: encendido, la pantalla se
-      // convierte en el cliente cómodo de una ruta que hoy deja a cualquier
-      // docente renombrar la cuenta de un superusuario. Ver docs/usuarios.md.
-      expect(PendientesUsuarios.cambiarUsername, isFalse);
+    test('los dos que ya están desplegados vienen encendidos', () {
+      // Los dos salen del mismo commit del backend, `0e7208c`, que entró en la
+      // tanda `eb95cbc` desplegada el 25 ago 2026 con el mismo hash en los
+      // quince colegios. Ver docs/usuarios.md.
+      expect(PendientesUsuarios.cambiarUsername, isTrue);
+      expect(PendientesUsuarios.cambiarClavesArreglado, isTrue);
+    });
+
+    test('los que siguen esperando al servidor vienen apagados', () {
       expect(PendientesUsuarios.rolesPorPersona, isFalse);
       expect(PendientesUsuarios.ultimoAcceso, isFalse);
       expect(PendientesUsuarios.otrosUsuarios, isFalse);
       expect(PendientesUsuarios.masivasPorGrupoQueFaltan, isFalse);
     });
 
-    test('encenderlos y volver a fábrica es una llamada', () {
-      PendientesUsuarios.cambiarUsername = true;
+    test('volver a fábrica es una llamada, y fábrica no es «todo apagado»', () {
+      // Si `comoDeFabrica` se desincroniza de los valores escritos, las pruebas
+      // dejan de comprobar la app que se publica. Por eso se mueven los dos
+      // sentidos y se comprueban los dos.
+      PendientesUsuarios.cambiarUsername = false;
       PendientesUsuarios.rolesPorPersona = true;
 
       PendientesUsuarios.comoDeFabrica();
 
-      expect(PendientesUsuarios.cambiarUsername, isFalse);
+      expect(PendientesUsuarios.cambiarUsername, isTrue);
       expect(PendientesUsuarios.rolesPorPersona, isFalse);
     });
   });

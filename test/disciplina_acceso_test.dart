@@ -50,30 +50,68 @@ void main() {
   });
 
   group('la opción del menú', () {
-    Future<void> montar(WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: MenuLateral()));
+    /// Monta el menú y apunta a qué ruta manda lo que se toque.
+    ///
+    /// Desde que existe `/mi-disciplina` **el texto ya no distingue**: alumnos,
+    /// acudientes y personal ven los tres la palabra «Disciplina», y lo que
+    /// separa a unos de otros es la ruta que hay detrás. Comprobar el texto
+    /// aquí sería volver a la prueba que pasaba por el motivo equivocado.
+    Future<List<String?>> montar(WidgetTester tester) async {
+      // El lienzo alto, por lo mismo que en menu_lateral_test: un `ListView` no
+      // construye lo que no se ve, y la opción que no cabe falla con la cara de
+      // una opción que no está puesta.
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final visitadas = <String?>[];
+
+      await tester.pumpWidget(MaterialApp(
+        home: MenuLateral(),
+        onGenerateRoute: (settings) {
+          visitadas.add(settings.name);
+          return MaterialPageRoute(builder: (_) => const SizedBox());
+        },
+      ));
       await tester.pump();
+
+      return visitadas;
     }
 
-    testWidgets('la ve el personal del colegio', (tester) async {
+    testWidgets('la del personal la ve el personal del colegio',
+        (tester) async {
       AuthService.user = UserAutenticado(username: 'agomez', tipo: 'Profesor');
 
-      await montar(tester);
-
+      final visitadas = await montar(tester);
       expect(find.text('Disciplina'), findsOneWidget);
+
+      await tester.tap(find.text('Disciplina'));
+      await tester.pumpAndSettle();
+
+      expect(visitadas, contains('/disciplina'));
     });
 
-    testWidgets('no la ven los alumnos ni los acudientes', (tester) async {
-      // Y no es solo por pudor: todas las rutas de disciplina del backend
-      // llevan `auth.personal` y les responderían 403.
-      AuthService.user = UserAutenticado(username: 'ana', tipo: 'Alumno');
-      await montar(tester);
-      expect(find.text('Disciplina'), findsNothing);
+    // Una prueba por tipo y no un bucle dentro de una: tocar la opción navega,
+    // y un segundo `pumpWidget` sobre el mismo tester reaprovecha el árbol —el
+    // Navigator se queda donde lo dejó la vuelta anterior y el menú ya no está
+    // montado—. La segunda vuelta fallaba diciendo que la opción no existe.
+    for (final tipo in ['Alumno', 'Acudiente']) {
+      testWidgets('la del personal no la alcanza un ${tipo.toLowerCase()}',
+          (tester) async {
+        // Las rutas de disciplina que escriben llevan `auth.personal` y les
+        // responderían 403. La única que no lo lleva es `mis-fichas`, que es a
+        // donde va la suya.
+        AuthService.user = UserAutenticado(username: 'x', tipo: tipo);
 
-      AuthService.user = UserAutenticado(username: 'papa', tipo: 'Acudiente');
-      await montar(tester);
-      expect(find.text('Disciplina'), findsNothing);
-    });
+        final visitadas = await montar(tester);
+        await tester.tap(find.text('Disciplina'));
+        await tester.pumpAndSettle();
+
+        expect(visitadas, contains('/mi-disciplina'));
+        expect(visitadas, isNot(contains('/disciplina')));
+      });
+    }
   });
 
   group('el periodo por su número', () {

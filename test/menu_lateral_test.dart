@@ -126,13 +126,17 @@ void main() {
       // No es solo pudor: todas esas pantallas piden endpoints con
       // `auth.personal`, que a un acudiente le responden 403. Ofrecérselas
       // sería ofrecerle una pantalla de error.
+      //
+      // «Disciplina» no está en la lista y no es un olvido: desde que existe
+      // `/mi-disciplina` un acudiente sí ve esa palabra, y es la suya en sólo
+      // lectura. Que no alcance la del personal se comprueba por la ruta, en
+      // disciplina_acceso_test.
       AuthService.user = UserAutenticado(username: 'x', tipo: 'Acudiente');
 
       await montar(tester);
 
       expect(find.text('Notas'), findsNothing);
       expect(find.text('Notas perdidas'), findsNothing);
-      expect(find.text('Disciplina'), findsNothing);
       expect(find.text('Configuración'), findsNothing);
     });
   });
@@ -160,15 +164,17 @@ void main() {
     testWidgets('y un alumno sigue sin ver lo que no es suyo',
         (WidgetTester tester) async {
       // Que Privacidad se cuele en la rama de alumno no puede haber abierto de
-      // paso las opciones del personal.
+      // paso las opciones del personal. «Disciplina» ya no sirve de testigo
+      // —un alumno ve la suya con ese mismo nombre—, así que el testigo son
+      // las que siguen siendo sólo del personal.
       AuthService.user = UserAutenticado(username: 'a', tipo: 'Alumno');
 
       await montar(tester);
 
       expect(find.text('Privacidad'), findsOneWidget);
-      expect(find.text('Disciplina'), findsNothing);
       expect(find.text('Configuración'), findsNothing);
       expect(find.text('Notas perdidas'), findsNothing);
+      expect(find.text('Usuarios'), findsNothing);
     });
   });
 }

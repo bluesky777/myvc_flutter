@@ -4,35 +4,57 @@ El mapa para retomar el trabajo sin que nadie tenga que contar nada. Se
 actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
-**Última actualización: 25 de agosto de 2026.** **Todo lo construido está
+**Última actualización: 26 de agosto de 2026.** **Todo lo construido está
 fusionado en `main`, empujado a `origin` y no queda ninguna rama suelta**: las
 fases 4, 5 y 6 de notas, la configuración, la analítica, la pantalla de
 usuarios, la versión mínima y el 422 de la escala.
-Los tres frentes viejos esperan al backend. **[La analítica](analitica.md) está
-hecha entera** —Firebase, los eventos, el interruptor para apagarla y la
-política de privacidad reescrita—; de ella solo queda un ajuste de consola. Lo
-recién abierto es **[la pantalla de usuarios](usuarios.md)**: su fase 1 está
-hecha y lo demás espera ocho cosas del servidor.
+**[La analítica](analitica.md) está hecha entera** —Firebase, los eventos, el
+interruptor para apagarla y la política de privacidad reescrita—; de ella solo
+queda un ajuste de consola.
+
+**El 26 de agosto se encendieron tres interruptores** que llevaban días apagados
+esperando algo que ya había pasado: la ficha de disciplina del alumno y del
+acudiente, el botón de cambiar el nombre de usuario y el aviso de la contraseña
+de grupo. Ver «La lección de los tres días», abajo — porque el fallo no fue de
+código sino de esta página.
+
+## Dos cifras que hay que corregir donde se lean
+
+- **Son quince colegios, no dieciséis**, desde el 25 de agosto de 2026. Uno se
+  dio de baja y se borró del servidor, y además nunca estuvo en ninguna tanda de
+  despliegue: no tenía ni repositorio git ni aplicación, así que jamás pudo
+  devolver un hash. Importa porque «desplegado en los dieciséis» es la condición
+  de encendido de los interruptores, y escrita así **no se puede cumplir nunca**.
+  Corregido en [Interruptores](../lib/Utils/Interruptores.dart),
+  [usuarios.md](usuarios.md), [disciplina.md](disciplina.md) y
+  [backend-pendiente.md](backend-pendiente.md); **queda por barrer** en
+  `notificaciones.md`, `analitica.md`, `seguridad-datos-play.md`,
+  `VersionMinima.dart`, `Analitica.dart` y `ActualizarScreen.dart`.
+- **«Desplegado» se comprueba contra el hash de la tanda, no contra `main`.** Lo
+  que corre en los quince es el commit que Joseth verificó igual en todos, y
+  `main` va por delante. La pregunta correcta es «¿el commit que trae esto es
+  ancestro del hash desplegado?», y se contesta con
+  `git merge-base --is-ancestor <commit> <hash>`.
 
 ## Los frentes abiertos
 
 ```mermaid
 flowchart LR
     D["Disciplina<br/>docs/disciplina.md"] --> D5["fases 1–5 ✓"]
-    D --> D6["fase 6 ⛔<br/>falta endpoint"]
+    D --> D6["fase 6 ✓<br/>encendida 26 ago"]
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
     P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
     A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
-    U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓"]
-    U --> U2["fases 2–4 ⛔<br/>faltan endpoints<br/>y una guarda"]
+    U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
+    U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
     T["Tablets"] --> T0["sin empezar ○<br/>hoy es el layout<br/>de teléfono estirado"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
-    style D6 fill:#ffe6e6,stroke:#c04b4b
+    style D6 fill:#e8f4e8,stroke:#5a8f5a
     style P0 fill:#ffe6e6,stroke:#c04b4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
     style A0 fill:#e8f4e8,stroke:#5a8f5a
@@ -51,35 +73,54 @@ flowchart LR
 una cosa, y es de consola: confirmar en Analytics que la retención a nivel de
 usuario está en dos meses, que es lo que promete la política de privacidad.
 
-Los otros frentes —la pantalla de disciplina del alumno, las notificaciones y
-lo que le falta a la de usuarios— necesitan trabajo en el backend, y el backend
-es de solo lectura para esta app. Ver «Lo que está bloqueado». Cuando se
-desbloquee alguno, el orden es:
+Y hay **una decisión pequeña que sí se puede tomar ya**: `PUT notas/lote` está
+desplegado desde el 25 ago, así que `Interruptores.notasLote` se puede encender
+cuando Joseth quiera. Sigue apagado a propósito y no por falta de servidor: toca
+la pantalla del trabajo diario de un docente —pasar una columna de treinta
+notas— y eso no se enciende de paso mientras se enciende otra cosa.
 
-1. **Disciplina, la pantalla del alumno y del acudiente**, en cuanto exista
-   `GET disciplina/mis-fichas`. Es corta: la ficha del alumno en modo lectura.
-2. **Notificaciones**, en cuanto estén las tres piezas del servidor. El paso 0
+Los otros frentes —las notificaciones y lo que le falta a la de usuarios—
+necesitan trabajo en el backend, y el backend es de solo lectura para esta app.
+Ver «Lo que está bloqueado». Cuando se desbloquee alguno, el orden es:
+
+1. **Notificaciones**, en cuanto estén las tres piezas del servidor. El paso 0
    ya está cerrado, así que se entra directo por el tipo más tonto, el del
    muro, para probar la tubería entera antes de llenarla.
-3. **Usuarios, lo que le falta**, y por trozos según vaya llegando: cada cosa
-   apagada tiene su interruptor y se enciende con una palabra. El primero no
-   es un endpoint sino una guarda —la de `perfiles/guardar-username`—, y ese
-   va por delante de todo porque es un fallo en producción y no una función
-   que falte. Ver [usuarios.md](usuarios.md).
+2. **Usuarios, lo que le falta**, y por trozos según vaya llegando: cada cosa
+   apagada tiene su interruptor y se enciende con una palabra. Ver
+   [usuarios.md](usuarios.md).
+
+## La lección de los tres días
+
+El 26 de agosto se descubrió que **tres cosas que este mapa daba por bloqueadas
+llevaban un día desplegadas**. No se perdió trabajo —el código ya estaba escrito
+y probado—, pero la ficha de disciplina de una familia y el arreglo de una
+escalada de privilegios estuvieron apagados sin motivo. Las tres causas, porque
+las tres se repiten solas:
+
+1. **Se preguntó «¿está en `main`?» en vez de «¿está desplegado?».** Son
+   preguntas distintas y `main` contesta mal en los dos sentidos.
+2. **Se leyó la guarda en `routes/` y no en el controlador.**
+   `PUT perfiles/guardar-username/{id}` **sigue llevando
+   `persona.propia:user_id` en la ruta**, y el arreglo está anclado al objetivo
+   dentro del método. Leer el fichero de rutas daba la conclusión falsa.
+3. **Este documento se creyó a sí mismo.** Decía «un endpoint que hoy no existe»
+   de un endpoint que existía, y nadie fue a mirar porque el mapa ya lo decía.
+   Su propia regla lo cubre: si esta página miente, es un fallo tan real como una
+   prueba en rojo — pero una prueba en rojo se ve sola y esto no.
+
+Lo que queda escrito para la próxima: antes de dar algo por bloqueado en el
+servidor, **comprobarlo contra el hash desplegado y en el controlador**, no en
+`main` ni en `routes/` ni aquí.
 
 ## Lo que está bloqueado, y por qué
 
-Los tres primeros, con su contrato ya escrito y la evidencia que lo justifica,
-están en **[backend-pendiente.md](backend-pendiente.md)**: es lo que hay que aprobar para
-desbloquearlos, y está redactado para poder decidir sin volver a investigar. Ahí
-está también lo contrario —**«Lo que la app necesita que NO se rompa»**—, con el
-mínimo de `contratos` para alumno y acudiente, que el backend está a punto de
-recortar por seguridad.
+Los contratos, con la evidencia que los justifica, están en
+**[backend-pendiente.md](backend-pendiente.md)** —donde los dos primeros ya
+figuran como entregados—. Ahí está también lo contrario —**«Lo que la app
+necesita que NO se rompa»**—, con el mínimo de `contratos` para alumno y
+acudiente, que el backend está a punto de recortar por seguridad.
 
-- **Disciplina, la pantalla del alumno y del acudiente.** Hace falta un
-  `GET disciplina/mis-fichas` que hoy no existe: todas las rutas que tocan
-  `dis_procesos` llevan `auth.personal`, que a un alumno le responde 403. El
-  detalle, en [disciplina.md](disciplina.md) → «Lo que queda pendiente».
 - **Notificaciones.** Cuelgan de tres cosas del servidor: un endpoint de temas,
   un comando de artisan y una entrada de cron. **El paso 0 está cerrado y las
   cuatro comprobaciones salieron bien** (23 ago 2026): el hosting sale por HTTPS
@@ -88,22 +129,23 @@ recortar por seguridad.
   prueba. El plan B sin push queda descartado. Lo que falta es escribir las tres
   piezas, y eso es trabajo de backend. Ver
   [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
-- **Un `PUT notas/lote`.** No existe y es la mejora de carga más grande de todo
-  el plan: no solo convierte treinta peticiones en una, sino **treinta agregados
-  de la asignatura entera en uno**. Cada `notas/update` recalcula la definitiva,
-  y ese recálculo agrega toda la asignatura antes de quedarse con un alumno. El
-  contrato, en [backend-pendiente.md](backend-pendiente.md).
-- **Usuarios, todo menos la fase 1.** Ocho cosas del servidor —el último acceso,
-  los roles por lista, «Otros», dos masivas por grupo y tres columnas que
-  faltan—, **todas sin autorizar todavía**. Y dos que no eran funciones sino
-  arreglos, **ya escritas en el backend y sin desplegar**: la guarda de
-  `PUT perfiles/guardar-username/{id}` —que hoy deja a cualquiera de los 51
-  docentes renombrar cualquier cuenta, la de un superusuario incluida— y el
-  alcance de `alumnos/cambiar-claves`, que le cambiaba la contraseña también a
-  los retirados del grupo y a las cuentas borradas. **Nada se enciende en la app
-  hasta que esté en los dieciséis colegios**, que no es lo mismo que escrito. El
-  contrato entero, en [usuarios.md](usuarios.md) → «Lo que falta en el
-  servidor».
+- **Usuarios, lo que le falta.** Ocho cosas del servidor —el último acceso, los
+  roles por lista, «Otros», dos masivas por grupo y tres columnas que faltan—,
+  **todas sin autorizar todavía**. El contrato entero, en
+  [usuarios.md](usuarios.md) → «Lo que falta en el servidor».
+
+**Y lo que ya NO está bloqueado**, para que nadie lo vuelva a buscar aquí:
+
+- **`PUT notas/lote`** existe y está desplegado desde el 25 ago. El interruptor
+  sigue apagado por decisión, no por bloqueo. Ver «Qué sigue, en orden».
+- **`GET disciplina/mis-fichas`** existe, está desplegado y la pantalla está
+  encendida desde el 26 ago.
+- **Los dos arreglos de cuentas** —la guarda de
+  `PUT perfiles/guardar-username/{id}`, que dejaba a cualquiera de los 51
+  docentes renombrar cualquier cuenta, y el alcance de `alumnos/cambiar-claves`,
+  que llegaba a los retirados del grupo y a las cuentas borradas— van en el mismo
+  commit `0e7208c` y están desplegados desde el 25 ago. Sus dos interruptores se
+  encendieron el 26.
 
 ### El 422 de la escala — hecho, y esperando al servidor
 
@@ -199,8 +241,16 @@ que llevan por debajo de la mínima, del año entero y en una sola petición.
 
 ### Disciplina — [disciplina.md](disciplina.md)
 
-Fases 1 a 5 hechas, la 4b incluida. Falta solo la pantalla del alumno y del
-acudiente, bloqueada por el endpoint que no existe.
+**Hecha entera, las seis fases.** La 6 —la ficha del alumno y del acudiente— se
+encendió el 26 de agosto de 2026: es
+[MiDisciplinaScreen](../lib/Screens/MiDisciplinaScreen.dart), que **no es una
+pantalla nueva** sino `FichaDisciplinaScreen` con `soloLectura: true`, y por eso
+se pidió que `mis-fichas` devolviera el alumno con la misma forma que un elemento
+de `PUT disciplina/alumnos`.
+
+En el menú, alumnos y acudientes ven la palabra «Disciplina» igual que el
+personal, y lo que separa a unos de otros es la ruta: `/mi-disciplina` sólo lee,
+`/disciplina` edita y lleva `auth.personal`.
 
 ### Configuración — [configuracion.md](configuracion.md)
 
@@ -230,14 +280,19 @@ un grupo a la vez**: la pantalla que sustituye traía las 2.279 personas del
 colegio con tres consultas por fila para sus roles.
 
 Funciona hoy: los listados de alumnos, acudientes —con sus acudidos— y
-docentes —con sus años contratados—, ponerle una contraseña a una persona y
-ponerle una a todo un grupo de alumnos. **Cuatro cosas están apagadas** con su
-interruptor en
-[PendientesUsuarios](../lib/Http/UsuariosApi.dart): los roles, el último
-acceso, «Otros» y dos de las masivas por grupo. Y una quinta, cambiar el nombre
-de usuario, que no está apagada por falta de endpoint sino porque el que hay
-deja a cualquier docente renombrar la cuenta de un superusuario — está avisado
-al backend y va por delante de la pantalla.
+docentes —con sus años contratados—, ponerle una contraseña a una persona,
+ponerle una a todo un grupo de alumnos y **cambiarle el nombre de usuario a una
+cuenta**, esto último desde el 26 de agosto de 2026, cuando se desplegó la guarda
+que faltaba.
+
+**Tres cosas siguen apagadas** con su interruptor en
+[PendientesUsuarios](../lib/Http/UsuariosApi.dart): los roles, el último acceso,
+«Otros» y dos de las masivas por grupo — todas por endpoints que no existen.
+
+Y una nota de alcance que la app no decide: `alumnos/cambiar-claves` pasó de
+pedir superusuario a pedir **`esAdministrativo`**, ordenado por alcance —la de un
+grupo pedía más que la del colegio entero—. Hoy no le da el botón a nadie nuevo,
+pero por eso la pantalla usa `administraCuentas` y no cablea `is_superuser`.
 
 ### La versión mínima — [backend-pendiente.md](backend-pendiente.md) §4
 
@@ -255,7 +310,7 @@ Lo que falta es que el backend lo mande, y eso está en la lista de Joseth.
 **Por qué importa más de lo que parece.** Es lo único que permite retirar un
 endpoint: sin esto, un teléfono con la versión vieja sigue llamando a la ruta
 vieja indefinidamente y nadie se entera, así que **retirar cualquier cosa
-depende de que dieciséis colegios se actualicen por su cuenta**. Dos planes del
+depende de que quince colegios se actualicen por su cuenta**. Dos planes del
 backend —la fase 7 de la auditoría y la 5 del 00— estaban parados en eso. Ahora
 pasan de «sin fecha y sin forma» a «sin fecha, pero con la forma escrita»: la
 fecha sigue sin poder existir porque **la app no está publicada todavía**.

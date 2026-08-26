@@ -88,9 +88,10 @@ class MenuLateral extends StatelessWidget {
           texto: 'Asistencia',
           ruta: '/mi-asistencia',
         ),
-        // Detrás del interruptor: `disciplina/mis-fichas` está fusionado en el
-        // backend pero no desplegado en los dieciséis colegios, y ofrecer una
-        // opción de menú que termina en 404 es peor que no tenerla.
+        // La misma palabra que ve el personal, y otra ruta detrás: aquélla es
+        // la de editar y lleva `auth.personal`, que aquí contestaría 403.
+        // Sigue detrás del interruptor porque la condición es el despliegue y
+        // no el código — hoy cumplida en los quince desde el 25 ago 2026.
         if (Interruptores.disciplinaMisFichas)
           _opcion(
             context,
@@ -139,9 +140,11 @@ class MenuLateral extends StatelessWidget {
 
     // «Disciplina» y no «Convivencia» ni «Observador»: es como se llama la
     // pantalla equivalente en la plataforma web y como la nombra el colegio al
-    // pedirla. Los alumnos y los acudientes no la ven, y no es solo por
-    // pudor: todas las rutas de disciplina del backend llevan `auth.personal`
-    // y les responderían 403.
+    // pedirla. Los alumnos y los acudientes ven una opción con este mismo
+    // nombre, pero es la suya —`/mi-disciplina`, en sólo lectura—: **ésta** no
+    // la ven, porque las rutas que escriben llevan `auth.personal` y les
+    // responderían 403. La única de disciplina que no lo lleva es
+    // `mis-fichas`.
     opciones.add(_opcion(
       context,
       icono: Icons.gavel_outlined,
