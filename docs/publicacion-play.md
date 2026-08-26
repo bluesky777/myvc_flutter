@@ -158,16 +158,32 @@ como creados o editados con IA»* y ese recurso marcado, y solo ese (25 ago
 
 ## 6. Contenido de la app: qué contestar
 
-**Se entra por «Descripción general de la publicación»**, en el menú izquierdo,
-y desde ahí por los **enlaces azules «Contenido de la app»** del bloque
-*«Cambios que indicaste»*, al final de la página. Esa misma pantalla es además la
-única que lista de una vez todo lo hecho y todo lo pendiente.
+**Supervisa y mejora → Política y programas → Contenido de la app.** Está
+enterrado dos niveles y bajo un grupo que no suena a esto, que es por lo que
+cuesta encontrarlo. La otra puerta, y la que además lista de una vez todo lo
+hecho y todo lo pendiente, es **«Descripción general de la publicación»**: los
+enlaces azules «Contenido de la app» del bloque *«Cambios que indicaste»*, al
+final de la página.
 
-**No se busque en el menú.** La consola se reorganizó: el menú «Política» ya no
-existe, «Contenido de la app» no cuelga de «Prueba y lanza», el «Mostrar más»
-del Panel solo abre un texto explicativo, y la URL `.../app-content` devuelve a
-la lista de apps. Las cuatro se probaron el 25 y 26 de agosto de 2026 y ninguna
-sirve; se perdió un buen rato en eso.
+**Lo que NO funciona**, probado el 25 y 26 de agosto de 2026: el menú «Política»
+ya no existe, «Contenido de la app» no cuelga de «Prueba y lanza», el «Mostrar
+más» del Panel solo abre un texto explicativo, y la URL `.../app-content`
+devuelve a la lista de apps.
+
+### El ID de publicidad: se contesta «No»
+
+Una de las verificaciones previas al envío para la declaración de ID de
+publicidad. **La respuesta es «No»**, y está forzada en el código: el SDK de
+Analytics mete tres permisos de publicidad por su cuenta y los tres salen del
+manifiesto fusionado con `tools:node="remove"` —`AD_ID`,
+`ACCESS_ADSERVICES_AD_ID` y `ACCESS_ADSERVICES_ATTRIBUTION`—, más el meta-data
+que apaga la recogida. Ver
+[AndroidManifest.xml](../android/app/src/main/AndroidManifest.xml) y
+[analitica.md](analitica.md) → «Lo que se apaga a propósito».
+
+Contestar «Sí» obligaría a declarar el identificador en seguridad de datos y
+contradiría la ficha. Si algún día entra publicidad —que no es el plan—, hay que
+volver aquí.
 
 Son siete formularios; estos son los que tienen respuesta no obvia en esta app:
 
