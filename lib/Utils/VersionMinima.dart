@@ -8,7 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 /// comprobaba en ninguna parte que su versión siguiera siendo aceptable, así
 /// que un teléfono con la del año pasado seguía llamando a los mismos
 /// endpoints indefinidamente y nadie se enteraba. Mientras eso fuera así,
-/// **retirar cualquier ruta dependía de que dieciséis colegios se actualizaran
+/// **retirar cualquier ruta dependía de que quince colegios se actualizaran
 /// por su cuenta**, que es lo que dejaba sin fecha —que no es lo mismo que
 /// lejos— dos planes del backend. El contrato entero, en
 /// [docs/backend-pendiente.md](../../docs/backend-pendiente.md) §4.

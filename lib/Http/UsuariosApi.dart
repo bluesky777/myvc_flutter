@@ -289,18 +289,15 @@ Future<String?> quitarRol(
 
 /// Una misma contraseña para todos los alumnos de un grupo.
 ///
-/// **Alcanza a más gente de la que la pantalla enseña.** La consulta del
-/// servidor no filtra el estado de la matrícula ni las cuentas en la papelera
-/// (`AlumnosController.php:103-107`), al contrario que su vecina de colegio
-/// entero, así que además de los matriculados alcanza a los retirados de ese
-/// grupo y a los borrados. Confirmado como defecto y anotado para arreglo; hasta
-/// entonces la confirmación de la pantalla no promete un número.
+/// **Alcanzaba a más gente de la que la pantalla enseña.** La consulta del
+/// servidor no filtraba el estado de la matrícula ni las cuentas en la papelera,
+/// al contrario que su vecina de colegio entero, así que además de los
+/// matriculados alcanzaba a los retirados de ese grupo y a los borrados.
 ///
-/// **Lo de arriba deja de ser verdad cuando el colegio actualice el servidor.**
-/// El arreglo está escrito y probado en el backend —filtra MATR/ASIS y las
-/// cuentas borradas, y contesta `{"resultado": "Cambiadas", "cambiadas": 31}`—,
-/// pero vive en una rama sin fusionar y sin desplegar en los dieciséis. Ver
-/// [PendientesUsuarios.cambiarClavesArreglado].
+/// **Arreglado y desplegado en los quince desde el 25 de agosto de 2026**
+/// —commit `0e7208c`, dentro de la tanda `eb95cbc`—: filtra MATR/ASIS y las
+/// cuentas borradas, y contesta `{"resultado": "Cambiadas", "cambiadas": 31}`.
+/// Ver [PendientesUsuarios.cambiarClavesArreglado], encendido el 26 ago.
 ///
 /// Devuelve el motivo del fallo, o cuántas cambió cuando el servidor lo dice.
 /// Las dos cosas pueden venir vacías: en la versión de hoy no hay número que
@@ -385,8 +382,8 @@ Future<List<Map<String, dynamic>>> _traerLista(
 /// **Cuando el servidor explica por qué dijo que no, gana su explicación.**
 /// `Autoriza::exigir` corta con un `abort(403, '...')` que trae escrito el
 /// criterio exacto —quién puede hacer eso—, y ese criterio cambia con el
-/// despliegue: la contraseña de un grupo pasó de superusuario a superusuario o
-/// secretaría, y los dieciséis colegios no se actualizan el mismo día. Una
+/// despliegue: la contraseña de un grupo pasó de pedir superusuario a pedir
+/// `esAdministrativo`, y los quince colegios no se actualizan el mismo día. Una
 /// frase escrita aquí envejece sin avisar; la suya llega siempre al día.
 ///
 /// Los mensajes de aquí quedan de respaldo, para cuando no dice nada o contesta

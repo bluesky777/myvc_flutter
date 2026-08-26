@@ -1,10 +1,11 @@
 # Lo que la app necesita del servidor
 
-Tres cosas, y ninguna se puede hacer desde el lado Flutter. El backend
-(`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta app: se lee para saber
-qué devuelve cada endpoint y nunca se edita. Esto es la petición, escrita con el
-detalle suficiente para que se pueda decidir sin volver a investigar, y para que
-el día que se autorice no haya que redescubrir nada.
+Tres cosas, y ninguna se puede hacer desde el lado Flutter — **dos de ellas ya
+entregadas**. El backend (`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta
+app: se lee para saber qué devuelve cada endpoint y nunca se edita. Esto es la
+petición, escrita con el detalle suficiente para que se pueda decidir sin volver
+a investigar, y para que el día que se autorice no haya que redescubrir nada. Lo
+entregado se conserva aquí, marcado, porque explica por qué se pidió así.
 
 Están ordenadas por lo que dan a cambio de lo que cuestan.
 
@@ -18,8 +19,7 @@ lo que corre, y lo que corre puede tener de sobra lo que aquí se pide.
 
 **Son quince colegios y no dieciséis** desde el 25 ago 2026: uno se dio de baja y
 se borró del servidor, y nunca estuvo en ninguna tanda porque no tenía ni
-repositorio git ni aplicación. Donde este documento diga «los dieciséis» más
-abajo, léase quince.
+repositorio git ni aplicación.
 
 ```mermaid
 flowchart LR
@@ -238,7 +238,7 @@ una tarea de prueba que corrió cuatro veces. O sea que el push es viable, no
 hace falta el plan B y **no queda nada por comprobar**: lo que falta es escribir
 las tres piezas.
 
-Ese cron **no es uno, es un bucle sobre los dieciséis colegios**: cada uno es un
+Ese cron **no es uno, es un bucle sobre los quince colegios**: cada uno es un
 directorio con su `.env` y su base. El detalle, en
 [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 
@@ -261,7 +261,7 @@ publicar.
 ninguna parte** que su versión siga siendo aceptable. Un teléfono con la versión
 del año pasado sigue llamando a los mismos endpoints indefinidamente y nadie se
 entera. Mientras eso sea así, **retirar cualquier endpoint depende de que
-dieciséis colegios se actualicen por su cuenta**: es la condición de entrada de
+quince colegios se actualicen por su cuenta**: es la condición de entrada de
 la fase 7 de `18-auditoria.md` y de la fase 5 de `00`, y por eso esas fases hoy
 no tienen fecha —que no es lo mismo que tenerla lejos—.
 
@@ -325,7 +325,7 @@ para no hacerlo; es el motivo por el que ese campo no se edita a la ligera ni se
 copia de un colegio a otro sin mirar.
 
 **La pantalla de entrar es la única que se deja pasar bloqueado**, y no es una
-rendija. Son dieciséis colegios con una sola app y **el número lo pone cada
+rendija. Son quince colegios con una sola app y **el número lo pone cada
 colegio en su servidor**, así que quien tenga cuenta en dos puede estar
 bloqueado por el que va atrasado y no por el otro; sin esa salida no le quedaría
 forma de llegar a la pantalla de entrar. No debilita nada, porque entrar vuelve
@@ -412,10 +412,10 @@ el mismo commit:
    PHP 8.4.24 en /usr/local/bin/php) y el cron dispara. El plan entero, con el
    porqué de cada decisión, está en ~/DESARROLLOS/myvc_flutter/docs/notificaciones.md.
    El cron NO es uno: cada colegio es un directorio con su .env y su base, y son
-   dieciséis, así que va un bucle secuencial con $HOME.
+   quince, así que va un bucle secuencial con $HOME.
 
 Y una restricción de despliegue que hay que dejar anotada donde toque: `app/` es
-copia por colegio y myvc_flutter es UNA sola app para los dieciséis. La app no
+copia por colegio y myvc_flutter es UNA sola app para los quince. La app no
 puede llamar a notas/lote hasta que esté desplegado en todos, o gastaría un 404
 antes de caer al método viejo. Avísame cuando esté desplegado y hago el lado
 Flutter.
@@ -459,7 +459,7 @@ profesor que haya que respetar: quitar esos campos es quitar lo que nadie lee.
 
 **Lo que sí rompería es cerrarlo con un 403.** No tumba la pantalla —el mapa de
 docentes va en un `catch` y se queda vacío— pero deja a todo alumno y acudiente
-sin el nombre de su titular, en los dieciséis colegios a la vez.
+sin el nombre de su titular, en los quince colegios a la vez.
 
 ### `GET perfiles/username/{u}` — hoy no limita a cuáles
 
@@ -479,7 +479,7 @@ backend se está reescribiendo (`docs/migracion/18-auditoria.md`, sesión
 `8myvc-7b`), con cuatro rutas `auditoria/*` nuevas, y entre lo que se retiraría
 está esta. **En la fase 5 no se retira nada** —las nuevas son aditivas y los
 alias siguen— y la retirada es una fase 7 cuya condición de entrada no es
-«desplegado en los dieciséis» sino **«Flutter publicado y adoptado»**. Esto es
+«desplegado en los quince» sino **«Flutter publicado y adoptado»**. Esto es
 lo que la app puede decir de eso, comprobado sobre el código y no sobre la
 memoria.
 
@@ -516,7 +516,7 @@ esta sesión:
 1. **Que la app aprenda a exigir una versión mínima** —el servidor dice cuál es
    la más vieja que acepta y la app manda a actualizar—. Es trabajo de la app y
    de un endpoint diminuto, y hasta que exista, cualquier plan de retirada de
-   cualquier endpoint depende de la buena voluntad de dieciséis colegios.
+   cualquier endpoint depende de la buena voluntad de quince colegios.
 2. **Que la retirada se decida mirando Play Console**, que enseña el reparto de
    usuarios por versión. Es un dato de tienda: lo tiene Joseth, no el código.
 

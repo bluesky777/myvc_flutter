@@ -111,7 +111,7 @@ void main() {
     });
 
     test('el login se deja pasar, para quien tiene dos colegios', () {
-      // Son dieciséis colegios y una sola app, y el número lo pone cada
+      // Son quince colegios y una sola app, y el número lo pone cada
       // colegio en su servidor. Sin esta salida, a quien le bloquee el primero
       // no le quedaría forma de llegar a la pantalla de entrar para usar el
       // segundo, que sí acepta su versión. No debilita nada: entrar vuelve a

@@ -291,7 +291,7 @@ class LoginController implements LoginBaseController {
     // tenía el anterior.
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
-    // La versión mínima es de un colegio, no de este teléfono: son dieciséis
+    // La versión mínima es de un colegio, no de este teléfono: son quince
     // colegios y una sola app, y el que se queda es el número del colegio del
     // que se acaba de salir.
     VersionMinima.limpiar();

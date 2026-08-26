@@ -25,11 +25,10 @@ código sino de esta página.
   despliegue: no tenía ni repositorio git ni aplicación, así que jamás pudo
   devolver un hash. Importa porque «desplegado en los dieciséis» es la condición
   de encendido de los interruptores, y escrita así **no se puede cumplir nunca**.
-  Corregido en [Interruptores](../lib/Utils/Interruptores.dart),
-  [usuarios.md](usuarios.md), [disciplina.md](disciplina.md) y
-  [backend-pendiente.md](backend-pendiente.md); **queda por barrer** en
-  `notificaciones.md`, `analitica.md`, `seguridad-datos-play.md`,
-  `VersionMinima.dart`, `Analitica.dart` y `ActualizarScreen.dart`.
+  Barrido entero el 26 ago: documentos y comentarios de código. Lo único que
+  sigue diciendo «dieciséis» a propósito son las frases que corrigen la cifra, y
+  [SelectorDocente](../lib/Widgets/SelectorDocente.dart), que habla de dieciséis
+  **docentes** y no de colegios.
 - **«Desplegado» se comprueba contra el hash de la tanda, no contra `main`.** Lo
   que corre en los quince es el commit que Joseth verificó igual en todos, y
   `main` va por delante. La pregunta correcta es «¿el commit que trae esto es

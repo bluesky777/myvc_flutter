@@ -125,7 +125,7 @@ class Analitica {
   ///
   /// - [rol] separa «los docentes no la usan» de «los acudientes no la usan»,
   ///   que son dos problemas distintos.
-  /// - [servidor] es de qué colegio de los dieciséis se trata. Se guarda solo
+  /// - [servidor] es de qué colegio de los quince se trata. Se guarda solo
   ///   el **host**: la URL completa no añade nada y arrastra rutas.
   ///
   /// Ninguna de las dos identifica a una persona, y no se añade una tercera:

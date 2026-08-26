@@ -314,7 +314,7 @@ void main() {
 
   group('lo que dijo el servidor cuando dice que no', () {
     // Quién puede hacer cada cosa cambia con el despliegue —la contraseña de un
-    // grupo pasó de superusuario a superusuario o secretaría— y los dieciséis
+    // grupo pasó de pedir superusuario a pedir `esAdministrativo`— y los quince
     // colegios no se actualizan el mismo día. Una frase escrita en la app
     // envejece sin avisar; la del servidor llega siempre al día.
     test('se prefiere su explicación a la nuestra', () {

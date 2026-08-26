@@ -13,7 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// nada. Lo decidió Joseth el 23 de agosto de 2026 sabiendo eso. Ver
 /// [VersionMinima] y docs/backend-pendiente.md §4.
 ///
-/// **Pero sí deja salir a otro colegio, que no es lo mismo.** Son dieciséis
+/// **Pero sí deja salir a otro colegio, que no es lo mismo.** Son quince
 /// colegios con una sola app y el número lo pone cada uno en su servidor: quien
 /// tiene cuenta en dos puede estar bloqueado por el que va atrasado y no por el
 /// otro. Y el bloqueo se decide al arrancar, así que con sesión guardada del
@@ -83,7 +83,7 @@ class ActualizarScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: Colors.black54),
                   ),
                 const SizedBox(height: 8),
-                // La única salida, y no es una rendija: son dieciséis colegios
+                // La única salida, y no es una rendija: son quince colegios
                 // con una sola app y el número lo pone cada uno, así que quien
                 // tiene cuenta en dos puede estar bloqueado por el que va
                 // atrasado y no por el otro. Sin esto se quedaba encerrado por

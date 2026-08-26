@@ -82,9 +82,9 @@ c_4b2d7a…_muro         c_4b2d7a…_avisos
 
 Los dos últimos no son de un alumno sino de todo el colegio, y aun así **no
 pueden llamarse `colegio_muro` a secas**. El motivo es que los temas viven en el
-proyecto de Firebase, y **el proyecto es uno solo para los dieciséis colegios**:
+proyecto de Firebase, y **el proyecto es uno solo para los quince colegios**:
 es una sola app, un solo `com.micolevirtual.app`, un solo `google-services.json`.
-Un tema llamado `colegio_muro` sería el mismo tema para los dieciséis, y una
+Un tema llamado `colegio_muro` sería el mismo tema para los quince, y una
 publicación del muro de un colegio le llegaría a las familias de los otros
 quince.
 
@@ -248,10 +248,10 @@ sorpresa de versión; en otro colegio habría que volver a mirarlo.
 Esto salió al ver la ruta real del servidor, `~/coabsaravena.micolevirtual.com/8myvc`:
 **cada colegio es un directorio con su propio `.env` y su propia base de datos**,
 como dice el `CLAUDE.md` del backend. Así que el comando hay que ejecutarlo una
-vez **por colegio**, y son dieciséis.
+vez **por colegio**, y son quince.
 
-Dieciséis entradas de cron es la forma equivocada: muchos hostings limitan
-cuántas se pueden tener, y disparadas a la misma hora son dieciséis procesos PHP
+Quince entradas de cron es la forma equivocada: muchos hostings limitan
+cuántas se pueden tener, y disparadas a la misma hora son quince procesos PHP
 a la vez, que es justo la carga que este documento entero intenta evitar. Una
 sola entrada que los recorra en fila:
 
@@ -281,7 +281,7 @@ ya estaba contado: los USD 25 de una vez de Play Console y, **solo si se quiere
 iOS**, los USD 99 al año del programa de desarrollador de Apple, que es de donde
 sale la clave de APNs.
 
-**Un proyecto, no dieciséis.** Es una sola app con un solo identificador,
+**Un proyecto, no quince.** Es una sola app con un solo identificador,
 `com.micolevirtual.app`, así que hay un proyecto de Firebase y un
 `google-services.json`. Lo que separa a un colegio de otro es el nombre del
 tema, no el proyecto — ver «Los temas del colegio también llevan prefijo».
@@ -298,7 +298,7 @@ Los pasos, en orden:
 3. **La cuenta de servicio**, que es lo que usa el servidor para firmar el
    token: *Configuración del proyecto ▸ Cuentas de servicio ▸ Generar nueva
    clave privada*. Sale un JSON. Ese archivo va **fuera del repositorio** y en
-   los dieciséis directorios de colegio hace falta el mismo, porque el proyecto
+   los quince directorios de colegio hace falta el mismo, porque el proyecto
    de Firebase es uno.
 4. **iOS, solo cuando haya cuenta de Apple.** Una clave de APNs (`.p8`) subida a
    Firebase y la app de iOS registrada con su *bundle id*. Sin eso, en iOS no
