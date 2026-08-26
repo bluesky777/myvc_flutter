@@ -158,8 +158,28 @@ como creados o editados con IA»* y ese recurso marcado, y solo ese (25 ago
 
 ## 6. Contenido de la app: qué contestar
 
-**Policy → App content**. Son siete formularios; estos son los que tienen
-respuesta no obvia en esta app:
+**Prueba y lanza → Contenido de la app.** La consola se reorganizó y **el menú
+«Política» ya no existe**: si buscas por ahí, no lo encuentras (perdido un rato
+el 25 ago 2026). Las mismas tareas salen también en el Panel, detrás del
+«Mostrar más» de *«Prepárate para publicar tu app»*, que viene colapsado.
+
+**Y para saber qué falta de verdad, «Descripción general de la publicación»**,
+en el menú izquierdo: es la única pantalla que lista todo lo pendiente y todo lo
+listo para enviar de una vez. El Panel enseña trozos.
+
+Son siete formularios; estos son los que tienen respuesta no obvia en esta app:
+
+**Acceso a la app.** ⚠️ **El que tumba esta app si se contesta mal.** Aquí no
+hay nada que ver sin iniciar sesión: el revisor de Google abre la app, se topa
+con usuario y contraseña, no puede entrar y **rechaza por contenido
+inaccesible**. Hay que marcar «todas o algunas funciones tienen acceso
+restringido» y darle **credenciales que funcionen de verdad**.
+
+Eso obliga a **crear una cuenta de prueba** en algún colegio —un docente, con un
+grupo pequeño y datos que no sean de alumnos reales, porque el revisor va a ver
+todo lo que esa cuenta vea— y a **mantenerla viva mientras la app esté
+publicada**: cada actualización se vuelve a revisar, y si alguien borra esa
+cuenta, la siguiente versión rebota.
 
 **Seguridad de los datos (Data Safety).** La app *sí* recoge datos. Lo que
 manda al servidor y guarda en el teléfono:
@@ -383,8 +403,15 @@ a quien instale la app desde una fuente que no sea Play, pidiéndole que la baje
 de la ficha de Play Store.
 
 Con distribución por APK directo eso estorba: cada acudiente que instale desde
-la web del colegio o por WhatsApp vería ese aviso. **Si se mantiene el canal
-directo, hay que apagarlo.**
+la web del colegio o por WhatsApp vería ese aviso.
+
+**Decidido el 25 de agosto de 2026: el canal directo se mantiene, así que se
+apaga.** En *Protegido con Play → Protección automática → Administrar*.
+
+En esa misma pantalla está la **API de Play Integrity**, en 0 de 7 servicios y
+**así se queda**: verificar sus tokens es una llamada a Google desde el servidor
+por cada validación, y el backend es de solo lectura sobre un hosting
+compartido. Tenerla apagada no penaliza la publicación.
 
 ### Cómo está ahora mismo
 
