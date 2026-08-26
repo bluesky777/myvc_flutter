@@ -158,14 +158,16 @@ como creados o editados con IA»* y ese recurso marcado, y solo ese (25 ago
 
 ## 6. Contenido de la app: qué contestar
 
-**Prueba y lanza → Contenido de la app.** La consola se reorganizó y **el menú
-«Política» ya no existe**: si buscas por ahí, no lo encuentras (perdido un rato
-el 25 ago 2026). Las mismas tareas salen también en el Panel, detrás del
-«Mostrar más» de *«Prepárate para publicar tu app»*, que viene colapsado.
+**Se entra por «Descripción general de la publicación»**, en el menú izquierdo,
+y desde ahí por los **enlaces azules «Contenido de la app»** del bloque
+*«Cambios que indicaste»*, al final de la página. Esa misma pantalla es además la
+única que lista de una vez todo lo hecho y todo lo pendiente.
 
-**Y para saber qué falta de verdad, «Descripción general de la publicación»**,
-en el menú izquierdo: es la única pantalla que lista todo lo pendiente y todo lo
-listo para enviar de una vez. El Panel enseña trozos.
+**No se busque en el menú.** La consola se reorganizó: el menú «Política» ya no
+existe, «Contenido de la app» no cuelga de «Prueba y lanza», el «Mostrar más»
+del Panel solo abre un texto explicativo, y la URL `.../app-content` devuelve a
+la lista de apps. Las cuatro se probaron el 25 y 26 de agosto de 2026 y ninguna
+sirve; se perdió un buen rato en eso.
 
 Son siete formularios; estos son los que tienen respuesta no obvia en esta app:
 
