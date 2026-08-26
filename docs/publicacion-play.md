@@ -136,7 +136,7 @@ tienda.
 - **Correo de contacto**: público, sale en la ficha.
 - **URL de política de privacidad**: **obligatoria**, y tiene que estar viva
   antes de enviar a revisión. Como el backend ya vive en `micolevirtual.com`,
-  lo natural es `https://micolevirtual.com/privacidad`. Ver §7.
+  lo natural es `https://micolevirtual.com/privacidad.html`. Ver §7.
 
 Capturas de tablet no son obligatorias, pero sin ellas Play marca la app como
 «no optimizada para tablets» y la esconde en esos dispositivos.

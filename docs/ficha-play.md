@@ -92,8 +92,14 @@ PARA EMPEZAR
 Necesitas que tu colegio use Mi Cole Virtual y que te haya entregado tu usuario
 y contraseña. Si no los tienes, pídelos en la secretaría de tu institución.
 
-Consulta nuestra política de privacidad en https://micolevirtual.com/privacidad
+Consulta nuestra política de privacidad en https://micolevirtual.com/privacidad.html
 ```
+
+⚠️ **Con `.html`, y no sin él.** `micolevirtual.com/privacidad` a secas da
+**404**; la página vive en `/privacidad.html` (comprobado el 25 ago 2026). La
+ficha llegó a publicarse con la URL corta, que es un enlace muerto dentro de la
+propia tienda. El día que se toque el sitio, lo limpio es una redirección de
+`/privacidad` a `/privacidad.html` y volver a la URL bonita.
 
 ## Categoría y etiquetas
 
@@ -104,7 +110,7 @@ Consulta nuestra política de privacidad en https://micolevirtual.com/privacidad
 | Público objetivo | **13+** (ver la advertencia en `publicacion-play.md` §6) |
 | Correo de contacto | ⟨correo público⟩ |
 | Sitio web | https://micolevirtual.com |
-| Política de privacidad | https://micolevirtual.com/privacidad |
+| Política de privacidad | https://micolevirtual.com/privacidad.html |
 
 ## Imágenes — subidas el 25 de agosto de 2026
 

@@ -2,7 +2,7 @@
 
 **Borrador.** Google Play exige una URL pública y viva con este texto antes de
 enviar la app a revisión; sin ella, la revisión se rechaza. Lo natural es
-publicarlo en `https://micolevirtual.com/privacidad`.
+publicarlo en `https://micolevirtual.com/privacidad.html`.
 
 Los campos entre `⟨corchetes⟩` hay que llenarlos antes de publicar. Y como esto
 toca datos de menores de edad, **que lo revise quien lleve el tema legal del
