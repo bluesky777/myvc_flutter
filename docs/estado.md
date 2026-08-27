@@ -124,6 +124,23 @@ Lo que queda escrito para la próxima: antes de dar algo por bloqueado en el
 servidor, **comprobarlo contra el hash desplegado y en el controlador**, no en
 `main` ni en `routes/` ni aquí.
 
+**Y el barrido de ese día se quedó corto, que es la cuarta lección.** Se
+comprobaron los dos frentes que Joseth preguntó y no todos los que esta página
+daba por bloqueados. Al hacerlo entero, ese mismo día, aparecieron dos más:
+
+- **Las notificaciones**, con sus tres piezas desplegadas (`98e6311`).
+- **El 422 de la escala** (`9cb4409`), que además lleva vivo desde el 25 sin la
+  comprobación previa que este documento pedía.
+
+Un mapa que miente en un sitio suele mentir en varios, porque la causa no es el
+sitio: es la costumbre de no ir a mirar. **Cuando se encuentre uno, se barren
+todos.**
+
+Lo que se barrió y **sí estaba bien**, para que nadie lo repita: las ocho cosas
+de la pantalla de usuarios no existen en el backend —comprobado—, y `GET
+contratos` **todavía no se ha recortado**, así que no hay regresión esperándonos
+ahí.
+
 ## Lo que está bloqueado, y por qué
 
 Los contratos, con la evidencia que los justifica, están en
@@ -147,6 +164,9 @@ acudiente, que el backend está a punto de recortar por seguridad.
 
 - **`PUT notas/lote`** existe y está desplegado desde el 25 ago. El interruptor
   sigue apagado por decisión, no por bloqueo. Ver «Qué sigue, en orden».
+
+- **El 422 de la escala** está desplegado desde el 25 ago (`9cb4409`), y el lado
+  de la app estaba desde antes. Hecho de punta a punta.
 - **`GET disciplina/mis-fichas`** existe, está desplegado y la pantalla está
   encendida desde el 26 ago.
 - **Los dos arreglos de cuentas** —la guarda de
@@ -156,24 +176,35 @@ acudiente, que el backend está a punto de recortar por seguridad.
   commit `0e7208c` y están desplegados desde el 25 ago. Sus dos interruptores se
   encendieron el 26.
 
-### El 422 de la escala — hecho, y esperando al servidor
+### El 422 de la escala — hecho por los dos lados, y vivo desde el 25 de agosto
 
-La escala de notas **pasa a validarse en el servidor**: `PUT notas/update` y la
-definitiva manual contestarán **422** donde hoy dan 200, con el motivo dentro
+La escala de notas **se valida en el servidor**: `PUT notas/update` y la
+definitiva manual contestan **422** donde antes daban 200, con el motivo dentro
 del cuerpo, y en `notas/lote` el mismo texto vuelve en `fallidas[].motivo`.
 
-El lado de la app ya está: los dos sitios que enseñaban «El servidor respondió
+El lado de la app ya estaba: los dos sitios que enseñaban «El servidor respondió
 422.» ahora enseñan lo que el servidor dijo, y lo traduce un solo sitio,
 [MensajesDelServidor](../lib/Http/MensajesDelServidor.dart). Sus dos recortes no
 son cosméticos —descarta la página de error en HTML y los volcados de excepción,
 que son JSON válido con `message` dentro— y tienen prueba cada uno.
 
-**Falta desplegarlo en el servidor**, y antes de eso conviene una comprobación
-que no es de código: el backend midió **92 notas fuera de rango en su base
-local**, todas de los años 1 a 5 y ninguna en los cuatro recientes. Si eso se
-sostiene en producción, encender la validación no le rompe el día a nadie. Una
-nota histórica que ya no se puede volver a guardar es distinta de una que se
-escribe hoy, así que merece mirarse contra la base real.
+**Y el lado del servidor también**: `EscalaDeNotas` y su uso en `NotasController`
+entraron en el commit `9cb4409`, ancestro de `eb95cbc`, o sea **desplegado en los
+quince desde el 25 de agosto de 2026**. Esta página decía «falta desplegarlo» un
+día de más; ver «La lección de los tres días».
+
+**Una cosa que conviene mirar, y que ya no se puede hacer antes.** Este documento
+pedía una comprobación previa que no era de código: el backend midió **92 notas
+fuera de rango en su base local**, todas de los años 1 a 5 y ninguna en los cuatro
+recientes, y la idea era confirmar contra producción antes de encender la
+validación — porque una nota histórica que ya no se puede volver a guardar es
+distinta de una que se escribe hoy.
+
+Se encendió sin esa confirmación. No es grave y probablemente no la nota nadie
+—las notas de hace cinco años no se reescriben—, pero **si algún docente reporta
+que no puede guardar una nota vieja, ésta es la explicación** y no un fallo
+nuevo. La comprobación sigue mereciendo hacerse, ahora como diagnóstico en vez
+de como precaución.
 
 ### Un agujero de la versión mínima, sin decidir
 
