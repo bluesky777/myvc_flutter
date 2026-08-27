@@ -81,14 +81,58 @@ void main() {
       expect(temas.alumnos.last.alumnoId, 44);
     });
 
-    test('los del colegio se leen, pero para eso están apagados', () async {
-      // Se leen porque el servidor los manda; no se usan porque hoy son
-      // literales sin identificador de colegio y el proyecto de Firebase es uno
-      // solo para los quince. Ver PendientesNotificaciones.temasDelColegio.
+    test('los del colegio en la forma vieja: lista de literales', () async {
+      // Lo que devuelven los quince HOY. Esos literales son el mismo tema para
+      // todos los colegios, que era el fallo: se leen para no romper la lectura
+      // y nadie se suscribe, porque el interruptor está apagado.
       final temas = await traerTemas(ServidorFingido(conTemas()));
 
-      expect(temas.delColegio, ['colegio_muro', 'colegio_avisos']);
+      expect(temas.delColegio, {
+        'colegio_muro': 'colegio_muro',
+        'colegio_avisos': 'colegio_avisos',
+      });
       expect(PendientesNotificaciones.temasDelColegio, isFalse);
+    });
+
+    test('los del colegio en la forma nueva: nombre lógico → tema', () async {
+      // Lo que devolverán cuando se despliegue `b369020`. **Las dos formas
+      // están vivas a la vez mientras dura un despliegue**, y esto no lleva
+      // interruptor a propósito: se lee de la respuesta tal como venga, así que
+      // vale antes y después y no hay nada que acordarse de encender.
+      final servidor = ServidorFingido(http.Response(
+        jsonEncode({
+          'alumnos': [],
+          'colegio': {
+            'colegio_muro': 'c_1a2b3c4d5e6f708192a3b4c5d6e7f809',
+            'colegio_avisos': 'c_9f8e7d6c5b4a39281706f5e4d3c2b1a0',
+          },
+        }),
+        200,
+      ));
+
+      final temas = await traerTemas(servidor);
+
+      // La clave sigue siendo el nombre lógico, que es lo estable y con lo que
+      // se etiqueta la preferencia; el valor es el tema de verdad.
+      expect(temas.delColegio['colegio_muro'],
+          'c_1a2b3c4d5e6f708192a3b4c5d6e7f809');
+      expect(temas.delColegio.keys, ['colegio_muro', 'colegio_avisos']);
+    });
+
+    test('los dos temas del colegio no son el mismo', () async {
+      // Lo que se rompía: derivados del mismo secreto pero de nombres lógicos
+      // distintos, así que tienen que salir distintos.
+      final servidor = ServidorFingido(http.Response(
+        jsonEncode({
+          'alumnos': [],
+          'colegio': {'colegio_muro': 'c_aaaa', 'colegio_avisos': 'c_bbbb'},
+        }),
+        200,
+      ));
+
+      final temas = await traerTemas(servidor);
+
+      expect(temas.delColegio.values.toSet(), hasLength(2));
     });
 
     test('un cuerpo que no es el esperado se dice, no se adivina', () async {

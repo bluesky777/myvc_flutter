@@ -219,9 +219,45 @@ Hoy no rompe nada porque la app no está publicada. **No es fuga de contenido**
 —el cuerpo es genérico, «hay 3 publicaciones nuevas»— pero sí es el aviso
 equivocado a la familia equivocada, multiplicado por quince.
 
-Está pedido al backend. Mientras tanto, en la app
-`PendientesNotificaciones.temasDelColegio` está **apagado** y solo se usan los
-temas por alumno, que llevan HMAC y no colisionan.
+**Arreglado el mismo día** (`b369020`), y con una forma mejor que la que se
+pidió: `c_` + 32 hex de HMAC, derivado con el mismo secreto del colegio que los
+temas de alumno. **No lleva el identificador del colegio, y con razón** — el
+secreto ya *es* distinto en cada colegio, porque es su `APP_KEY`, así que el
+identificador sería un dato de más; y uno que hoy no existe en su `config/` y
+obligaría a editar quince `.env`, que es justo lo que su propio documento dice
+que no se le puede pedir a un despliegue.
+
+**Está en `main` y NO desplegado**, así que en la app
+`PendientesNotificaciones.temasDelColegio` sigue **apagado** y solo se usan los
+temas por alumno. Se enciende cuando entre en una tanda y esté en los quince,
+comprobado contra el hash.
+
+**Y cambia la forma de la respuesta, no solo el valor.** El campo `colegio` pasa
+de lista a objeto:
+
+```
+ANTES  "colegio": ["colegio_muro", "colegio_avisos"]
+AHORA  "colegio": {"colegio_muro": "c_1a2b…", "colegio_avisos": "c_3c4d…"}
+```
+
+La clave es el nombre lógico —estable, y es con lo que se etiqueta la
+preferencia— y el valor el tema de verdad. `alumnos` no se toca.
+
+[NotificacionesApi](../lib/Http/NotificacionesApi.dart) **lee las dos formas, y
+eso no lleva interruptor a propósito**: las dos están vivas a la vez mientras
+dura un despliegue, y leer de la respuesta tal como venga vale antes y después
+sin que nadie tenga que acordarse de encender nada. Es el mismo criterio que el
+número de contraseñas cambiadas en [usuarios.md](usuarios.md).
+
+**La letra pequeña, que nos toca conocer:** si dos colegios compartieran
+`APP_KEY` —un `.env` copiado al crear uno nuevo, que es como se crean— sus temas
+colisionarían. Eso no lo introduce el arreglo: los temas de alumno dependen del
+mismo secreto desde el primer día. Lo que cambia es que ahora el fallo sería el
+mismo en los dos sitios y no solo en uno.
+
+**`colegio_avisos` se queda declarado** aunque no lo publique nadie todavía. Si
+esa función no va a existir se retira **de los dos lados a la vez**, y esa es una
+pregunta para Joseth y no para ninguna de las dos sesiones.
 
 **Y esto reordena el plan de abajo:** el paso 3 era probar la tubería con el
 tipo más tonto, el del muro, y ése es precisamente el roto. Hasta que lleve

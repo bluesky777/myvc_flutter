@@ -38,24 +38,53 @@ Future<TemasDeNotificacion> traerTemas(Server server) async {
             .where((a) => a.alumnoId != 0)
             .toList()
         : const [],
-    delColegio: _textos(cuerpo['colegio']),
+    delColegio: _temasDelColegio(cuerpo['colegio']),
   );
 }
 
-List<String> _textos(dynamic crudo) {
-  if (crudo is! List) return const [];
+/// Los temas del colegio, leyendo **las dos formas** que puede tener.
+///
+/// No es defensa por si acaso: son dos formas reales y las dos están vivas a la
+/// vez mientras dura un despliegue.
+///
+///  - **Objeto** —`{"colegio_muro": "c_1a2b…"}`— es la forma buena: la clave es
+///    el nombre lógico, estable, con el que se etiquetan las preferencias, y el
+///    valor es el tema de verdad, derivado con el secreto del colegio.
+///  - **Lista** —`["colegio_muro", "colegio_avisos"]`— es la que devuelven los
+///    quince hoy, y es la del fallo: esos literales son el mismo tema para todos
+///    los colegios. Se leen para no romper la lectura, con el nombre lógico como
+///    tema; nadie se suscribe a ellos porque
+///    [PendientesNotificaciones.temasDelColegio] está apagado.
+///
+/// **Esto no lleva interruptor a propósito**, igual que el número de contraseñas
+/// cambiadas de `usuarios`: se lee de la respuesta tal como venga, así que vale
+/// antes y después del despliegue y no hay nada que acordarse de encender.
+Map<String, String> _temasDelColegio(dynamic crudo) {
+  final temas = <String, String>{};
 
-  return crudo
-      .map((t) => '$t'.trim())
-      .where((t) => t.isNotEmpty)
-      .toList(growable: false);
+  if (crudo is Map) {
+    crudo.forEach((clave, valor) {
+      final tema = '$valor'.trim();
+      if (tema.isNotEmpty) temas['$clave'] = tema;
+    });
+    return temas;
+  }
+
+  if (crudo is List) {
+    for (final entrada in crudo) {
+      final nombre = '$entrada'.trim();
+      if (nombre.isNotEmpty) temas[nombre] = nombre;
+    }
+  }
+
+  return temas;
 }
 
 /// Lo que devuelve el endpoint de temas.
 class TemasDeNotificacion {
   const TemasDeNotificacion({
     this.alumnos = const [],
-    this.delColegio = const [],
+    this.delColegio = const {},
   });
 
   /// Un bloque por alumno: el propio si quien mira es alumno, o cada acudido
@@ -64,11 +93,15 @@ class TemasDeNotificacion {
   /// seguiría recibiendo sus avisos.
   final List<TemasDeUnAlumno> alumnos;
 
-  /// Los del colegio entero — muro y avisos—, que no cuelgan de ningún alumno.
+  /// Los del colegio entero —muro y avisos—, que no cuelgan de ningún alumno.
+  ///
+  /// Del **nombre lógico** —`colegio_muro`, estable y con el que se etiqueta la
+  /// preferencia— al **tema de verdad**, que el servidor compone. Ver
+  /// [_temasDelColegio] para las dos formas en que puede llegar.
   ///
   /// **Hoy no se usan, y no es un olvido.** Ver
   /// [PendientesNotificaciones.temasDelColegio].
-  final List<String> delColegio;
+  final Map<String, String> delColegio;
 
   bool get hayAlgo => alumnos.isNotEmpty;
 
@@ -148,19 +181,32 @@ class PendientesNotificaciones {
   /// Suscribirse a `colegio_muro` y `colegio_avisos`.
   ///
   /// **Apagado por un fallo del servidor, no porque falte código.** El endpoint
-  /// los devuelve como literales sin identificador de colegio, y el proyecto de
+  /// los devolvía como literales sin identificador de colegio, y el proyecto de
   /// Firebase **es uno solo para los quince**: una sola app, un solo
   /// `com.micolevirtual.app`, un solo `google-services.json`. O sea que
-  /// `colegio_muro` es el mismo tema para los quince colegios, y una publicación
-  /// del muro de uno le llegaría a las familias de los otros catorce.
+  /// `colegio_muro` era el mismo tema para los quince colegios, y una
+  /// publicación del muro de uno le llegaría a las familias de los otros
+  /// catorce.
   ///
-  /// Los temas **por alumno** no tienen ese problema: llevan HMAC con el
-  /// secreto del colegio, así que dos colegios nunca colisionan. Por eso ésos
-  /// sí se usan y éstos no.
+  /// Los temas **por alumno** nunca tuvieron ese problema: llevan HMAC con el
+  /// secreto del colegio, así que dos colegios no colisionan. Por eso ésos sí se
+  /// usan y éstos no.
   ///
-  /// Está avisado al backend con la forma que se pidió desde el plan —`c_` +
-  /// HMAC del identificador del colegio, entregado ya compuesto—. Se enciende
-  /// cuando eso esté **desplegado en los quince**, comprobado contra el hash de
-  /// la tanda y no contra `main`. Ver docs/notificaciones.md.
+  /// **Arreglado en el backend el 26 de agosto de 2026** (`b369020`): ahora son
+  /// `c_` + 32 hex de HMAC, derivados con el mismo secreto del colegio que los
+  /// del alumno. No llevan el identificador del colegio, que es lo que se pidió,
+  /// y con razón: el secreto **ya es distinto en cada colegio** —es su
+  /// `APP_KEY`— así que el identificador sería un dato de más, y uno que hoy no
+  /// existe en su `config/` y obligaría a editar quince `.env`.
+  ///
+  /// **Pero está en `main` y NO desplegado**, así que sigue apagado. Se enciende
+  /// cuando entre en una tanda y esté en los quince, comprobado contra el hash y
+  /// no contra `main` — que es la lección de esta semana. Ver
+  /// docs/notificaciones.md.
+  ///
+  /// La letra pequeña que nos toca conocer: si dos colegios compartieran
+  /// `APP_KEY` —un `.env` copiado al crear uno nuevo, que es como se crean—, sus
+  /// temas colisionarían. **Eso no lo introduce el arreglo**: los temas de
+  /// alumno dependen del mismo secreto desde el primer día.
   static bool temasDelColegio = false;
 }
