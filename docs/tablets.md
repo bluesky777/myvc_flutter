@@ -45,7 +45,7 @@ emulador de Pixel Tablet.
 
 | Pantalla | Cómo queda | Cuál de los dos problemas |
 |---|---|---|
-| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | los **dos** — el 1 hecho en la fase 3; el 2 queda |
+| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | los **dos** — **hechos**: el 1 en la fase 3, el 2 en la fase 4 |
 | Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados | el 1 — **hecho**, fase 1 |
 | Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más | el 1 — **hecho**, fase 2 |
 | Notas «por alumno» | Se anotó **«bien»**, y era media verdad. Ver abajo | el 1 — **hecho**, fase 3 |
@@ -76,13 +76,13 @@ conviene mirarlas con esta pregunta el día que se pase por ellas.
 ```mermaid
 flowchart LR
     F1["1 · El tope ✓<br/>26 ago 2026<br/><i>login</i>"] --> F2["2 · El tope ✓<br/>26 ago 2026<br/><i>ficha de disciplina</i>"]
-    F2 --> F3["3 · El detalle de<br/>una asignatura ◑<br/>26 ago 2026<br/><i>el ancho, sí;<br/>el hueco, no</i>"]
-    F3 --> F4["4 · Maestro-detalle ○<br/><i>lo único que llena<br/>el hueco</i>"]
+    F2 --> F3["3 · El detalle de<br/>una asignatura ✓<br/>26 ago 2026<br/><i>el ancho</i>"]
+    F3 --> F4["4 · Maestro-detalle ✓<br/>26 ago 2026<br/><i>el hueco, con la<br/>planilla al lado</i>"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
     style F2 fill:#e8f4e8,stroke:#5a8f5a
-    style F3 fill:#fff0e6,stroke:#c98a4b
-    style F4 fill:#f0f0f5,stroke:#8a8aa0
+    style F3 fill:#e8f4e8,stroke:#5a8f5a
+    style F4 fill:#e8f4e8,stroke:#5a8f5a
 ```
 
 ### Fase 1 — el tope, y el login. Hecha
@@ -141,7 +141,7 @@ yendo de punta a punta, que se ve peor que no hacer nada.
 bueno porque se parece a algo medido como regular es exactamente lo que este
 documento existe para evitar.
 
-### Fase 3 — el detalle de una asignatura. Hecha a medias, y a propósito
+### Fase 3 — el detalle de una asignatura, el ancho. Hecha
 
 **26 de agosto de 2026.** Esta fase se abordó **mirando la pantalla en un Pixel
 Tablet**, no leyendo el código, y eso cambió lo que había que hacer.
@@ -152,14 +152,18 @@ que es el problema 2. Pero el defecto que más molesta es el 1, y estaba sin
 anotar: el lápiz de cada indicador quedaba a 1.900 px de su título, y en la otra
 pestaña el nombre de un alumno a esa misma distancia de su nota.
 
-**Hecho: el problema 1.** El mismo `ColumnaDeFicha` de la fase 2, envolviendo el
-`TabBarView` entero y no cada pestaña — son la misma matriz leída por sus dos
-lados, y si cada una pusiera su tope, cambiar de pestaña movería el contenido de
-sitio. Con prueba de regresión en
-[libro_en_tablet_test](../test/libro_en_tablet_test.dart).
+**Hecho: el problema 1.** El mismo `ColumnaDeFicha` de la fase 2, con prueba de
+regresión en [libro_en_tablet_test](../test/libro_en_tablet_test.dart).
 
-**Queda: el problema 2**, el hueco vertical, y ahí se descartaron dos caminos
-que este documento daba por buenos:
+Esta fase envolvió el `TabBarView` entero —las dos pestañas con el mismo tope,
+para que cambiar de pestaña no moviera el contenido de sitio—, y **la fase 4 lo
+deshizo un día después**: desde que la pestaña de indicadores usa el ancho
+entero para poner la planilla al lado, las dos pestañas ya no son el mismo
+layout, y forzarlas a medir igual sería estrechar la que sí aprovecha la
+pantalla. Ahora el tope va por pestaña.
+
+**El problema 2**, el hueco vertical, es la fase 4. Aquí se descartaron dos
+caminos que este documento daba por buenos:
 
 - **Dos columnas no sirven.** Con dos tarjetas de unidad, ponerlas lado a lado
   ocupa la mitad de alto que apiladas: el blanco de abajo **crece**. Dos
@@ -172,25 +176,88 @@ Lo único que llena ese hueco con algo útil es **maestro-detalle**: la lista de
 indicadores a un lado y la planilla de los treinta alumnos al otro. Y no es
 casualidad: es literalmente el trabajo diario del docente —se acaba la clase, se
 entra al indicador del quiz y se pasan las treinta notas—, que hoy son dos
-pantallas y en una tablet caben en una. O sea que **la fase 4 no es opcional
-para esta pantalla: es su fase 3 de verdad**.
+pantallas y en una tablet caben en una. O sea que **la fase 4 no era opcional
+para esta pantalla**, y por eso se hizo a continuación.
 
-### Fase 4 — maestro-detalle
+### Fase 4 — maestro-detalle. Hecha, para la pareja que importa
 
-Enseñar la lista a un lado y el detalle del seleccionado al otro, en vez de
-navegar de una pantalla a otra. Es lo que mejor aprovecha una tablet y es, con
-diferencia, lo más caro: **cambia la navegación, no el layout**, así que toca el
-router y el estado de cada pantalla que lo adopte.
+**26 de agosto de 2026.** La lista de indicadores a la izquierda y la planilla
+del elegido a la derecha, sin navegar. **Es el trabajo diario del docente en una
+sola pantalla**: se acaba la clase, se entra al indicador del quiz y se pasan
+las treinta notas. En un teléfono eso son dos pantallas y una ida y vuelta por
+cada casilla.
 
-Este apartado decía «si hace falta» y «puede que con dos columnas ya sobre».
-Las dos cosas resultaron falsas al mirar la pantalla: ver la fase 3. Para el
-detalle de una asignatura, maestro-detalle es el **único** camino que llena el
-hueco, y el par natural es indicador → planilla de treinta alumnos.
+No cuesta ni una petición más: `notas/detailed` ya está pedido y sirve a las dos
+mitades. Por eso se eligió esta pareja y no grupo → alumno → ficha.
 
-Por dónde empezar el día que se aborde: por esa pareja y no por
-grupo → alumno → ficha, porque es la que se repite todos los días y la que ya
-comparte los datos cargados —`notas/detailed` se pide una vez y sirve a las dos
-mitades—, así que no cuesta ni una petición más.
+**Por debajo de `Anchos.maestroDetalle` (900) no cambia nada**: se navega como
+siempre. Con la lista en 380, por debajo de eso al detalle le quedarían menos de
+520 px, y el detalle es una planilla de treinta alumnos con su campo de nota.
+Una tablet de 10" entra en horizontal (1.280) y en vertical (800), y eso es a
+propósito: **girar la tablet no cambia de patrón**, porque cambiar de patrón a
+media clase es peor que un layout imperfecto.
+
+Cómo quedó repartido:
+
+```mermaid
+flowchart LR
+    S["LibroAsignaturaScreen"] --> A{"¿ancho ≥ 900?"}
+    A -->|"no · teléfono"| B["lista con tope<br/>tocar → empuja PlanillaScreen"]
+    A -->|"sí · tablet"| C["Row"]
+    C --> D["lista · 380<br/>la elegida, marcada"]
+    C --> E["PlanillaScreen encajada<br/>con tope, sin barra propia"]
+
+    style B fill:#e8f4e8,stroke:#5a8f5a
+    style C fill:#e8f4e8,stroke:#5a8f5a
+```
+
+**Lo que hubo que darle a `PlanillaScreen`, y por qué no se escribió otra.**
+Pasar treinta notas tiene que costar lo mismo en un teléfono y en una tablet
+—el teclado numérico, «Siguiente» que baja sin cerrar el teclado, «A todos»—,
+así que es la misma pantalla en dos sitios y no dos pantallas parecidas. Encajada
+cambia solo lo que deja de tener sentido:
+
+- **Sin `AppBar` propia.** Dos barras apiladas serían dos títulos diciendo casi
+  lo mismo y una franja menos de sitio. El título del indicador lo pone una
+  cabecera dentro del panel, que hace falta: sin ella la mitad derecha empieza
+  por «A todos» y no dice de qué casilla son las notas.
+- **Sin `PopScope`.** De una planilla encajada no se sale por el botón atrás, se
+  sale tocando otro indicador. Un `PopScope` ahí secuestraría el atrás de la
+  pantalla entera.
+- **Avisa de lo guardado según entra**, con `alGuardar`, en vez de al salir. La
+  lista de indicadores está a un palmo con su «faltan 30»: si esperara al final,
+  ese número mentiría mientras el docente lo está mirando.
+- **Su estado se pregunta desde fuera.** Cambiar de indicador con notas escritas
+  sin guardar tiene que avisar, y ese diálogo ya existe. En vez de duplicarlo,
+  `PlanillaScreenState` es público y expone `puedeSalir()`.
+
+**Dos decisiones que parecen detalles y no lo son:**
+
+1. **No se elige una casilla sola al entrar**, aunque llenaría el hueco de un
+   golpe. Abrir una planilla dispara `planilla_abierta`, y ese evento contesta
+   una pregunta concreta —¿se usa en clase o corrigiendo en casa?, por la hora—
+   que se falsearía si la app la abriera sola cada vez. Ver
+   [analitica.md](analitica.md).
+2. **El panel derecho también lleva tope.** La fila de la planilla es nombre a
+   la izquierda y campo de nota a la derecha: el mismo par de extremos que se
+   arregló en todo lo demás. Sin el tope, partir en dos columnas habría cambiado
+   un renglón de 1.900 px por uno de 1.200.
+
+**Y el aviso vacío no nombra la palabra del colegio.** Cada uno renombra esto
+—«indicador», «logro», «subunidad»— y el artículo que le toca no es el mismo, así
+que «Elige {palabra}» sale mal escrito en la mitad de los colegios. La lista está
+al lado; no hace falta nombrarla.
+
+### Lo que queda de este frente
+
+Nada urgente. Si algún día se quiere más:
+
+- **La otra pestaña, «Por alumno»**, podría ser maestro-detalle con la ficha del
+  alumno al lado. No se hizo porque no es trabajo diario —es el acudiente que
+  pregunta y el nivelar de fin de periodo— y porque el patrón ya está probado en
+  la pestaña que sí lo es.
+- **El listado de disciplina** tiene la misma forma —grupo → alumno → ficha— y
+  el mismo patrón le serviría.
 
 ## Cómo se mira una pantalla en tablet, sin cuenta y sin red
 

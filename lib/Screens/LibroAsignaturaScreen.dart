@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Screens/FichaAlumnoNotasScreen.dart';
 import 'package:myvc_flutter/Screens/PlanillaScreen.dart';
 import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
+import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
@@ -62,6 +63,15 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
   LibroDeNotas? libro;
   bool cargando = true;
   String? error;
+
+  /// Qué indicador se está pasando, en maestro-detalle. Null en un teléfono,
+  /// donde la planilla es una pantalla aparte y esto no se usa.
+  SubunidadModel? _elegida;
+  UnidadModel? _unidadDeLaElegida;
+
+  /// Se renueva al cambiar de indicador, para rehacer el estado de la planilla.
+  GlobalKey<PlanillaScreenState> _clavePlanilla =
+      GlobalKey<PlanillaScreenState>();
 
   @override
   void initState() {
@@ -219,23 +229,129 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
 
     final actual = libro!;
 
-    // El tope va aquí, envolviendo las dos pestañas, y no dentro de cada una:
-    // son la misma matriz leída por sus dos lados y tienen que medir igual, o
-    // cambiar de pestaña mueve el contenido de sitio.
+    // El tope de ancho, y lo que arregla —medido en un Pixel Tablet—: a
+    // pantalla completa el nombre de un alumno quedaba a 1.900 px de su nota, y
+    // el lápiz de un indicador a esa misma distancia de su título. Son filas de
+    // dos extremos y estiradas obligan al ojo a cruzar la pantalla para
+    // emparejar las dos mitades.
     //
-    // Lo que arregla, medido en un Pixel Tablet: **a pantalla completa el
-    // nombre de un alumno queda a 1.900 px de su nota**, y el lápiz de un
-    // indicador a esa misma distancia de su título. Son filas de dos extremos
-    // —etiqueta a la izquierda, dato o acción a la derecha— y estiradas obligan
-    // al ojo a cruzar la pantalla para emparejar las dos mitades.
+    // **Va por pestaña y no envolviendo las dos**, que es como estuvo hasta que
+    // existió el maestro-detalle: desde que la de indicadores usa el ancho
+    // entero para poner la planilla al lado, las dos pestañas ya no son el
+    // mismo layout y forzarlas a medir igual sería estrechar la que sí
+    // aprovecha la pantalla.
+    return TabBarView(
+      children: [
+        _hayEspacioParaLosDos(context)
+            ? _buildMaestroDetalle(actual)
+            : ColumnaDeFicha(child: _buildPorIndicador(actual)),
+        ColumnaDeFicha(child: _buildPorAlumno(actual)),
+      ],
+    );
+  }
+
+  /// Si la pantalla da para la lista y la planilla a la vez.
+  bool _hayEspacioParaLosDos(BuildContext context) =>
+      MediaQuery.of(context).size.width >= Anchos.maestroDetalle;
+
+  /// La lista de indicadores a un lado y la planilla del elegido al otro.
+  ///
+  /// **Es el trabajo diario del docente en una sola pantalla**: se acaba la
+  /// clase, se entra al indicador del quiz y se pasan las treinta notas. En un
+  /// teléfono eso son dos pantallas y una ida y vuelta; en una tablet caben las
+  /// dos, y elegir el siguiente indicador deja de costar un viaje.
+  ///
+  /// No cuesta ni una petición más: `notas/detailed` ya está pedido y sirve a
+  /// las dos mitades, que es justo por qué esta pareja se eligió antes que
+  /// grupo → alumno → ficha.
+  Widget _buildMaestroDetalle(LibroDeNotas actual) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: Anchos.maestro,
+          child: _buildPorIndicador(actual),
+        ),
+        const VerticalDivider(width: 1, thickness: 1),
+        Expanded(child: _buildDetalle(actual)),
+      ],
+    );
+  }
+
+  Widget _buildDetalle(LibroDeNotas actual) {
+    final subunidad = _elegida;
+    final unidad = _unidadDeLaElegida;
+
+    if (subunidad == null || unidad == null) {
+      // Sin la palabra del colegio a propósito. Cada uno renombra esto —unos
+      // «indicador», otros «logro», otros «subunidad»— y el artículo que le
+      // toca no es el mismo, así que «Elige {palabra}» sale mal escrito en la
+      // mitad de los colegios. La lista está al lado; no hace falta nombrarla.
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'Elige en la lista de la izquierda para pasar sus notas.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black54),
+          ),
+        ),
+      );
+    }
+
+    // **No se elige una sola porque sí al entrar**, aunque llenaría el hueco:
+    // abrir una planilla dispara `planilla_abierta`, y ese evento contesta una
+    // pregunta concreta —¿se usa en clase o corrigiendo en casa?, por la hora—
+    // que se falsearía si la app la abriera sola cada vez. Ver docs/analitica.md.
+
+    // Con su tope también aquí dentro: la fila de la planilla es nombre a la
+    // izquierda y campo de nota a la derecha, o sea el mismo par de extremos
+    // que se arregló en el resto de la pantalla. Sin esto, partir en dos
+    // columnas habría cambiado un renglón de 1.900 px por uno de 1.200.
     return ColumnaDeFicha(
-      child: TabBarView(
-        children: [
-          _buildPorIndicador(actual),
-          _buildPorAlumno(actual),
-        ],
+      child: PlanillaScreen(
+        // La clave cambia con el indicador, y por eso cambiarlo rehace el
+        // estado de la planilla: sus treinta campos se llenan en `initState`
+        // desde la casilla que le toca. Reaprovechar el State dejaría las notas
+        // del indicador anterior escritas encima del nuevo.
+        key: _clavePlanilla,
+        libro: actual,
+        unidad: unidad,
+        subunidad: subunidad,
+        encajada: true,
+        alGuardar: _aplicarCambios,
       ),
     );
+  }
+
+  /// Aplica al libro lo que la planilla encajada acaba de guardar.
+  void _aplicarCambios(CambiosDeLaPlanilla cambios) {
+    final actual = libro;
+    if (actual == null || !cambios.hayAlgo) return;
+
+    setState(() {
+      var nuevo = actual.conNotas(cambios.notas);
+      for (final definitiva in cambios.definitivas) {
+        nuevo = nuevo.conDefinitivaDelLote(definitiva);
+      }
+      libro = nuevo;
+    });
+  }
+
+  /// Cambia de indicador en maestro-detalle, preguntando antes si hay notas
+  /// escritas sin guardar.
+  Future<void> _elegir(UnidadModel unidad, SubunidadModel subunidad) async {
+    if (subunidad.id == _elegida?.id) return;
+
+    final abierta = _clavePlanilla.currentState;
+    if (abierta != null && !await abierta.puedeSalir()) return;
+    if (!mounted) return;
+
+    setState(() {
+      _elegida = subunidad;
+      _unidadDeLaElegida = unidad;
+      _clavePlanilla = GlobalKey<PlanillaScreenState>();
+    });
   }
 
   Widget _buildPorIndicador(LibroDeNotas actual) {
@@ -441,9 +557,19 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     final faltan = total - puestas;
     final numero = unidad.subunidades.indexOf(subunidad) + 1;
 
+    // En maestro-detalle tocar no navega: cambia la mitad de la derecha, y la
+    // fila se queda marcada para que se sepa de qué casilla son las notas que
+    // se están tecleando al lado.
+    final enPareja = _hayEspacioParaLosDos(context);
+    final elegida = enPareja && subunidad.id == _elegida?.id;
+
     return ListTile(
       dense: true,
-      onTap: () => _abrirPlanilla(unidad, subunidad),
+      selected: elegida,
+      selectedTileColor: kPrimaryColor.withValues(alpha: 0.10),
+      onTap: enPareja
+          ? () => _elegir(unidad, subunidad)
+          : () => _abrirPlanilla(unidad, subunidad),
       title: Text(
         '$numero. ${subunidad.definicion}',
         maxLines: 2,

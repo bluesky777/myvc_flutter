@@ -58,17 +58,44 @@ class PlanillaScreen extends StatefulWidget {
     required this.libro,
     required this.unidad,
     required this.subunidad,
+    this.encajada = false,
+    this.alGuardar,
   });
 
   final LibroDeNotas libro;
   final UnidadModel unidad;
   final SubunidadModel subunidad;
 
+  /// Si va dentro de otra pantalla en vez de ser una pantalla propia.
+  ///
+  /// **Es el modo maestro-detalle de tablet**: la lista de indicadores a un
+  /// lado y esto al otro, sin navegar. Encajada no pone su propia barra —el
+  /// título ya lo da la pantalla que la contiene— y **no se sale de ella por el
+  /// botón atrás**, así que no lleva `PopScope` ni hace `pop`: quien la
+  /// contiene le pide lo guardado con [PlanillaScreenState.cambios] y le
+  /// pregunta si puede irse con [PlanillaScreenState.puedeSalir].
+  ///
+  /// El resto —cómo se teclea, cómo se guarda, qué se manda— es idéntico. Esa
+  /// es la razón de encajarla en vez de escribir una segunda planilla: pasar
+  /// treinta notas tiene que costar lo mismo en un teléfono y en una tablet.
+  final bool encajada;
+
+  /// Avisa de lo que acaba de entrar, guardado a guardado.
+  ///
+  /// Solo lo usa el modo encajado. Lleva **el trozo de ese guardado**, no todo
+  /// lo acumulado: quien escucha lo aplica según llega, y sumar dos veces la
+  /// misma nota sería pintarla dos veces.
+  final void Function(CambiosDeLaPlanilla)? alGuardar;
+
   @override
-  State<PlanillaScreen> createState() => _PlanillaScreenState();
+  State<PlanillaScreen> createState() => PlanillaScreenState();
 }
 
-class _PlanillaScreenState extends State<PlanillaScreen> {
+/// Público a propósito: en maestro-detalle, la pantalla que la contiene
+/// necesita preguntarle dos cosas —qué llevas guardado, y puedo cambiarte de
+/// indicador— y eso no cabe en un callback sin duplicar el diálogo de «quedan
+/// notas sin guardar» en los dos sitios.
+class PlanillaScreenState extends State<PlanillaScreen> {
   final Server server = Server();
 
   /// Un campo y un foco por alumno, en el mismo orden en que se pintan.
@@ -219,6 +246,7 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
     // Lo que entró pasa a ser lo nuevo «original»: así, si el docente vuelve a
     // pulsar Guardar, no se remanda lo que ya está puesto.
     final fallidas = resultado.fallidas.map((f) => f.alumnoId).toSet();
+    final entraron = <NotaPendiente>[];
 
     for (final cambio in cambios) {
       if (fallidas.contains(cambio.alumnoId)) continue;
@@ -227,12 +255,22 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
           _alumnos.indexWhere((a) => a.alumnoId == cambio.alumnoId);
       if (indice >= 0) _original[indice] = cambio.nota;
       _guardadas.add(cambio);
+      entraron.add(cambio);
     }
 
     setState(() {
       guardando = false;
       _fallidas = fallidas;
     });
+
+    // Encajada, lo guardado se avisa **ahora** y no al salir: en
+    // maestro-detalle la lista de indicadores está a la izquierda, a un palmo,
+    // y su «faltan 30» se quedaría mintiendo mientras el docente lo mira.
+    // Desde una pantalla propia esto es null y todo viaja en el `pop`.
+    widget.alGuardar?.call(CambiosDeLaPlanilla(
+      notas: entraron,
+      definitivas: resultado.definitivas,
+    ));
 
     if (resultado.todoBien) {
       _avisar('${resultado.guardadas} notas guardadas.');
@@ -250,6 +288,16 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
   /// el gesto de volver, sin querer, y guardar a espaldas de quien está
   /// escribiendo deja notas puestas que nadie confirmó. Es el mismo criterio
   /// que ya sigue el editor de situaciones.
+  /// Lo guardado hasta ahora, para quien la tenga encajada.
+  CambiosDeLaPlanilla get cambios => CambiosDeLaPlanilla(
+        notas: _guardadas,
+        definitivas: _definitivas.values.toList(),
+      );
+
+  /// ¿Se puede dejar esta casilla? Pregunta si quedan notas escritas sin
+  /// guardar, con el mismo diálogo que al salir por el botón atrás.
+  Future<bool> puedeSalir() => _confirmarSalida();
+
   Future<bool> _confirmarSalida() async {
     if (_cuantasPendientes == 0) return true;
 
@@ -331,6 +379,33 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
   Widget build(BuildContext context) {
     final numero = widget.unidad.subunidades.indexOf(widget.subunidad) + 1;
 
+    final cuerpo = Scaffold(
+      backgroundColor: const Color(0xFFF4F5F7),
+      appBar: widget.encajada
+          ? null
+          : AppBar(
+              title: TituloPantalla(
+                titulo: '${widget.libro.asignatura.abrevGrupo}'
+                    ' · ${widget.libro.asignatura.materia}',
+                subtitulo: '$numero. ${widget.subunidad.definicion}'
+                    ' (${porcentajeEscrito(widget.subunidad.porcentaje)})',
+              ),
+            ),
+      body: Column(
+        children: [
+          if (widget.encajada) _buildCabeceraEncajada(numero),
+          if (_puedeEditar) _buildATodos(),
+          Expanded(child: _buildLista()),
+        ],
+      ),
+      bottomNavigationBar: _puedeEditar ? _buildBarraGuardar() : null,
+    );
+
+    // Encajada no se sale por atrás: de ella se sale tocando otro indicador, y
+    // eso lo pregunta quien la contiene con `puedeSalir`. Un `PopScope` aquí
+    // secuestraría el botón atrás de la pantalla entera.
+    if (widget.encajada) return cuerpo;
+
     // El navegador se toma antes de esperar nada: el `context` del build no
     // sirve después de un await, y el `mounted` del State no lo cubre.
     final navegador = Navigator.of(context);
@@ -341,28 +416,35 @@ class _PlanillaScreenState extends State<PlanillaScreen> {
         if (yaSalio) return;
         if (!await _confirmarSalida()) return;
         if (!mounted) return;
-        navegador.pop(CambiosDeLaPlanilla(
-          notas: _guardadas,
-          definitivas: _definitivas.values.toList(),
-        ));
+        navegador.pop(cambios);
       },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF4F5F7),
-        appBar: AppBar(
-          title: TituloPantalla(
-            titulo: '${widget.libro.asignatura.abrevGrupo}'
-                ' · ${widget.libro.asignatura.materia}',
-            subtitulo: '$numero. ${widget.subunidad.definicion}'
-                ' (${porcentajeEscrito(widget.subunidad.porcentaje)})',
+      child: cuerpo,
+    );
+  }
+
+  /// El título del indicador cuando no hay barra propia que lo lleve.
+  ///
+  /// Sin él, en maestro-detalle la mitad derecha empieza directamente por «A
+  /// todos» y no dice de qué casilla son las treinta notas que se están
+  /// tecleando. La lista de la izquierda lo marca, pero el ojo está aquí.
+  Widget _buildCabeceraEncajada(int numero) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$numero. ${widget.subunidad.definicion}',
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
-        ),
-        body: Column(
-          children: [
-            if (_puedeEditar) _buildATodos(),
-            Expanded(child: _buildLista()),
-          ],
-        ),
-        bottomNavigationBar: _puedeEditar ? _buildBarraGuardar() : null,
+          const SizedBox(height: 2),
+          Text(
+            porcentajeEscrito(widget.subunidad.porcentaje),
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+        ],
       ),
     );
   }

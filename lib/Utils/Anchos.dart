@@ -44,6 +44,25 @@ class Anchos {
   /// que sí es un renglón y a 1.700 px no se lee.
   static const double ficha = 720;
 
+  /// A partir de cuánto ancho cabe una lista y su detalle a la vez.
+  ///
+  /// Por debajo de esto, maestro-detalle no es una mejora sino dos pantallas
+  /// estrechas: con el maestro en [maestro], al detalle le quedarían menos de
+  /// 520 px, y el detalle de esta app es una planilla de treinta alumnos con su
+  /// campo de nota. Vale más navegar.
+  ///
+  /// Una tablet de 10" en horizontal son 1.280; en vertical, 800. Las dos
+  /// entran, y ésa es la intención: girar la tablet no cambia de patrón, porque
+  /// cambiar de patrón a media clase es peor que un layout imperfecto.
+  static const double maestroDetalle = 900;
+
+  /// El ancho de la lista, cuando hay lista y detalle.
+  ///
+  /// Fijo y no proporcional: lo que va dentro son títulos de indicador de dos
+  /// líneas, y su ancho ideal no depende de lo grande que sea la pantalla. Lo
+  /// que crece con la pantalla es el detalle, que es donde se trabaja.
+  static const double maestro = 380;
+
   /// La banda del login: el 80% de la pantalla, sin pasar de [formulario].
   ///
   /// Los tres controles del login —el campo, el botón y la casilla de recordar—

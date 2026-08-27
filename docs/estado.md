@@ -48,7 +48,7 @@ flowchart LR
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
-    T["Tablets<br/>docs/tablets.md"] --> T0["fases 1–3 ✓ el ancho<br/>login · ficha · asignatura<br/>fase 4 ○ maestro-detalle"]
+    T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
@@ -60,7 +60,7 @@ flowchart LR
     style U1 fill:#e8f4e8,stroke:#5a8f5a
     style U2 fill:#ffe6e6,stroke:#c04b4b
     style V1 fill:#fff0e6,stroke:#c98a4b
-    style T0 fill:#fff0e6,stroke:#c98a4b
+    style T0 fill:#e8f4e8,stroke:#5a8f5a
     style I0 fill:#f0f0f5,stroke:#8a8aa0
 ```
 
@@ -68,11 +68,10 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y de
-sus cuatro fases hay tres hechas: **todo lo que se arreglaba con un ancho
-máximo**. Lo que queda es la fase 4, maestro-detalle en el detalle de una
-asignatura, que es lo único que llena el hueco vertical y lo más caro del frente
-porque cambia la navegación y no el layout.
+**[Tablets](tablets.md) está hecho, las cuatro fases**, y con eso no queda
+trabajo de app que no espere a nadie. Lo que se puede hacer ahora es lo que
+quede de los otros frentes cuando el servidor los suelte, más las dos cosas de
+abajo.
 
 De la analítica solo falta una cosa, y es de consola: confirmar en Analytics que
 la retención a nivel de usuario está en dos meses, que es lo que promete la
@@ -343,7 +342,7 @@ que la retención está en dos meses.
 
 ### Tablets — [tablets.md](tablets.md)
 
-**Fase 1 hecha el 26 de agosto de 2026, y no bloquea nada.** El frente salió al
+**Hecho entero el 26 de agosto de 2026, las cuatro fases.** El frente salió al
 sacar las capturas de la ficha de Play el 25 de agosto, en un emulador de Pixel
 Tablet: la app **funciona** en tablet, pero no tiene ningún layout propio. Es la
 interfaz de teléfono ocupando todo el ancho.
@@ -386,8 +385,20 @@ De paso salió un defecto que no era de tablet: las tarjetas de unidad eran un
 sea que la acción más repetida de la pantalla del trabajo diario no daba ninguna
 respuesta visual. Lo destapó la primera prueba que monta esa pantalla.
 
-**Queda la fase 4**, maestro-detalle. El plan entero, y **cómo mirar una
-pantalla en tablet sin cuenta y sin red**, en [tablets.md](tablets.md).
+**La fase 4, maestro-detalle, también está hecha**: en una tablet la lista de
+indicadores queda a la izquierda y la planilla de los treinta alumnos a la
+derecha, sin navegar. Es el trabajo diario del docente en una sola pantalla —se
+acaba la clase, se entra al indicador del quiz y se pasan las treinta notas—, y
+no cuesta ni una petición más porque `notas/detailed` ya sirve a las dos mitades.
+Por debajo de 900 px no cambia nada: se navega como siempre.
+
+Es la misma `PlanillaScreen` en los dos sitios y no dos parecidas, porque pasar
+treinta notas tiene que costar lo mismo en un teléfono y en una tablet. Encajada
+pierde solo lo que deja de tener sentido —su barra, su `PopScope`— y avisa de lo
+guardado según entra, para que el «faltan 30» de la lista de al lado no mienta.
+
+El plan entero, y **cómo mirar una pantalla en tablet sin cuenta y sin red**, en
+[tablets.md](tablets.md).
 
 Las capturas de tablet que se subieron a Play son de las tres pantallas que ya
 quedaban bien, a propósito. Sirven para que Play no marque la app como «no
