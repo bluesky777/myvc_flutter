@@ -136,6 +136,22 @@ Un mapa que miente en un sitio suele mentir en varios, porque la causa no es el
 sitio: es la costumbre de no ir a mirar. **Cuando se encuentre uno, se barren
 todos.**
 
+**Y una quinta, que salió de trabajar con la sesión del backend y vale para los
+dos repositorios:**
+
+- **Un fallo puede tener la premisa en un repositorio y la consecuencia en el
+  otro.** Lo de `colegio_muro` —el mismo tema de Firebase para los quince
+  colegios— sólo se veía desde aquí: allí es un nombre razonable, y lo que lo
+  convierte en fallo —que el proyecto de Firebase es uno solo— vive en este lado.
+  Se vio por leer el contrato **antes** de cablearlo, que es la única postura
+  desde la que se veía.
+- **Un número sacado de la copia equivocada no es un número pequeño: es otra
+  pregunta.** Ver el 422 de la escala, abajo.
+- **Un cambio de forma no avisa; un cambio de valor sí.** El campo `colegio` del
+  endpoint de temas pasó de lista a objeto, y un parser que sólo leyera lista
+  habría devuelto vacío **en silencio** el día del despliegue. Por eso se leen
+  las dos formas.
+
 Lo que se barrió y **sí estaba bien**, para que nadie lo repita: las ocho cosas
 de la pantalla de usuarios no existen en el backend —comprobado—, y `GET
 contratos` **todavía no se ha recortado**, así que no hay regresión esperándonos
@@ -193,18 +209,36 @@ entraron en el commit `9cb4409`, ancestro de `eb95cbc`, o sea **desplegado en lo
 quince desde el 25 de agosto de 2026**. Esta página decía «falta desplegarlo» un
 día de más; ver «La lección de los tres días».
 
-**Una cosa que conviene mirar, y que ya no se puede hacer antes.** Este documento
-pedía una comprobación previa que no era de código: el backend midió **92 notas
-fuera de rango en su base local**, todas de los años 1 a 5 y ninguna en los cuatro
-recientes, y la idea era confirmar contra producción antes de encender la
-validación — porque una nota histórica que ya no se puede volver a guardar es
-distinta de una que se escribe hoy.
+**Se encendió sin la comprobación previa que este documento pedía**, y eso llevó
+a algo que merece guardarse.
 
-Se encendió sin esa confirmación. No es grave y probablemente no la nota nadie
-—las notas de hace cinco años no se reescriben—, pero **si algún docente reporta
-que no puede guardar una nota vieja, ésta es la explicación** y no un fallo
-nuevo. La comprobación sigue mereciendo hacerse, ahora como diagnóstico en vez
-de como precaución.
+La precaución era ésta: el backend midió **92 notas fuera de rango en su base
+local**, todas de los años 1 a 5 y ninguna en los cuatro recientes, y había que
+confirmarlo contra producción antes de encender — porque una nota histórica que
+ya no se puede reescribir es distinta de una que se escribe hoy.
+
+Al pedirla el 26 ago, la sesión del backend la montó como un bloque más de su
+herramienta de fase cero, que ya recorre los quince colegios: sale con el `for`
+que ya estaba pendiente, sin una visita más al servidor. Y al correrla contra su
+base de desarrollo salieron **tres cifras distintas y las tres ciertas**: 42 con
+cadena viva, 123 planas, y las 92 del docblock. Peor aún, **quince de esas 42
+caían en el año en curso**, justo donde el docblock afirma que hay cero.
+
+**La premisa parecía falsa y no lo era.** Las 81 de diferencia cuelgan de una
+unidad en la papelera, así que no se abren desde ninguna pantalla y **nadie puede
+reescribirlas**; y 31 de las 123 se crearon el 24 de agosto de 2026 —el día de
+aquella misma medición—, incluidas las quince del año en curso. Eran rastro de
+desarrollo.
+
+**La lección no es sobre ese docblock: la base de desarrollo no es una muestra
+limpia de un colegio, porque el trabajo de desarrollo escribe en ella.** Un
+número sacado de la copia equivocada no es un número pequeño, es **otra
+pregunta** — y eso refuerza la petición original en vez de contradecirla: hay que
+hacérsela a los quince.
+
+Así que sigue abierta, pero ya con herramienta. Mientras tanto: **si un docente
+reporta que no puede guardar una nota vieja, ésta es la explicación y no un fallo
+nuevo.**
 
 ### Un agujero de la versión mínima, sin decidir
 
