@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myvc_flutter/Utils/Anchos.dart';
+import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
 
 /// Mide [Anchos.bandaDeLogin] en una pantalla del tamaño que se le diga.
 Future<double> bandaEn(WidgetTester tester, Size tamano) async {
@@ -21,7 +22,47 @@ Future<double> bandaEn(WidgetTester tester, Size tamano) async {
   return medida;
 }
 
+/// Mide cuánto acaba ocupando lo que se mete en una [ColumnaDeFicha].
+Future<double> fichaEn(WidgetTester tester, Size tamano) async {
+  tester.view.physicalSize = tamano;
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await tester.pumpWidget(MaterialApp(
+    home: Scaffold(
+      body: ColumnaDeFicha(
+        child: ListView(children: const [SizedBox(height: 20)]),
+      ),
+    ),
+  ));
+
+  return tester.getSize(find.byType(ListView)).width;
+}
+
 void main() {
+  group('la columna de una ficha', () {
+    testWidgets('en un teléfono ocupa todo, o sea que no hace nada',
+        (tester) async {
+      // Lo que la hace segura de meter en una pantalla que ya funciona: la
+      // pantalla es más estrecha que el tope, así que no llega a apretar.
+      expect(await fichaEn(tester, const Size(400, 800)), 400);
+    });
+
+    testWidgets('en una tablet se queda en el tope', (tester) async {
+      // Los tres contadores son Expanded y se reparten lo que haya: a pantalla
+      // completa cada uno mediría medio palmo.
+      expect(await fichaEn(tester, const Size(1729, 1080)), Anchos.ficha);
+    });
+
+    testWidgets('una ficha respira más que un formulario', (tester) async {
+      // No es el mismo número a propósito: una ficha lleva bloques dentro y un
+      // formulario un renglón que el ojo sigue de punta a punta. Si alguien los
+      // unifica, esto se pone en rojo y le obliga a leer el porqué.
+      expect(Anchos.ficha, greaterThan(Anchos.formulario));
+    });
+  });
+
   group('la banda del login', () {
     testWidgets('en un teléfono es el 80% de siempre', (tester) async {
       // Lo que había antes de que existiera el tope. En un teléfono no cambia

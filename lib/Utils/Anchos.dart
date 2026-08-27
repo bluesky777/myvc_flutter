@@ -30,6 +30,20 @@ class Anchos {
   /// estirada de sí mismo.
   static const double formulario = 420;
 
+  /// El tope de una ficha: una columna de datos de una persona.
+  ///
+  /// Casi el doble que [formulario], y no por capricho. Una ficha no es un
+  /// formulario: aguanta más ancho porque lo que lleva dentro son bloques —una
+  /// fila de tres contadores, una lista de situaciones con su fecha y su
+  /// docente— y no un renglón que el ojo tenga que seguir de punta a punta.
+  /// Apretarla a 420 desperdiciaría la tablet en la dirección contraria.
+  ///
+  /// Lo que sí hace es cortar los dos estiramientos que se midieron: los tres
+  /// contadores, que son `Expanded` y se reparten lo que haya —a pantalla
+  /// completa cada uno mide medio palmo—, y la descripción de una situación,
+  /// que sí es un renglón y a 1.700 px no se lee.
+  static const double ficha = 720;
+
   /// La banda del login: el 80% de la pantalla, sin pasar de [formulario].
   ///
   /// Los tres controles del login —el campo, el botón y la casilla de recordar—

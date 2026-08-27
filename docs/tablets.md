@@ -46,9 +46,9 @@ emulador de Pixel Tablet.
 | Pantalla | Cómo queda | Cuál de los dos problemas |
 |---|---|---|
 | Notas «por alumno», asistencia, disciplina | **Bien.** Son listas, y a lo ancho caben 15 alumnos en vez de 7 | ninguno |
-| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | el 2 |
-| Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados | el 1 |
-| Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más | el 1 |
+| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | el 2 — **queda**, fase 3 |
+| Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados | el 1 — **hecho**, fase 1 |
+| Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más | el 1 — **hecho**, fase 2 |
 
 **Las listas quedan bien y no hay que tocarlas.** Merece decirlo porque la
 tentación al abordar «tablets» es rediseñarlo todo: una lista de alumnos a lo
@@ -60,12 +60,12 @@ eso quitó una etiqueta, no resolvió el fondo.
 
 ```mermaid
 flowchart LR
-    F1["1 · El tope ✓<br/>hecho 26 ago 2026<br/><i>login</i>"] --> F2["2 · El tope<br/>en las fichas ○"]
+    F1["1 · El tope ✓<br/>26 ago 2026<br/><i>login</i>"] --> F2["2 · El tope ✓<br/>26 ago 2026<br/><i>ficha de disciplina</i>"]
     F2 --> F3["3 · El detalle de<br/>una asignatura ○<br/><i>aprovechar el hueco</i>"]
     F3 --> F4["4 · Maestro-detalle ○<br/><i>si hace falta</i>"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
-    style F2 fill:#f0f0f5,stroke:#8a8aa0
+    style F2 fill:#e8f4e8,stroke:#5a8f5a
     style F3 fill:#f0f0f5,stroke:#8a8aa0
     style F4 fill:#f0f0f5,stroke:#8a8aa0
 ```
@@ -93,18 +93,38 @@ Cinco pruebas en [anchos_test](../test/anchos_test.dart), y la que más importa
 es la primera: **en un teléfono la banda sigue siendo el 80% exacto de antes**.
 Esto no puede tocar la pantalla que usa todo el mundo.
 
-### Fase 2 — el tope en las fichas
+### Fase 2 — el tope en la ficha de disciplina. Hecha
 
-Las tarjetas de contadores de la ficha de disciplina, y cualquier otra ficha que
-se estire de más. Es el mismo número de la fase 1 aplicado en otro sitio, así
-que es corta.
+**26 de agosto de 2026.** [ColumnaDeFicha](../lib/Widgets/ColumnaDeFicha.dart)
+envolviendo el `ListView` de [FichaDisciplinaScreen](../lib/Screens/FichaDisciplinaScreen.dart),
+con su propio tope: `Anchos.ficha`, 720 px.
 
-Ojo con una cosa: **una ficha no es un formulario**. 420 px es el ancho de un
-campo de texto; una ficha con tres columnas de contadores aguanta más. Cuando se
-aborde habrá que decidir si `Anchos` gana una segunda constante o si las
-tarjetas se resuelven con un `Wrap` que las deje fluir, que probablemente es
-mejor: dejar que quepan cuatro donde caben cuatro es aprovechar el hueco, y no
-solo dejar de estirarse.
+**Una ficha no es un formulario y no lleva el mismo número.** 420 px es el ancho
+de un campo de texto; una ficha aguanta casi el doble porque lo que lleva dentro
+son bloques —una fila de tres contadores, una lista de situaciones con su fecha
+y su docente— y no un renglón que el ojo tenga que seguir de punta a punta.
+Apretarla a 420 desperdiciaría la tablet en la dirección contraria. Hay una
+prueba que se pone en rojo si alguien unifica las dos constantes, para que tenga
+que leer este párrafo antes.
+
+**Y aquí se descartó una idea que este documento traía escrita.** La fase 2
+decía que las tarjetas de contadores «probablemente» quedaban mejor con un
+`Wrap` que las dejara fluir. Es falso: **son exactamente tres y siempre tres**
+—uniforme, tardanzas, ausencias—, así que un `Wrap` no las reacomoda, no hay
+cuartas que quepan y lo único que haría es no arreglar nada. El `Wrap` es la
+respuesta cuando la colección crece; ésta no crece.
+
+El tope, además, arregla de paso algo que no estaba en la lista de lo medido: la
+**descripción de una situación** sí es un renglón corrido, y a 1.700 px no se
+lee. Se ganó envolviendo la lista entera en vez de solo la fila de contadores —
+que es también por qué el envoltorio va por fuera del scroll y no por dentro: si
+se pone por dentro, cada fila se centra por su cuenta y los separadores siguen
+yendo de punta a punta, que se ve peor que no hacer nada.
+
+**Las otras fichas no se tocan**, y no por falta de tiempo: «notas por alumno» y
+«asistencia» se midieron **bien** en el Pixel Tablet. Cambiar algo medido como
+bueno porque se parece a algo medido como regular es exactamente lo que este
+documento existe para evitar.
 
 ### Fase 3 — el detalle de una asignatura
 

@@ -48,7 +48,7 @@ flowchart LR
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
-    T["Tablets<br/>docs/tablets.md"] --> T0["fase 1 ✓ el tope<br/>y el login<br/>fases 2–4 ○"]
+    T["Tablets<br/>docs/tablets.md"] --> T0["fases 1–2 ✓ el tope<br/>login y ficha<br/>fases 3–4 ○"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
@@ -68,10 +68,10 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y su
-fase 1 ya está hecha. Lo siguiente de ahí es la fase 2 —el tope en las fichas,
-que es corta— y luego la 3, el detalle de una asignatura, que es la única
-pantalla francamente mal y la única que pide rediseño y no un número.
+**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y sus
+dos primeras fases ya están hechas — las dos que se arreglaban con un número. Lo
+que queda es la fase 3, el detalle de una asignatura: la única pantalla
+francamente mal y la única que pide rediseño y no un tope.
 
 De la analítica solo falta una cosa, y es de consola: confirmar en Analytics que
 la retención a nivel de usuario está en dos meses, que es lo que promete la
@@ -352,16 +352,26 @@ que se estira y no debería —un campo de texto de 1.300 px— y el hueco que s
 y no se aprovecha. El primero se arregla con un número y el segundo rediseñando
 una pantalla, así que el primero no espera al segundo.
 
-**Hecho:** [Anchos](../lib/Utils/Anchos.dart) y el login. La regla es
-proporcional **con tope**: en un teléfono no cambia nada —hay prueba de eso— y
-en tablet el formulario se queda centrado a 420 px en vez de estirarse. De paso
-quita la banda del login de los tres sitios donde estaba escrita.
+**Hecho, las dos primeras fases** —las dos que se arreglan con un número—:
 
-**Queda:** el tope en las fichas (fase 2), y el detalle de una asignatura (fase
-3), que es la única pantalla francamente mal y la única que no se arregla con un
-número. El plan entero, con las cuatro fases y con lo que este frente **no** va
-a hacer —empezando por un sistema de *breakpoints*—, en
-[tablets.md](tablets.md).
+- **El login** ([Anchos](../lib/Utils/Anchos.dart)). La regla es proporcional
+  **con tope**: en un teléfono no cambia nada —hay prueba de eso— y en tablet el
+  formulario se queda centrado a 420 px. De paso quita la banda del login de los
+  tres sitios donde estaba escrita.
+- **La ficha de disciplina**
+  ([ColumnaDeFicha](../lib/Widgets/ColumnaDeFicha.dart)), con su propio tope de
+  720: una ficha lleva bloques dentro y aguanta más que un formulario, y hay
+  prueba que se pone en rojo si alguien unifica las dos constantes.
+
+Ahí se descartó una idea que el plan traía escrita —resolver los contadores con
+un `Wrap`—: son exactamente tres y siempre tres, así que un `Wrap` no reacomoda
+nada. Y **las otras fichas no se tocan**, porque «notas por alumno» y
+«asistencia» se midieron bien.
+
+**Queda la fase 3**, el detalle de una asignatura: la única pantalla francamente
+mal y la única que no se arregla con un número, sino aprovechando el hueco. El
+plan entero, con lo que este frente **no** va a hacer —empezando por un sistema
+de *breakpoints*—, en [tablets.md](tablets.md).
 
 Las capturas de tablet que se subieron a Play son de las tres pantallas que ya
 quedaban bien, a propósito. Sirven para que Play no marque la app como «no
