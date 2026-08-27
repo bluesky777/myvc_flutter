@@ -7,9 +7,9 @@ import 'package:flutter/widgets.dart';
 /// **Por qué existe este archivo.** La app se diseñó para un teléfono y ahí un
 /// ancho proporcional —«el 80% de la pantalla»— es exactamente lo correcto: el
 /// control ocupa lo que hay y deja un margen a los lados. En una tablet ese
-/// mismo 80% son 1.300 px, y un campo de texto de 1.300 px no lo lee nadie: el
-/// ojo pierde el renglón, el icono de la izquierda queda a un palmo del texto y
-/// el botón «Entrar» se convierte en una franja de lado a lado.
+/// mismo 80% es casi toda la pantalla, y un campo de texto así no lo lee nadie:
+/// el ojo pierde el renglón, el icono de la izquierda queda a un palmo del texto
+/// y el botón «Entrar» se convierte en una franja de lado a lado.
 ///
 /// Así que la regla no es «proporcional» ni «fijo», sino **proporcional con
 /// tope**: en un teléfono manda la proporción y nada cambia; en una tablet manda
@@ -41,7 +41,7 @@ class Anchos {
   /// Lo que sí hace es cortar los dos estiramientos que se midieron: los tres
   /// contadores, que son `Expanded` y se reparten lo que haya —a pantalla
   /// completa cada uno mide medio palmo—, y la descripción de una situación,
-  /// que sí es un renglón y a 1.700 px no se lee.
+  /// que sí es un renglón y a lo ancho de una tablet no se lee.
   static const double ficha = 720;
 
   /// A partir de cuánto ancho cabe una lista y su detalle a la vez.

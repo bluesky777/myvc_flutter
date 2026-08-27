@@ -18,10 +18,10 @@ Y confundirlos es la forma de hacer el doble de trabajo del necesario.
 
 ```mermaid
 flowchart TD
-    P["La interfaz de teléfono<br/>en 1.700 px de ancho"] --> A["1 · Lo que se estira<br/>y no debería"]
+    P["La interfaz de teléfono<br/>a lo ancho de una tablet"] --> A["1 · Lo que se estira<br/>y no debería"]
     P --> B["2 · El hueco que sobra<br/>y no se aprovecha"]
 
-    A --> A1["un campo de texto de 1.300 px<br/>un botón de lado a lado<br/>una tarjeta de contador deformada"]
+    A --> A1["un campo de texto de tres palmos<br/>un botón de lado a lado<br/>una etiqueta lejísimos de su dato"]
     A --> A2["Se arregla con <b>un número</b>:<br/>un ancho máximo"]
 
     B --> B1["cinco indicadores arriba<br/>y media pantalla en blanco"]
@@ -57,11 +57,22 @@ La tabla de arriba decía que «notas por alumno» quedaba **bien** en tablet,
 porque a lo ancho caben quince alumnos en vez de siete. Eso es cierto y es una
 medida **vertical**: cuántas filas se ven.
 
-Puesta la pantalla delante, en horizontal está mal: **el nombre del alumno queda
-a 1.900 px de su nota**. Es una fila de dos extremos —etiqueta a la izquierda,
-dato a la derecha— y estirada obliga al ojo a cruzar la pantalla entera para
-emparejar las dos mitades. Lo mismo le pasaba al lápiz de cada indicador
-respecto de su título.
+Puesta la pantalla delante, en horizontal está mal: **el nombre del alumno y su
+nota quedan en los dos extremos de la pantalla**. Es una fila de dos extremos
+—etiqueta a la izquierda, dato a la derecha— y estirada obliga al ojo a cruzar
+la pantalla entera para emparejar las dos mitades. Lo mismo le pasaba al lápiz
+de cada indicador respecto de su título.
+
+Medido: en el Pixel Tablet, que son **1.280 dp de ancho**, el nombre queda a 83
+dp y el campo de nota a 1.235 — **1.152 dp entre una mitad de la fila y la
+otra**. Con el tope de 720, esa distancia baja a unos 560.
+
+**Pero el número no es lo que sostiene el argumento, y por eso va después.** Lo
+que hace que esto esté mal no es la cifra de este dispositivo: es que **la fila
+no tiene ancho propio**, así que sus dos extremos se separan tanto como se le dé
+de pantalla. En una tablet más grande es peor y en una más pequeña es lo mismo
+en menor grado — la propiedad no cambia con el aparato, y por eso no hace falta
+volver a medir en cada uno.
 
 Es el aviso más útil que ha dado este frente: **«caben más» y «se lee bien» son
 dos preguntas distintas**, y la primera se contesta de un vistazo mientras que
@@ -135,8 +146,8 @@ cuartas que quepan y lo único que haría es no arreglar nada. El `Wrap` es la
 respuesta cuando la colección crece; ésta no crece.
 
 El tope, además, arregla de paso algo que no estaba en la lista de lo medido: la
-**descripción de una situación** sí es un renglón corrido, y a 1.700 px no se
-lee. Se ganó envolviendo la lista entera en vez de solo la fila de contadores —
+**descripción de una situación** sí es un renglón corrido, y a lo ancho de una
+tablet no se lee. Se ganó envolviendo la lista entera en vez de solo la fila de contadores —
 que es también por qué el envoltorio va por fuera del scroll y no por dentro: si
 se pone por dentro, cada fila se centra por su cuenta y los separadores siguen
 yendo de punta a punta, que se ve peor que no hacer nada.
@@ -154,8 +165,8 @@ Tablet**, no leyendo el código, y eso cambió lo que había que hacer.
 **Lo que se encontró es que esta pantalla tiene los dos problemas, no solo el
 segundo.** El documento la tenía anotada como «media pantalla en blanco debajo»,
 que es el problema 2. Pero el defecto que más molesta es el 1, y estaba sin
-anotar: el lápiz de cada indicador quedaba a 1.900 px de su título, y en la otra
-pestaña el nombre de un alumno a esa misma distancia de su nota.
+anotar: el lápiz de cada indicador quedaba en el extremo opuesto a su título, y
+en la otra pestaña el nombre de un alumno a esa misma distancia de su nota.
 
 **Hecho: el problema 1.** El mismo `ColumnaDeFicha` de la fase 2, con prueba de
 regresión en [libro_en_tablet_test](../test/libro_en_tablet_test.dart).
@@ -246,7 +257,7 @@ cambia solo lo que deja de tener sentido:
 2. **El panel derecho también lleva tope.** La fila de la planilla es nombre a
    la izquierda y campo de nota a la derecha: el mismo par de extremos que se
    arregló en todo lo demás. Sin el tope, partir en dos columnas habría cambiado
-   un renglón de 1.900 px por uno de 1.200.
+   un renglón de punta a punta por uno algo menos largo.
 
 **Y el aviso vacío no nombra la palabra del colegio.** Cada uno renombra esto
 —«indicador», «logro», «subunidad»— y el artículo que le toca no es el mismo, así

@@ -80,10 +80,11 @@ void main() {
     testWidgets('nada se estira a lo ancho entero de la pantalla',
         (tester) async {
       // **Lo que esto protege, medido en un Pixel Tablet y no supuesto:** a
-      // pantalla completa el nombre de un alumno quedaba a 1.900 px de su nota,
-      // y el lápiz de un indicador a esa misma distancia de su título. Son
-      // filas de dos extremos, y estiradas obligan al ojo a cruzar la pantalla
-      // para emparejar las dos mitades.
+      // pantalla completa el nombre de un alumno y su nota quedaban en los dos
+      // extremos, y el lápiz de un indicador igual de lejos de su título. Lo que
+      // lo hace un fallo no es la cifra de un aparato concreto sino que **la
+      // fila no tiene ancho propio**: sus extremos se separan tanto como se le
+      // dé de pantalla.
       await abrirEn(tester, const Size(1729, 1080));
 
       for (final columna in tester.widgetList(find.byType(ColumnaDeFicha))) {
@@ -128,17 +129,18 @@ void main() {
       await tester.pumpAndSettle();
 
       final maestro = tester.getSize(
-        find.ancestor(
-          of: find.textContaining('Quiz de función lineal'),
-          matching: find.byType(SizedBox),
-        ).last,
+        find
+            .ancestor(
+              of: find.textContaining('Quiz de función lineal'),
+              matching: find.byType(SizedBox),
+            )
+            .last,
       );
 
       expect(maestro.width, Anchos.maestro);
     });
 
-    testWidgets('la planilla encajada no trae su propia barra',
-        (tester) async {
+    testWidgets('la planilla encajada no trae su propia barra', (tester) async {
       // Dos AppBar apiladas —la de la asignatura y la del indicador— serían dos
       // títulos diciendo casi lo mismo y una franja menos de sitio para las
       // treinta notas. El título del indicador lo pone la cabecera encajada.

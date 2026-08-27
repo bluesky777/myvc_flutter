@@ -230,10 +230,11 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     final actual = libro!;
 
     // El tope de ancho, y lo que arregla —medido en un Pixel Tablet—: a
-    // pantalla completa el nombre de un alumno quedaba a 1.900 px de su nota, y
-    // el lápiz de un indicador a esa misma distancia de su título. Son filas de
-    // dos extremos y estiradas obligan al ojo a cruzar la pantalla para
-    // emparejar las dos mitades.
+    // pantalla completa el nombre de un alumno y su nota quedaban en los dos
+    // extremos —1.152 dp de separación en el Pixel Tablet—, y el lápiz de un
+    // indicador igual de lejos de su título. Lo que lo hace un fallo no es esa
+    // cifra sino que **la fila no tiene ancho propio**: sus dos extremos se
+    // separan tanto como se le dé de pantalla. Ver docs/tablets.md.
     //
     // **Va por pestaña y no envolviendo las dos**, que es como estuvo hasta que
     // existió el maestro-detalle: desde que la de indicadores usa el ancho
@@ -307,7 +308,8 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     // Con su tope también aquí dentro: la fila de la planilla es nombre a la
     // izquierda y campo de nota a la derecha, o sea el mismo par de extremos
     // que se arregló en el resto de la pantalla. Sin esto, partir en dos
-    // columnas habría cambiado un renglón de 1.900 px por uno de 1.200.
+    // columnas habría cambiado un renglón de punta a punta por uno algo menos
+    // largo.
     return ColumnaDeFicha(
       child: PlanillaScreen(
         // La clave cambia con el indicador, y por eso cambiarlo rehace el

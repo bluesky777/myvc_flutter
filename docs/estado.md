@@ -174,6 +174,31 @@ dos repositorios:**
   cuál de los quince colegios salieron**, que es la lección 2 otra vez. Ahora
   viven en un solo sitio, con su origen: [usuarios.md](usuarios.md) → «De dónde
   salen estas cifras».
+
+  **Y la forma final de la regla, que vino de vuelta del backend y es mejor que
+  «estampar la copia en todo número»:**
+
+  > **O se dice de qué copia salió el número, o se dice por qué la copia no
+  > cambia la respuesta.** La segunda es mejor cuando se puede, porque no caduca
+  > al cambiar de base.
+
+  Es el mismo movimiento por los dos lados: **subir del número a la propiedad que
+  lo hacía cierto**. Aquí salió como «lo correcto no es que sean 2.279, es que es
+  el colegio entero contra treinta»; allí, como una herramienta que busca
+  `possible_keys` vacío —propiedad del esquema y no del volumen—, así que el seed
+  pequeño enseña el mismo hecho que un colegio con un millón de notas.
+
+  **Aplicada aquí destapó algo peor que los censos, y era mío.** Este repo decía
+  doce veces que el nombre de un alumno quedaba «a 1.900 px» de su nota. Ese
+  número no salió de ningún dispositivo: **lo leí de una captura escalada** —la
+  imagen se me mostraba a 2.000 px de ancho y el original eran 2.560—, así que no
+  era ni físico ni lógico. Lo medido de verdad son **1.152 dp en un Pixel Tablet
+  de 1.280 dp de ancho**, y con el tope baja a unos 560.
+
+  Pero lo que hace que eso esté mal **no es la cifra de ese aparato**: es que la
+  fila **no tiene ancho propio**, así que sus dos extremos se separan tanto como
+  se le dé de pantalla. Esa frase vale en cualquier tablet y no hay que volver a
+  medirla nunca — que es exactamente lo que la regla pide.
 - **Una promesa que sólo vive en un mensaje entre sesiones se cae con la
   sesión.** Las dos condiciones que esperamos del backend —el hash de
   `b369020`, y el desglose por año de la fase 0— están escritas en su
@@ -446,7 +471,7 @@ Tablet: la app **funciona** en tablet, pero no tiene ningún layout propio. Es l
 interfaz de teléfono ocupando todo el ancho.
 
 Lo primero que hizo falta fue **separar dos problemas que no son el mismo**: lo
-que se estira y no debería —un campo de texto de 1.300 px— y el hueco que sobra
+que se estira y no debería —un campo de texto de tres palmos— y el hueco que sobra
 y no se aprovecha. El primero se arregla con un número y el segundo rediseñando
 una pantalla, así que el primero no espera al segundo.
 
@@ -469,7 +494,7 @@ había que hacer.** Tres cosas que este mapa daba por buenas resultaron falsas:
 
 1. **«Notas por alumno queda bien en tablet»** — era media verdad. Caben quince
    alumnos en vez de siete, que es una medida *vertical*; en horizontal **el
-   nombre quedaba a 1.900 px de su nota**. «Caben más» y «se lee bien» son dos
+   nombre y su nota quedaban en los dos extremos**. «Caben más» y «se lee bien» son dos
    preguntas distintas, y la primera se contestó sacando capturas para Play, o
    sea mirando la pantalla como una imagen y no como algo que alguien usa.
 2. **«Dos columnas arreglan el hueco»** — no: con dos tarjetas, ponerlas lado a
