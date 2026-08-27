@@ -1,21 +1,34 @@
 # Lo que la app necesita del servidor
 
-Tres cosas, y ninguna se puede hacer desde el lado Flutter. El backend
-(`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta app: se lee para saber
-qué devuelve cada endpoint y nunca se edita. Esto es la petición, escrita con el
-detalle suficiente para que se pueda decidir sin volver a investigar, y para que
-el día que se autorice no haya que redescubrir nada.
+Tres cosas, y ninguna se puede hacer desde el lado Flutter — **dos de ellas ya
+entregadas**. El backend (`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta
+app: se lee para saber qué devuelve cada endpoint y nunca se edita. Esto es la
+petición, escrita con el detalle suficiente para que se pueda decidir sin volver
+a investigar, y para que el día que se autorice no haya que redescubrir nada. Lo
+entregado se conserva aquí, marcado, porque explica por qué se pidió así.
 
 Están ordenadas por lo que dan a cambio de lo que cuestan.
 
+**Al día 26 de agosto de 2026, las dos primeras están escritas y desplegadas.**
+Entraron en la tanda `eb95cbc`, que se desplegó el 25 ago **con el mismo hash en
+los quince colegios**, y esta página no se enteró hasta el día siguiente. La
+lección queda escrita arriba del todo porque es la que costó: **«desplegado» se
+comprueba contra el hash de la tanda, no contra `main`**, y preguntar «¿está en
+`main`?» da la respuesta equivocada en los dos sentidos —`main` va por delante de
+lo que corre, y lo que corre puede tener de sobra lo que aquí se pide.
+
+**Son quince colegios y no dieciséis** desde el 25 ago 2026: uno se dio de baja y
+se borró del servidor, y nunca estuvo en ninguna tanda porque no tenía ni
+repositorio git ni aplicación.
+
 ```mermaid
 flowchart LR
-    A["1 · PUT notas/lote<br/>quita carga al servidor"] --> A1["30 peticiones → 1<br/>y 30 agregados → 1"]
-    B["2 · GET disciplina/mis-fichas<br/>desbloquea una pantalla"] --> B1["el alumno y el acudiente<br/>ven sus situaciones"]
+    A["1 · PUT notas/lote<br/>quita carga al servidor"] --> A1["30 peticiones → 1<br/>y 30 agregados → 1<br/><b>desplegado ✓</b><br/><i>interruptor apagado</i>"]
+    B["2 · GET disciplina/mis-fichas<br/>desbloquea una pantalla"] --> B1["el alumno y el acudiente<br/>ven sus situaciones<br/><b>desplegado y encendido ✓</b>"]
     C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 cerrado ✓</i>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
-    style B fill:#fff0e6,stroke:#c98a4b
+    style B fill:#e8f4e8,stroke:#5a8f5a
     style C fill:#fff0e6,stroke:#c98a4b
 ```
 
@@ -65,10 +78,17 @@ Lo de la respuesta no es capricho: la app ya sabe reintentar solo lo que falló
 sin que el docente vuelva a teclear nada, y para eso necesita saber **cuáles**
 fallaron. Que un lote entero se caiga por una nota sería peor que lo de ahora.
 
-**Existe, y el lado de la app está escrito** (24 ago 2026). Vive en
-`_guardarEnLote` de [LibroNotasApi](../lib/Http/LibroNotasApi.dart), detrás de
-`Interruptores.notasLote`, **apagado**: se enciende el día que el endpoint esté
-desplegado en los dieciséis colegios, no el día que se fusione. Ver
+**Existe, está desplegado, y el lado de la app está escrito** (24 ago 2026). Vive
+en `_guardarEnLote` de [LibroNotasApi](../lib/Http/LibroNotasApi.dart), detrás de
+`Interruptores.notasLote`, **todavía apagado**.
+
+La condición de encendido —desplegado en los quince, no fusionado— **ya está
+cumplida**: la ruta viajó en la misma tanda `eb95cbc` del 25 ago que subió las
+rutas de 539 a 542. Sigue apagado por una razón distinta y deliberada: **esto
+toca la pantalla del trabajo diario de un docente**, la de pasar una columna de
+treinta notas, y encenderlo es decisión de Joseth y no algo que se haga de paso
+mientras se enciende otra cosa. La sesión del backend ofreció una comprobación
+fina del contrato antes de encenderlo; conviene pedírsela ese día. Ver
 [Interruptores](../lib/Utils/Interruptores.dart).
 
 Tres cosas salieron de leer el controlador en vez de fiarse de este contrato, y
@@ -96,12 +116,26 @@ las tres cambian lo que la app tenía que hacer:
 
 ---
 
-## 2. `GET disciplina/mis-fichas` — que el alumno vea lo suyo
+## 2. `GET disciplina/mis-fichas` — HECHO, desplegado y encendido
 
-**Lo que pasa hoy.** La pantalla de disciplina existe y funciona para el
-personal; el alumno y el acudiente no entran. No es pudor: se comprobó que en
+> **Ya no es un pendiente.** La ruta entró con el commit `83bf717` (23 ago 2026),
+> viajó en la tanda `eb95cbc` desplegada el 25 ago en los quince colegios, y el
+> interruptor de la app se encendió el 26 ago. Se entregó **exactamente con el
+> contrato que se pedía aquí**, guarda incluida, y con un test de contrato,
+> `tests/Contrato/FichaDisciplinaPropiaTest.php`, que compara las claves de
+> `mis-fichas` contra un elemento de `PUT disciplina/alumnos` **pidiendo las dos
+> rutas en la misma ejecución** — no contra una lista escrita a mano, que se
+> quedaría vieja el día que alguien añada una columna.
+>
+> Lo que sigue se conserva porque explica **por qué** se pidió así, y porque las
+> tres correcciones del final son cosas del endpoint real que este contrato no
+> preveía. Lo que la app hace con él está en
+> [disciplina.md](disciplina.md) → «La ficha del alumno y del acudiente».
+
+**De dónde venía.** La pantalla de disciplina existía y funcionaba para el
+personal; el alumno y el acudiente no entraban. No era pudor: se comprobó que en
 todo el backend solo cuatro controladores tocan `dis_procesos` —`Disciplina`,
-`Comportamiento`, `NotaComportamiento` y `Grupos`— y **todas** sus rutas llevan
+`Comportamiento`, `NotaComportamiento` y `Grupos`— y **todas** sus rutas llevaban
 `auth.personal`, que aborta con 403 a `Alumno` y `Acudiente`.
 
 El único endpoint de notas abierto a ellos, `GET notas/alumno/{id}`, trae por
@@ -109,19 +143,21 @@ periodo las asignaturas, sus ausencias de clase y `nota_comportamiento` —que e
 **la nota**, no las fichas—. Uniformes y tardanzas de institución, igual de
 cerrados.
 
-**Lo que se pide.**
+**Lo que se pidió, y lo que se entregó.**
 
 | | |
 |---|---|
-| Ruta | `GET disciplina/mis-fichas/{alumno_id?}` |
-| Guarda | `boletin.propio:sin-paz-y-salvo`, **no** `auth.personal` |
-| Respuesta | `{"alumno": {…}, "config": {…}, "ordinales": [ … ]}` |
+| Ruta | `GET disciplina/mis-fichas/{alumno_id?}` ✓ |
+| Guarda | `boletin.propio:sin-paz-y-salvo`, **no** `auth.personal` ✓ |
+| Respuesta | `{"alumno": {…}, "config": {…}, "ordinales": [ … ]}` ✓ |
 
 Sobre la guarda: ya existe y hace exactamente esto. `ExigirBoletinPropio` deja
 pasar de largo a quien no es alumno ni acudiente, y a los que lo son les
 comprueba que el `alumno_id` pedido sea el suyo o el de un acudido; sin id
-significa «lo mío». El modo `sin-paz-y-salvo` es el correcto: **retener el
-boletín de quien debe es una cosa y esconderle a una familia la situación
+significa «lo mío» — **y eso último resultó ser falso para un acudiente; ver las
+correcciones al final de este apartado**. El modo `sin-paz-y-salvo` es el
+correcto: **retener el boletín de quien debe es una cosa y esconderle a una
+familia la situación
 disciplinaria de su hijo es otra, y esa nadie la ha pedido.** Es la misma
 decisión que ya se tomó para `notas/alumno` y para `matriculas/prematricular`.
 
@@ -139,9 +175,44 @@ ordinales de cada situación se resuelven contra el catálogo del año. **No** h
 falta mandar `grupos` ni `descripciones_typeahead`: eso es del editor, y aquí no
 se escribe nada.
 
-**Lo que cambia en la app cuando exista.** Una pantalla corta —la ficha en modo
-lectura— y la opción del menú para alumnos y acudientes. Ver
-[disciplina.md](disciplina.md) → «Lo que queda pendiente».
+**Lo que cambió en la app.** Una pantalla corta —la ficha en modo lectura, que es
+`FichaDisciplinaScreen` con `soloLectura: true`— y la opción del menú para
+alumnos y acudientes. Ver [disciplina.md](disciplina.md) → «La ficha del alumno y
+del acudiente».
+
+### Tres correcciones a este contrato, del endpoint que se entregó
+
+Ninguna se supo escribiendo la petición; las tres salieron de leer el
+controlador desplegado, y la sesión del backend las confirmó ejecutando sus
+pruebas contra el esquema real.
+
+1. **«Sin id significa lo mío» NO vale para un acudiente: recibe 400.** El
+   controlador solo resuelve `persona_id` cuando `tipo == 'Alumno'`; cualquier
+   otro tipo se lleva `400 'No hay id de alumno'`
+   (`DisciplinaController.php:142-147`). Es deliberado y tiene su prueba: «lo
+   mío» no significa nada para quien tiene varios acudidos y no es alumno. La
+   guarda deja pasar la petición sin id porque no hay alumno concreto que
+   proteger, así que el 400 lo pone el controlador. **En sesión de acudiente hay
+   que mandar siempre el id**, y por eso
+   [MiDisciplinaScreen](../lib/Screens/MiDisciplinaScreen.dart) pregunta de qué
+   acudido antes de llamar, con la misma hoja que «Mis notas» y «Asistencia».
+2. **`config` llega como objeto o `null`, no como lista.** Sale del backend como
+   `$config[0] ?? null`, y esa lectura **no crea la fila del año a propósito**,
+   porque una lectura que escribe deja de ser de solo lectura. Un año recién
+   abierto llega nulo, y leer `falta_tipoN_displayname` sin defensa reventaría en
+   la primera ficha. `traerMisFichas` cae a los valores por defecto de
+   `ConfigDisciplinaModel`. Los `ordinales` sí son lista.
+3. **El año sale del alumno, no de quien pregunta.** Si el colegio pasa de año y
+   la familia no ha vuelto a entrar, `users.periodo_id` sigue en el año viejo y
+   la ficha habría dado 404 sobre una ficha que existe — justo cuando la familia
+   abre la app a ver el curso nuevo. Se prefiere el año activo si hay matrícula
+   viva, y si no el más reciente, que es lo que hace que la ficha de un egresado
+   siga saliendo.
+
+Y el aviso del coste se atendió: `fichaConFormaDeGrupo()` **copia la lista de
+columnas de `Grupo::alumnos` pero parte del alumno**, no del grupo. Se copió en
+vez de reutilizar la consulta precisamente para no armar el grupo entero y
+quedarse con uno.
 
 ---
 
@@ -167,7 +238,7 @@ una tarea de prueba que corrió cuatro veces. O sea que el push es viable, no
 hace falta el plan B y **no queda nada por comprobar**: lo que falta es escribir
 las tres piezas.
 
-Ese cron **no es uno, es un bucle sobre los dieciséis colegios**: cada uno es un
+Ese cron **no es uno, es un bucle sobre los quince colegios**: cada uno es un
 directorio con su `.env` y su base. El detalle, en
 [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 
@@ -190,7 +261,7 @@ publicar.
 ninguna parte** que su versión siga siendo aceptable. Un teléfono con la versión
 del año pasado sigue llamando a los mismos endpoints indefinidamente y nadie se
 entera. Mientras eso sea así, **retirar cualquier endpoint depende de que
-dieciséis colegios se actualicen por su cuenta**: es la condición de entrada de
+quince colegios se actualicen por su cuenta**: es la condición de entrada de
 la fase 7 de `18-auditoria.md` y de la fase 5 de `00`, y por eso esas fases hoy
 no tienen fecha —que no es lo mismo que tenerla lejos—.
 
@@ -254,7 +325,7 @@ para no hacerlo; es el motivo por el que ese campo no se edita a la ligera ni se
 copia de un colegio a otro sin mirar.
 
 **La pantalla de entrar es la única que se deja pasar bloqueado**, y no es una
-rendija. Son dieciséis colegios con una sola app y **el número lo pone cada
+rendija. Son quince colegios con una sola app y **el número lo pone cada
 colegio en su servidor**, así que quien tenga cuenta en dos puede estar
 bloqueado por el que va atrasado y no por el otro; sin esa salida no le quedaría
 forma de llegar a la pantalla de entrar. No debilita nada, porque entrar vuelve
@@ -341,10 +412,10 @@ el mismo commit:
    PHP 8.4.24 en /usr/local/bin/php) y el cron dispara. El plan entero, con el
    porqué de cada decisión, está en ~/DESARROLLOS/myvc_flutter/docs/notificaciones.md.
    El cron NO es uno: cada colegio es un directorio con su .env y su base, y son
-   dieciséis, así que va un bucle secuencial con $HOME.
+   quince, así que va un bucle secuencial con $HOME.
 
 Y una restricción de despliegue que hay que dejar anotada donde toque: `app/` es
-copia por colegio y myvc_flutter es UNA sola app para los dieciséis. La app no
+copia por colegio y myvc_flutter es UNA sola app para los quince. La app no
 puede llamar a notas/lote hasta que esté desplegado en todos, o gastaría un 404
 antes de caer al método viejo. Avísame cuando esté desplegado y hago el lado
 Flutter.
@@ -388,7 +459,7 @@ profesor que haya que respetar: quitar esos campos es quitar lo que nadie lee.
 
 **Lo que sí rompería es cerrarlo con un 403.** No tumba la pantalla —el mapa de
 docentes va en un `catch` y se queda vacío— pero deja a todo alumno y acudiente
-sin el nombre de su titular, en los dieciséis colegios a la vez.
+sin el nombre de su titular, en los quince colegios a la vez.
 
 ### `GET perfiles/username/{u}` — hoy no limita a cuáles
 
@@ -408,7 +479,7 @@ backend se está reescribiendo (`docs/migracion/18-auditoria.md`, sesión
 `8myvc-7b`), con cuatro rutas `auditoria/*` nuevas, y entre lo que se retiraría
 está esta. **En la fase 5 no se retira nada** —las nuevas son aditivas y los
 alias siguen— y la retirada es una fase 7 cuya condición de entrada no es
-«desplegado en los dieciséis» sino **«Flutter publicado y adoptado»**. Esto es
+«desplegado en los quince» sino **«Flutter publicado y adoptado»**. Esto es
 lo que la app puede decir de eso, comprobado sobre el código y no sobre la
 memoria.
 
@@ -445,7 +516,7 @@ esta sesión:
 1. **Que la app aprenda a exigir una versión mínima** —el servidor dice cuál es
    la más vieja que acepta y la app manda a actualizar—. Es trabajo de la app y
    de un endpoint diminuto, y hasta que exista, cualquier plan de retirada de
-   cualquier endpoint depende de la buena voluntad de dieciséis colegios.
+   cualquier endpoint depende de la buena voluntad de quince colegios.
 2. **Que la retirada se decida mirando Play Console**, que enseña el reparto de
    usuarios por versión. Es un dato de tienda: lo tiene Joseth, no el código.
 

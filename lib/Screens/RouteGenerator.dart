@@ -30,7 +30,7 @@ class RouteGenerator {
     // mandó un número que se entiende y esta app se queda corta. Ver
     // VersionMinima.
     //
-    // El login se deja pasar, y no es una rendija: son dieciséis colegios con
+    // El login se deja pasar, y no es una rendija: son quince colegios con
     // una sola app, y el número lo pone cada colegio en su servidor. Sin esto,
     // a quien tenga cuenta en dos y le bloquee el primero no le quedaría forma
     // de llegar a la pantalla de entrar para usar el segundo, que sí acepta su

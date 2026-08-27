@@ -32,18 +32,32 @@ import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 class PendientesUsuarios {
   /// Cambiar el nombre de usuario de otra persona.
   ///
-  /// **Este no está apagado por falta de endpoint: está apagado porque el que
-  /// hay es una puerta abierta.** `PUT perfiles/guardar-username/{id}` lleva
-  /// `persona.propia:user_id`, y ese guard deja pasar de largo a todo el que no
-  /// sea alumno ni acudiente; el controlador solo comprueba que el nombre no
-  /// venga vacío. O sea que cualquiera de los 51 docentes le cambia el usuario a
-  /// cualquier cuenta, incluida la de un superusuario, y como `users.username`
-  /// es UNIQUE, eso deja a alguien fuera del sistema en una petición.
+  /// **Estuvo apagado por una razón que no era «todavía no existe».**
+  /// `PUT perfiles/guardar-username/{id}` lleva `persona.propia:user_id`, y ese
+  /// guard deja pasar de largo a todo el que no sea alumno ni acudiente; el
+  /// controlador solo comprobaba que el nombre no viniera vacío. O sea que
+  /// cualquiera de los 51 docentes le cambiaba el usuario a cualquier cuenta,
+  /// incluida la de un superusuario, y como `users.username` es UNIQUE, eso
+  /// dejaba a alguien fuera del sistema en una petición.
   ///
-  /// El código de aquí está escrito y probado. Se enciende cuando el backend
-  /// cierre la guarda, y no antes: la primera versión de esta pantalla no puede
-  /// ser el cliente cómodo de una escalada de privilegios.
-  static bool cambiarUsername = false;
+  /// **Encendido el 26 de agosto de 2026, con la guarda cerrada y desplegada.**
+  /// El arreglo es el commit `0e7208c` del backend (23 ago), ancestro de
+  /// `eb95cbc`, la tanda que se desplegó el 25 ago con el mismo hash en los
+  /// quince colegios. Quedó anclado al objetivo copiando a `putResetPassword`:
+  /// un superusuario a cualquiera; cada quien el suyo —un alumno sigue
+  /// cambiándose el suyo—; un docente con `profes_can_edit_alumnos`, solo el de
+  /// un alumno; 403 para todo lo demás.
+  ///
+  /// **La ruta sigue diciendo `persona.propia:user_id`, y no es un olvido:** lo
+  /// que cierra el agujero está dentro del método, no en el middleware. Quien
+  /// vaya a comprobarlo leyendo `routes/` sacará la conclusión falsa, que es
+  /// justo la que tuvo esto apagado tres días de más.
+  ///
+  /// Y de paso, un nombre ocupado contesta **422** en vez del 500 de MySQL
+  /// —mirando también entre los borrados, porque el nombre de una cuenta
+  /// borrada sigue ocupado—, que es lo que permite enseñar «ese nombre ya está
+  /// en uso» en lugar de un error genérico.
+  static bool cambiarUsername = true;
 
   /// Ver y cambiar los roles de cada persona.
   ///
@@ -75,28 +89,36 @@ class PendientesUsuarios {
   /// sí existe y está encendida: es `alumnos/cambiar-claves`.
   static bool masivasPorGrupoQueFaltan = false;
 
-  /// El arreglo de `alumnos/cambiar-claves` ya está desplegado en los dieciséis.
+  /// El arreglo de `alumnos/cambiar-claves`, desplegado en los quince.
   ///
-  /// Mientras esté apagado, esa operación **alcanza a más gente de la que la
-  /// pantalla enseña**: la consulta desplegada hoy no filtra el estado de la
-  /// matrícula ni las cuentas de la papelera, así que además de los treinta que
-  /// se ven, le cambia la contraseña a los retirados de ese grupo y a los
-  /// borrados. Por eso la confirmación avisa de ello en vez de prometer un
-  /// número.
+  /// Apagado, esa operación **alcanzaba a más gente de la que la pantalla
+  /// enseña**: la consulta no filtraba el estado de la matrícula ni las cuentas
+  /// de la papelera, así que además de los treinta que se ven, le cambiaba la
+  /// contraseña a los retirados de ese grupo y a los borrados. Por eso la
+  /// confirmación avisaba de ello en vez de prometer un número.
+  ///
+  /// **Encendido el 26 de agosto de 2026.** Va en el mismo commit que la guarda
+  /// de `guardar-username` —`0e7208c`, ancestro de la tanda `eb95cbc` que corre
+  /// en los quince desde el 25 ago—: ahora filtra MATR/ASIS, deja fuera las
+  /// borradas y contesta `{"resultado": "Cambiadas", "cambiadas": 31}`, con lo
+  /// que el número cuadra con la lista que la pantalla pinta.
   ///
   /// Encenderlo cambia una frase: la de la confirmación. El número de cuántas
   /// cambiaron no cuelga de aquí —se lee de la respuesta si viene—, así que
-  /// olvidarse de encenderlo no oculta nada, solo deja un aviso de más.
-  static bool cambiarClavesArreglado = false;
+  /// olvidarse de encenderlo no ocultaba nada, solo dejaba un aviso de más.
+  static bool cambiarClavesArreglado = true;
 
   /// Deja los interruptores como vienen de fábrica. Para las pruebas.
+  ///
+  /// «De fábrica» es lo que hay escrito arriba, no «todo apagado»: si esto se
+  /// desincroniza, las pruebas dejan de comprobar la app que se publica.
   static void comoDeFabrica() {
-    cambiarUsername = false;
+    cambiarUsername = true;
     rolesPorPersona = false;
     ultimoAcceso = false;
     otrosUsuarios = false;
     masivasPorGrupoQueFaltan = false;
-    cambiarClavesArreglado = false;
+    cambiarClavesArreglado = true;
   }
 }
 
@@ -267,18 +289,15 @@ Future<String?> quitarRol(
 
 /// Una misma contraseña para todos los alumnos de un grupo.
 ///
-/// **Alcanza a más gente de la que la pantalla enseña.** La consulta del
-/// servidor no filtra el estado de la matrícula ni las cuentas en la papelera
-/// (`AlumnosController.php:103-107`), al contrario que su vecina de colegio
-/// entero, así que además de los matriculados alcanza a los retirados de ese
-/// grupo y a los borrados. Confirmado como defecto y anotado para arreglo; hasta
-/// entonces la confirmación de la pantalla no promete un número.
+/// **Alcanzaba a más gente de la que la pantalla enseña.** La consulta del
+/// servidor no filtraba el estado de la matrícula ni las cuentas en la papelera,
+/// al contrario que su vecina de colegio entero, así que además de los
+/// matriculados alcanzaba a los retirados de ese grupo y a los borrados.
 ///
-/// **Lo de arriba deja de ser verdad cuando el colegio actualice el servidor.**
-/// El arreglo está escrito y probado en el backend —filtra MATR/ASIS y las
-/// cuentas borradas, y contesta `{"resultado": "Cambiadas", "cambiadas": 31}`—,
-/// pero vive en una rama sin fusionar y sin desplegar en los dieciséis. Ver
-/// [PendientesUsuarios.cambiarClavesArreglado].
+/// **Arreglado y desplegado en los quince desde el 25 de agosto de 2026**
+/// —commit `0e7208c`, dentro de la tanda `eb95cbc`—: filtra MATR/ASIS y las
+/// cuentas borradas, y contesta `{"resultado": "Cambiadas", "cambiadas": 31}`.
+/// Ver [PendientesUsuarios.cambiarClavesArreglado], encendido el 26 ago.
 ///
 /// Devuelve el motivo del fallo, o cuántas cambió cuando el servidor lo dice.
 /// Las dos cosas pueden venir vacías: en la versión de hoy no hay número que
@@ -363,8 +382,8 @@ Future<List<Map<String, dynamic>>> _traerLista(
 /// **Cuando el servidor explica por qué dijo que no, gana su explicación.**
 /// `Autoriza::exigir` corta con un `abort(403, '...')` que trae escrito el
 /// criterio exacto —quién puede hacer eso—, y ese criterio cambia con el
-/// despliegue: la contraseña de un grupo pasó de superusuario a superusuario o
-/// secretaría, y los dieciséis colegios no se actualizan el mismo día. Una
+/// despliegue: la contraseña de un grupo pasó de pedir superusuario a pedir
+/// `esAdministrativo`, y los quince colegios no se actualizan el mismo día. Una
 /// frase escrita aquí envejece sin avisar; la suya llega siempre al día.
 ///
 /// Los mensajes de aquí quedan de respaldo, para cuando no dice nada o contesta

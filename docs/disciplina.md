@@ -1,8 +1,9 @@
 # Disciplina
 
 La pantalla de disciplina de la app, traída de `/disciplina` del front web
-(`myvc_front/app/scripts/comportamiento/`). Está hecha salvo la del alumno y el acudiente, que
-sigue esperando un endpoint; ver «Lo que queda pendiente».
+(`myvc_front/app/scripts/comportamiento/`). **Está hecha entera**, la del alumno y el acudiente
+incluida, y encendida desde el 26 de agosto de 2026; ver «La ficha del alumno y del
+acudiente».
 
 Los diagramas son [Mermaid](https://mermaid.js.org). Para verlos dibujados en VS Code,
 extensión `bierner.markdown-mermaid` y vista previa con `⌘K V`; en GitHub se ven solos.
@@ -106,12 +107,12 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     L(["Abre el menú"]) --> Q{"¿Alumno<br/>o acudiente?"}
-    Q -->|"sí"| P["No ve Disciplina<br/><i>pendiente: GET disciplina/mis-fichas</i>"]
+    Q -->|"sí"| P["Ve <b>Disciplina</b>, pero es otra<br/>/mi-disciplina · sólo lectura<br/><i>GET disciplina/mis-fichas</i>"]
     Q -->|"no"| R{"¿Especial?<br/>superusuario · admin · coord*"}
     R -->|"sí"| TODOS["Todos los grupos del año"]
     R -->|"no"| SUYOS["Los grupos donde da clase<br/>+ el grupo del que es titular"]
 
-    style P fill:#fff0e6,stroke:#c98a4b
+    style P fill:#e8f4e8,stroke:#5a8f5a
 ```
 
 - **Especial** — `isSuperuser`, rol `admin`, o cualquier rol que empiece por `coord`. Va como
@@ -119,11 +120,15 @@ flowchart TD
 - **Docente** — los grupos donde tiene asignatura (`GET asignaturas/listasignaturas`, que la
   app ya usa en Unidades) más aquel del que es titular (`titular_id == personaId`, dato que ya
   viene en `grupos`).
-- **Alumno y acudiente** — no entran. Ver «Lo que queda pendiente».
+- **Alumno y acudiente** — entran a **la suya**, en sólo lectura y por otra ruta. Ver «La ficha
+  del alumno y del acudiente».
 
 ## Navegación
 
-Una opción nueva en el menú lateral, **Disciplina**, visible solo para el personal.
+En el menú lateral, **Disciplina**. La misma palabra para todos y dos pantallas detrás: el
+personal va a `/disciplina`, que edita; el alumno y el acudiente a `/mi-disciplina`, que sólo
+lee. El nombre se comparte a propósito —es como lo llama el colegio—, así que **lo que separa a
+unos de otros es la ruta y no el texto**, y así se comprueba en las pruebas.
 
 ```mermaid
 flowchart TD
@@ -286,7 +291,7 @@ flowchart LR
     F3 --> F4["4 · Crear y editar ✓<br/>situaciones"]
     F4 --> F4b["4b · Derivantes ✓<br/>encadenar situaciones"]
     F4b --> F5["5 · Uniformes ✓"]
-    F5 --> F6["6 · Pantalla del alumno ✓<br/>y del acudiente<br/><i>tras interruptor</i>"]
+    F5 --> F6["6 · Pantalla del alumno ✓<br/>y del acudiente<br/><i>encendida 26 ago 2026</i>"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
     style F2 fill:#e8f4e8,stroke:#5a8f5a
@@ -299,29 +304,32 @@ flowchart LR
 
 De la 1 a la 5, la 4b incluida, hechas en la rama `feat/disciplina`.
 
-## La fase 6, hecha y esperando despliegue
+## La ficha del alumno y del acudiente
 
-**La pantalla del alumno y del acudiente.** Necesita un endpoint que hoy no existe. Se
-comprobó: en todo el backend solo cuatro controladores tocan `dis_procesos` —`Disciplina`,
-`Comportamiento`, `NotaComportamiento` y `Grupos`— y todas sus rutas llevan `auth.personal`,
-que aborta con 403 a `Alumno` y `Acudiente`. El único endpoint de notas abierto a ellos,
-`GET notas/alumno/{id}` con la guarda `boletin.propio`, trae por periodo las asignaturas, sus
-ausencias de clase y `nota_comportamiento` —que es **la nota**, no las fichas—. Uniformes y
-tardanzas de institución, igual de cerrados.
+**La fase 6, hecha y encendida.** De dónde venía: en todo el backend solo cuatro controladores
+tocan `dis_procesos` —`Disciplina`, `Comportamiento`, `NotaComportamiento` y `Grupos`— y todas
+sus rutas llevaban `auth.personal`, que aborta con 403 a `Alumno` y `Acudiente`. El único
+endpoint de notas abierto a ellos, `GET notas/alumno/{id}` con la guarda `boletin.propio`, trae
+por periodo las asignaturas, sus ausencias de clase y `nota_comportamiento` —que es **la
+nota**, no las fichas—. Uniformes y tardanzas de institución, igual de cerrados.
 
-Hace falta algo como `GET disciplina/mis-fichas`: solo las situaciones del propio alumno con
-sus ordinales ya resueltos, sin los cuarenta compañeros, sin las notas y sin el boletín, con
-una guarda de propiedad al estilo de `boletin.propio`. Cuando exista, la pantalla es corta: es
-la ficha del alumno en modo lectura.
+Por eso se pidió `GET disciplina/mis-fichas`: solo las situaciones del propio alumno con sus
+ordinales ya resueltos, sin los cuarenta compañeros, sin las notas y sin el boletín, con una
+guarda de propiedad al estilo de `boletin.propio`.
 
 **Ya existe, y la pantalla está escrita** (24 ago 2026). El endpoint está en el backend con la
 guarda `boletin.propio:sin-paz-y-salvo` y devuelve `{alumno, config, ordinales}`, con `alumno`
 en la misma forma que un elemento de `PUT disciplina/alumnos` — que era el motivo de pedirlo
 así.
 
-**Detrás de `Interruptores.disciplinaMisFichas`, apagado**: está fusionado en el backend pero
-no desplegado en los dieciséis colegios, y una opción de menú que termina en 404 es peor que
-no tenerla.
+**Encendida el 26 de agosto de 2026.** Estuvo detrás de `Interruptores.disciplinaMisFichas`
+mientras el endpoint no estuviera desplegado —una opción de menú que termina en 404 es peor
+que no tenerla—, y esa condición **ya estaba cumplida sin que aquí se supiera**: la ruta entró
+con el commit `83bf717` (23 ago) y viajó en la tanda `eb95cbc`, que Joseth desplegó el 25 ago
+con el mismo hash en los quince colegios. Este documento la dio por pendiente tres días de
+más, y el mapa general lo copió.
+
+El interruptor sigue existiendo, porque la condición para el siguiente será la misma.
 
 Es [MiDisciplinaScreen](../lib/Screens/MiDisciplinaScreen.dart), y **no es una pantalla
 nueva**: carga y delega en `FichaDisciplinaScreen` con `soloLectura: true`. Escribir otra para

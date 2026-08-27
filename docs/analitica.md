@@ -74,7 +74,7 @@ razones, y cualquiera de las tres basta:
 - `rol` — `docente`, `alumno`, `acudiente`, `admin`. Es lo que permite separar
   «los docentes no la usan» de «los acudientes no la usan», que son dos
   problemas distintos con dos soluciones distintas.
-- `colegio` — cuál de los dieciséis. Sin esto, dieciséis colegios se mezclan en
+- `colegio` — cuál de los quince. Sin esto, quince colegios se mezclan en
   un solo número y ninguno se puede mirar por separado.
 
 ### Y se puede apagar

@@ -33,7 +33,7 @@ formulario.
 | Pregunta | Respuesta |
 |---|---|
 | ¿Tu app recopila o comparte alguno de los tipos de datos requeridos? | **Sí** |
-| ¿Todos los datos están cifrados en tránsito? | **Sí** — todo va por HTTPS; los dieciséis colegios sirven con certificado |
+| ¿Todos los datos están cifrados en tránsito? | **Sí** — todo va por HTTPS; los quince colegios sirven con certificado |
 | ¿Proporcionas una forma de solicitar la eliminación de datos? | **Sí**, a través del colegio (así lo dice la política) |
 
 ### Tipos de datos a marcar

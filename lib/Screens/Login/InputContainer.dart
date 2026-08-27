@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../constantes.dart';
+import '../../Utils/Anchos.dart';
 
 class InputContainer extends StatelessWidget {
   const InputContainer({
@@ -13,13 +14,10 @@ class InputContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    Size size = MediaQuery.of(context).size;
-
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      width: size.width * 0.8,
+      width: Anchos.bandaDeLogin(context),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         color: kPrimaryColor.withAlpha(50),

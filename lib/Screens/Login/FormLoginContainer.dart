@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myvc_flutter/Bloc/login_bloc.dart';
+import 'package:myvc_flutter/Utils/Anchos.dart';
 
 import 'RoundedButton.dart';
 import 'RoundedInput.dart';
@@ -82,10 +83,11 @@ class FormLoginContainerState extends State<FormLoginContainer> {
                       controller: widget.passwordController,
                       hint: 'Contraseña',
                     ),
-                    // Misma banda que InputContainer y RoundedButton: los dos
-                    // usan size.width * 0.8 centrado.
+                    // La misma banda que InputContainer y RoundedButton, y
+                    // ahora desde el mismo sitio: si los tres no miden igual se
+                    // ve un escalón entre ellos.
                     SizedBox(
-                      width: widget.size.width * 0.8,
+                      width: Anchos.bandaDeLogin(context),
                       child: CheckboxListTile(
                         value: widget.guardarDatos,
                         onChanged: (valor) =>

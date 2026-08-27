@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -164,16 +165,19 @@ class _FichaDisciplinaScreenState extends State<FichaDisciplinaScreen> {
                 icon: Icon(Icons.add),
                 label: Text('Nueva situación'),
               ),
-        body: ListView(
-          padding: const EdgeInsets.only(bottom: 96),
-          children: [
-            _cabecera(),
-            _barraDePeriodos(),
-            Divider(height: 1),
-            _resumenDelPeriodo(),
-            Divider(height: 1),
-            for (final tipo in ConfigDisciplinaModel.tipos) _bloqueDeTipo(tipo),
-          ],
+        body: ColumnaDeFicha(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 96),
+            children: [
+              _cabecera(),
+              _barraDePeriodos(),
+              Divider(height: 1),
+              _resumenDelPeriodo(),
+              Divider(height: 1),
+              for (final tipo in ConfigDisciplinaModel.tipos)
+                _bloqueDeTipo(tipo),
+            ],
+          ),
         ),
       ),
     );
