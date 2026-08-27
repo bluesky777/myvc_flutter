@@ -48,7 +48,7 @@ flowchart LR
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
-    T["Tablets<br/>docs/tablets.md"] --> T0["fases 1–2 ✓ el tope<br/>login y ficha<br/>fases 3–4 ○"]
+    T["Tablets<br/>docs/tablets.md"] --> T0["fases 1–3 ✓ el ancho<br/>login · ficha · asignatura<br/>fase 4 ○ maestro-detalle"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
@@ -68,10 +68,11 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y sus
-dos primeras fases ya están hechas — las dos que se arreglaban con un número. Lo
-que queda es la fase 3, el detalle de una asignatura: la única pantalla
-francamente mal y la única que pide rediseño y no un tope.
+**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y de
+sus cuatro fases hay tres hechas: **todo lo que se arreglaba con un ancho
+máximo**. Lo que queda es la fase 4, maestro-detalle en el detalle de una
+asignatura, que es lo único que llena el hueco vertical y lo más caro del frente
+porque cambia la navegación y no el layout.
 
 De la analítica solo falta una cosa, y es de consola: confirmar en Analytics que
 la retención a nivel de usuario está en dos meses, que es lo que promete la
@@ -363,15 +364,30 @@ una pantalla, así que el primero no espera al segundo.
   720: una ficha lleva bloques dentro y aguanta más que un formulario, y hay
   prueba que se pone en rojo si alguien unifica las dos constantes.
 
-Ahí se descartó una idea que el plan traía escrita —resolver los contadores con
-un `Wrap`—: son exactamente tres y siempre tres, así que un `Wrap` no reacomoda
-nada. Y **las otras fichas no se tocan**, porque «notas por alumno» y
-«asistencia» se midieron bien.
+- **El detalle de una asignatura** (fase 3), a medias y a propósito: se le puso
+  el tope, que arregla el ancho; el hueco vertical no lo arregla un número.
 
-**Queda la fase 3**, el detalle de una asignatura: la única pantalla francamente
-mal y la única que no se arregla con un número, sino aprovechando el hueco. El
-plan entero, con lo que este frente **no** va a hacer —empezando por un sistema
-de *breakpoints*—, en [tablets.md](tablets.md).
+**La fase 3 se hizo mirando la pantalla en un Pixel Tablet, y eso cambió lo que
+había que hacer.** Tres cosas que este mapa daba por buenas resultaron falsas:
+
+1. **«Notas por alumno queda bien en tablet»** — era media verdad. Caben quince
+   alumnos en vez de siete, que es una medida *vertical*; en horizontal **el
+   nombre quedaba a 1.900 px de su nota**. «Caben más» y «se lee bien» son dos
+   preguntas distintas, y la primera se contestó sacando capturas para Play, o
+   sea mirando la pantalla como una imagen y no como algo que alguien usa.
+2. **«Dos columnas arreglan el hueco»** — no: con dos tarjetas, ponerlas lado a
+   lado ocupa la mitad de alto y el blanco de abajo **crece**.
+3. **«Maestro-detalle, si hace falta»** — hace falta, y es lo único que llena
+   ese hueco. Su pareja natural es indicador → planilla de treinta alumnos, que
+   es el trabajo diario del docente y que hoy son dos pantallas.
+
+De paso salió un defecto que no era de tablet: las tarjetas de unidad eran un
+`Container` con color y **se tragaban la onda al tocar** de cada indicador, o
+sea que la acción más repetida de la pantalla del trabajo diario no daba ninguna
+respuesta visual. Lo destapó la primera prueba que monta esa pantalla.
+
+**Queda la fase 4**, maestro-detalle. El plan entero, y **cómo mirar una
+pantalla en tablet sin cuenta y sin red**, en [tablets.md](tablets.md).
 
 Las capturas de tablet que se subieron a Play son de las tres pantallas que ya
 quedaban bien, a propósito. Sirven para que Play no marque la app como «no

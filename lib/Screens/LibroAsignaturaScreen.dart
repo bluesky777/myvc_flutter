@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Screens/PlanillaScreen.dart';
 import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
+import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
@@ -34,6 +35,7 @@ class LibroAsignaturaScreen extends StatefulWidget {
     super.key,
     required this.asignatura,
     this.profesorId,
+    this.servidor,
   });
 
   final AsignaturaModel asignatura;
@@ -41,12 +43,21 @@ class LibroAsignaturaScreen extends StatefulWidget {
   /// De qué docente, cuando quien mira no es el dueño de la asignatura.
   final int? profesorId;
 
+  /// Con qué servidor hablar. Null es el de verdad, que es lo normal.
+  ///
+  /// Existe para poder abrir esta pantalla **sin red y sin cuenta**: se le pasa
+  /// un `Server` de mentira que devuelve un libro escrito a mano. Hasta que
+  /// existió esta costura, mirar cómo queda el layout obligaba a entrar con las
+  /// credenciales de un colegio de verdad — que no están en el repositorio a
+  /// propósito— y a mirar datos de alumnos reales para decidir un ancho.
+  final Server? servidor;
+
   @override
   State<LibroAsignaturaScreen> createState() => _LibroAsignaturaScreenState();
 }
 
 class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
-  final Server server = Server();
+  late final Server server = widget.servidor ?? Server();
 
   LibroDeNotas? libro;
   bool cargando = true;
@@ -88,7 +99,8 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
   /// Sin volver a pedir `notas/detailed`: lo que quedó guardado es lo que la
   /// planilla mandó y el servidor aceptó, y esa consulta es demasiado cara para
   /// gastarla en refrescar un contador.
-  Future<void> _abrirPlanilla(UnidadModel unidad, SubunidadModel subunidad) async {
+  Future<void> _abrirPlanilla(
+      UnidadModel unidad, SubunidadModel subunidad) async {
     final actual = libro;
     if (actual == null) return;
 
@@ -119,8 +131,6 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
       libro = nuevo;
     });
   }
-
-
 
   /// Abre la ficha de un alumno y aplica lo que se haya guardado allí.
   ///
@@ -198,7 +208,8 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(error ?? 'No hay libro de notas.', textAlign: TextAlign.center),
+            Text(error ?? 'No hay libro de notas.',
+                textAlign: TextAlign.center),
             const SizedBox(height: 12),
             TextButton(onPressed: _cargar, child: const Text('Reintentar')),
           ],
@@ -208,11 +219,22 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
 
     final actual = libro!;
 
-    return TabBarView(
-      children: [
-        _buildPorIndicador(actual),
-        _buildPorAlumno(actual),
-      ],
+    // El tope va aquí, envolviendo las dos pestañas, y no dentro de cada una:
+    // son la misma matriz leída por sus dos lados y tienen que medir igual, o
+    // cambiar de pestaña mueve el contenido de sitio.
+    //
+    // Lo que arregla, medido en un Pixel Tablet: **a pantalla completa el
+    // nombre de un alumno queda a 1.900 px de su nota**, y el lápiz de un
+    // indicador a esa misma distancia de su título. Son filas de dos extremos
+    // —etiqueta a la izquierda, dato o acción a la derecha— y estiradas obligan
+    // al ojo a cruzar la pantalla para emparejar las dos mitades.
+    return ColumnaDeFicha(
+      child: TabBarView(
+        children: [
+          _buildPorIndicador(actual),
+          _buildPorAlumno(actual),
+        ],
+      ),
     );
   }
 
@@ -356,48 +378,55 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
   Widget _buildUnidad(LibroDeNotas actual, UnidadModel unidad) {
     final numero = actual.unidades.indexOf(unidad) + 1;
 
+    // `Material` y no un `Container` con color: un ListTile pinta su fondo y su
+    // onda al tocar sobre el Material más cercano, así que una caja de color
+    // por encima se las traga. Tocar un indicador no daba ninguna respuesta
+    // visual, y es la acción más repetida de la pantalla del trabajo diario.
+    // En modo depuración Flutter avisa de esto, pero el aviso solo salta al
+    // montar la pantalla en una prueba, y hasta ahora no había ninguna.
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    '$numero. ${unidad.definicion}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$numero. ${unidad.definicion}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  porcentajeEscrito(unidad.porcentaje),
+                  const SizedBox(width: 8),
+                  Text(
+                    porcentajeEscrito(unidad.porcentaje),
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+            if (unidad.subunidades.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Text(
+                  'Sin ${_config.subunidades.toLowerCase()}',
                   style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
-              ],
-            ),
-          ),
-          if (unidad.subunidades.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: Text(
-                'Sin ${_config.subunidades.toLowerCase()}',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              )
+            else
+              ...unidad.subunidades.map(
+                (s) => _buildSubunidad(actual, unidad, s),
               ),
-            )
-          else
-            ...unidad.subunidades.map(
-              (s) => _buildSubunidad(actual, unidad, s),
-            ),
-          const SizedBox(height: 6),
-        ],
+            const SizedBox(height: 6),
+          ],
+        ),
       ),
     );
   }

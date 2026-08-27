@@ -45,28 +45,43 @@ emulador de Pixel Tablet.
 
 | Pantalla | Cómo queda | Cuál de los dos problemas |
 |---|---|---|
-| Notas «por alumno», asistencia, disciplina | **Bien.** Son listas, y a lo ancho caben 15 alumnos en vez de 7 | ninguno |
-| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | el 2 — **queda**, fase 3 |
+| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo | los **dos** — el 1 hecho en la fase 3; el 2 queda |
 | Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados | el 1 — **hecho**, fase 1 |
 | Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más | el 1 — **hecho**, fase 2 |
+| Notas «por alumno» | Se anotó **«bien»**, y era media verdad. Ver abajo | el 1 — **hecho**, fase 3 |
+| Asistencia, listado de disciplina | **Bien.** Son listas y a lo ancho caben 15 alumnos en vez de 7 | ninguno |
 
-**Las listas quedan bien y no hay que tocarlas.** Merece decirlo porque la
-tentación al abordar «tablets» es rediseñarlo todo: una lista de alumnos a lo
-ancho es *mejor* en tablet que en teléfono, sin hacer nada. Las capturas que se
-subieron a Play son de las tres pantallas que ya quedan bien, a propósito — pero
-eso quitó una etiqueta, no resolvió el fondo.
+### La medida de «por alumno» estaba incompleta, y se vio al mirarla de verdad
+
+La tabla de arriba decía que «notas por alumno» quedaba **bien** en tablet,
+porque a lo ancho caben quince alumnos en vez de siete. Eso es cierto y es una
+medida **vertical**: cuántas filas se ven.
+
+Puesta la pantalla delante, en horizontal está mal: **el nombre del alumno queda
+a 1.900 px de su nota**. Es una fila de dos extremos —etiqueta a la izquierda,
+dato a la derecha— y estirada obliga al ojo a cruzar la pantalla entera para
+emparejar las dos mitades. Lo mismo le pasaba al lápiz de cada indicador
+respecto de su título.
+
+Es el aviso más útil que ha dado este frente: **«caben más» y «se lee bien» son
+dos preguntas distintas**, y la primera se contesta de un vistazo mientras que
+la segunda pide mirar una fila. La primera medida se hizo sacando capturas para
+Play, o sea mirando la pantalla como una imagen y no como algo que alguien usa.
+
+**Las listas de asistencia y el listado de disciplina siguen sin tocarse**, pero
+conviene mirarlas con esta pregunta el día que se pase por ellas.
 
 ## Las fases
 
 ```mermaid
 flowchart LR
     F1["1 · El tope ✓<br/>26 ago 2026<br/><i>login</i>"] --> F2["2 · El tope ✓<br/>26 ago 2026<br/><i>ficha de disciplina</i>"]
-    F2 --> F3["3 · El detalle de<br/>una asignatura ○<br/><i>aprovechar el hueco</i>"]
-    F3 --> F4["4 · Maestro-detalle ○<br/><i>si hace falta</i>"]
+    F2 --> F3["3 · El detalle de<br/>una asignatura ◑<br/>26 ago 2026<br/><i>el ancho, sí;<br/>el hueco, no</i>"]
+    F3 --> F4["4 · Maestro-detalle ○<br/><i>lo único que llena<br/>el hueco</i>"]
 
     style F1 fill:#e8f4e8,stroke:#5a8f5a
     style F2 fill:#e8f4e8,stroke:#5a8f5a
-    style F3 fill:#f0f0f5,stroke:#8a8aa0
+    style F3 fill:#fff0e6,stroke:#c98a4b
     style F4 fill:#f0f0f5,stroke:#8a8aa0
 ```
 
@@ -126,25 +141,87 @@ yendo de punta a punta, que se ve peor que no hacer nada.
 bueno porque se parece a algo medido como regular es exactamente lo que este
 documento existe para evitar.
 
-### Fase 3 — el detalle de una asignatura
+### Fase 3 — el detalle de una asignatura. Hecha a medias, y a propósito
 
-**La única que está francamente mal**, y la única que no se arregla con un
-número. Cinco indicadores arriba y media pantalla en blanco debajo: el problema
-no es que algo se estire, es que el hueco no se usa.
+**26 de agosto de 2026.** Esta fase se abordó **mirando la pantalla en un Pixel
+Tablet**, no leyendo el código, y eso cambió lo que había que hacer.
 
-Dos caminos, y hay que elegir mirando la pantalla y no en abstracto: dos
-columnas, o el patrón maestro-detalle. La navegación de esta app
-—grupo → alumno → ficha— pide a gritos el segundo, pero eso es la fase 4 y es
-mucho más grande.
+**Lo que se encontró es que esta pantalla tiene los dos problemas, no solo el
+segundo.** El documento la tenía anotada como «media pantalla en blanco debajo»,
+que es el problema 2. Pero el defecto que más molesta es el 1, y estaba sin
+anotar: el lápiz de cada indicador quedaba a 1.900 px de su título, y en la otra
+pestaña el nombre de un alumno a esa misma distancia de su nota.
 
-### Fase 4 — maestro-detalle, si hace falta
+**Hecho: el problema 1.** El mismo `ColumnaDeFicha` de la fase 2, envolviendo el
+`TabBarView` entero y no cada pestaña — son la misma matriz leída por sus dos
+lados, y si cada una pusiera su tope, cambiar de pestaña movería el contenido de
+sitio. Con prueba de regresión en
+[libro_en_tablet_test](../test/libro_en_tablet_test.dart).
 
-Enseñar la lista a la izquierda y la ficha del seleccionado a la derecha, en vez
-de navegar de una pantalla a otra. Es lo que mejor aprovecha una tablet y es,
-con diferencia, lo más caro: cambia la navegación, no el layout, así que toca el
+**Queda: el problema 2**, el hueco vertical, y ahí se descartaron dos caminos
+que este documento daba por buenos:
+
+- **Dos columnas no sirven.** Con dos tarjetas de unidad, ponerlas lado a lado
+  ocupa la mitad de alto que apiladas: el blanco de abajo **crece**. Dos
+  columnas arreglan el ancho, y el ancho ya está arreglado con el tope.
+- **Un tope tampoco arregla el blanco** — de hecho también lo aumenta un poco.
+  Se aplicó igual porque resuelve el otro problema, que es el que se nota al
+  usarla.
+
+Lo único que llena ese hueco con algo útil es **maestro-detalle**: la lista de
+indicadores a un lado y la planilla de los treinta alumnos al otro. Y no es
+casualidad: es literalmente el trabajo diario del docente —se acaba la clase, se
+entra al indicador del quiz y se pasan las treinta notas—, que hoy son dos
+pantallas y en una tablet caben en una. O sea que **la fase 4 no es opcional
+para esta pantalla: es su fase 3 de verdad**.
+
+### Fase 4 — maestro-detalle
+
+Enseñar la lista a un lado y el detalle del seleccionado al otro, en vez de
+navegar de una pantalla a otra. Es lo que mejor aprovecha una tablet y es, con
+diferencia, lo más caro: **cambia la navegación, no el layout**, así que toca el
 router y el estado de cada pantalla que lo adopte.
 
-**No se empieza sin haber hecho la 3.** Puede que con dos columnas ya sobre.
+Este apartado decía «si hace falta» y «puede que con dos columnas ya sobre».
+Las dos cosas resultaron falsas al mirar la pantalla: ver la fase 3. Para el
+detalle de una asignatura, maestro-detalle es el **único** camino que llena el
+hueco, y el par natural es indicador → planilla de treinta alumnos.
+
+Por dónde empezar el día que se aborde: por esa pareja y no por
+grupo → alumno → ficha, porque es la que se repite todos los días y la que ya
+comparte los datos cargados —`notas/detailed` se pide una vez y sirve a las dos
+mitades—, así que no cuesta ni una petición más.
+
+## Cómo se mira una pantalla en tablet, sin cuenta y sin red
+
+Esto costó más que el código, así que queda escrito.
+
+Decidir un layout **exige verlo**, y ver esta app exigía entrar. Las
+credenciales del colegio Demo **no están en el repositorio y no van a estarlo**
+—ver [publicacion-play.md](publicacion-play.md)—, y aunque estuvieran, mirar
+datos de alumnos reales para decidir un ancho es una mala idea.
+
+La salida es [main_lab.dart](../lib/main_lab.dart): un punto de entrada aparte
+que abre **una pantalla sola, con datos escritos a mano y un `Server` de
+mentira**. No entra en la app publicada —`flutter build` usa `lib/main.dart`— y
+se lanza así:
+
+```
+flutter emulators --launch myvc_tablet
+adb shell wm size reset      # el emulador guarda el override de las capturas de teléfono
+flutter run -d emulator-5554 -t lib/main_lab.dart
+adb exec-out screencap -p > pantalla.png
+```
+
+**El `wm size reset` no es opcional**: el emulador de tablet quedó con un
+override de `1200x1920` de cuando se sacaron las capturas de teléfono para Play.
+Sin resetearlo se está mirando un teléfono con otro nombre, y no se ve ninguno
+de los dos problemas.
+
+Para que esto funcionara, `LibroAsignaturaScreen` ganó un parámetro opcional
+`servidor`. Es una costura de tres líneas y paga dos cosas: mirar el layout sin
+red, y **poder probar la pantalla**, que hasta ahora no tenía ni una prueba
+porque construía su propio `Server` por dentro.
 
 ## Lo que este frente NO va a hacer
 
