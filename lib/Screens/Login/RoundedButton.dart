@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../constantes.dart';
+import '../../Utils/Anchos.dart';
 
 class RoundedButton extends StatelessWidget {
   const RoundedButton({
@@ -14,13 +15,11 @@ class RoundedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
       child: Container(
-        width: size.width * 0.8,
+        width: Anchos.bandaDeLogin(context),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30), color: kPrimaryColor),
         padding: EdgeInsets.symmetric(vertical: 20),

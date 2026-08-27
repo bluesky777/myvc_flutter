@@ -48,7 +48,7 @@ flowchart LR
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
-    T["Tablets"] --> T0["sin empezar ○<br/>hoy es el layout<br/>de teléfono estirado"]
+    T["Tablets<br/>docs/tablets.md"] --> T0["fase 1 ✓ el tope<br/>y el login<br/>fases 2–4 ○"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
@@ -60,7 +60,7 @@ flowchart LR
     style U1 fill:#e8f4e8,stroke:#5a8f5a
     style U2 fill:#ffe6e6,stroke:#c04b4b
     style V1 fill:#fff0e6,stroke:#c98a4b
-    style T0 fill:#f0f0f5,stroke:#8a8aa0
+    style T0 fill:#fff0e6,stroke:#c98a4b
     style I0 fill:#f0f0f5,stroke:#8a8aa0
 ```
 
@@ -68,9 +68,14 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**No queda trabajo de app que no espere a nadie.** De la analítica solo falta
-una cosa, y es de consola: confirmar en Analytics que la retención a nivel de
-usuario está en dos meses, que es lo que promete la política de privacidad.
+**El único trabajo de app que no espera a nadie es [tablets](tablets.md)**, y su
+fase 1 ya está hecha. Lo siguiente de ahí es la fase 2 —el tope en las fichas,
+que es corta— y luego la 3, el detalle de una asignatura, que es la única
+pantalla francamente mal y la única que pide rediseño y no un número.
+
+De la analítica solo falta una cosa, y es de consola: confirmar en Analytics que
+la retención a nivel de usuario está en dos meses, que es lo que promete la
+política de privacidad.
 
 Y hay **una decisión pequeña que sí se puede tomar ya**: `PUT notas/lote` está
 desplegado desde el 25 ago, así que `Interruptores.notasLote` se puede encender
@@ -335,30 +340,31 @@ notificaciones.
 La política de privacidad ya está reescrita. Falta solo confirmar en la consola
 que la retención está en dos meses.
 
-### Tablets — el layout de teléfono, estirado
+### Tablets — [tablets.md](tablets.md)
 
-**Sin empezar, y no bloquea nada.** Salió al sacar las capturas de la ficha de
-Play el 25 de agosto de 2026, en un emulador de Pixel Tablet: la app **funciona**
-en tablet, pero no tiene ningún layout propio. Es la interfaz de teléfono
-ocupando todo el ancho.
+**Fase 1 hecha el 26 de agosto de 2026, y no bloquea nada.** El frente salió al
+sacar las capturas de la ficha de Play el 25 de agosto, en un emulador de Pixel
+Tablet: la app **funciona** en tablet, pero no tiene ningún layout propio. Es la
+interfaz de teléfono ocupando todo el ancho.
 
-Dónde se nota y dónde no, medido y no supuesto:
+Lo primero que hizo falta fue **separar dos problemas que no son el mismo**: lo
+que se estira y no debería —un campo de texto de 1.300 px— y el hueco que sobra
+y no se aprovecha. El primero se arregla con un número y el segundo rediseñando
+una pantalla, así que el primero no espera al segundo.
 
-| Pantalla | Cómo queda |
-|---|---|
-| Notas «por alumno», asistencia, disciplina | **Bien.** Son listas, y a lo ancho caben 15 alumnos en vez de 7 |
-| Detalle de una asignatura | **Mal.** Cinco indicadores arriba y media pantalla en blanco debajo |
-| Login | Regular. Los campos ocupan todo el ancho y quedan desproporcionados |
-| Ficha de disciplina de un alumno | Regular. Las tarjetas de contadores se estiran de más |
+**Hecho:** [Anchos](../lib/Utils/Anchos.dart) y el login. La regla es
+proporcional **con tope**: en un teléfono no cambia nada —hay prueba de eso— y
+en tablet el formulario se queda centrado a 420 px en vez de estirarse. De paso
+quita la banda del login de los tres sitios donde estaba escrita.
 
-Lo que haría falta el día que se aborde: un ancho máximo para los formularios y
-las fichas —que un campo de texto de 1.500 px no lo lee nadie— y, en las
-pantallas de detalle, aprovechar el hueco con dos columnas o con un patrón
-maestro-detalle, que es el que pide a gritos la navegación
-grupo → alumno → ficha.
+**Queda:** el tope en las fichas (fase 2), y el detalle de una asignatura (fase
+3), que es la única pantalla francamente mal y la única que no se arregla con un
+número. El plan entero, con las cuatro fases y con lo que este frente **no** va
+a hacer —empezando por un sistema de *breakpoints*—, en
+[tablets.md](tablets.md).
 
-Las capturas de tablet que se subieron a Play son de las tres pantallas que sí
-quedan bien, a propósito. Sirven para que Play no marque la app como «no
+Las capturas de tablet que se subieron a Play son de las tres pantallas que ya
+quedaban bien, a propósito. Sirven para que Play no marque la app como «no
 optimizada para tablets», pero eso es quitar una etiqueta, no resolver el fondo.
 
 ### Algo de IA en la app — una idea, todavía sin forma
