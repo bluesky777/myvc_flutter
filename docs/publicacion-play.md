@@ -83,6 +83,103 @@ opt-in que te da la consola.
 > aviso que la propia consola te muestra en «Production» antes de armar la
 > lista, por si a día de hoy pide otra cosa.
 
+### Dónde está el enlace, y cuál de los dos
+
+**Prueba y lanza → Pruebas → Prueba cerrada** → abrir el canal (aquí se llama
+**Alpha**) → sección **«Cómo se unen los verificadores a tu prueba»**, al final
+de la página. Hay **dos** botones de *Copiar vínculo*, y no dan lo mismo:
+
+| | Qué abre | El paso que ve la persona |
+|---|---|---|
+| **Unirse en Android** | la ficha en la app de Play Store del celular | **Instalar** |
+| **Unirse desde la Web** | una página de opt-in en el navegador | **«Convertirme en probador»** |
+
+**Se manda el de Android**, `play.google.com/store/apps/details?id=com.micolevirtual.app`,
+por dos razones: un enlace de tienda no despierta desconfianza como uno de
+«testing», y al abrirse desde el celular **la cuenta es automáticamente la del
+Play Store**, que es justo donde falla el otro. El de la web obliga a advertir
+«ábrelo con el mismo Gmail» y aun así hay quien lo abre con otro y no se entera.
+
+El precio de esa elección: quien **no** esté en la lista no ve un mensaje claro,
+ve «no se encontró la app». Por eso el mensaje pide que avisen si les pasa.
+
+Dos formas de perder la tarde:
+
+- **«Supervisa y mejora» no es.** Ahí están métricas y políticas; la prueba
+  cerrada cuelga de «Prueba y lanza».
+- **Si la sección no aparece, el canal todavía no tiene versión disponible.**
+  Mientras la versión esté en revisión no hay enlace. No es que la lista de
+  correos haya quedado mal cargada.
+
+Y lo que la consola **no** hace: **cargar la lista no invita a nadie.** Play no
+manda ningún correo. Los 27 de la lista cuentan 0 hasta que tú les pases el
+enlace y cada uno lo abra.
+
+**Ábrelo tú primero, desde tu propio celular.** Es la prueba de que el canal
+está activo, la lista cargada y la versión fuera de revisión, las tres de golpe.
+Si a ti te sale «no se encontró», no lo mandes todavía.
+
+### El mensaje para invitar
+
+Se escribió una vez y se perdió por no estar aquí. Va en bloque de código para
+que los asteriscos de negrita de WhatsApp se puedan copiar tal cual:
+
+```
+Hola 👋 Estoy publicando *Mi Cole Virtual* en Google Play y necesito que prueben la app durante 14 días. ¡Es fácil!
+
+📱 Ábrelo desde el celular (no desde el computador):
+https://play.google.com/store/apps/details?id=com.micolevirtual.app
+
+Se abre el Play Store, tocas *Instalar* y listo 🙏
+Si te dice que no encuentra la app, avísame — es que me falta agregar tu correo.
+
+Y un favor: *déjala instalada las dos semanas*. No tienes que usarla ni abrirla todos los días, solo no la borres hasta que yo te avise — si alguien la desinstala, *el conteo vuelve a empezar para todos* 😢
+```
+
+Tres decisiones que parecen de redacción y no lo son:
+
+- **«No tienes que usarla»** baja la barrera para que acepten, que es lo único
+  que se necesita de los 27. Lo que Google cuenta es estar *inscrito* 14 días
+  seguidos, no el uso: quien instala y no vuelve a abrirla cuenta igual.
+- **No dice «no te salgas de la prueba».** Se lee como «no cierres la app», y
+  hace pensar que hay que tenerla abierta todo el día.
+- **El fallo se convierte en un aviso.** «Si no encuentra la app, avísame»
+  recupera a quien tenga el celular con otra cuenta; sin esa línea, esa persona
+  abandona en silencio y tú nunca te enteras.
+
+**Y el recordatorio, día 12 o 13** — se manda antes de que termine, no después:
+
+```
+Hola, ya casi terminamos los 14 días 🙌 Solo un favor: no borres la app hasta que te avise, falta poquito. Gracias de verdad, sin esto no se puede publicar.
+```
+
+### La retroalimentación, que es otra cosa
+
+Al pedir acceso a producción, Google pregunta **a mano** cómo probaste y qué
+aprendiste, y ahí no sirve «se instalaron 12». Eso se resuelve aparte: a cuatro
+o cinco de confianza —docentes, sobre todo— se les pide que la usen unos días y
+cuenten. No va en el mensaje de los 27; pedirlo a todos sube la barrera para
+aceptar, que es lo que no conviene.
+
+En esa misma pantalla hay un campo **«URL o dirección de correo para
+comentarios»**, hoy vacío. Es opcional y no bloquea nada, pero poner ahí un
+correo es gratis y da algo que responder en esa pregunta.
+
+### El contador es lo único que dice la verdad
+
+El Panel muestra *«Actualmente, N verificadores aceptaron participar»*. Esa
+cifra, y no la lista de correos, es la que Google mira.
+
+- **Tarda horas en refrescarse.** Que no suba la misma tarde en que alguien
+  instaló no significa que lo haya hecho mal.
+- **Pide que los primeros dos o tres te avisen.** Si el contador no se mueve con
+  ellos, algo está mal en el enlace o en la lista, y lo descubres hoy y no el
+  día 6.
+- **Invita de más.** Hacen falta 12 y la lista tiene 27; ir justo significa
+  reiniciar los 14 días si uno se cae el día 9.
+- **El día 1 es el día en que el contador llega a 12**, no el día que mandaste
+  los mensajes. Anota la fecha.
+
 ## 4. Crear la app
 
 **All apps → Create app**:

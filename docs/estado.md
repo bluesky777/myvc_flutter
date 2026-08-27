@@ -473,16 +473,18 @@ Cuando le llegue el turno se le abre su `docs/ia.md`, como todos los frentes.
 —textos, ícono, gráfico destacado y capturas de teléfono y tablet, con el
 gráfico etiquetado como hecho con IA—, los formularios de contenido de la app,
 la política de privacidad viva en `micolevirtual.com/privacidad.html`, y la
-primera versión `1.0.0 (3)` en el canal de prueba cerrada, con los 28 correos de
-verificadores cargados y las credenciales del revisor comprobadas contra el
-servidor de Demo.
+primera versión `1.0.0 (3)` en el canal de prueba cerrada, con los **27** correos
+de verificadores cargados —la consola dice 27, no 28 como decía esta página— y
+las credenciales del revisor comprobadas contra el servidor de Demo.
 
 **Lo que sigue no depende de nosotros hasta que Google conteste**, y luego:
-mandarle el enlace de opt-in a los 28 —hacen falta **12 aceptaciones**, y
-aceptar es un acto de cada persona, no basta con estar en la lista—, y de ahí
-**14 días seguidos** antes de poder pedir acceso a producción. El mensaje de
-invitación importa más de lo que parece: el fallo típico es abrir el enlace con
-una cuenta de Google distinta a la registrada.
+mandarle el enlace a los 27 —hacen falta **12 aceptaciones**, y aceptar es un
+acto de cada persona, no basta con estar en la lista—, y de ahí **14 días
+seguidos** antes de poder pedir acceso a producción. **Cargar la lista no invita
+a nadie**: Play no manda ningún correo, el contador se queda en 0 hasta que cada
+uno abra el enlace. El mensaje ya está escrito, y el enlace elegido es el de
+Play Store y no el de opt-in web, para que la cuenta sea la del celular sin
+tener que advertir nada. Ver [publicacion-play.md](publicacion-play.md) §3.
 
 [publicacion-play.md](publicacion-play.md) tiene la guía, y
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)
