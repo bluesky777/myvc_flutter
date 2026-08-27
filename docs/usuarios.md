@@ -31,6 +31,33 @@ Medido y confirmado con la sesión del backend el 23 de agosto de 2026. Esta
 pantalla no repite eso: **nunca pide más de un grupo a la vez**, que son treinta
 o cuarenta personas.
 
+### De dónde salen estas cifras, y qué no sostienen
+
+`2.279`, `6.800`, `1.280`, `51 docentes` y `2.355 nombres de usuario` aparecen
+repetidos por este documento y por `lib/`. Los cinco vienen de **la misma
+medición del 23 de agosto de 2026**, hecha sobre **un colegio**, y este
+documento nunca dijo cuál. Son quince, de tamaños distintos: en uno pequeño
+esos números son otros.
+
+Se recuentan así, y por eso se dejan escritos aquí en vez de en catorce sitios:
+
+| Cifra | De dónde |
+|---|---|
+| 2.279 personas | lo que devuelve `GET perfiles/usuariosall` |
+| ~6.800 consultas | tres por fila —`User::find()`, `roles()->get()`, `permissions()`— en `PerfilesController.php:820-832`, por 2.279 |
+| 1.280 alumnos | el alcance de `cambiar-usuarios/*`, el de colegio entero |
+| 51 docentes | los que podían renombrar cualquier cuenta antes de la guarda de `0e7208c` |
+
+**Y lo que hay que entender antes de citar cualquiera de ellas: el argumento no
+depende del número.** Lo que hace correcto no pedir nunca más de un grupo no es
+que sean 2.279: es que **es el colegio entero contra treinta**. Un colegio de
+400 personas tiene el mismo problema con otro número, y si mañana ese colegio
+crece a 3.000 no hay que corregir nada más que estas filas.
+
+Así que las cifras están para dar la escala, no para sostener la decisión — y
+citarlas como si fueran una constante de los quince es un error que este
+documento cometió catorce veces antes de escribir este apartado.
+
 ## Por dónde se entra
 
 ```mermaid

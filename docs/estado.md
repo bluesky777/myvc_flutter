@@ -161,6 +161,19 @@ dos repositorios:**
   dos ciertas al escribirlas y rotas por quien añadió las siguientes, que fue la
   misma sesión—. Contar pruebas no le dice a nadie nada que no diga mejor abrir
   el fichero: **lo que hay que escribir es cuál importa y por qué**.
+
+  La versión afilada, que vino de vuelta del backend: **un número en un documento
+  envejece solo; una propiedad que obliga el compilador, no.** Cuando se puede
+  elegir entre los dos, escribir el número es escribir la parte que caduca.
+
+  **Con una excepción, y es importante: los censos son números y tienen que
+  serlo.** Ahí la regla no es quitarlos sino que lleven **pegado el recuento que
+  los reproduce**, porque un número que trae su consulta no envejece: se
+  recontesta. Este repo tenía cinco censos —2.279, 6.800, 1.280, 51 docentes,
+  2.355— repetidos catorce veces, ninguno con su recuento y **ninguno diciendo de
+  cuál de los quince colegios salieron**, que es la lección 2 otra vez. Ahora
+  viven en un solo sitio, con su origen: [usuarios.md](usuarios.md) → «De dónde
+  salen estas cifras».
 - **Una promesa que sólo vive en un mensaje entre sesiones se cae con la
   sesión.** Las dos condiciones que esperamos del backend —el hash de
   `b369020`, y el desglose por año de la fase 0— están escritas en su
