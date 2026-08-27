@@ -402,7 +402,10 @@ Hecho y probado, sin dependencias nuevas:
   `GET notificaciones/temas`, sus modelos y `PendientesNotificaciones`.
 - [PreferenciasAvisos](../lib/Utils/PreferenciasAvisos.dart) — qué avisos quiere
   este teléfono, una clave por tipo, todas encendidas por defecto.
-- Once pruebas en [notificaciones_test](../test/notificaciones_test.dart).
+- [notificaciones_test](../test/notificaciones_test.dart), donde las que
+  importan son tres: que **al cerrar sesión se sueltan todos** los temas y no
+  solo los encendidos, que el campo `colegio` **se lee en sus dos formas**, y que
+  los dos temas de colegio no salen iguales — que era el fondo del fallo.
 
 **Los temas no se derivan en la app, y es deliberado.** Se piden hechos y se usan
 tal cual. Si la app supiera componer `a_` + HMAC habría dos sitios donde

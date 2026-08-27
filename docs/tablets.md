@@ -104,9 +104,14 @@ comentario de uno de ellos avisaba de que los otros dos hacían lo mismo. Los
 tres tienen que medir igual o se ve un escalón entre ellos, así que eran tres
 sitios donde cambiar una decisión que es una.
 
-Cinco pruebas en [anchos_test](../test/anchos_test.dart), y la que más importa
-es la primera: **en un teléfono la banda sigue siendo el 80% exacto de antes**.
+Está cubierto en [anchos_test](../test/anchos_test.dart), y la prueba que más
+importa es la del teléfono: **la banda sigue siendo el 80% exacto de antes**.
 Esto no puede tocar la pantalla que usa todo el mundo.
+
+(Aquí decía «cinco pruebas» y dejó de ser verdad en cuanto ese fichero creció.
+**Un número de pruebas en un documento envejece solo**, y contarlas no le dice a
+nadie nada que no diga mejor abrir el fichero: lo que hay que escribir es cuál
+importa y por qué.)
 
 ### Fase 2 — el tope en la ficha de disciplina. Hecha
 

@@ -151,6 +151,21 @@ dos repositorios:**
   endpoint de temas pasó de lista a objeto, y un parser que sólo leyera lista
   habría devuelto vacío **en silencio** el día del despliegue. Por eso se leen
   las dos formas.
+- **El mensaje de un commit es una afirmación, y hay que poder comprobarla
+  contra el `stat`.** Salió en las dos direcciones el mismo día: aquí, un commit
+  con dos cosas dentro casi esconde que el 422 de la escala ya estaba desplegado,
+  porque su mensaje hablaba sólo de la otra; allí, un mensaje prometió una
+  sección que el parche no había llegado a escribir.
+- **Y un número escrito en un documento envejece solo.** Este repo decía «cinco
+  pruebas» de un fichero que ya tenía ocho, y «once» de otro que tenía trece —las
+  dos ciertas al escribirlas y rotas por quien añadió las siguientes, que fue la
+  misma sesión—. Contar pruebas no le dice a nadie nada que no diga mejor abrir
+  el fichero: **lo que hay que escribir es cuál importa y por qué**.
+- **Una promesa que sólo vive en un mensaje entre sesiones se cae con la
+  sesión.** Las dos condiciones que esperamos del backend —el hash de
+  `b369020`, y el desglose por año de la fase 0— están escritas en su
+  `docs/DESPLIEGUE.md` y no en un mensaje; y de este lado, la condición para
+  encender `temasDelColegio` vive en su propio docblock.
 
 Lo que se barrió y **sí estaba bien**, para que nadie lo repita: las ocho cosas
 de la pantalla de usuarios no existen en el backend —comprobado—, y `GET
