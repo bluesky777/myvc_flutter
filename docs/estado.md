@@ -43,7 +43,7 @@ flowchart LR
     D --> D6["fase 6 ✓<br/>encendida 26 ago"]
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
-    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["paso 0 cerrado ✓<br/>falta el trabajo<br/>en el backend"]
+    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["backend desplegado ✓<br/>app empezada ◑<br/>⛔ colegio_muro sin prefijo"]
     A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
@@ -54,7 +54,7 @@ flowchart LR
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
     style D6 fill:#e8f4e8,stroke:#5a8f5a
-    style P0 fill:#ffe6e6,stroke:#c04b4b
+    style P0 fill:#fff0e6,stroke:#c98a4b
     style C0 fill:#e8f4e8,stroke:#5a8f5a
     style A0 fill:#e8f4e8,stroke:#5a8f5a
     style U1 fill:#e8f4e8,stroke:#5a8f5a
@@ -68,31 +68,38 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**[Tablets](tablets.md) está hecho, las cuatro fases**, y con eso no queda
-trabajo de app que no espere a nadie. Lo que se puede hacer ahora es lo que
-quede de los otros frentes cuando el servidor los suelte, más las dos cosas de
-abajo.
+**[Tablets](tablets.md) está hecho, las cuatro fases.** El frente vivo ahora es
+**[notificaciones](notificaciones.md)**, que resultó no estar bloqueado: el
+backend lleva desplegado desde el 25 de agosto y este mapa lo dio por pendiente
+un día de más.
+
+Su mitad de app está empezada —el cliente de temas, las preferencias del
+dispositivo y sus once pruebas—, y **lo que falta no es más código sino una
+decisión de Joseth**:
+
+1. **Añadir `firebase_messaging` mete `POST_NOTIFICATIONS` en el manifiesto** y
+   un identificador de dispositivo en lo que hay que declararle a Google. La app
+   está **en revisión ahora mismo** con `1.0.0 (3)` en prueba cerrada, así que
+   la política de privacidad y la ficha de Play dejan de ser el paso 6 del plan
+   y pasan a ser condición previa. Ver [notificaciones.md](notificaciones.md) →
+   «En la app».
+2. **Y hay un fallo del servidor por medio**, ya pedido: `colegio_muro` no lleva
+   identificador de colegio y sería el mismo tema para los quince. Los temas por
+   alumno están bien y son los que se usan.
 
 De la analítica solo falta una cosa, y es de consola: confirmar en Analytics que
 la retención a nivel de usuario está en dos meses, que es lo que promete la
 política de privacidad.
 
-Y hay **una decisión pequeña que sí se puede tomar ya**: `PUT notas/lote` está
+Y **una decisión pequeña que se puede tomar ya**: `PUT notas/lote` está
 desplegado desde el 25 ago, así que `Interruptores.notasLote` se puede encender
 cuando Joseth quiera. Sigue apagado a propósito y no por falta de servidor: toca
 la pantalla del trabajo diario de un docente —pasar una columna de treinta
 notas— y eso no se enciende de paso mientras se enciende otra cosa.
 
-Los otros frentes —las notificaciones y lo que le falta a la de usuarios—
-necesitan trabajo en el backend, y el backend es de solo lectura para esta app.
-Ver «Lo que está bloqueado». Cuando se desbloquee alguno, el orden es:
-
-1. **Notificaciones**, en cuanto estén las tres piezas del servidor. El paso 0
-   ya está cerrado, así que se entra directo por el tipo más tonto, el del
-   muro, para probar la tubería entera antes de llenarla.
-2. **Usuarios, lo que le falta**, y por trozos según vaya llegando: cada cosa
-   apagada tiene su interruptor y se enciende con una palabra. Ver
-   [usuarios.md](usuarios.md).
+Lo único que sigue esperando al backend es **[usuarios](usuarios.md)**: ocho
+cosas sin autorizar. Cada una tiene su interruptor y se enciende con una palabra
+según vaya llegando.
 
 ## La lección de los tres días
 
@@ -125,20 +132,18 @@ figuran como entregados—. Ahí está también lo contrario —**«Lo que la ap
 necesita que NO se rompa»**—, con el mínimo de `contratos` para alumno y
 acudiente, que el backend está a punto de recortar por seguridad.
 
-- **Notificaciones.** Cuelgan de tres cosas del servidor: un endpoint de temas,
-  un comando de artisan y una entrada de cron. **El paso 0 está cerrado y las
-  cuatro comprobaciones salieron bien** (23 ago 2026): el hosting sale por HTTPS
-  a Google, ejecuta artisan (Laravel 13.26.1 sobre PHP 8.4.24 en
-  `/usr/local/bin/php`) y **el cron dispara**, comprobado con una tarea de
-  prueba. El plan B sin push queda descartado. Lo que falta es escribir las tres
-  piezas, y eso es trabajo de backend. Ver
-  [notificaciones.md](notificaciones.md) → «Lo comprobado en el servidor».
 - **Usuarios, lo que le falta.** Ocho cosas del servidor —el último acceso, los
   roles por lista, «Otros», dos masivas por grupo y tres columnas que faltan—,
   **todas sin autorizar todavía**. El contrato entero, en
   [usuarios.md](usuarios.md) → «Lo que falta en el servidor».
 
 **Y lo que ya NO está bloqueado**, para que nadie lo vuelva a buscar aquí:
+
+- **Las notificaciones.** Las tres piezas del servidor —el endpoint de temas, el
+  comando `notificaciones:enviar` y su disparo cada quince minutos— entraron en
+  el commit `98e6311` y **están desplegadas desde el 25 ago**. El disparo no es
+  un cron nuevo: va en el `schedule:run` de cada minuto que ya existía. Este
+  mapa las dio por bloqueadas un día de más, por la misma causa de siempre.
 
 - **`PUT notas/lote`** existe y está desplegado desde el 25 ago. El interruptor
   sigue apagado por decisión, no por bloqueo. Ver «Qué sigue, en orden».

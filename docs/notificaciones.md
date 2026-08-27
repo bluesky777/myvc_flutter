@@ -179,11 +179,58 @@ preocupante.
 
 ## Lo que hay que construir
 
-### En el backend — y esto necesita permiso
+### El backend ya está — desplegado desde el 25 de agosto de 2026
 
-**El backend es de solo lectura para esta app.** Nada de este apartado se hace
-sin que lo autorices, y conviene decidirlo antes de empezar por el lado Flutter,
-porque sin servidor no hay notificación que probar.
+**Y este documento no se enteró hasta el 26.** Las tres piezas entraron en el
+commit `98e6311`, que es ancestro de `eb95cbc`, la tanda que se desplegó con el
+mismo hash en los quince colegios:
+
+| Pieza | Dónde |
+|---|---|
+| `GET notificaciones/temas` | `routes/api/notificaciones.php:25` |
+| `notificaciones:enviar` | `app/Console/Commands/EnviarNotificaciones.php` |
+| El disparo cada quince minutos | `app/Console/Kernel.php:58` — **en el scheduler, no un cron nuevo**: viaja en el `schedule:run` de cada minuto que ya existía |
+| La configuración | `config/notificaciones.php` |
+
+Se comprueba con `git merge-base --is-ancestor <commit> eb95cbc`, no leyendo un
+documento. Es la misma lección que dejó apagada la ficha de disciplina tres días
+de más; ver [estado.md](estado.md) → «La lección de los tres días».
+
+### ⛔ Un fallo del servidor que hay que arreglar antes de encender el muro
+
+**`colegio_muro` y `colegio_avisos` no llevan identificador de colegio.**
+`TemasDeNotificacion::DEL_COLEGIO` son literales, y `avisosDelMuro()` publica en
+el literal `'colegio_muro'`.
+
+El proyecto de Firebase **es uno solo para los quince colegios** —una sola app,
+un solo `com.micolevirtual.app`, un solo `google-services.json`—, así que ese
+tema es el mismo para los quince: en cuanto dos colegios tengan la app, una
+publicación del muro de uno le llega a las familias de los otros catorce.
+
+Es justo lo que este documento avisaba en «Los temas del colegio también llevan
+prefijo». Por qué se escapó, que es lo que merece la pena guardar: el docblock
+del backend razona que ese tema «no lleva HMAC porque es público a propósito: no
+dice nada de ningún menor». Eso es cierto y es **otra pregunta**. El HMAC del
+tema del alumno hace dos cosas a la vez —esconder de quién es, y separar un
+colegio de otro—; ahí se descartó la primera, que no hacía falta, y con ella se
+fue la segunda, que sí.
+
+Hoy no rompe nada porque la app no está publicada. **No es fuga de contenido**
+—el cuerpo es genérico, «hay 3 publicaciones nuevas»— pero sí es el aviso
+equivocado a la familia equivocada, multiplicado por quince.
+
+Está pedido al backend. Mientras tanto, en la app
+`PendientesNotificaciones.temasDelColegio` está **apagado** y solo se usan los
+temas por alumno, que llevan HMAC y no colisionan.
+
+**Y esto reordena el plan de abajo:** el paso 3 era probar la tubería con el
+tipo más tonto, el del muro, y ése es precisamente el roto. Hasta que lleve
+prefijo, la prueba de punta a punta tiene que hacerse con uno de los tres tipos
+por alumno.
+
+### Lo que se pidió en su día, y que ya está hecho
+
+Se conserva porque explica por qué el backend quedó como quedó.
 
 1. Un endpoint que, al identificarse, devuelva **los temas** que le tocan a ese
    usuario (los suyos y los de sus acudidos). Es la pieza de seguridad: la
@@ -311,9 +358,32 @@ un secreto, y ese es el que nunca sale del servidor.
 
 ### En la app
 
-Dependencias nuevas: `firebase_core`, `firebase_messaging` y
+**Empezado el 26 de agosto de 2026, por la mitad que no toca el manifiesto.**
+
+Hecho y probado, sin dependencias nuevas:
+
+- [NotificacionesApi](../lib/Http/NotificacionesApi.dart) — el cliente de
+  `GET notificaciones/temas`, sus modelos y `PendientesNotificaciones`.
+- [PreferenciasAvisos](../lib/Utils/PreferenciasAvisos.dart) — qué avisos quiere
+  este teléfono, una clave por tipo, todas encendidas por defecto.
+- Once pruebas en [notificaciones_test](../test/notificaciones_test.dart).
+
+**Los temas no se derivan en la app, y es deliberado.** Se piden hechos y se usan
+tal cual. Si la app supiera componer `a_` + HMAC habría dos sitios donde
+escribirlo mal, y uno de ellos **no da error**: suscribirse a un tema que no
+existe es válido en FCM, así que el aviso se perdería en silencio — el fallo más
+caro de este diseño, y ya anotado en el propio código del backend.
+
+**Lo que falta necesita una decisión, no más código.** `firebase_messaging` mete
+`POST_NOTIFICATIONS` en el manifiesto y un identificador de dispositivo en lo
+que hay que declarar, y **la app está en revisión de Google ahora mismo** con
+`1.0.0 (3)` en prueba cerrada. Ver «Fuera del código», abajo: eso deja de ser
+papeleo posterior y pasa a ser condición previa.
+
+Dependencias que hará falta añadir ese día: `firebase_messaging` y
 `flutter_local_notifications` — esta última porque FCM no pinta nada si la app
-está abierta, y ahí hay que mostrarlo uno mismo.
+está abierta, y ahí hay que mostrarlo uno mismo. `firebase_core` ya está, y
+`Firebase.initializeApp()` ya se llama en `main.dart` para la analítica.
 
 Y lo demás:
 
