@@ -98,7 +98,10 @@ void main() {
   });
 
   group('el promedio del periodo', () {
-    test('solo cuenta lo que ya tiene nota', () {
+    test('divide entre todas, y la que no tiene nota baja el promedio', () {
+      // Como el boletín, que es el papel que se firma: 80 + 90 + 0 entre TRES.
+      // Promediando sólo las que tienen nota daría 85, y ese era el número de
+      // antes. Decisión de Joseth del 28 ago 2026.
       final periodo = PeriodoNotasModel.fromJson({
         'id': 1,
         'numero': 1,
@@ -109,16 +112,48 @@ void main() {
         ],
       });
 
-      expect(periodo.promedio, 85);
+      expect(periodo.promedio, closeTo(56.67, 0.01));
     });
 
-    test('sin ninguna nota no hay promedio que dar', () {
+    test('la asignatura sin definitiva cuenta igual que un cero', () {
+      // Es el caso que trajo la decisión: el servidor dejó de sembrar la
+      // definitiva inventada, así que donde antes llegaba un 0 ahora llega
+      // null. El promedio no puede cambiar por eso.
+      Map<String, dynamic> conNota(dynamic nota) => {
+            'id': 1,
+            'numero': 1,
+            'asignaturas': [
+              {'asignatura_id': 1, 'materia': 'A', 'nota_asignatura': 90},
+              {'asignatura_id': 2, 'materia': 'B', 'nota_asignatura': nota},
+            ],
+          };
+
+      expect(
+        PeriodoNotasModel.fromJson(conNota(null)).promedio,
+        PeriodoNotasModel.fromJson(conNota(0)).promedio,
+      );
+      expect(PeriodoNotasModel.fromJson(conNota(null)).promedio, 45);
+    });
+
+    test('sin ninguna nota el promedio es cero, no «no hay»', () {
       final periodo = PeriodoNotasModel.fromJson({
         'id': 1,
         'numero': 1,
         'asignaturas': [
           {'asignatura_id': 1, 'materia': 'A', 'nota_asignatura': null},
         ],
+      });
+
+      expect(periodo.promedio, 0);
+    });
+
+    test('sin asignaturas no hay promedio que dar', () {
+      // Distinto de lo anterior: aquí no hay nada que promediar, y eso no es
+      // promediar ceros. Es el único null que queda.
+      final periodo = PeriodoNotasModel.fromJson({
+        'id': 1,
+        'numero': 1,
+        'asignaturas': [],
       });
 
       expect(periodo.promedio, isNull);

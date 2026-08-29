@@ -123,13 +123,39 @@ class PeriodoNotasModel {
     required this.asignaturas,
   });
 
-  /// El promedio de lo que ya tiene nota. Null si no hay ninguna todavía.
+  /// El promedio del periodo, contado **como lo cuenta el boletín**.
+  ///
+  /// O sea: se divide entre **todas** las asignaturas del periodo, tengan nota
+  /// o no, y una asignatura sin definitiva suma cero. Baja el promedio. Es la
+  /// decisión de Joseth del 28 de agosto de 2026, y la tomó sabiendo lo que
+  /// implica: baja igual **cuando nadie montó el periodo en esa asignatura**,
+  /// así que a los treinta del grupo les baja por algo que no hizo ninguno.
+  /// Descartó expresamente las dos alternativas —«si no hay unidades, no
+  /// cuenta» y marcarlo en la casilla—, y descartó también dejar que la app
+  /// contara a su manera.
+  ///
+  /// Antes esto promediaba sólo las que tenían nota, y daba un número más alto.
+  /// El motivo de cambiarlo no es que aquél estuviera mal calculado: es que
+  /// **el boletín es el papel que se imprime y se firma**, y dos números
+  /// distintos para el mismo alumno según mire la pantalla o el papel es peor
+  /// que un número discutible. El del papel divide entre todas desde hace años.
+  ///
+  /// **El divisor son las asignaturas de la respuesta, no las filas que traen
+  /// definitiva.** Parece lo mismo y no lo es: el servidor arma este listado
+  /// con un `left join notas_finales` —`Grupo::detailed_materias_notafinal`—,
+  /// así que la asignatura viene igual cuando no hay definitiva, sólo que con
+  /// sus campos a null. Contar filas presentes volvería a excluir justo las que
+  /// tienen que contar.
+  ///
+  /// Null sólo cuando no hay ni una asignatura: ahí no hay nada que promediar,
+  /// que no es lo mismo que promediar ceros.
+  ///
+  /// Hoy no lo pinta ninguna pantalla. Se deja correcto para cuando lo pinte.
   double? get promedio {
-    final puestas = asignaturas.where((a) => a.tieneNota).toList();
-    if (puestas.isEmpty) return null;
+    if (asignaturas.isEmpty) return null;
 
-    final suma = puestas.fold<double>(0, (acc, a) => acc + a.nota!);
-    return suma / puestas.length;
+    final suma = asignaturas.fold<double>(0, (acc, a) => acc + (a.nota ?? 0));
+    return suma / asignaturas.length;
   }
 
   factory PeriodoNotasModel.fromJson(Map<String, dynamic> json) {
