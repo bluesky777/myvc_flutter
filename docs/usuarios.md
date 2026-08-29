@@ -227,12 +227,25 @@ Lo que ya existe y la app llama:
 | Los grupos del año | `GET grupos` | id, nombre, abreviatura, grado, titular |
 | Alumnos de un grupo | `GET grupos/listado/{grupo_id}` | usuario, nombre, foto |
 | Acudientes de un grupo | `PUT acudientes/datos` con `{grupo_actual:{id}}` | usuario, nombre, foto, celular, documento, parentesco y **sus acudidos** |
-| Los docentes | `GET profesores/conyears` | nombre, foto, y los años contratados |
+| Los docentes | `GET profesores/conyears` | nombre, foto, y los años contratados —`user_id` sí, `username` no— |
 | El catálogo de roles | `GET roles` | id y nombre |
 | Ponerle contraseña a alguien | `PUT perfiles/reset-password/{id}` con `{password}` | |
 | Contraseña a un grupo de alumnos | `PUT alumnos/cambiar-claves` con `{clave, grupo_id}` | cuántas cambió, cuando el servidor esté al día |
 | Poner y quitar un rol | `PUT roles/addroletouser/{id}` y `removeroletouser/{id}` con `{user_id}` | |
 | ¿Está libre este usuario? | `GET perfiles/comprobarusername/{username}` | |
+
+**Los tres listados traen `user_id`, y eso es lo que sostiene la fase 1.** No
+aparece en la tabla de arriba porque no se pinta: no es un dato que nadie mire.
+Pero es el que piden `guardar-username/{id}` y `reset-password/{id}`, así que
+tenerlo en el listado es lo que permite administrar la cuenta de alguien **sin
+un endpoint nuevo** —ni una consulta más—. Las tres fábricas de
+[CuentaDeUsuarioModel](../lib/Models/CuentaDeUsuarioModel.dart) lo leen.
+
+Queda escrito porque es justo la clase de dato que sostiene una decisión sin
+aparecer en ninguna parte, y este documento ya tiene un caso: la frase que
+decidía el alcance del secretario vivía sólo en `SecretarioTest`. Lo confirmó
+además la sesión del front web midiendo las respuestas por su lado, que llegó a
+la misma conclusión sin que estuviera escrito en ninguno de los dos documentos.
 
 Dos trampas de los que ya existen, y las dos están anotadas donde se leen:
 

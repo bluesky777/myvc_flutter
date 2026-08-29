@@ -218,8 +218,8 @@ Future<String?> ponerContrasena(
 
 /// Cambia el nombre de usuario de una persona. Null si entró, o el motivo.
 ///
-/// Ver [PendientesUsuarios.cambiarUsername]: la pantalla no llama a esto
-/// todavía, y no por falta de endpoint.
+/// Ver [PendientesUsuarios.cambiarUsername], que cuenta por qué esto estuvo
+/// apagado hasta el 26 de agosto de 2026 aunque el endpoint ya existía.
 Future<String?> cambiarNombreDeUsuario(
   Server server, {
   required int userId,
