@@ -223,6 +223,14 @@ acudiente, que el backend está a punto de recortar por seguridad.
   **todas sin autorizar todavía**. El contrato entero, en
   [usuarios.md](usuarios.md) → «Lo que falta en el servidor».
 
+- **El boletín independiente.** El backend lo tiene **fusionado y sin desplegar**
+  (1 sep 2026), y esta app **no sabe nada de él**: en un colegio ya desplegado,
+  un alumno que lleve boletín aparte **desaparece de la planilla sin ningún
+  error**. Lo que hay que escribir, la decisión que falta y por qué esta app lo
+  tiene peor que el front —es **una sola para los quince** y el despliegue va
+  colegio a colegio— están en
+  [boletin-independiente.md](boletin-independiente.md).
+
 **Y lo que ya NO está bloqueado**, para que nadie lo vuelva a buscar aquí:
 
 - **Las notificaciones.** Las tres piezas del servidor —el endpoint de temas, el
@@ -338,6 +346,13 @@ existe pero **sólo se cierra en la cara de quien vuelve a entrar**.
   Con `--concurrency=2` si la máquina va justa; a pelo se queda sin memoria.
 
 ## El estado de cada frente, en detalle
+
+### El boletín independiente — [boletin-independiente.md](boletin-independiente.md)
+
+**Sin empezar por este lado, y con una decisión de Joseth dentro** (ocultar a los
+marcados y decirlo, o enseñarlos con su propia estructura). No se publica hasta
+que el backend esté **desplegado en los quince**, comprobado contra el hash de la
+tanda y no contra `main`.
 
 ### Notas — [notas.md](notas.md)
 
