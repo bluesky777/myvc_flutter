@@ -33,6 +33,13 @@ dependencies:
   package_info_plus: ^10.2.1
   url_launcher: ^6.3.2
 
+  # Las fotos de perfil, guardadas en disco entre arranques. `Image.network` no
+  # cachea nada en móvil: cada arranque en frío volvía a bajar la foto de cada
+  # alumno, aunque el servidor ya las manda con `cache-control: max-age=604800`
+  # —comprobado con curl contra demo.micolevirtual.com—. O sea que la cabecera
+  # estaba puesta y nadie la escuchaba. Ver AvatarPersona.
+  cached_network_image: ^3.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

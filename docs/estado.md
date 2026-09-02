@@ -68,7 +68,34 @@ flowchart LR
 
 ## Qué sigue, en orden
 
-**[Tablets](tablets.md) está hecho, las cuatro fases.** El frente vivo ahora es
+**Primero, lo único con prisa: [backend-pendiente.md](backend-pendiente.md) §5,
+`GET muro/app`.** Salió el 2 de septiembre de 2026 al mirar qué le va a costar al
+hosting compartido que la app deje de ser de docentes y pase a ser de toda la
+comunidad. `GET ChangesAsked/to-me` —de donde la app saca el muro— le manda a un
+acudiente **108 KB**, y el 99 % de eso es la tabla `calendario` entera, sin
+filtro de año ni de fecha. **La app no lee esa clave**: de toda la respuesta usa
+unos 5 KB. Se paga en cada apertura, y el pico lo fabrica el push —una
+notificación hace que cientos de teléfonos abran la app en el mismo medio
+minuto, sobre un servidor de un núcleo—.
+
+**El backend ya hizo una pasada ese mismo día** (`805e08f`: el panel de un
+alumno de 620 ms a 24 ms, y el calendario a la mitad para todos) y midió el
+endpoint rol por rol. Esa medición corrigió a esta app: aquí se había estimado
+el coste contando consultas en el código, y el número real es otro **y el
+argumento está en otro sitio** —el peso, no las consultas—. Lo que sigue
+pendiente es no mandarle `eventos` a quien no lo pinta. Ojo: lo de hoy está en
+`main` del backend, que no es lo mismo que desplegado.
+
+Del lado Flutter ya se hizo lo que se podía hacer sin tocar el servidor, el
+mismo día: [MuroEnMemoria](../lib/Utils/MuroEnMemoria.dart) —cuatro pantallas
+pedían el muro en una sola visita, ahora una—,
+[VerificacionSesion](../lib/Utils/VerificacionSesion.dart) —`GET /years` en cada
+arranque en frío, y también es N+1— y `cached_network_image`, que hace que la
+cabecera `max-age=604800` que el servidor ya manda sirva para algo en móvil.
+**Eso divide entre cuatro cuántas veces se pide; no toca lo que cuesta cada
+vez**, que es lo que decide el pico. Lo segundo es el endpoint.
+
+**[Tablets](tablets.md) está hecho, las cuatro fases.** El otro frente vivo es
 **[notificaciones](notificaciones.md)**, que resultó no estar bloqueado: el
 backend lleva desplegado desde el 25 de agosto y este mapa lo dio por pendiente
 un día de más.

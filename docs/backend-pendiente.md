@@ -1,7 +1,9 @@
 # Lo que la app necesita del servidor
 
-Tres cosas, y ninguna se puede hacer desde el lado Flutter — **dos de ellas ya
-entregadas**. El backend (`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta
+Cinco cosas, y ninguna se puede hacer desde el lado Flutter — **tres de ellas
+ya entregadas**. La quinta es la única con prisa: se anotó el 2 de septiembre de
+2026 y es el 99 % de una respuesta que la app descarta, pagado en cada apertura
+por un hosting compartido de un núcleo. El backend (`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta
 app: se lee para saber qué devuelve cada endpoint y nunca se edita. Esto es la
 petición, escrita con el detalle suficiente para que se pueda decidir sin volver
 a investigar, y para que el día que se autorice no haya que redescubrir nada. Lo
@@ -26,10 +28,14 @@ flowchart LR
     A["1 · PUT notas/lote<br/>quita carga al servidor"] --> A1["30 peticiones → 1<br/>y 30 agregados → 1<br/><b>desplegado ✓</b><br/><i>interruptor apagado</i>"]
     B["2 · GET disciplina/mis-fichas<br/>desbloquea una pantalla"] --> B1["el alumno y el acudiente<br/>ven sus situaciones<br/><b>desplegado y encendido ✓</b>"]
     C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 cerrado ✓</i>"]
+    D["4 · La versión mínima<br/>un campo en /login"] --> D1["se puede retirar<br/>un endpoint<br/><i>falta el servidor</i>"]
+    E["5 · GET muro/app<br/>⚡ el muro sin el calendario"] --> E1["108 KB → ~5<br/>el 99% que la app tira<br/><b>urgente</b>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
     style B fill:#e8f4e8,stroke:#5a8f5a
-    style C fill:#fff0e6,stroke:#c98a4b
+    style C fill:#e8f4e8,stroke:#5a8f5a
+    style D fill:#fff0e6,stroke:#c98a4b
+    style E fill:#ffe6e6,stroke:#c94b4b
 ```
 
 ---
@@ -363,6 +369,131 @@ Con esto, retirar un endpoint pasa a ser comprobable: se publica la versión que
 ya no lo llama, se sube el mínimo, y el servidor sabe que nadie por debajo entra.
 Sin esto, la única forma honesta es mirar el reparto por versión de Play Console
 y decidir a ojo — que también vale, pero es un dato de tienda y no un contrato.
+
+---
+
+## 5. ⚡ URGENTE — `GET muro/app`: el muro sin el calendario del colegio
+
+**Es la única de esta página que tiene fecha límite, y la pone la propia app.**
+Las demás desbloquean algo. Ésta evita que el hosting compartido pague por
+mandar, en cada apertura, cien kilobytes que la app tira sin mirar.
+
+Anotada el 2 de septiembre de 2026 al medir qué le cuesta al servidor que la app
+deje de ser de docentes y pase a ser de toda la comunidad.
+
+### Antes que nada: el backend ya hizo una pasada hoy, y hay que partir de ahí
+
+**El commit `805e08f` del 2 sep 2026** —«el panel de un alumno baja de 620 ms a
+24 ms»— ya recortó tres cosas de `ChangesAsked/to-me`, y su medición rol por rol
+está en `docs/migracion/24-el-panel-de-inicio.md` del backend. Esto es lo que
+midió, que **no es lo que esta página estimó**:
+
+| rol | consultas | tiempo | respuesta |
+|---|---:|---:|---:|
+| `Usuario` | 39 | ~700 ms | 274 → 157 KB |
+| `Profesor` | 75 → 17 | ~30 → ~13 ms | 279 → 162 KB |
+| `Alumno` | 49 → 24 | ~620 → ~24 ms | 225 → 112 KB |
+| `Acudiente` | 8 | ~8 ms | 218 → **108 KB** |
+
+**Corrección, y va con nombre:** esta página había estimado «unas dieciocho
+consultas» para un acudiente a partir de leer el bucle. La medición dice 8 y ~8
+ms. La estimación no era del todo falsa —el propio doc del backend avisa de que
+**«el acudiente medido no tiene acudidos en el año en curso, así que sus 8
+consultas son el suelo, no el caso normal: uno con dos acudidos paga seis
+consultas más por cada uno»**— pero el número que se citó era una cuenta de
+código, no una medición, y no estaba marcado como tal. **Lo que se mide manda.**
+
+Y sobre todo: **la medición mueve el argumento a otro sitio**, que es lo que
+sigue.
+
+### Lo que de verdad cuesta no son las consultas: es el calendario
+
+Del desglose de la respuesta por clave, para un acudiente:
+
+| clave | KB | ¿la lee la app? |
+|---|---:|---|
+| **`eventos`** | **215,5** → ~108 tras el recorte de columnas | **no** |
+| `publicaciones` | 2,1 | sí |
+| `alumnos` | ~0 con cero acudidos; unos pocos KB con dos | sí, ocho campos |
+| `comportamiento` · `ausencias_periodo` · `libro` | 0,0–4,2 | solo `ausencias_periodo` |
+
+**El calendario es el 99 % de la respuesta y la app no lo lee.** La consulta es
+`SELECT * FROM calendario WHERE solo_profes=0 and deleted_at is null`, **sin
+filtro de año y sin filtro de fecha**: 593 filas, de las que 123 son de 2019 a
+2023. El recorte de columnas de hoy lo dejó en la mitad, y sigue siendo el 99 %
+de lo que la app descarta.
+
+O sea que cada vez que alguien abre la app se serializan y se mandan ~108 KB
+para que Flutter lea unos 5.
+
+### Lo que se pide
+
+Un endpoint propio para la app:
+
+    GET muro/app  →  { "publicaciones": [...], "alumnos": [...], "horario_hoy": [...] }
+
+Tres claves. **Sin `eventos`** —que es todo el peso—, y con `alumnos` trayendo
+solo lo que [AcudidoModel.fromJson](../lib/Http/MuroApi.dart) lee: `alumno_id`,
+`nombres`, `apellidos`, `foto_nombre`, `nombre_grupo`, `grupo_abrev`,
+`pazysalvo` y `ausencias_periodo`.
+
+Eso quita del bucle por acudido `comportamiento`, `situaciones`, `libro`,
+`uniformes`, `prematricula` y `matri_next` —seis de las siete llamadas—, y deja
+`Ausencia::deAlumnoYear`, que es la única cuyo resultado se mira.
+
+**El endpoint viejo no se toca**: lo usa el panel del front web y ahí sí se
+pintan esas cosas. Es uno nuevo al lado.
+
+> Si `muro/app` resulta ser más de lo que se quiere hacer ahora, **el 90 % del
+> beneficio está en una línea**: no mandar `eventos` a quien no lo pinta, igual
+> que hoy `profes_actuales` ya vuelve vacío para un alumno. La app no lee esa
+> clave en ningún rol, comprobado en `MuroApi.traerMuro`.
+
+### Por qué corre prisa
+
+No es el coste medio, es **el pico, y lo fabrica el push**. Una notificación de
+«ya están las notas» hace que unos cuantos cientos de teléfonos abran la app en
+el mismo medio minuto. Con el hosting en **un núcleo** —ver la ficha del
+servidor—, lo que se paga en ese medio minuto es serializar y mandar 108 KB por
+cada uno, más el ancho de banda.
+
+Mientras la app era de docentes esto no existía: eran cincuenta personas y
+entraban repartidas por la mañana.
+
+### Lo que ya se hizo del lado Flutter, y por qué no basta
+
+El 2 de septiembre de 2026, el mismo día:
+
+- [MuroEnMemoria](../lib/Utils/MuroEnMemoria.dart) — **cuatro** pantallas pedían
+  el muro en una sola visita (el muro, Mis notas, Mi disciplina y Mi asistencia)
+  y las tres últimas solo querían la lista de acudidos. Ahora una.
+- [VerificacionSesion](../lib/Utils/VerificacionSesion.dart) — `GET /years` en
+  cada arranque en frío, ahora una vez cada seis horas.
+- `cached_network_image` — las fotos, guardadas en disco entre arranques.
+
+**Eso divide entre cuatro cuántas veces se pide; no toca los 108 KB de cada
+vez**, y la que llega en ráfaga detrás de una notificación es justamente la
+primera de la visita, que nunca sale de la caché.
+
+### Antes de dar esto por hecho
+
+Lo de hoy está en `main` del backend, **no necesariamente desplegado**. Se
+comprueba contra el hash de la tanda y no contra `main`, que es la lección del
+principio de esta página:
+
+```bash
+git merge-base --is-ancestor 805e08f <hash-de-la-tanda>
+```
+
+### De paso: `GET /years` también es N+1
+
+`YearsController::getIndex` trae todos los años y luego, **año por año**, lanza
+otra consulta por sus periodos. La app lo usaba en cada arranque en frío solo
+para comprobar que el token sigue valiendo —mira el código de estado y tira la
+respuesta—. Del lado Flutter ya se espació a una vez cada seis horas; lo barato
+de verdad sería un `GET auth/ping` que devuelva 200 o 401 y nada más. **No es
+urgente**, pero si alguien abre ese controlador por otra cosa, el `foreach` con
+un `DB::select` dentro se arregla con un solo `WHERE year_id IN (...)`.
 
 ---
 

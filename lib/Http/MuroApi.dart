@@ -8,6 +8,8 @@ import 'package:myvc_flutter/Models/PublicacionModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Utils/MuroEnMemoria.dart';
+import 'package:myvc_flutter/Utils/VerificacionSesion.dart';
 
 /// Lo que trae el muro: las publicaciones y, si quien mira es acudiente, sus
 /// acudidos.
@@ -87,9 +89,33 @@ class AcudidoModel {
 /// solicitudes de cambio, nada de lo cual mira esta app. Se usa igualmente
 /// porque no hay otro —`publicaciones/ultimas` es el de la pantalla de login,
 /// sin sesión— y el backend no se puede tocar por ahora. El día que se pueda,
-/// aquí hay que apuntar a un endpoint que traiga solo esto.
-Future<MuroCargado> traerMuro(Server server) async {
+/// aquí hay que apuntar a un endpoint que traiga solo esto. **Ese día dejó de
+/// ser lejano**: mientras la app era de docentes esto costaba lo que costaba un
+/// panel, pero la rama del acudiente recorre a sus acudidos uno a uno lanzando
+/// seis consultas por cada uno, y son las familias las que van a entrar ahora.
+/// Está pedido en [docs/backend-pendiente.md](../../docs/backend-pendiente.md) §5.
+///
+/// **`refrescar` decide si se pregunta o se sirve lo guardado.** Por defecto
+/// vale lo de [MuroEnMemoria], que es lo que quieren las tres pantallas que
+/// piden el muro solo para saber qué acudidos hay —Mis notas, Mi disciplina y
+/// Mi asistencia—. La pantalla del muro pide `refrescar: true` siempre: es la
+/// que enseña las publicaciones y no puede enseñarlas viejas.
+Future<MuroCargado> traerMuro(Server server, {bool refrescar = false}) async {
+  if (!refrescar) {
+    final guardado = MuroEnMemoria.instancia.vigente();
+    if (guardado != null) return guardado;
+  }
+
   final res = await server.get('/ChangesAsked/to-me');
+
+  // El token dejó de valer —le cambiaron la clave, le desactivaron la cuenta—.
+  // Se tira el sello de la comprobación para que el próximo arranque sí le
+  // pregunte al servidor y mande al login en vez de seguir con una sesión
+  // muerta. Es lo que cierra la ventana que abre VerificacionSesion, y por eso
+  // va aquí: el muro es la primera petición de casi cualquier arranque.
+  if (res.statusCode == 401 || res.statusCode == 403) {
+    await VerificacionSesion.olvidar();
+  }
 
   if (res.statusCode >= 300) {
     throw Exception('El servidor respondió ${res.statusCode}.');
@@ -105,10 +131,29 @@ Future<MuroCargado> traerMuro(Server server) async {
   // las tenga sin volver a preguntar. Ver HorarioDeHoy.
   HorarioDeHoy.instancia.tomar(_clasesDeHoy(cuerpo['horario_hoy']));
 
-  return MuroCargado(
+  final cargado = MuroCargado(
     publicaciones: _publicaciones(cuerpo['publicaciones']),
     acudidos: leerAcudidos(cuerpo['alumnos']),
+    // En la raíz y no dentro de cada alumno, que es la diferencia que hacía
+    // que esto no se leyera. Para un acudiente las faltas vienen colgadas de
+    // cada acudido —`$alumnos[$i]->ausencias_periodo`— y eso sí se leía; para
+    // un alumno vienen sueltas arriba, `'ausencias_periodo' => $ausencias` en
+    // la rama `Alumno` de `ChangeAskedController::getToMe()`. Nadie las
+    // recogía, así que `asistenciaPropia` era siempre una lista vacía y
+    // MiAsistenciaScreen le enseñaba a cada alumno que no ha faltado nunca.
+    //
+    // El mismo lector que los acudidos, y no uno parecido: las dos ramas del
+    // backend llaman a `Ausencia::deAlumnoYear`, o sea que es exactamente la
+    // misma forma leída en dos sitios.
+    asistenciaPropia: asistenciaPorPeriodo(cuerpo['ausencias_periodo']),
   );
+
+  // Solo se guarda lo que costó una petición. La respuesta que no se entiende
+  // —el `cuerpo is! Map` de arriba— se devuelve pero no se cachea: sería
+  // guardar cinco minutos de pantalla vacía por un error de una vez.
+  MuroEnMemoria.instancia.guardar(cargado);
+
+  return cargado;
 }
 
 /// Las asignaturas que el docente dicta hoy, tal como las manda

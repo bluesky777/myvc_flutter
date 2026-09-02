@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/PublicacionModel.dart';
@@ -82,22 +84,45 @@ class Publicacion extends StatelessWidget {
   /// Sin altura fija a propósito: una publicación puede ser un cartel vertical
   /// o una foto apaisada, y encajarla en una franja se come justo lo que se
   /// quiso enseñar.
+  /// Y cacheada en disco fuera de la web, que en una publicación pesa más que
+  /// en un avatar: aquí la imagen va entera y a todo el ancho, no recortada a
+  /// un círculo de 40 px. Sin caché, cada arranque en frío volvía a bajar el
+  /// cartel entero de cada publicación del muro. El mismo reparto y los mismos
+  /// motivos que en [AvatarPersona.\_foto], donde están explicados.
   Widget _imagen() {
-    return Image.network(
-      Server.urlFoto(publicacion.imagenNombre),
+    final url = Server.urlFoto(publicacion.imagenNombre);
+
+    if (kIsWeb) {
+      return Image.network(
+        url,
+        fit: BoxFit.fitWidth,
+        width: double.infinity,
+        // Las fotos no las sirve Laravel: las saca el servidor web del disco, y
+        // ahí no pasan por el middleware que pone `Access-Control-Allow-Origin`.
+        // O sea que en cuanto la app se sirve desde un dominio distinto al del
+        // colegio —app.micolevirtual.com pidiendo a lalvirtual.edu.co— el
+        // navegador bloquea el fetch de bytes aunque el servidor responda 200, y
+        // el muro enseñaba «No se pudo cargar la imagen» en todas las
+        // publicaciones. Con fallback se reintenta con una etiqueta <img>, que
+        // no está sujeta a esa regla. Se pierde poder aplicarle filtros, que
+        // aquí no se usan.
+        webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+        errorBuilder: (_, __, ___) => _noSePudo(),
+        loadingBuilder: (context, hijo, progreso) =>
+            progreso == null ? hijo : _cargando(),
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.fitWidth,
       width: double.infinity,
-      // Lo mismo que hace AvatarPersona, y por lo mismo. Las fotos no las
-      // sirve Laravel: las saca el servidor web del disco, y ahí no pasan por
-      // el middleware que pone `Access-Control-Allow-Origin`. O sea que en
-      // cuanto la app se sirve desde un dominio distinto al del colegio
-      // —app.micolevirtual.com pidiendo a lalvirtual.edu.co— el navegador
-      // bloquea el fetch de bytes aunque el servidor responda 200, y el muro
-      // enseñaba «No se pudo cargar la imagen» en todas las publicaciones.
-      // Con fallback se reintenta con una etiqueta <img>, que no está sujeta a
-      // esa regla. Se pierde poder aplicarle filtros, que aquí no se usan.
-      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
-      errorBuilder: (_, __, ___) => _marcoGris(
+      placeholder: (_, __) => _cargando(),
+      errorWidget: (_, __, ___) => _noSePudo(),
+    );
+  }
+
+  Widget _noSePudo() => _marcoGris(
         alto: 110,
         hijo: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -109,19 +134,16 @@ class Publicacion extends StatelessWidget {
                 style: TextStyle(color: Colors.black38, fontSize: 13)),
           ],
         ),
-      ),
-      loadingBuilder: (context, hijo, progreso) => progreso == null
-          ? hijo
-          : _marcoGris(
-              alto: 180,
-              hijo: const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-    );
-  }
+      );
+
+  Widget _cargando() => _marcoGris(
+        alto: 180,
+        hijo: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
 
   Widget _marcoGris({required double alto, required Widget hijo}) => Container(
         height: alto,

@@ -10,6 +10,8 @@ import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Utils/MuroEnMemoria.dart';
+import 'package:myvc_flutter/Utils/VerificacionSesion.dart';
 import 'package:myvc_flutter/Utils/EsquemaServidor.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
@@ -93,6 +95,13 @@ class LoginController implements LoginBaseController {
       usuario: res.body,
       local: isLocal,
     );
+
+    // Entrar es la mejor prueba que hay de que el token vale: el servidor
+    // acaba de emitirlo. Sellarlo aquí es lo que evita que el primer arranque
+    // después de entrar gaste otra vez el `GET /years`, y es la mitad del
+    // invariante que sostiene VerificacionSesion —la otra mitad la cumple
+    // logout(), que lo borra—.
+    await VerificacionSesion.sellar();
 
     final preferences = await SharedPreferences.getInstance();
 
@@ -186,6 +195,16 @@ class LoginController implements LoginBaseController {
   /// 500— no dice nada sobre el token, así que la sesión se queda y se sigue
   /// con lo guardado; ya fallará lo que tenga que fallar, con su mensaje.
   Future<bool> _tokenSigueValiendo() async {
+    // Si se comprobó hace poco, no se vuelve a preguntar. `/years` no es la
+    // consulta barata que parece: `YearsController::getIndex` trae todos los
+    // años y luego lanza otra consulta por los periodos de cada uno, y de esa
+    // respuesta aquí solo se mira el código de estado. Pagarlo en cada arranque
+    // en frío daba igual con cincuenta docentes; con las familias dentro es la
+    // factura de cada vez que alguien abre la app, y llega en ráfaga detrás de
+    // cada notificación. Lo que se pierde a cambio está escrito, sin adornos,
+    // en VerificacionSesion.
+    if (!await VerificacionSesion.hayQueComprobar()) return true;
+
     try {
       final res = await Server().get('/years');
 
@@ -193,6 +212,11 @@ class LoginController implements LoginBaseController {
         await _tirarLaSesion();
         return false;
       }
+
+      // Solo se sella cuando el servidor contestó de verdad. Un fallo de red
+      // no prueba nada, y sellarlo sería regalarle seis horas de silencio a
+      // una sesión de la que no se sabe nada.
+      await VerificacionSesion.sellar();
 
       return true;
     } catch (err) {
@@ -206,6 +230,12 @@ class LoginController implements LoginBaseController {
     VersionMinima.limpiar();
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
+    // El muro guardado lleva los nombres y las fotos de los acudidos de quien
+    // se va, y el sello dice que su token estaba bien. Las dos cosas son de la
+    // sesión que se está tirando y ninguna puede sobrevivirle. Ver
+    // MuroEnMemoria y VerificacionSesion.
+    MuroEnMemoria.instancia.limpiar();
+    await VerificacionSesion.olvidar();
     await SesionGuardada.borrar();
   }
 
@@ -291,6 +321,13 @@ class LoginController implements LoginBaseController {
     // tenía el anterior.
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
+    // Y el muro guardado, por lo mismo y con más motivo: lleva dentro los
+    // nombres y las fotos de los acudidos de quien se va.
+    MuroEnMemoria.instancia.limpiar();
+    // El sello de la comprobación también es de esta sesión. Sin borrarlo,
+    // quien entre después heredaría seis horas de «ya se comprobó» que no le
+    // corresponden. Es la otra mitad del invariante de VerificacionSesion.
+    await VerificacionSesion.olvidar();
     // La versión mínima es de un colegio, no de este teléfono: son quince
     // colegios y una sola app, y el que se queda es el número del colegio del
     // que se acaba de salir.

@@ -70,7 +70,14 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _cargar());
   }
 
-  Future<void> _cargar() async {
+  /// Trae el muro para saber de quién se puede mirar la asistencia.
+  ///
+  /// `refrescar` distingue las dos formas de llegar aquí, que no piden lo
+  /// mismo. Al **entrar** basta la lista de acudidos que ya se trajo hace un
+  /// momento, y pedirla otra vez sería la cuarta copia de la petición más cara
+  /// de la app. Al **deslizar para recargar** la persona está pidiendo lo de
+  /// ahora explícitamente, y ahí sí se pregunta. Ver MuroEnMemoria.
+  Future<void> _cargar({bool refrescar = false}) async {
     setState(() {
       cargando = true;
       error = null;
@@ -79,7 +86,7 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
     });
 
     try {
-      final traido = await traerMuro(server);
+      final traido = await traerMuro(server, refrescar: refrescar);
       if (!mounted) return;
 
       setState(() => muro = traido);
@@ -268,7 +275,8 @@ class _MiAsistenciaScreenState extends State<MiAsistenciaScreen> {
     final year = ContextoAcademico.instancia.year;
 
     return RefreshIndicator(
-      onRefresh: Analitica.refresco('mi-asistencia', _cargar),
+      onRefresh:
+          Analitica.refresco('mi-asistencia', () => _cargar(refrescar: true)),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [

@@ -104,6 +104,33 @@ class ContextoAcademico extends ChangeNotifier {
   }
 
   /// Trae los años con sus periodos, si no se han traído ya.
+  ///
+  /// Es lo que llena el selector de año de [BarraContexto].
+  ///
+  /// **Un año sin periodos se descarta, y para la app es como si no
+  /// existiera.** No es un capricho: aquí se trabaja en año *y* periodo —esta
+  /// clase guarda `periodoId` y casi todas las pantallas lo mandan—, y
+  /// `PUT years/useractive/{id}` mueve al usuario al periodo del mismo número
+  /// en el año destino, o al último si no lo tiene. Con cero periodos no hay
+  /// dónde caer: elegir ese año dejaría la app en un estado que ninguna
+  /// pantalla sabe pintar.
+  ///
+  /// **Lo que cuesta es que el descarte es mudo**, y conviene saberlo antes de
+  /// diagnosticar. El caso real es un colegio que crea el año siguiente en la
+  /// plataforma web y todavía no le ha puesto los periodos: en la web el año
+  /// aparece, en la app **no**, y no sale ningún error —simplemente no está en
+  /// la lista—. «No me sale el año nuevo» se contesta mirando aquí, y se
+  /// arregla creándole los periodos, no tocando la app.
+  ///
+  /// El mismo filtro está en [FaltasAlumnoScreen], que sí lo dice en voz alta
+  /// cuando se queda sin ninguno: «El colegio no tiene años con periodos». Aquí
+  /// no hay dónde decirlo sin inventarse un aviso en una barra que es de otra
+  /// cosa, así que queda escrito.
+  ///
+  /// Lo levantó la sesión del backend el 2 de septiembre de 2026, mirando qué
+  /// hacía Flutter con las respuestas de `years`: es la clase de filtro de
+  /// cliente que hace que un dato del servidor no aparezca sin que nadie vea un
+  /// fallo.
   Future<void> cargarYears(Server server, {bool forzar = false}) async {
     if (years.isNotEmpty && !forzar) return;
 

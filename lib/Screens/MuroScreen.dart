@@ -42,7 +42,12 @@ class _MuroScreenState extends State<MuroScreen> {
     });
 
     try {
-      final traido = await traerMuro(server);
+      // Siempre fresco, nunca de la caché. Es la pantalla que enseña las
+      // publicaciones, y quien entra al muro —o desliza para recargar— viene
+      // justamente a ver si hay algo nuevo. Que las otras tres pantallas se
+      // sirvan de lo guardado depende de que ésta lo llene de verdad. Ver
+      // MuroEnMemoria.
+      final traido = await traerMuro(server, refrescar: true);
       if (!mounted) return;
       setState(() => muro = traido);
     } catch (err) {
