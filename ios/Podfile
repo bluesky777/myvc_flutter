@@ -1,5 +1,14 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+# La versión mínima de iOS, y no está comentada a propósito.
+#
+# La plantilla de Flutter la deja apagada y entonces manda la del proyecto de
+# Xcode, que aquí decía 13.0. Con eso `pod install` FALLA: firebase_core 4.13 y
+# firebase_analytics 12.4 declaran `s.ios.deployment_target = '15.0'`, y el
+# error que da no menciona a Firebase, así que cuesta un rato entenderlo.
+#
+# Subir a 15 no deja fuera a nadie que importe: iOS 15 corre desde el iPhone 6s,
+# de 2015. Tiene que coincidir con IPHONEOS_DEPLOYMENT_TARGET del pbxproj, que
+# está puesto en los tres sitios. Ver docs/publicacion-app-store.md §1.2.
+platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
