@@ -14,6 +14,7 @@ import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 
 /// Qué llevan perdido los alumnos de un docente, y arreglarlo desde aquí.
 ///
@@ -174,7 +175,7 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
     return _campos.putIfAbsent(
       nota.notaId,
       () => TextEditingController(
-        text: notaEscrita(_corregidas[nota.notaId] ?? nota.nota),
+        text: notaEnCasilla(_corregidas[nota.notaId] ?? nota.nota),
       ),
     );
   }
@@ -196,7 +197,7 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
     }
 
     setState(() => _corregidas[nota.notaId] = escrita);
-    _avisar('Guardada: ${notaEscrita(escrita)}.');
+    _avisar('Guardada: ${notaEnCasilla(escrita)}.');
   }
 
   void _avisar(String mensaje) {

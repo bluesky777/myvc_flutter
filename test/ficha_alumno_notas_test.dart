@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 
 /// Un libro de una unidad al 100 % con dos subunidades al 50 % cada una.
 LibroDeNotas libroCon(Map<int, double?> notas) {
@@ -201,9 +202,25 @@ void main() {
   group('lo que se escribe y se lee en un campo de nota', () {
     test('una nota redonda se escribe sin decimales', () {
       // Un campo que dice «85.0» invita a borrar el punto antes de teclear.
-      expect(notaEscrita(85), '85');
-      expect(notaEscrita(85.5), '85.5');
-      expect(notaEscrita(null), '');
+      expect(notaEnCasilla(85), '85');
+      expect(notaEnCasilla(85.5), '85.5');
+      expect(notaEnCasilla(null), '');
+    });
+
+    test('en un campo la nota decimal va entera, no redondeada', () {
+      // Lo que hay en la casilla es lo que se vuelve a guardar: redondear aquí
+      // guardaría el redondeo, que es el que la migración vino a quitar.
+      expect(notaEnCasilla(43.75), '43.75');
+      expect(notaEnCasilla(43.7500), '43.75');
+    });
+
+    test('pintada, en cambio, va entera como en el boletín', () {
+      // La otra mitad de la regla, y la razón de que sean dos funciones: el
+      // mismo 43,75 se pinta «44» y se edita «43.75».
+      expect(notaPintada(43.75), '44');
+      expect(notaPintada(43.2), '43');
+      expect(notaPintada(85), '85');
+      expect(notaPintada(null), '—');
     });
 
     test('la coma vale como separador decimal', () {
@@ -230,8 +247,10 @@ void main() {
       return base.conNotaFinalDe(100, definitiva);
     }
 
-    test('la automática pasa a ser el promedio nuevo, redondeado', () {
-      // El backend lo castea a DECIMAL(4,0), así que guarda un entero.
+    test('la automática pasa a ser el promedio nuevo, SIN redondear', () {
+      // Antes esto esperaba 86: el backend casteaba a DECIMAL(4,0) y la app le
+      // copiaba el redondeo. Desde la migración guarda DECIMAL(7,4), así que
+      // redondear aquí enseñaría 86 con 85,5 en la base hasta recargar.
       final libro = libroConDefinitiva(
         const NotaFinalDelLibro(nfId: 77, nota: 70),
       );
@@ -240,9 +259,9 @@ void main() {
         const NotaPendiente(notaId: 906, alumnoId: 100, nota: 91),
       ]);
 
-      // 50 % × 80 + 50 % × 91 = 85,5 → 86
+      // 50 % × 80 + 50 % × 91 = 85,5, y 85,5 es lo que se guarda
       expect(despues.promedioDe(despues.alumnos.first), closeTo(85.5, 0.001));
-      expect(despues.alumnos.first.notaFinal?.nota, 86);
+      expect(despues.alumnos.first.notaFinal?.nota, closeTo(85.5, 0.001));
     });
 
     test('la manual se respeta, que es lo que hace el backend', () {

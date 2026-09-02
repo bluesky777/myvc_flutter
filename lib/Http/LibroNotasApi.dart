@@ -432,12 +432,26 @@ class NotaFinalDelLibro {
   /// enseñando la definitiva de antes hasta la siguiente recarga.
   ///
   /// El backend respeta las manuales y las recuperadas —las salta— y a las
-  /// demás les escribe el promedio **redondeado a entero**: la consulta lo
-  /// castea a `DECIMAL(4,0)`. Aquí se hace lo mismo para que lo que se ve sea
-  /// lo que hay guardado y no una aproximación parecida.
+  /// demás les escribe el promedio. Aquí se guarda **el mismo número que él**,
+  /// para que lo que se ve sea lo que hay guardado y no una aproximación
+  /// parecida.
+  ///
+  /// **Aquí había un `roundToDouble()`, y era correcto hasta el 30 de agosto de
+  /// 2026.** La consulta del servidor casteaba a `DECIMAL(4,0)`, así que
+  /// redondear aquí era copiarle. La migración `notas_finales_en_decimal` pasa
+  /// esa columna y sus dos `CAST` a `DECIMAL(7,4)` y deja de redondear, con lo
+  /// que la línea que hacía coincidir los dos números pasó a ser justo la que
+  /// los separaba: el docente guardaba una subunidad, la app enseñaba «44» y el
+  /// servidor tenía 43,75 hasta la siguiente recarga. Sin error y sin
+  /// excepción, que es lo que lo hacía difícil de ver.
+  ///
+  /// **Esto vale sólo con la migración desplegada**, y va sin interruptor por
+  /// decisión de Joseth: el orden es desplegarla en los quince —verificado por
+  /// el hash de la tanda, no por `main`— y publicar el bundle después. Con el
+  /// bundle delante de la migración, la divergencia es la misma del revés.
   NotaFinalDelLibro trasRecalcularse(double promedio) {
     if (manual || recuperada) return this;
-    return copiaCon(nota: promedio.roundToDouble(), desactualizada: false);
+    return copiaCon(nota: promedio, desactualizada: false);
   }
 
   factory NotaFinalDelLibro.fromJson(Map<String, dynamic> json) {
@@ -826,19 +840,6 @@ Future<String?> guardarNota(
   } catch (err) {
     return 'No se pudo guardar: $err';
   }
-}
-
-/// Cómo se escribe una nota dentro de un campo: sin decimales cuando es
-/// redonda.
-///
-/// Las notas llegan como decimales del servidor —un 85 puede venir como
-/// '85.0'—, y un campo que dice «85.0» invita a borrar el punto antes de
-/// escribir encima.
-String notaEscrita(double? nota) {
-  if (nota == null) return '';
-  return nota == nota.roundToDouble()
-      ? nota.toStringAsFixed(0)
-      : nota.toString();
 }
 
 /// Lo que hay escrito en un campo de nota, o null si está vacío.

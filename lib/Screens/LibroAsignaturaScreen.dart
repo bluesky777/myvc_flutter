@@ -13,6 +13,7 @@ import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 
 /// El libro de notas de una asignatura, por indicador.
 ///
@@ -450,7 +451,7 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
           style: const TextStyle(fontSize: 11),
         ),
         trailing: Text(
-          definitiva == null ? '—' : notaEscrita(definitiva),
+          notaPintada(definitiva),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

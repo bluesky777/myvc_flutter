@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 
 /// Lo que la planilla devuelve al libro cuando se sale de ella.
 ///
@@ -146,7 +147,7 @@ class PlanillaScreenState extends State<PlanillaScreen> {
     for (final alumno in _alumnos) {
       final nota = alumno.notaDe(widget.subunidad.id)?.nota;
       _original.add(nota);
-      _campos.add(TextEditingController(text: notaEscrita(nota)));
+      _campos.add(TextEditingController(text: notaEnCasilla(nota)));
       _focos.add(FocusNode());
     }
   }
@@ -208,7 +209,7 @@ class PlanillaScreenState extends State<PlanillaScreen> {
 
     setState(() {
       for (var i = 0; i < _campos.length; i++) {
-        _campos[i].text = notaEscrita(valor);
+        _campos[i].text = notaEnCasilla(valor);
       }
     });
   }

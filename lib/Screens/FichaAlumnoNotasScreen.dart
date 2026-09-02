@@ -14,6 +14,7 @@ import 'package:myvc_flutter/Widgets/SelectorFrases.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 
 /// Lo que la ficha devuelve al libro, para no volver a pedir `notas/detailed`.
 class CambiosDeLaFicha {
@@ -132,14 +133,14 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
       for (final subunidad in unidad.subunidades) {
         final nota = widget.alumno.notaDe(subunidad.id)?.nota;
         _original[subunidad.id] = nota;
-        _campos[subunidad.id] = TextEditingController(text: notaEscrita(nota));
+        _campos[subunidad.id] = TextEditingController(text: notaEnCasilla(nota));
       }
     }
 
     _frases = widget.alumno.frases;
     _notaFinal = widget.alumno.notaFinal;
     _definitivaOriginal = _notaFinal?.nota;
-    _definitiva.text = notaEscrita(_definitivaOriginal);
+    _definitiva.text = notaEnCasilla(_definitivaOriginal);
   }
 
   @override
@@ -259,7 +260,7 @@ class _FichaAlumnoNotasScreenState extends State<FichaAlumnoNotasScreen> {
           setState(() {
             _notaFinal = alDia;
             _definitivaOriginal = alDia.nota;
-            _definitiva.text = notaEscrita(alDia.nota);
+            _definitiva.text = notaEnCasilla(alDia.nota);
             _definitivaTocada = true;
           });
         }

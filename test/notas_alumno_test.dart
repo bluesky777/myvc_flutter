@@ -79,13 +79,18 @@ void main() {
       expect(con('87.0').notaEscrita, '87');
     });
 
-    test('con un decimal cuando lo tiene', () {
-      expect(con('87.5').notaEscrita, '87.5');
+    test('con decimales se pinta entera, como el boletín', () {
+      // Desde que la definitiva es DECIMAL(7,4) puede valer 43,75, y el papel
+      // que se firma imprime la nota de una materia entera. Antes esto daba
+      // «87.5», cuando el decimal no podía llegar.
+      expect(con('87.5').notaEscrita, '88');
+      expect(con('43.75').notaEscrita, '44');
+      expect(con('43.2').notaEscrita, '43');
     });
 
     test('una coma decimal también se entiende', () {
       // Según cómo lo serialice el servidor puede llegar con coma.
-      expect(con('87,5').notaEscrita, '87.5');
+      expect(con('87,5').notaEscrita, '88');
     });
 
     test('sin nota se pone una raya, no un cero', () {

@@ -1,5 +1,6 @@
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
 import 'package:myvc_flutter/Models/TipoFalta.dart';
+import 'package:myvc_flutter/Utils/FormatoDeNota.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 /// Las notas de un alumno en una asignatura, en un periodo.
@@ -80,13 +81,13 @@ class AsignaturaNotaModel {
   /// Cuántas faltas no dicen de qué día son.
   int get faltasSinDia => faltas.where((f) => f.fecha == null).length;
 
-  /// La nota como se escribe en un boletín: sin decimales cuando es redonda.
-  String get notaEscrita {
-    if (nota == null) return '—';
-    return nota! == nota!.roundToDouble()
-        ? nota!.toStringAsFixed(0)
-        : nota!.toStringAsFixed(1);
-  }
+  /// La nota como se escribe en un boletín: **entera**.
+  ///
+  /// La regla y su porqué están en [notaPintada], que es de donde sale. Aquí
+  /// era `toStringAsFixed(1)` cuando la definitiva era un entero en la base y
+  /// el decimal no podía aparecer; desde que es `DECIMAL(7,4)` sí aparece, y
+  /// «43.8» no es lo que imprime el boletín.
+  String get notaEscrita => notaPintada(nota);
 
   factory AsignaturaNotaModel.fromJson(Map<String, dynamic> json) {
     final nombres = '${json['nombres_profesor'] ?? ''}'.trim();
