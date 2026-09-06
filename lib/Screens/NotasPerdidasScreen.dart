@@ -5,7 +5,7 @@ import 'package:myvc_flutter/Http/LibroNotasApi.dart';
 import 'package:myvc_flutter/Http/NotasPerdidasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Http/UnidadesApi.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
@@ -209,17 +209,9 @@ class _NotasPerdidasScreenState extends State<NotasPerdidasScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: Scaffold(
+      pantalla: Scaffold(
         backgroundColor: const Color(0xFFF4F5F7),
         body: BarraPlegable(
           titulo: 'Notas perdidas',

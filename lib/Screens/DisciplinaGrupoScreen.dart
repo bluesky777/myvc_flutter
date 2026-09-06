@@ -4,7 +4,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/DisciplinaApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Http/UnidadesApi.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Models/AlumnoDisciplinaModel.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/ConfigDisciplinaModel.dart';
@@ -294,17 +294,9 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: Scaffold(
+      pantalla: Scaffold(
         body: BarraPlegable(
           titulo: 'Disciplina',
           alAbrirMenu: () => _drawerController.toggle!(),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/Server.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
@@ -59,21 +59,9 @@ class _PanelScreen extends State<PanelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      // Sin esto el menú no se podía cerrar: mainScreenAbsorbPointer viene en
-      // true, así que con el menú abierto la pantalla principal se traga los
-      // toques y el icono ☰ deja de responder; y mainScreenTapClose viene en
-      // false, así que tocar fuera tampoco cerraba. Solo quedaba arrastrar.
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: Scaffold(
+      pantalla: Scaffold(
         appBar: AppBar(
           // «Asistencias», como la llama el menú, y debajo qué toca hacer
           // aquí. Antes ponía solo «Elija grupo», que dice el paso pero no de

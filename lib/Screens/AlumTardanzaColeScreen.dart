@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
@@ -102,17 +102,9 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
   @override
   Widget build(BuildContext context) {
     // El mismo menú y la misma forma de abrirlo que en el inicio.
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: Scaffold(
+      pantalla: Scaffold(
         appBar: AppBar(
           // El grupo solo no dice a qué se ha entrado: el mismo 10-B sale en
           // asistencias, en disciplina y en notas.

@@ -4,7 +4,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/DisciplinaApi.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Screens/FichaDisciplinaScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
@@ -143,17 +143,9 @@ class _MiDisciplinaScreenState extends State<MiDisciplinaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: _pantalla(),
+      pantalla: _pantalla(),
     );
   }
 

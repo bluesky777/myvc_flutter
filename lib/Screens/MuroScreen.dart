@@ -3,7 +3,7 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
-import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
@@ -58,17 +58,9 @@ class _MuroScreenState extends State<MuroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ZoomDrawer(
-      menuScreen: MenuLateral(),
+    return PantallaConMenu(
       controller: _drawerController,
-      borderRadius: 40.0,
-      slideWidth: 300,
-      showShadow: true,
-      angle: -8.0,
-      style: DrawerStyle.style1,
-      mainScreenTapClose: true,
-      androidCloseOnBackTap: true,
-      mainScreen: Scaffold(
+      pantalla: Scaffold(
         // Un gris muy claro detrás: es lo que hace que cada publicación se lea
         // como una tarjeta y no como un trozo suelto de la pantalla.
         backgroundColor: const Color(0xFFF4F5F7),
