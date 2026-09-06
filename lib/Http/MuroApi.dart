@@ -129,7 +129,13 @@ Future<MuroCargado> traerMuro(Server server, {bool refrescar = false}) async {
   // Las clases de hoy viajan en este mismo cajón y no le cuestan una petición
   // a nadie. Se guardan aquí, al leer el muro, para que la pantalla de notas
   // las tenga sin volver a preguntar. Ver HorarioDeHoy.
-  HorarioDeHoy.instancia.tomar(_clasesDeHoy(cuerpo['horario_hoy']));
+  // Y con ellas `horario_version_id`, que es lo que dice si el colegio tiene
+  // horario publicado. Sin ese segundo dato, `horario_hoy: []` significaba dos
+  // cosas a la vez y la app elegía la equivocada. Ver HorarioDeHoy.tomar.
+  HorarioDeHoy.instancia.tomar(
+    _clasesDeHoy(cuerpo['horario_hoy']),
+    versionOficial: entero(cuerpo['horario_version_id']),
+  );
 
   final cargado = MuroCargado(
     publicaciones: _publicaciones(cuerpo['publicaciones']),

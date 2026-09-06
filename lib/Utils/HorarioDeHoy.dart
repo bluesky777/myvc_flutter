@@ -45,8 +45,31 @@ class HorarioDeHoy {
   /// Cuántas clases tocan hoy, para decirlo en el muro.
   int get cuantas => clases.length;
 
-  void tomar(List<AsignaturaConUnidades> clasesDeHoy) {
-    _clases = clasesDeHoy;
+  /// Guarda las clases de hoy, **si el colegio tiene un horario publicado**.
+  ///
+  /// `versionOficial` es `horario_version_id` de la respuesta del muro, y su
+  /// contrato es exacto: **`null` significa «este año no tiene horario
+  /// publicado», y sólo entonces**.
+  ///
+  /// Sin ese dato esto estaba roto, y llevaba meses estándolo. El backend manda
+  /// `horario_hoy` **siempre** —nace en `[]` y viaja esté como esté—, así que
+  /// desde aquí «el colegio no ha puesto el horario» y «hoy no tienes clases»
+  /// eran indistinguibles. Un array vacío no es null, así que [seSabe] valía
+  /// `true` con cero clases y **el muro le decía a todos los docentes, todos
+  /// los días, «Hoy no tienes clases»**. El `seSabe` estaba bien escrito; la
+  /// señal que llegaba, no. Medido el 2 sep 2026 y arreglado por los dos lados:
+  /// el campo lo añadió `8myvc` en `dff8361`.
+  ///
+  /// **La clave ausente cuenta como `null`, y es lo correcto**, no una
+  /// concesión: un servidor que todavía no tiene ese commit desplegado es
+  /// exactamente un servidor del que no se sabe si hay horario. Con eso el
+  /// mensaje falso desaparece hoy, sin esperar al despliegue, y la función se
+  /// enciende sola en cada colegio el día que publique su horario.
+  void tomar(
+    List<AsignaturaConUnidades> clasesDeHoy, {
+    required int? versionOficial,
+  }) {
+    _clases = versionOficial == null ? null : clasesDeHoy;
   }
 
   /// Deja el horario como recién arrancada la app.
