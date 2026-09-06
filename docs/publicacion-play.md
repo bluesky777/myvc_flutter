@@ -32,13 +32,25 @@ en una tarde.
 
 ## 1. La cuenta de Google
 
-**Crea una cuenta nueva, no uses la personal del día a día.** La cuenta que
-registra la consola es la dueña de la app: si mañana la administra otra persona,
-o si esa cuenta se pierde, se pierde la app. Algo como
+**Este documento recomendaba crear una cuenta nueva** —la que registra la
+consola es la dueña de la app: si mañana la administra otra persona, o si esa
+cuenta se pierde, se pierde la app—, y proponía algo como
 `desarrollo@micolevirtual.com` o `micolevirtual.dev@gmail.com`.
 
-Actívale la verificación en dos pasos antes de seguir. Play Console la exige
-para publicar, y activarla después de tener la app subida es más incómodo.
+**No fue lo que se hizo, y aquí queda el dato real.** La cuenta de Play Console
+es la personal de Joseth: `davidguerrero777@gmail.com`. Se escribe porque es
+justo lo que hacía falta para recuperar la cuenta y no estaba en ninguna parte
+del repo: la recomendación de arriba se redactó *antes* de hacerlo y se leía
+como si fuera lo ocurrido.
+
+Es además el correo del Apple ID de la App Store —ver
+[publicacion-app-store.md](publicacion-app-store.md) §3—, así que **las dos
+tiendas cuelgan de esa única cuenta de Gmail**.
+
+Lo que lo mitiga, y no cuesta nada: verificación en dos pasos **con teléfono de
+confianza y clave de recuperación guardada fuera del portátil**. Play Console
+exige el segundo factor para publicar, y activarlo después de tener la app
+subida es más incómodo.
 
 ## 2. Registro en Play Console
 

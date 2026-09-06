@@ -546,7 +546,11 @@ real pero pequeño, y es exactamente el que ya se aceptó en Play.
 #### El correo: el personal — decidido el 2 sep 2026
 
 **Joseth se inscribe con su Apple ID personal**, el mismo que tiene abierto en el
-Mac. No crea uno dedicado.
+Mac: `davidguerrero777@gmail.com`. No crea uno dedicado. Es **el mismo correo con
+el que está registrada la cuenta de Play** —ver
+[publicacion-play.md](publicacion-play.md) §1—, así que las dos tiendas cuelgan
+de una sola cuenta de Gmail. Eso simplifica el día a día y concentra el riesgo:
+las dos cosas a la vez, y por eso la mitigación de abajo no es opcional.
 
 Este documento recomendaba lo contrario, y conviene dejar escrito que **no se
 descartó por descuido**. El argumento que se le expuso fue el mismo que vale en
@@ -554,6 +558,13 @@ Play: ese Apple ID es el **dueño de la app para siempre**, y cambiarlo después
 es editar un campo, es **transferir la app** de una cuenta a otra. Aun así
 prefirió el personal por coherencia con Play, donde la cuenta también es la
 suya. Es una decisión suya y con la información delante.
+
+**Estado de la mitigación, 2 sep 2026:** verificación en dos pasos activa y
+**teléfono de confianza puesto** —hecho ese día—. **Falta la clave de
+recuperación**, que en Apple es opcional y viene desactivada; queda aplazada a
+petición de Joseth y hay que recordárselo. Falta también el lado de Google:
+teléfono de recuperación y códigos de respaldo en la cuenta de Play, que es el
+mismo correo.
 
 **El riesgo que queda, para que esté dicho una vez:** si ese Apple ID se pierde
 —se olvida la contraseña sin acceso al segundo factor, o queda en manos de otra
@@ -565,6 +576,36 @@ recuperación guardada fuera del Mac**.
 Ojo con la trampa: el correo puede ser el que sea, pero **el nombre y apellido
 de ese Apple ID tienen que ser los tuyos legales**. No se puede poner «Mi Cole
 Virtual» ahí.
+
+#### Dónde va la inscripción — 2 sep 2026
+
+La solicitud está **creada y sin pagar**. El dato que hay que conservar:
+
+| | |
+|---|---|
+| Enrollment ID | `8LJ68CM389` |
+| Tipo | Apple Developer Program, individual |
+| Costo | USD 99 · 1 año |
+| Estado | en la pantalla de pago, **sin pagar** |
+
+Ese Enrollment ID es lo primero que pide el soporte de Apple si el trámite se
+traba, y **no llega por correo hasta que se paga**: si se pierde esta pantalla
+sin apuntarlo, no hay dónde volver a leerlo.
+
+**Se decidió no pagar todavía, y por una razón concreta:** la membresía dura un
+año **contado desde el pago**, así que pagar hoy es empezar a gastar días que
+aún no se pueden usar. Lo que la cuenta desbloquea —App Store Connect,
+TestFlight, subir la build— es el final del camino; los pasos 3, 4 y 5 de §7 no
+la necesitan para nada.
+
+**El margen que hay que dejar:** la verificación de identidad tarda de horas a
+días *después* de pagar. O sea que «pagar el mismo día que se sube» no sirve;
+hay que pagar unos días antes de necesitar App Store Connect.
+
+Lo que no se sabe, y conviene no dar por hecho: **cuánto vive una solicitud sin
+pagar**. Apple no lo documenta. Si caduca no se pierde nada más que el trámite
+—se vuelve a empezar y sale otro Enrollment ID—, pero no conviene dejarla
+dormida meses.
 
 #### Publicar solo en Colombia
 
@@ -781,33 +822,46 @@ pub-cache, así que no deberían salir. Si sale alguno, dice qué SDK es.
 
 **Ahora, y en paralelo:**
 
-1. Inscribirse en el Apple Developer Program **como individual** con el Apple
-   ID personal —decidido, §3—, y pagar los USD 99. Comprobar antes que sus
-   campos de nombre y apellido llevan el **nombre legal**, que es lo que Apple
-   verifica, y que el segundo factor tiene teléfono de confianza. Ya no hay
-   D-U-N-S que pedir. **Por web**, no desde la Apple Developer app: eso pide un
-   iPhone y aquí no hay.
-2. **Correrla en un iPhone real.** Recorrer las pantallas. Aquí es donde se ve
-   lo que este documento no puede prever, y de paso se cierran dos cosas que
-   solo se deciden mirando: si «Mi Cole Virtual» se lee bien cortado bajo el
-   ícono (§1.3) y si el vertical fijo molesta (§2.2).
+1. **Inscripción: creada el 2 sep 2026, sin pagar.** Individual, con el Apple ID
+   personal y por web —no desde la Apple Developer app, que pide un iPhone y
+   aquí no hay—. Enrollment ID `8LJ68CM389`. **Pagar los USD 99 se dejó
+   deliberadamente para el final** (§3): el año corre desde el pago. Segundo factor
+   activo y con teléfono de confianza; **falta la clave de recuperación** y el
+   refuerzo de la cuenta de Google (§3).
+2. **Correrla en el simulador.** Quedó instalado con la plataforma de §1.1, y
+   hay iPhone 17 Pro Max e iPad Pro de 13″. Enseña casi todo: que arranque, que
+   el login entre contra `demo`, que las pantallas se pinten, y las dos cosas
+   que solo se deciden mirando —si «Mi Cole Virtual» se lee bien cortado bajo el
+   ícono (§1.3) y si el vertical fijo molesta (§2.2)—.
 3. Decidir la analítica. Si va: app iOS en Firebase, el plist dentro del target,
-   ampliar `Analitica.disponible` y su docblock.
+   ampliar `Analitica.disponible` y su docblock. Y con ella,
+   `FIREBASE_ANALYTICS_WITHOUT_ADID` (§2.1).
 4. La pantalla de arranque, si se quiere que no sea la de fábrica (§1.8).
 5. Correr el `nscurl` de §1.5 contra `demo`, que es por donde entra el revisor.
+6. **Las capturas, que NO necesitan cuenta.** Las dos obligatorias —iPhone 6,9″
+   e iPad 13″— salen del simulador, que ya tiene los dos tamaños. Es trabajo
+   real y está desbloqueado.
+7. **Redactar en frío** la ficha —peinada de menciones a Android, §4.1—, las
+   etiquetas de privacidad (§4.2) y la cuenta de demostración (§4.4). Se
+   escriben ahora y se pegan luego; nada de eso necesita la cuenta.
+8. Montar `soporte.html` al lado de `privacidad.html`. Es obligatoria en Apple y
+   hoy no existe.
 
-**Cuando la cuenta esté verificada:**
+**Cuando se pague y la cuenta esté verificada** —y recuérdese que eso se aplazó
+a propósito, §3—:
 
-6. Crear la app en App Store Connect. **Apuntar el ID numérico** y con él cerrar
+9. Crear la app en App Store Connect. **Apuntar el ID numérico** y con él cerrar
    §1.6 —el enlace a la App Store en `ActualizarScreen`—.
-7. Montar `soporte.html` al lado de `privacidad.html`.
-8. Capturas de iPhone 6,9″ y de iPad 13″. Ficha, peinada de menciones a
-   Android. Etiquetas de privacidad. Cuenta de demostración escrita con detalle.
-9. `flutter build ipa`, subir, enviar a revisión.
+10. **Probarla en un iPhone de verdad, por TestFlight** (§5). Aquí no hay
+    teléfono, así que va por el de otra persona, y TestFlight necesita la cuenta
+    pagada y una build subida: **este paso no se puede adelantar**. Si quien
+    prueba está fuera de Colombia, es además el ensayo gratis del riesgo de
+    rechazo nº 1.
+11. Subir lo redactado en el paso 7, `flutter build ipa`, y enviar a revisión.
 
 **Después:**
 
-10. Actualizar [estado.md](estado.md) con el frente de iOS, y
+12. Actualizar [estado.md](estado.md) con el frente de iOS, y
     [analitica.md](analitica.md) si la analítica pasó a medir en dos
     plataformas: sus números dejan de ser «Android» y pasan a ser «Android e
     iOS», que es una diferencia que se puede leer mal en una gráfica.
