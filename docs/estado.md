@@ -4,10 +4,15 @@ El mapa para retomar el trabajo sin que nadie tenga que contar nada. Se
 actualiza en el mismo commit que cambia el estado que describe: si esta página
 miente, es un fallo tan real como una prueba en rojo.
 
-**Última actualización: 26 de agosto de 2026.** **Todo lo construido está
+**Última actualización: 15 de septiembre de 2026.** **Todo lo construido está
 fusionado en `main`, empujado a `origin` y no queda ninguna rama suelta**: las
 fases 4, 5 y 6 de notas, la configuración, la analítica, la pantalla de
-usuarios, la versión mínima y el 422 de la escala.
+usuarios, la versión mínima y el 422 de la escala; y de septiembre, el horario
+arreglado, las notas con decimales, el muro que se pide una vez por visita, la
+primera compilación para iOS y el menú lateral montado en un solo sitio.
+
+**La app está enviada a revisión para producción en Google Play**, con acceso
+concedido el 15 de septiembre — abajo, en «Publicación en Google Play».
 **[La analítica](analitica.md) está hecha entera** —Firebase, los eventos, el
 interruptor para apagarla y la política de privacidad reescrita—; de ella solo
 queda un ajuste de consola.
@@ -598,24 +603,40 @@ Cuando le llegue el turno se le abre su `docs/ia.md`, como todos los frentes.
 
 ### Publicación en Google Play
 
-**Enviada a revisión el 25 de agosto de 2026.** Trece cambios: la ficha entera
-—textos, ícono, gráfico destacado y capturas de teléfono y tablet, con el
-gráfico etiquetado como hecho con IA—, los formularios de contenido de la app,
-la política de privacidad viva en `micolevirtual.com/privacidad.html`, y la
-primera versión `1.0.0 (3)` en el canal de prueba cerrada, con los **27** correos
-de verificadores cargados —la consola dice 27, no 28 como decía esta página— y
-las credenciales del revisor comprobadas contra el servidor de Demo.
+**Publicada, a falta de que Google apruebe la versión.** El 15 de septiembre de
+2026 se concedió el acceso a producción y ese mismo día se envió a revisión la
+versión `1.0.1 (4)` en el canal de producción, con nueve países y lanzamiento
+completo al 100 %.
 
-**Lo que sigue no depende de nosotros hasta que Google conteste**, y luego:
-mandarle el enlace a los 27 —hacen falta **12 aceptaciones**, y aceptar es un
-acto de cada persona, no basta con estar en la lista—, y de ahí **14 días
-seguidos** antes de poder pedir acceso a producción. **Cargar la lista no invita
-a nadie**: Play no manda ningún correo, el contador se queda en 0 hasta que cada
-uno abra el enlace. El mensaje ya está escrito, y el enlace elegido es el de
-Play Store y no el de opt-in web, para que la cuenta sea la del celular sin
-tener que advertir nada. Ver [publicacion-play.md](publicacion-play.md) §3.
+El camino, en fechas:
 
-[publicacion-play.md](publicacion-play.md) tiene la guía, y
+| | |
+|---|---|
+| 25 ago | Ficha completa y `1.0.0 (3)` a revisión, con 27 correos de verificadores cargados |
+| 26 ago – 10 sep | Prueba cerrada. La consola marcaba **15 instalaciones** al final; el mínimo exigido son 12 aceptaciones |
+| 11 sep, 9:34 | Formulario de acceso a producción enviado — ocho preguntas a mano |
+| 15 sep, 20:41 | **Acceso concedido**, en cuatro días de los siete prometidos |
+| 15 sep | `1.0.1 (4)` y nueve países, enviados a revisión en un solo envío |
+
+**Lo que salió de esas dos semanas fueron cuatro arreglos, y ninguno lo reportó
+un verificador**: el horario que le decía «Hoy no tienes clases» a todos los
+docentes, las notas que se redondeaban a entero, el promedio que no cuadraba con
+el boletín y el arranque que volvía a descargar las fotos. Los cuatro van en el
+`4`; el canal cerrado se quedó en el `3`, y por eso el build que se promociona a
+producción **no** es el que probaron los verificadores. Es lo correcto —el `3`
+lleva el fallo del horario—, pero conviene tenerlo escrito.
+
+**Lo que queda:** que Google apruebe la versión (horas a 3 días) y decidir cuándo
+se les avisa a los colegios. **Las notificaciones no bloquean nada**: entran como
+`1.1.0` cuando el servidor arregle lo suyo, y le llegan a todo el mundo solas
+([notificaciones.md](notificaciones.md)).
+
+[publicacion-play.md](publicacion-play.md) §10 tiene el formulario contestado
+pregunta por pregunta —**App Store pregunta lo mismo**—, por qué «Aplicar» envía
+la solicitud en vez de guardarla, y las tres piedras del lanzamiento: el botón
+gris por un borrador a medias, los países que arrancan en 0 y las notas que van
+en `es-419` y no en `es-CO`.
+
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)
-los borradores. Si algún día entran las notificaciones, los dos hay que
+tienen los textos. Si algún día entran las notificaciones, los dos hay que
 retocarlos: hay que declarar el identificador de dispositivo de FCM.

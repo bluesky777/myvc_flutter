@@ -4,6 +4,11 @@ Cómo se saca la cuenta de Play Console y cómo se sube la app. Escrito para una
 **cuenta personal** (a nombre de una persona, no del colegio), que es la que se
 eligió; al final está qué cambia si algún día se pasa a cuenta de organización.
 
+> **Estado a 15 de septiembre de 2026.** Acceso a producción **concedido** el 15
+> de septiembre, cuatro días después de solicitarlo. La versión `1.0.1 (4)` está
+> **enviada a revisión** para el canal de producción, con 9 países y lanzamiento
+> completo. Lo que se contestó en el formulario y cómo se lanzó, en §10.
+
 Los diagramas son [Mermaid](https://mermaid.js.org). Para verlos dibujados en VS Code,
 extensión `bierner.markdown-mermaid` y vista previa con `⌘K V`; en GitHub se ven solos.
 
@@ -176,6 +181,11 @@ aceptar, que es lo que no conviene.
 En esa misma pantalla hay un campo **«URL o dirección de correo para
 comentarios»**, hoy vacío. Es opcional y no bloquea nada, pero poner ahí un
 correo es gratis y da algo que responder en esa pregunta.
+
+> **Y pasó exactamente lo que avisa este párrafo.** Llegó el día del formulario
+> sin una sola frase de verificador guardada en ninguna parte, y esa es la única
+> pregunta de las ocho que no se puede reconstruir desde el repositorio. El
+> relato completo, en §10.
 
 ### El contador es lo único que dice la verdad
 
@@ -608,19 +618,188 @@ de permiso—, así que en el teléfono no se nota ningún cambio.
 Aun así, ya no se puede contestar «solo internet» en el formulario de seguridad
 de datos: hay que declarar los datos de uso y diagnóstico que recoge Analytics.
 
-## 10. Cuánto se demora
+## 10. El acceso a producción, contestado y concedido
 
-| Paso | Tiempo |
+Los 14 días se cumplieron y el botón **«Solicitar acceso a producción»**
+apareció solo. Lo que abre es un formulario de tres pantallas con ocho preguntas
+escritas a mano, casi todas con tope de **300 caracteres** que la consola cuenta
+en vivo y no deja pasar.
+
+```mermaid
+flowchart LR
+    A["Prueba cerrada<br/>15 instalaciones"] --> B["Formulario<br/>8 preguntas, 300 car."]
+    B -->|"11 sep, 9:34"| C["Revisión de la solicitud"]
+    C -->|"15 sep, 20:41<br/>4 días"| D["Acceso concedido"]
+    D --> E["Versión 1.0.1 (4)<br/>+ 9 países"] --> F["Revisión de la versión"]
+
+    style D fill:#e6ffe6,stroke:#4bc94b
+```
+
+### «Aplicar» envía la solicitud, no la guarda
+
+Es la trampa del trámite. El botón azul del final del formulario dice
+**Aplicar**, al lado de un **Descartar**, y parece que guarda un borrador. No:
+manda la solicitud a Google en ese momento. No hay pantalla de confirmación ni
+segundo paso, y **una vez enviada no se puede editar ni una coma**.
+
+Consecuencia práctica: cada respuesta tiene que ser verdad **el día que se
+escribe**, no el día que planeabas hacerla verdad. Si una frase dependía de
+subir un build que todavía no subiste, esa frase no va.
+
+### Las ocho preguntas, y lo que se contestó
+
+Se dejan escritas porque **App Store pregunta lo mismo** y porque una segunda
+app con esta misma cuenta volvería a pasar por aquí. Las dos últimas están
+literales, comprobadas en pantalla antes de enviar.
+
+**1. Acerca de la prueba cerrada**
+
+| Pregunta | Respuesta |
 |---|---|
-| Registro + pago | 1 hora |
-| Verificación de identidad | horas a 3 días |
-| Ficha e imágenes | media jornada |
-| Prueba cerrada | **14 días, mínimo** |
-| Revisión de acceso a producción | días a 2 semanas |
-| Revisión de cada actualización después | horas a 3 días |
+| Cómo reclutaste a los verificadores | Invitación personal por WhatsApp a docentes y directivos del colegio, familiares y compañeros. **Sin proveedor de pruebas pagado**, y 27 correos cargados para asegurar los 12 |
+| Qué tan fácil fue reclutarlos | **Difícil** — es la escala honesta cuando hay que invitar a 27 para conseguir 12, y Google la usa para medir fricción, no para juzgar |
+| Nivel de participación | La mayoría instaló y mantuvo instalada; el uso real vino de los docentes del colegio, con datos reales. Lo que la prueba no ejercitó: el rol de acudiente a escala y el uso simultáneo desde varios colegios |
+| Resumen de comentarios y método | Recogidos por canal directo —WhatsApp, llamada y conversación en el colegio—, no por formulario |
+
+**2. Acerca de tu app**
+
+| Pregunta | Respuesta |
+|---|---|
+| Público objetivo | Solo quien tiene credenciales de un colegio cliente; quince instituciones de Colombia; docentes, acudientes y alumnos de 13 años en adelante |
+| Cómo ofrece valor | Acaba con la espera al boletín impreso: notas, asistencia y disciplina el mismo día; y el docente registra asistencia en segundos, sin planillas |
+| Instalaciones esperadas el primer año | **entre 0 y 10.000** |
+
+Sobre la última: el techo real son quince colegios, y el más grande medido tiene
+2.279 personas. Inflar la cifra no da ninguna ventaja —es dimensionamiento, no
+ambición— y desentona con la app cerrada que describen las dos respuestas
+anteriores. **«No lo sé» tampoco**: en un formulario que evalúa si estás listo
+para producción, no conocer tu propio mercado se lee solo de una manera.
+
+**3. Nivel de preparación**, las dos literales:
+
+> **¿Qué cambios hiciste según lo que aprendiste durante la prueba cerrada?**
+>
+> Corregí los fallos que salieron en esas dos semanas. El más grave: la app
+> decía «Hoy no tienes clases» a todos los docentes, porque un horario vacío y
+> uno sin publicar llegaban iguales. Y las notas dejaron de redondearse a
+> entero, se corrigió el promedio y el arranque dejó de rebajar fotos.
+
+> **¿Cómo decidiste que tu app está lista para producción?**
+>
+> Cuando no quedaron fallos conocidos sin corregir. Los que aparecieron durante
+> la prueba ya están arreglados y verificados contra los servidores reales de
+> los quince colegios, con datos reales de clase, y la app pasa 510 pruebas
+> automatizadas en cada cambio antes de compilar una versión.
+
+Fíjate en lo que la segunda **no** dice: que esos arreglos estuvieran ya en el
+canal cerrado. No lo estaban —el canal seguía con `1.0.0 (3)`— y por eso la
+frase se escribió así. La versión fuerte («la versión que pido publicar es la
+misma que llevan instalada los verificadores») era mentira ese día, y se
+descartó.
+
+### La lección que costó: los comentarios no estaban escritos
+
+Esta guía ya avisaba en §3 que la retroalimentación «es otra cosa» y que había
+que pedírsela aparte a cuatro o cinco docentes. Llegó el día del formulario y
+**no había ni una frase de verificador guardada en ninguna parte**. El git log
+tenía cuatro arreglos de esas dos semanas, pero al mirarlos de cerca ninguno
+venía de un tester: el del horario lo dice él mismo —«nadie lo reportó, salió al
+medir el radio de impacto»— y el del promedio lo destapó la sesión del front web.
+
+De ahí que la respuesta de la sección 3 hable de «los fallos que salieron»
+—cierto— y no de «lo que pidieron los verificadores», que habría sido inventado.
+
+**Para la próxima**: un archivo de texto donde se pegue cada frase que diga un
+probador, con fecha y quién. Cuesta nada y es el único campo del formulario que
+no se puede reconstruir desde el repositorio.
+
+### Cuatro días, no siete
+
+El correo prometía «7 días o menos» y llegó en **4**: enviada el 11 de
+septiembre a las 9:34, concedida el 15 a las 20:41, con asunto *«Congratulations!
+Your app has been granted Google Play production access»*.
+
+Lo que **no** hace esa aprobación: publicar nada. Es un permiso. La app seguía
+en «Producción: Inactivo» y el lanzamiento es un trámite aparte, el de abajo.
+
+### Lanzar la versión, y las tres piedras del camino
+
+Con el acceso concedido: **Prueba y lanza → Producción → Crear versión nueva**.
+
+1. **El botón sale gris si hay un borrador a medias.** El tooltip lo explica
+   —«lanza o descarta la versión en borrador actual»— pero el borrador no se
+   retoma desde ahí: está en la pestaña **Versiones**, con su botón *Editar*.
+2. **Los países arrancan en 0 y sin ellos no se lanza.** Pestaña
+   **Países/regiones**. Se eligieron **9**, Colombia entre ellos; abrir de más no
+   cuesta nada porque sin credenciales de un colegio nadie pasa del login.
+3. **Las notas de la versión van en `es-419`, no en `es-CO`.** La etiqueta la
+   propone la propia consola y es el idioma de la ficha (§4: «Español (Colombia)»
+   no existe en el catálogo de Play). Con la etiqueta equivocada, las notas no se
+   muestran. Debajo del cuadro tiene que leerse *«disponibles en 1 idioma»*.
+
+Y un aviso que sí importa antes de darle a publicar: **«tu elección de clave de
+firma se corregirá una vez que la publiques»**. Es irreversible, así que se
+comprobó en *Protegido con Play → Firma de apps* que la huella en uso fuera la
+de `myvc-release.jks` —`61:44:AF:9F:7D:C9…`— y no una generada por Google. Lo
+era, igual que la clave de carga. Si hubiera salido otra, ese habría sido el
+último momento de cambiarla, y el canal de APK directo se habría quedado sin
+poder actualizar los teléfonos ya instalados.
+
+El resto de avisos de esa pantalla se dejaron como estaban, a propósito:
+verificación del instalador apagada (§8), Play Integrity en 0 de 7 (§8) y las
+**preferencias de acceso al catálogo** sin tocar —si no decides, la ficha entra
+por defecto en las exportaciones del catálogo de Play, que son metadatos
+públicos: nombre, ícono, descripción. Nada de usuarios.
+
+### El tamaño real de la descarga
+
+| | |
+|---|---|
+| Bundle que se sube | **58 MB** |
+| Instalación nueva | **10,9 MB** |
+| Tiempo de descarga estimado | 6 s |
+
+Este documento decía «la descarga real ronda los 20 MB». **Es la mitad**: 10,9 MB,
+medido por la propia consola en la vista previa de la versión. Es el número que
+sirve para contestarle a un acudiente que pregunta cuánto ocupa.
+
+### Cómo quedó enviado
+
+**15 de septiembre de 2026**, dos cambios en un solo envío desde *Descripción
+general de la publicación* —que es el buzón de salida de Play: nada llega a
+Google hasta que se pulsa ahí—:
+
+| Elemento | Detalle |
+|---|---|
+| Producción | `4 (1.0.1)`, **lanzamiento completo** (100%, sin despliegue por fases) |
+| Países/regiones | 9, con Colombia |
+| Notas | `es-419`, primera versión pública |
+| Bundle | el mismo `app-release.aab` compilado y verificado el 11 de septiembre |
+
+Sin despliegue por fases a propósito: con quince colegios, un rollout al 20%
+solo genera llamadas de «a mí no me aparece la actualización».
+
+## 11. Cuánto se demora
+
+La columna de la derecha ya no es una estimación: es lo que tardó de verdad,
+medido entre el 24 de agosto y el 15 de septiembre de 2026.
+
+| Paso | Estimado | Lo que tardó |
+|---|---|---|
+| Registro + pago | 1 hora | ✅ |
+| Verificación de identidad | horas a 3 días | ✅ |
+| Ficha e imágenes | media jornada | ✅ |
+| Prueba cerrada | **14 días, mínimo** | 14 días |
+| Revisión de acceso a producción | días a 2 semanas | **4 días** (11 → 15 sep) |
+| Revisión de cada actualización después | horas a 3 días | — |
 
 De cero a publicada, cuenta con **entre 3 semanas y mes y medio**. La primera
 vez es la lenta; las actualizaciones posteriores salen en un día.
+
+Los 14 días de la prueba cerrada son el 60 % del calendario, y **corren solos**:
+la ficha, los formularios de contenido y la política se preparan mientras tanto.
+Esperar a tenerlo todo listo para arrancar la prueba es sumar dos semanas al
+final en vez de solaparlas.
 
 ## Si algún día se pasa a cuenta de organización
 
