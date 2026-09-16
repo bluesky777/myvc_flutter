@@ -20,8 +20,14 @@ código.
 > texto promete dos meses; por defecto Google trae ese valor, pero conviene
 > confirmarlo y no fiarse.
 >
-> **Falta todavía lo de las notificaciones**, que cuando entren añaden el
-> identificador de dispositivo de FCM ([notificaciones.md](notificaciones.md)).
+> **Lo de las notificaciones ya está escrito, pero NO publicado.** Los bloques
+> marcados con `⏸ NOTIFICACIONES` describen algo que la app todavía no hace:
+> `firebase_messaging` no está ni en `pubspec.yaml`. Se publican **el día que
+> salga a Play la versión que las estrene**, ni antes —prometería un tratamiento
+> de datos que no ocurre— ni después —la versión estaría recogiendo un
+> identificador que la política no menciona—. Van en la misma tanda que el
+> formulario de seguridad de datos ([seguridad-datos-play.md](seguridad-datos-play.md))
+> y que el `privacidad.html`, donde el mismo texto espera comentado.
 
 ---
 
@@ -86,11 +92,38 @@ aplicación sigue funcionando igual. El ajuste es **de ese dispositivo**: si
 usted usa la aplicación en el teléfono y en una tableta, tendrá que apagarlo en
 cada uno.
 
+<!-- ⏸ NOTIFICACIONES — no publicar hasta la versión que las estrene. Ver la cabecera. -->
+
+**Avisos en el teléfono.** Si usted lo permite, la aplicación le avisa cuando hay
+calificaciones, ausencias, anotaciones de disciplina o publicaciones nuevas. Los
+entrega Firebase Cloud Messaging, un servicio de Google, y para poder
+entregárselos Google asigna a esa instalación de la aplicación un identificador
+de registro.
+
+**El aviso no lleva información suya.** Dice cuántas novedades hay —«tiene 3
+calificaciones nuevas»— y nunca la calificación, el nombre del alumno ni el
+texto de la anotación. Para verlas hay que abrir la aplicación y entrar con su
+usuario y su contraseña.
+
+**Su teléfono no le dice a nadie quién es usted.** La aplicación no envía a
+ningún servidor el identificador de su dispositivo. En su lugar, el teléfono se
+apunta a unos canales cuyo nombre es un código: no contiene su nombre, ni su
+documento, ni el de su colegio, y de él no se puede volver atrás para averiguar
+a quién pertenece.
+
+**Puede apagarlos cuando quiera.** Android le pedirá permiso la primera vez y
+usted puede decir que no: el resto de la aplicación funciona igual. Dentro de la
+aplicación puede además elegir qué avisos quiere recibir y cuáles no, y **al
+cerrar sesión el teléfono deja de recibirlos todos**.
+
+<!-- ⏸ fin del bloque de notificaciones -->
+
 **Lo que NO recogemos.** La aplicación no accede a su cámara, micrófono,
 contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de
-esas cosas: los permisos que declara son técnicos —comprobar si hay conexión,
-por ejemplo— y ninguno da acceso a información personal guardada en su
-dispositivo. **No hay publicidad, no se lee el identificador de publicidad y no
+esas cosas: los demás permisos que declara son técnicos —comprobar si hay
+conexión, por ejemplo— y ninguno da acceso a información personal guardada en su
+dispositivo. <!-- ⏸ NOTIFICACIONES --> El único permiso que la aplicación le
+pedirá es el de mostrarle avisos, y puede negarlo. **No hay publicidad, no se lee el identificador de publicidad y no
 se crean perfiles publicitarios.** Tampoco vendemos ni cedemos a nadie la
 información académica.
 
@@ -107,6 +140,11 @@ corregir y qué construir después. No se usan para evaluar ni supervisar a
 ninguna persona —no llevan datos que permitan identificarla—, no se cruzan con
 la información académica y no se emplean con fines publicitarios.
 
+<!-- ⏸ NOTIFICACIONES -->
+**Los avisos, únicamente para decirle que hay algo nuevo**: no se usan para
+promocionar nada, ni para recordarle que abra la aplicación, ni para medir si
+los abre o no.
+
 ### Con quién los compartimos
 
 **La información académica, con nadie fuera de su colegio.** Sus calificaciones,
@@ -120,6 +158,13 @@ solo para eso: recibe lo descrito en «Datos de uso de la aplicación» y las
 procesa por encargo nuestro, sujeto a sus propias condiciones de tratamiento de
 datos. Google no recibe ninguna calificación, ningún nombre y ningún dato que
 permita identificar a un estudiante.
+
+<!-- ⏸ NOTIFICACIONES -->
+**Los avisos, también con Google.** Firebase Cloud Messaging es quien los
+entrega a su teléfono, por encargo nuestro y sujeto a sus condiciones de
+tratamiento de datos. Recibe el texto del aviso —que no lleva datos de nadie— y
+el identificador de registro del dispositivo; nada más. Ni Google ni el servidor
+de su colegio guardan a quién pertenece ese identificador.
 
 No hay servicios de publicidad ni de redes sociales integrados en la
 aplicación.

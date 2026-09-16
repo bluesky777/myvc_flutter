@@ -443,12 +443,30 @@ Y lo demás:
 
 ### Fuera del código
 
+**Escrito el 15 de septiembre de 2026, y esperando.** Los tres textos están
+redactados y **sin publicar**, marcados con `⏸ NOTIFICACIONES` allí donde viven:
+
 - **La política de privacidad** ([politica-privacidad.md](politica-privacidad.md))
-  no menciona notificaciones y tendrá que decir que se usa Firebase Cloud
-  Messaging, qué se manda (nada personal en el cuerpo) y cómo se apagan.
-- **La ficha de Play** ([ficha-play.md](ficha-play.md)) y la sección de
-  seguridad de datos: hay que declarar el identificador de dispositivo que FCM
-  maneja.
+  ya dice que se usa Firebase Cloud Messaging, que el cuerpo del aviso no lleva
+  nada personal, que el teléfono no manda su identificador a ningún servidor y
+  cómo se apagan. En [privacidad.html](privacidad.html) el mismo texto está
+  **comentado**, con las tres cosas que hay que hacer el día de publicar escritas
+  dentro del comentario.
+- **El formulario de seguridad de datos**
+  ([seguridad-datos-play.md](seguridad-datos-play.md)) tiene la respuesta
+  decidida: cambia **una fila y solo su propósito** —el ID del dispositivo pasa a
+  servir también a «Funciones de la app»— y se queda en **opcional**, no en
+  obligatorio como decía esa página. De ahí sale una condición para el código:
+  **no pedir el token ni suscribirse a nada hasta que la persona conceda el
+  permiso**, o «opcional» deja de ser verdad.
+- **La ficha de Play** ([ficha-play.md](ficha-play.md)) tiene el bloque «AVISOS
+  CUANDO HAY ALGO NUEVO» listo, fuera del texto que se copia para que nadie lo
+  pegue antes de tiempo.
+
+**Los tres se publican el mismo día que la versión que estrene las
+notificaciones.** Ni antes —prometerían un tratamiento de datos que no ocurre—,
+ni después —la app estaría recogiendo un identificador que la política no
+menciona—.
 - Son de menores. Merece la pena que el colegio lo comunique a las familias
   antes de encenderlo, aunque legalmente baste con la política.
 

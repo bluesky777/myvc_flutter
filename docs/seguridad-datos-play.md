@@ -85,6 +85,47 @@ teléfono** y la app no la retransmite a ningún tercero. Play pregunta por dato
 que solo sirve para autenticar contra el servidor del propio colegio no se
 declara. Si alguna vez se volviera a guardar en disco, esta respuesta cambia.
 
+### Cuando entren las notificaciones — decidido por adelantado
+
+Se escribe aquí porque este formulario, la política y la versión que estrene las
+notificaciones **se envían en la misma tanda**: la app no puede llegar a Play
+recogiendo un identificador que estas respuestas no declaren.
+
+**Cambia una sola fila, y solo su propósito:**
+
+| Categoría | Tipo | Recopilado | Compartido | Obligatorio | Para qué |
+|---|---|---|---|---|---|
+| Dispositivo u otros IDs | ID del dispositivo | ✔ | ✘ | **Opcional** | Estadísticas **y Funciones de la app** |
+
+El identificador de registro de FCM cae en la misma categoría que el de
+instalación que ya declara la analítica, así que no hay tipo nuevo que marcar.
+Lo que se añade es el propósito: entregar un aviso es una **función de la app**,
+no una estadística.
+
+**Y no pasa a «obligatorio», aunque esta misma página lo dijera antes.** El
+criterio de Play no es si la función necesita el dato, sino si **el usuario puede
+usar la app sin que se recoja**. Y puede: Android 13 en adelante pide permiso
+para notificaciones y se puede decir que no, y dentro de la app hay una
+preferencia por tipo de aviso. La app entera sigue funcionando sin nada de eso.
+
+> **Eso impone una condición al código, y conviene saberla antes de escribirlo:**
+> no pedir el token ni suscribirse a ningún tema **hasta que la persona haya
+> concedido el permiso**. `firebase_messaging` genera el token aunque el permiso
+> esté denegado, así que una implementación que lo pida al arrancar convierte
+> esta respuesta en falsa — y entonces lo honesto sería marcar «obligatorio».
+
+**Lo que sigue sin marcarse, aunque lo parezca:**
+
+- **Mensajes.** Play pregunta por los mensajes *del usuario* —SMS, correo,
+  mensajería—. Un aviso que sale de tu propio servidor no es un dato recogido de
+  nadie.
+- **Nada nuevo en «Actividad en la app»**: el cuerpo del aviso es genérico
+  —«tiene 3 calificaciones nuevas»— y no se mide si se abre o no.
+
+Las tres preguntas de cabecera no cambian. Y «compartido» sigue en **no** por el
+mismo motivo de la sección siguiente: Google entrega los avisos como proveedor
+de servicio, por encargo, igual que procesa las estadísticas.
+
 ## La única decisión discutible: ¿«compartido» con Google?
 
 En todas las filas puse **compartido: no**, y conviene saber por qué, porque la
@@ -123,9 +164,10 @@ llaman las unidades—. Esos no son datos personales y no se declaran.
 
 ## Lo que hay que revisar si algo cambia
 
-- **Si entran las notificaciones** ([notificaciones.md](notificaciones.md)):
-  añade el token de FCM como *ID del dispositivo*, y pasa a **obligatorio**,
-  porque sin él no hay notificaciones.
+- **Si entran las notificaciones** ([notificaciones.md](notificaciones.md)): ya
+  está resuelto arriba, en «Cuando entren las notificaciones». Ojo, que esta
+  línea decía **obligatorio** y es **opcional**: lo que Play pregunta es si se
+  puede usar la app sin ese dato, no si la función lo necesita.
 - **Si se enciende algo que hoy está tras interruptor** —las notas por lote, por
   ejemplo— no cambia nada aquí: sigue siendo el servidor del colegio.
 - **Si se vuelve a guardar la contraseña** en el dispositivo, hay que marcar
