@@ -101,6 +101,34 @@ ficha llegó a publicarse con la URL corta, que es un enlace muerto dentro de la
 propia tienda. El día que se toque el sitio, lo limpio es una redirección de
 `/privacidad` a `/privacidad.html` y volver a la URL bonita.
 
+### ⏸ Cuando entren las notificaciones
+
+**No se pega todavía**: la versión publicada no las tiene, y anunciar en la ficha
+una función que la app no hace es de las cosas que Google mira. Entra en la misma
+tanda que la política y el formulario de seguridad de datos.
+
+Va **antes** de «TU COLEGIO, TUS DATOS»:
+
+```
+AVISOS CUANDO HAY ALGO NUEVO
+
+• Entérate el mismo día: notas publicadas, una ausencia registrada, una
+  anotación de disciplina o una publicación del colegio.
+• El aviso solo te dice que hay algo nuevo. Para verlo entras con tu usuario,
+  así que nadie que tome tu teléfono lee tus notas desde la pantalla de bloqueo.
+• Tú eliges qué avisos quieres recibir, y puedes apagarlos todos.
+```
+
+Y dentro de «TU COLEGIO, TUS DATOS», después del párrafo de Google Analytics:
+
+```
+Los avisos se entregan con Firebase Cloud Messaging, de Google. No llevan tu
+nombre, tus notas ni el nombre de tu colegio, y puedes apagarlos desde el menú.
+```
+
+Con los dos añadidos la descripción larga pasa de **1.851 a 2.393 caracteres**
+—medidos, no estimados—, así que sigue holgada frente al tope de 4.000.
+
 ## Categoría y etiquetas
 
 | Campo | Valor |

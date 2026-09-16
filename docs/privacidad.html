@@ -70,15 +70,43 @@
 <p><strong>Estas estadísticas no dicen quién es usted.</strong> No se envía su nombre, su documento, su nombre de usuario, ninguna calificación, ninguna anotación de disciplina ni el nombre de su grupo. Los únicos dos rasgos que se guardan junto a ellas son <strong>el tipo de usuario</strong> —alumno, acudiente, docente o administrador— y <strong>de qué colegio se trata</strong>, y son los que permiten distinguir, por ejemplo, si son los docentes o los acudientes quienes no encuentran una pantalla. Ni Google ni nosotros podemos saber, a partir de esas estadísticas, a qué persona corresponden.</p>
 <p>Ese identificador aleatorio <strong>no es el identificador de publicidad de Android</strong>: la aplicación lo tiene desactivado y ni siquiera pide el permiso para leerlo. El identificador de la instalación desaparece si usted borra los datos de la aplicación o la desinstala.</p>
 <p><strong>Puede desactivarlas cuando quiera.</strong> En el menú de la aplicación, en <strong>Privacidad</strong>, hay un interruptor para dejar de enviar estadísticas de uso. Apagarlo tiene efecto inmediato y la aplicación lo recuerda; el resto de la aplicación sigue funcionando igual. El ajuste es <strong>de ese dispositivo</strong>: si usted usa la aplicación en el teléfono y en una tableta, tendrá que apagarlo en cada uno.</p>
+<!-- ═══════════════════════════════════════════════════════════════════════
+     ⏸ NOTIFICACIONES — DESCOMENTAR el día que salga a Play la versión que las
+     estrene, y no antes. Hay que hacer tres cosas en este archivo:
+       1. descomentar los tres bloques marcados «⏸ NOTIFICACIONES»;
+       2. sustituir el párrafo «Lo que NO recogemos» por el que va debajo de él;
+       3. cambiar la fecha de «Última actualización» al día de la publicación.
+     El mismo texto, sin comentar, está en politica-privacidad.md.
+     ═══════════════════════════════════════════════════════════════════════
+
+<p><strong>Avisos en el teléfono.</strong> Si usted lo permite, la aplicación le avisa cuando hay calificaciones, ausencias, anotaciones de disciplina o publicaciones nuevas. Los entrega Firebase Cloud Messaging, un servicio de Google, y para poder entregárselos Google asigna a esa instalación de la aplicación un identificador de registro.</p>
+<p><strong>El aviso no lleva información suya.</strong> Dice cuántas novedades hay —«tiene 3 calificaciones nuevas»— y nunca la calificación, el nombre del alumno ni el texto de la anotación. Para verlas hay que abrir la aplicación y entrar con su usuario y su contraseña.</p>
+<p><strong>Su teléfono no le dice a nadie quién es usted.</strong> La aplicación no envía a ningún servidor el identificador de su dispositivo. En su lugar, el teléfono se apunta a unos canales cuyo nombre es un código: no contiene su nombre, ni su documento, ni el de su colegio, y de él no se puede volver atrás para averiguar a quién pertenece.</p>
+<p><strong>Puede apagarlos cuando quiera.</strong> Android le pedirá permiso la primera vez y usted puede decir que no: el resto de la aplicación funciona igual. Dentro de la aplicación puede además elegir qué avisos quiere recibir y cuáles no, y <strong>al cerrar sesión el teléfono deja de recibirlos todos</strong>.</p>
+
+     ═══════════════════════════════════════════════════════════════════ -->
+
 <p><strong>Lo que NO recogemos.</strong> La aplicación no accede a su cámara, micrófono, contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de esas cosas: los permisos que declara son técnicos —comprobar si hay conexión, por ejemplo— y ninguno da acceso a información personal guardada en su dispositivo. <strong>No hay publicidad, no se lee el identificador de publicidad y no se crean perfiles publicitarios.</strong> Tampoco vendemos ni cedemos a nadie la información académica.</p>
+
+<!-- ⏸ NOTIFICACIONES — este párrafo SUSTITUYE al de arriba el día de publicar:
+<p><strong>Lo que NO recogemos.</strong> La aplicación no accede a su cámara, micrófono, contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de esas cosas: los demás permisos que declara son técnicos —comprobar si hay conexión, por ejemplo— y ninguno da acceso a información personal guardada en su dispositivo. El único permiso que la aplicación le pedirá es el de mostrarle avisos, y puede negarlo. <strong>No hay publicidad, no se lee el identificador de publicidad y no se crean perfiles publicitarios.</strong> Tampoco vendemos ni cedemos a nadie la información académica.</p>
+-->
 
 <h2>Para qué los usamos</h2>
 <p><strong>Los datos académicos y de su perfil, únicamente para prestar el servicio académico</strong>: mostrarle la información que le corresponde según su rol y permitir a los docentes registrar la que la institución les pide llevar. No se usan para ningún otro fin.</p>
 <p><strong>Las estadísticas de uso, únicamente para mejorar la aplicación</strong>: saber qué pantallas se usan, cuáles sobran y dónde la gente se atasca, para decidir qué corregir y qué construir después. No se usan para evaluar ni supervisar a ninguna persona —no llevan datos que permitan identificarla—, no se cruzan con la información académica y no se emplean con fines publicitarios.</p>
 
+<!-- ⏸ NOTIFICACIONES
+<p><strong>Los avisos, únicamente para decirle que hay algo nuevo</strong>: no se usan para promocionar nada, ni para recordarle que abra la aplicación, ni para medir si los abre o no.</p>
+-->
+
 <h2>Con quién los compartimos</h2>
 <p><strong>La información académica, con nadie fuera de su colegio.</strong> Sus calificaciones, su asistencia, sus anotaciones de disciplina y sus datos de perfil viajan exclusivamente entre la aplicación y el servidor de la institución educativa a la que usted pertenece. No los vendemos, no los alquilamos y no los cedemos a terceros.</p>
 <p><strong>Las estadísticas de uso, con Google.</strong> Es el único tercero que interviene, y solo para eso: recibe lo descrito en «Datos de uso de la aplicación» y las procesa por encargo nuestro, sujeto a sus propias condiciones de tratamiento de datos. Google no recibe ninguna calificación, ningún nombre y ningún dato que permita identificar a un estudiante.</p>
+<!-- ⏸ NOTIFICACIONES
+<p><strong>Los avisos, también con Google.</strong> Firebase Cloud Messaging es quien los entrega a su teléfono, por encargo nuestro y sujeto a sus condiciones de tratamiento de datos. Recibe el texto del aviso —que no lleva datos de nadie— y el identificador de registro del dispositivo; nada más. Ni Google ni el servidor de su colegio guardan a quién pertenece ese identificador.</p>
+-->
+
 <p>No hay servicios de publicidad ni de redes sociales integrados en la aplicación.</p>
 
 <h2>Cómo los protegemos</h2>
