@@ -246,4 +246,103 @@ void main() {
       expect(ContextoAcademico.instancia.config.unidad, 'Unidad');
     });
   });
+
+  group('el modelo de evaluación del año', () {
+    test('sin el campo, el año va como siempre', () {
+      // Es el caso de HOY en los quince: la migración que crea la columna está
+      // en `main` del backend y no en el volcado del esquema, así que el
+      // /login no la manda. Una app que diera por hecho que viene dejaría de
+      // pintar lo de siempre.
+      final config = ConfiguracionColegio.deLogin({'year_id': 9});
+
+      expect(config.modeloEvaluacion, ModeloDeEvaluacion.ponderado);
+      expect(config.vaPorCompetencias, isFalse);
+    });
+
+    test('con competencias, va por competencias', () {
+      final config = ConfiguracionColegio.deLogin({
+        'modelo_evaluacion': 'competencias',
+      });
+
+      expect(config.vaPorCompetencias, isTrue);
+    });
+
+    test('una cadena que no se conoce cae en lo de siempre', () {
+      // Con el `sql_mode` de estos servidores, un valor fuera del `enum` se
+      // guarda como cadena vacía en vez de fallar. `values.byName` con eso
+      // tumbaría el arranque.
+      for (final raro in ['', 'COMPETENCIA', 'null', 'ponderadoo']) {
+        final config = ConfiguracionColegio.deLogin({
+          'modelo_evaluacion': raro,
+        });
+
+        expect(
+          config.vaPorCompetencias,
+          isFalse,
+          reason: 'con «$raro» el año tiene que comportarse como hoy',
+        );
+      }
+    });
+
+    test('«Competencias» con mayúscula sí se reconoce', () {
+      final config = ConfiguracionColegio.deLogin({
+        'modelo_evaluacion': 'Competencias',
+      });
+
+      expect(config.vaPorCompetencias, isTrue);
+    });
+  });
+
+  group('cómo llama el colegio a las competencias', () {
+    test('sin los campos, los de la columna', () {
+      // El defecto es el de `years`, no la palabra que decidió el front: que la
+      // app diga «Competencia» donde el servidor dice «Desempeño» sería dar por
+      // hecha una configuración que el colegio no ha tocado.
+      final config = ConfiguracionColegio.deLogin({});
+
+      expect(config.competencia, 'Desempeño');
+      expect(config.competencias, 'Desempeños');
+      expect(config.articuloCompetencia, 'el');
+      expect(config.deLaCompetencia, 'del');
+    });
+
+    test('con el nombre y el género del colegio', () {
+      final config = ConfiguracionColegio.deLogin({
+        'desempeno_displayname': 'Competencia',
+        'desempenos_displayname': 'Competencias',
+        'genero_desempeno': 'F',
+      });
+
+      expect(config.competencia, 'Competencia');
+      expect(config.competencias, 'Competencias');
+      expect(config.articuloCompetencia, 'la');
+      expect(config.deLaCompetencia, 'de la');
+    });
+
+    test('el choque de H1 se detecta', () {
+      // `simonbolivar`, medido en su /login: las dos columnas valen «Desempeño»,
+      // así que la unidad del 70 % y el texto del boletín se llaman igual.
+      final choca = ConfiguracionColegio.deLogin({
+        'unidad_displayname': 'Desempeño',
+        'desempeno_displayname': 'Desempeño',
+      });
+
+      expect(choca.hayChoqueDeNombres, isTrue);
+
+      final resuelto = ConfiguracionColegio.deLogin({
+        'unidad_displayname': 'Desempeño',
+        'desempeno_displayname': 'Competencia',
+      });
+
+      expect(resuelto.hayChoqueDeNombres, isFalse);
+    });
+
+    test('un nombre vacío no borra el que vale', () {
+      final config = ConfiguracionColegio.deLogin({
+        'desempeno_displayname': '   ',
+      });
+
+      expect(config.competencia, 'Desempeño');
+    });
+  });
 }

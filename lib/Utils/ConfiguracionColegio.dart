@@ -21,6 +21,20 @@ import 'package:myvc_flutter/Utils/JsonBackend.dart';
 /// de Profesor y de Usuario (ver `app/Services/ContextoDeUsuario.php`). Para un
 /// alumno o un acudiente no vienen, y no pasa nada: son ajustes sobre lo que
 /// hace un docente.
+/// Cómo evalúa el colegio este año — `years.modelo_evaluacion`.
+///
+/// **No cambia ni una cuenta.** Es D3: el interruptor gobierna lo que se ve,
+/// nunca el cálculo. La definitiva se saca igual en los dos modos, de las
+/// unidades y sus porcentajes; lo que cambia es que el boletín imprime además
+/// las competencias del plan de área.
+enum ModeloDeEvaluacion {
+  /// Lo de siempre, y lo que vale cuando no viene nada.
+  ponderado,
+
+  /// El año va por competencias: ver `docs/competencias.md`.
+  competencias,
+}
+
 class ConfiguracionColegio {
   const ConfiguracionColegio({
     this.notaMinimaAceptada,
@@ -34,6 +48,10 @@ class ConfiguracionColegio {
     this.subunidades = 'Subunidades',
     this.unidadEsFemenina = true,
     this.subunidadEsFemenina = true,
+    this.modeloEvaluacion = ModeloDeEvaluacion.ponderado,
+    this.competencia = 'Desempeño',
+    this.competencias = 'Desempeños',
+    this.competenciaEsFemenina = false,
   });
 
   /// La de antes de que nadie haya entrado, y la de cuando el contexto se
@@ -79,6 +97,40 @@ class ConfiguracionColegio {
   final bool unidadEsFemenina;
   final bool subunidadEsFemenina;
 
+  /// Si el año va por competencias. Ver [ModeloDeEvaluacion].
+  final ModeloDeEvaluacion modeloEvaluacion;
+
+  bool get vaPorCompetencias =>
+      modeloEvaluacion == ModeloDeEvaluacion.competencias;
+
+  /// Cómo llama este colegio a las competencias del boletín.
+  ///
+  /// **La columna se llama `desempeno_displayname` y aquí el campo no**, y es a
+  /// propósito. En esta app ya hay dos cosas que se llaman «desempeño» y no son
+  /// ésta: `AsignaturaNotaModel.desempenio`, que es el nombre de la banda
+  /// —«Alto», «Superior»—, y `unidad_displayname`, que en `simonbolivar` vale
+  /// literalmente «Desempeño». Un tercer identificador `desempeno*` en el mismo
+  /// código sería el choque de H1 metido dentro del editor.
+  ///
+  /// **El valor por defecto es el de la columna** —'Desempeño'— y no la palabra
+  /// que decidió la §7.7 del front («Competencia»). Cambiar esa palabra es
+  /// configuración del colegio, en su ficha, y ponerla aquí haría que la app
+  /// dijera una cosa y el servidor otra para el mismo colegio.
+  final String competencia;
+  final String competencias;
+  final bool competenciaEsFemenina;
+
+  /// Si este colegio tiene dos cosas distintas con el mismo nombre.
+  ///
+  /// Es **H1**, y se puede detectar: en `simonbolivar`, `unidad_displayname` y
+  /// `desempeno_displayname` valen los dos «Desempeño», así que el docente ve
+  /// la unidad del 70 % y el texto del boletín rotulados igual en la misma
+  /// pantalla. No se arregla desde aquí —es la ficha del colegio— pero una
+  /// pantalla que lo sepa puede decirlo en vez de pintar la misma palabra dos
+  /// veces. Ver `docs/competencias.md` §6.
+  bool get hayChoqueDeNombres =>
+      competencia.toLowerCase().trim() == unidad.toLowerCase().trim();
+
   /// Lee lo que venga, con lo que ya hay por defecto para lo que no venga.
   ///
   /// Con [entero] y no leyendo el campo a pelo porque estas columnas viajan
@@ -117,6 +169,18 @@ class ConfiguracionColegio {
       subunidadEsFemenina: _esFemenina(
         datos['genero_subunidad'],
         porDefecto.subunidadEsFemenina,
+      ),
+      modeloEvaluacion: _modelo(
+        datos['modelo_evaluacion'],
+        porDefecto.modeloEvaluacion,
+      ),
+      competencia:
+          _nombre(datos['desempeno_displayname'], porDefecto.competencia),
+      competencias:
+          _nombre(datos['desempenos_displayname'], porDefecto.competencias),
+      competenciaEsFemenina: _esFemenina(
+        datos['genero_desempeno'],
+        porDefecto.competenciaEsFemenina,
       ),
     );
   }
@@ -205,9 +269,12 @@ class ConfiguracionColegio {
   String get articuloUnidad => unidadEsFemenina ? 'la' : 'el';
   String get articuloSubunidad => subunidadEsFemenina ? 'la' : 'el';
 
+  String get articuloCompetencia => competenciaEsFemenina ? 'la' : 'el';
+
   /// 'de la' o 'del'.
   String get deLaUnidad => unidadEsFemenina ? 'de la' : 'del';
   String get deLaSubunidad => subunidadEsFemenina ? 'de la' : 'del';
+  String get deLaCompetencia => competenciaEsFemenina ? 'de la' : 'del';
 
   /// Una bandera 0/1 del backend, con respaldo si no vino.
   ///
@@ -221,6 +288,21 @@ class ConfiguracionColegio {
   static String _nombre(dynamic valor, String respaldo) {
     final crudo = texto(valor)?.trim();
     return (crudo == null || crudo.isEmpty) ? respaldo : crudo;
+  }
+
+  /// El modo del año, con respaldo si no vino o si vino algo que no se conoce.
+  ///
+  /// **Una cadena desconocida cae en el respaldo y no revienta.** El `enum` de
+  /// la columna vive en dos sitios —la base y `Year::MODELOS_DE_EVALUACION`— y
+  /// con el `sql_mode` de estos servidores un valor fuera del `enum` se guarda
+  /// como cadena vacía en vez de fallar. Una app que hiciera `values.byName`
+  /// con eso se caería en el arranque, y en la pantalla que usan todos.
+  static ModeloDeEvaluacion _modelo(
+      dynamic valor, ModeloDeEvaluacion respaldo) {
+    final crudo = texto(valor)?.trim().toLowerCase();
+    if (crudo == 'competencias') return ModeloDeEvaluacion.competencias;
+    if (crudo == 'ponderado') return ModeloDeEvaluacion.ponderado;
+    return respaldo;
   }
 
   static bool _esFemenina(dynamic valor, bool respaldo) {
