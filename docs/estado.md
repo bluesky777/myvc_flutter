@@ -81,7 +81,7 @@ flowchart LR
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
     T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
-    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3, A5 ✓<br/>docente, familia y las<br/>frases por grupo<br/>651 pruebas ✓<br/>⛔ sólo el despliegue"]
+    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3, A4, A5 ✓<br/>las cuatro entregas<br/>y las frases por grupo<br/>663 pruebas ✓<br/>⛔ sólo el despliegue"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -727,9 +727,23 @@ pedir su boletín, porque `ExigirBoletinPropio` tiene una rama escrita justo par
 eso. Lo que queda no es un bloqueo sino un coste, y está en
 [competencias.md](competencias.md) §5.
 
+**A4 también, el 19 sep**: «Traer de…» en la tarjeta de cada clase, que copia
+el plan de otro periodo o del mismo periodo de otro año. Y con ella una
+corrección al propio repositorio — el docblock de `CompetenciasApi` decía que
+copiar era de la web, y al abrir el controlador resultó que copia **un par
+(materia, grado) y un periodo**, o sea lo que el docente ya puede escribir
+aquí. Su trampa conocida —la bandera del periodo destino— **se esquiva**: el
+destino es siempre el periodo de la barra, así que la bandera que la app tiene
+es la que el backend comprueba.
+
+Con eso **las cuatro entregas del plan están hechas**. Lo que queda escrito y
+sin hacer es reordenar arrastrando —`PUT desempenos/orden` toca el conjunto
+entero, incluidas filas que el docente no puede escribir— y adoptar del MEN,
+que es de coordinación y va en la web.
+
 **Lo único que espera de verdad es el despliegue**: las siete rutas están en
-`main` de `8myvc` y no en los quince, igual que las cuatro columnas del año — que
-ni siquiera están en el volcado del esquema.
+`main` de `8myvc` y no en los dieciséis, igual que las cuatro columnas del año
+— que ni siquiera están en el volcado del esquema.
 
 Y de rebote, **A5, hecha el 19 sep**: las dos rutas nuevas de
 `frases_asignatura/grupo/{asignatura_id}` arreglaban un fallo que la app ya

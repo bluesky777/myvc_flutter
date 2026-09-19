@@ -76,6 +76,9 @@ class ServidorDeCompetencias extends Server {
     if (direccion.startsWith('/escalas')) {
       return http.Response(jsonEncode(_escalas), 200);
     }
+    if (direccion.startsWith('/years')) {
+      return http.Response(jsonEncode(_years), 200);
+    }
     return http.Response('[]', 200);
   }
 
@@ -90,6 +93,12 @@ class ServidorDeCompetencias extends Server {
 
   @override
   Future put(String direccion, params) async {
+    // Antes que el `{id}`: «copiar» no es un número y caería en el camino de
+    // editar, que buscaría la fila 0 y contestaría un objeto vacío.
+    if (direccion == '/desempenos/copiar') {
+      return http.Response(jsonEncode(_copiar(params)), 200);
+    }
+
     final id = int.tryParse(direccion.split('/').last) ?? 0;
     final fila = desempenos.firstWhere(
       (d) => d['id'] == id,
@@ -97,6 +106,61 @@ class ServidorDeCompetencias extends Server {
     );
     fila.addAll(Map<String, dynamic>.from(params as Map));
     return http.Response(jsonEncode(fila), 200);
+  }
+
+  /// Traer el plan de otro sitio, con los tres desenlaces que hay que mirar.
+  ///
+  /// El origen es de mentira y está escrito aquí —`_planDeOtroPeriodo`—, pero
+  /// **el salto por duplicado sí se calcula**, comparando el texto en
+  /// minúsculas como hace el servidor. Es lo que permite pulsar dos veces y ver
+  /// que la segunda dice «ya las tenías» en vez de duplicarlas, que es
+  /// justamente lo que hay que comprobar con el dedo.
+  Map<String, dynamic> _copiar(dynamic params) {
+    final cuerpo = Map<String, dynamic>.from(params as Map);
+    final destino = Map<String, dynamic>.from(cuerpo['destino'] as Map);
+    final origen = Map<String, dynamic>.from(cuerpo['origen'] as Map);
+
+    // Del año pasado se trae una menos, para que las dos opciones no den lo
+    // mismo y se note cuál se pulsó.
+    final candidatos = origen['tipo'] == 'year'
+        ? _planDeOtroPeriodo.take(2).toList()
+        : _planDeOtroPeriodo;
+
+    final yaEstan = desempenos
+        .where((d) =>
+            d['materia_id'] == destino['materia_id'] &&
+            d['grado_id'] == destino['grado_id'])
+        .map((d) => '${d['definicion']}'.toLowerCase().trim())
+        .toSet();
+
+    var copiados = 0;
+    var duplicados = 0;
+
+    for (final texto in candidatos) {
+      if (yaEstan.contains(texto.toLowerCase().trim())) {
+        duplicados++;
+        continue;
+      }
+
+      desempenos.add({
+        'id': _siguienteId++,
+        'definicion': texto,
+        'tipo': null,
+        'orden': desempenos.length + 1,
+        'materia_id': destino['materia_id'],
+        'grado_id': destino['grado_id'],
+        'periodo_id': destino['periodo_id'],
+      });
+      yaEstan.add(texto.toLowerCase().trim());
+      copiados++;
+    }
+
+    return {
+      'revisados': candidatos.length,
+      'copiados': copiados,
+      'saltados_por_duplicado': duplicados,
+      'saltadas_sin_catalogo': candidatos.isEmpty ? 1 : 0,
+    };
   }
 
   @override
@@ -148,7 +212,8 @@ class ServidorDeFrases extends Server {
 
       if (sobre == null) {
         return http.Response(
-          jsonEncode({'message': 'Ese periodo no es del año de la asignatura.'}),
+          jsonEncode(
+              {'message': 'Ese periodo no es del año de la asignatura.'}),
           422,
         );
       }
@@ -266,16 +331,16 @@ class ServidorDeFrases extends Server {
         } else if (previa['frase_id'] != fraseId ||
             '${previa['frase_escrita'] ?? ''}' != texto) {
           cambiadas++;
-          despues.add({...previa, ..._nuevaFila(fraseId, texto), 'id': previa['id']});
+          despues.add(
+              {...previa, ..._nuevaFila(fraseId, texto), 'id': previa['id']});
         } else {
           sinCambio++;
           despues.add(previa);
         }
       }
 
-      borradas += antes
-          .where((f) => !despues.any((d) => d['id'] == f['id']))
-          .length;
+      borradas +=
+          antes.where((f) => !despues.any((d) => d['id'] == f['id'])).length;
 
       fila['frases'] = despues;
     }
@@ -308,7 +373,8 @@ class ServidorDeFrases extends Server {
       'frase': fraseId == null ? texto : '${delCatalogo['frase'] ?? ''}',
       'frase_escrita': fraseId == null ? texto : null,
       'frase_id': fraseId,
-      'tipo_frase': fraseId == null ? null : '${delCatalogo['tipo_frase'] ?? ''}',
+      'tipo_frase':
+          fraseId == null ? null : '${delCatalogo['tipo_frase'] ?? ''}',
     };
   }
 }
@@ -432,6 +498,13 @@ Map<String, dynamic> _sobreDeSoloLectura() => {
       'periodo_abierto': true,
       'puede_escribir': false,
     };
+
+/// Lo que «ya estaba escrito» en el otro periodo, para poder traerlo.
+const _planDeOtroPeriodo = [
+  'Reconoce y representa fracciones en la recta numérica.',
+  'Resuelve problemas que requieren el uso de la proporcionalidad.',
+  'Explica sus procedimientos con sus propias palabras.',
+];
 
 /// Las cuatro bandas **con sus frases escritas**.
 ///

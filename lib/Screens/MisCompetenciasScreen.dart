@@ -14,6 +14,7 @@ import 'package:myvc_flutter/Utils/ClasesDelDocente.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/Widgets/HojaCompetencia.dart';
+import 'package:myvc_flutter/Widgets/HojaTraerPlan.dart';
 import 'package:myvc_flutter/Widgets/SelectorDocente.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -513,14 +514,26 @@ class _MisCompetenciasScreenState extends State<MisCompetenciasScreen> {
               ),
             ),
           ),
+        // En un `Wrap` y apretados: dos botones con el relleno normal de
+        // Material no caben en la tarjeta de un teléfono. Es la misma medida
+        // que se pagó en `FrasesDelGrupoScreen`, donde se desbordaba por dos
+        // píxeles a 420 dp.
         if (permiso.puede)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: ocupada ? null : () => _agregar(clase),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Añadir'),
-            ),
+          Wrap(
+            children: [
+              TextButton.icon(
+                style: _apretado,
+                onPressed: ocupada ? null : () => _agregar(clase),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Añadir'),
+              ),
+              TextButton.icon(
+                style: _apretado,
+                onPressed: ocupada ? null : () => _traerDeOtro(clase),
+                icon: const Icon(Icons.file_download_outlined, size: 18),
+                label: const Text('Traer de…'),
+              ),
+            ],
           ),
       ],
     );
@@ -695,7 +708,119 @@ class _MisCompetenciasScreenState extends State<MisCompetenciasScreen> {
     );
   }
 
+  static final ButtonStyle _apretado = TextButton.styleFrom(
+    visualDensity: VisualDensity.compact,
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+  );
+
   // ---- escribir ----------------------------------------------------------
+
+  /// Trae a esta clase el plan de otro periodo o de otro año.
+  ///
+  /// **El destino es siempre el periodo de la barra**, que es lo que hace que
+  /// la bandera con la que se pintó el botón —`permiso`, calculado sobre
+  /// `profes_pueden_editar_notas` de la sesión— sea la misma que el backend va
+  /// a comprobar. Ver el docblock de [copiarCompetencias].
+  ///
+  /// La respuesta trae contadores y **no las filas nuevas**, así que después
+  /// se relee el catálogo. Es una petición, y sólo cuando algo entró: un
+  /// «ya las tenías todas» no cambia nada que repintar.
+  Future<void> _traerDeOtro(ClaseDelDocente clase) async {
+    final periodoId = ContextoAcademico.instancia.periodoId;
+    if (periodoId == null) return;
+
+    await _asegurarYears();
+    if (!mounted) return;
+
+    final origen = await pedirOrigenDelPlan(
+      context,
+      titulo: _tituloDe(clase),
+      periodos: ContextoAcademico.instancia.periodosDelYear,
+      periodoDestino: periodoId,
+      years: ContextoAcademico.instancia.years,
+      yearDestino: ContextoAcademico.instancia.yearId,
+    );
+
+    if (origen == null || !mounted) return;
+
+    setState(() => ocupadas.add(_clave(clase)));
+
+    final resultado = await copiarCompetencias(
+      server,
+      materiaId: clase.materiaId,
+      gradoId: clase.gradoId,
+      periodoId: periodoId,
+      desdePeriodoId: origen.periodoId,
+      desdeYearId: origen.yearId,
+    );
+
+    if (!mounted) return;
+    setState(() => ocupadas.remove(_clave(clase)));
+
+    if (!resultado.entro) {
+      _avisar(resultado.motivo!);
+      return;
+    }
+
+    final copia = resultado.copia ?? const CopiaDelPlan();
+    _avisar(_comoFueLaCopia(copia, origen.comoSeLlama));
+
+    if (copia.copiados > 0) await _recargarCatalogo();
+  }
+
+  /// Qué pasó al copiar, con los tres desenlaces dichos distinto.
+  ///
+  /// **Los tres son un 200 y dos de ellos traen `copiados: 0`**, que es
+  /// exactamente lo que no se puede aplanar en «no se copió nada»: «ahí no
+  /// había nada» manda a mirar si se eligió mal el periodo, y «ya las tenías»
+  /// dice que el trabajo está hecho. El backend se tomó el trabajo de
+  /// separarlos; la pantalla no los vuelve a juntar.
+  String _comoFueLaCopia(CopiaDelPlan copia, String origen) {
+    if (copia.origenVacio) return 'En $origen no hay nada escrito.';
+
+    if (copia.copiados == 0) {
+      return copia.saltadosPorDuplicado == 1
+          ? 'Ya la tenías. No se añadió ninguna.'
+          : 'Ya tenías las ${copia.saltadosPorDuplicado}.'
+              ' No se añadió ninguna.';
+    }
+
+    final traidas = copia.copiados == 1
+        ? 'Se trajo 1 de $origen'
+        : 'Se trajeron ${copia.copiados} de $origen';
+
+    return copia.saltadosPorDuplicado == 0
+        ? '$traidas.'
+        : '$traidas · ${copia.saltadosPorDuplicado} ya estaban.';
+  }
+
+  /// Los años con sus periodos, para la hoja de traer.
+  ///
+  /// No se piden al abrir la pantalla: la mayoría de las visitas no van a
+  /// copiar nada, y `GET /years` es una petición que no hace falta pagar por
+  /// si acaso. Si falla, la hoja sale diciendo que no hay de dónde traer, que
+  /// es cierto desde el punto de vista de quien mira.
+  Future<void> _asegurarYears() async {
+    try {
+      await ContextoAcademico.instancia.cargarYears(server);
+    } catch (_) {
+      // Sin listas, y la hoja lo dice.
+    }
+  }
+
+  /// Relee el catálogo del periodo, sin volver a pedir clases ni escalas.
+  Future<void> _recargarCatalogo() async {
+    try {
+      final traidas = await traerCompetencias(
+        server,
+        periodoId: ContextoAcademico.instancia.periodoId,
+      );
+      if (!mounted) return;
+      setState(() => catalogo = traidas);
+    } catch (err) {
+      _avisar('Se copió, pero no se pudo releer la lista: $err');
+    }
+  }
 
   Future<void> _agregar(ClaseDelDocente clase) async {
     final escrita = await pedirCompetencia(

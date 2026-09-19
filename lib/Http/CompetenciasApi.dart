@@ -3,22 +3,36 @@ import 'dart:convert';
 import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/CompetenciaModel.dart';
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 /// El plan de área por competencias: leerlo y escribirlo.
 ///
-/// La familia del backend tiene siete rutas y aquí viven **cuatro**:
-/// `GET desempenos`, `POST desempenos`, `PUT desempenos/{id}` y
-/// `DELETE desempenos/{id}`. Las otras tres no están y ninguna por olvido:
+/// La familia del backend tiene siete rutas y aquí viven **cinco**:
+/// `GET desempenos`, `POST desempenos`, `PUT desempenos/{id}`,
+/// `DELETE desempenos/{id}` y `PUT desempenos/copiar`. Las otras dos no están
+/// y ninguna por olvido:
 ///
 ///  - **`PUT desempenos/orden` no se implementa**: decidido que la app no
 ///    reordena. El orden lo hace el servidor y lo comparten la pantalla y el
 ///    boletín —ver `competenciasDeLista`—, así que un botón de subir y bajar
 ///    aquí sería la única forma de que los dos dejaran de coincidir;
-///  - **`PUT desempenos/copiar`** —traer el plan de otro año, grado o periodo—
-///    es trabajo de escritorio, de los que se hacen una vez en agosto: va en la
-///    web administrativa, no en el teléfono;
 ///  - **`GET desempenos/catalogo-men`** es el catálogo de Estándares del MEN
 ///    para sugerir al escribir; no hace falta para la primera pantalla.
+///
+/// ## Y una corrección a lo que este archivo decía de `copiar`
+///
+/// Aquí ponía que copiar *«es trabajo de escritorio, de los que se hacen una
+/// vez en agosto: va en la web administrativa, no en el teléfono»*. **Es
+/// falso, y se cayó al abrir el controlador.** `putCopiarPlantilla` no copia el
+/// catálogo del colegio: copia **un par (materia, grado) y un periodo** —su
+/// `destino` son esos tres campos y su permiso es el mismo
+/// `exigirEscrituraDelPlan` que usa escribir una a mano—. O sea que lo que
+/// mueve es exactamente lo que el docente ya puede escribir en esta app, y
+/// ahorrarle teclear cuatro frases que ya escribió el periodo pasado es trabajo
+/// de pie y de todos los días.
+///
+/// Lo que sí se queda en la web es **el catálogo del colegio entero** y
+/// **adoptar del MEN**, que son otra cosa. Ver `docs/competencias.md` §2.
 ///
 /// **Nada de esto está desplegado todavía.** Las siete rutas están en `main` de
 /// `8myvc` (`8329718`) y sin subir a los colegios, y la pantalla que las usa
@@ -209,6 +223,154 @@ Future<String?> borrarCompetencia(Server server, {required int id}) async {
     return _motivoDelRechazo(res, respaldo: 'No se pudo borrar.');
   } catch (err) {
     return 'No se pudo borrar: $err';
+  }
+}
+
+/// Lo que dejó una copia, contado por el servidor.
+///
+/// **Los tres desenlaces de un 200 no se pueden contar igual**, y por eso esto
+/// no es un booleano: «no había nada allí», «ya las tenías todas» y «se
+/// trajeron cuatro» son tres respuestas distintas a la misma pulsación, y las
+/// dos primeras dan `copiados: 0`. Aplanarlas en «no se copió nada» deja al
+/// docente sin saber si se equivocó de periodo o si ya estaba hecho.
+class CopiaDelPlan {
+  const CopiaDelPlan({
+    this.revisados = 0,
+    this.copiados = 0,
+    this.saltadosPorDuplicado = 0,
+    this.origenVacio = false,
+  });
+
+  /// Cuántas filas tenía el origen.
+  final int revisados;
+
+  /// Cuántas se escribieron.
+  final int copiados;
+
+  /// Cuántas ya estaban en el destino, comparando el texto **normalizado**:
+  /// el servidor baja a minúsculas, quita acentos y aprieta los espacios, así
+  /// que «Interpreta gráficas» y «interpreta graficas» son la misma.
+  final int saltadosPorDuplicado;
+
+  /// Si el origen no tenía ni una fila.
+  ///
+  /// **Llega como `saltadas_sin_catalogo` y su nombre miente**: no es un
+  /// recuento sino una bandera, `$candidatos === [] ? 1 : 0`. Se lee como lo
+  /// que es para que nadie la sume con las otras.
+  final bool origenVacio;
+
+  factory CopiaDelPlan.fromJson(Map<String, dynamic> json) {
+    return CopiaDelPlan(
+      revisados: enteroO(json['revisados']),
+      copiados: enteroO(json['copiados']),
+      saltadosPorDuplicado: enteroO(json['saltados_por_duplicado']),
+      origenVacio: enteroO(json['saltadas_sin_catalogo']) > 0,
+    );
+  }
+}
+
+/// Lo que devuelve copiar.
+class ResultadoDeCopia {
+  const ResultadoDeCopia({this.copia, this.motivo});
+
+  final CopiaDelPlan? copia;
+  final String? motivo;
+
+  bool get entro => motivo == null;
+}
+
+/// Trae a esta clase el plan que ya está escrito en otro sitio.
+///
+/// `PUT desempenos/copiar`. El **destino** es siempre una clase de este año:
+/// su materia, su grado y **el periodo en el que se está**. El **origen** es
+/// una de dos, y son excluyentes:
+///
+///  - [desdePeriodoId] — otro periodo de este mismo año;
+///  - [desdeYearId] — el periodo del mismo número de otro año.
+///
+/// ## Por qué el destino es siempre el periodo de la barra, y no uno a elegir
+///
+/// **Ahí está la trampa de esta entrega, y se esquiva en vez de resolverse.**
+/// `exigirEscrituraDelPlan` comprueba `profes_pueden_editar_notas` **del
+/// periodo en el que se escribe**, y lo único que la app tiene a mano —en
+/// `ConfiguracionColegio`— es la bandera del periodo de la sesión. Dejar
+/// elegir el periodo destino obligaría a traerse antes la suya, o a pintar un
+/// botón contra la bandera equivocada y que el 403 lo explique después.
+///
+/// Con el destino fijado en el periodo actual, la bandera que la app tiene
+/// **es** la del periodo en el que se escribe, y la pregunta desaparece. Y no
+/// se pierde nada real: lo que se hace es «tráeme lo del periodo pasado»
+/// estando en el nuevo, no colocar filas en un periodo que no se está mirando.
+///
+/// ## Copiando de otro año, el periodo NO viaja, y eso es a propósito
+///
+/// Los ids de `periodos` son **por año y disjuntos**, así que mandar el
+/// `periodo_id` del destino como origen no casa ninguna fila del otro año: el
+/// servidor contesta **200 con `copiados: 0`**, que no se distingue de «el año
+/// pasado no tenía nada escrito». Omitiéndolo, el backend lo resuelve **por
+/// número de periodo** y, si ese año no tiene ese número, contesta un 422 que
+/// lo dice.
+///
+/// No es un caso de laboratorio: el front web escribió justo ese cuerpo y midió
+/// las dos formas —0 copiadas con el malo, 2 y 3 con el bueno, sobre las mismas
+/// filas—. Está contado en `DesempenosController::putCopiarPlantilla`.
+///
+/// ## Lo que no se ofrece
+///
+/// El backend admite un tercer origen —`origen.tipo: 'grado'` con
+/// `origen.grado_id`, o sea traer de **otro grado**— y la app no lo pinta:
+/// `Profesor::asignaturas` **no manda el nombre del grado**, así que esa lista
+/// saldría con los grados sin nombre y nadie sabría cuál está eligiendo. El día
+/// que el nombre llegue, es añadir una sección a la hoja.
+///
+/// Los 422 que se esperan van con el texto del servidor: el origen y el destino
+/// son el mismo grupo, el año de origen no tiene ese número de periodo, o el
+/// año no existe.
+Future<ResultadoDeCopia> copiarCompetencias(
+  Server server, {
+  required int materiaId,
+  required int? gradoId,
+  required int periodoId,
+  int? desdePeriodoId,
+  int? desdeYearId,
+}) async {
+  assert((desdePeriodoId == null) != (desdeYearId == null),
+      'El origen es uno: o un periodo de este año, o otro año.');
+  assert(desdePeriodoId != periodoId,
+      'Copiar un grupo sobre sí mismo es un 422: no se ofrece.');
+
+  try {
+    final res = await server.put('/desempenos/copiar', {
+      'destino': {
+        'materia_id': materiaId,
+        'grado_id': gradoId,
+        'periodo_id': periodoId,
+      },
+      'origen': {
+        'tipo': desdeYearId != null ? 'year' : 'grado',
+        if (desdeYearId != null) 'year_id': desdeYearId,
+        // Del mismo año se nombra el periodo; de otro año **no**, para que lo
+        // resuelva por número. Ver arriba.
+        if (desdePeriodoId != null) 'periodo_id': desdePeriodoId,
+      },
+    });
+
+    final motivo =
+        _motivoDelRechazo(res, respaldo: 'No se pudo traer el plan.');
+    if (motivo != null) return ResultadoDeCopia(motivo: motivo);
+
+    final cuerpo = jsonDecode(res.body);
+    if (cuerpo is! Map) {
+      return const ResultadoDeCopia(
+        motivo: 'El servidor contestó algo que no se entiende.',
+      );
+    }
+
+    return ResultadoDeCopia(
+      copia: CopiaDelPlan.fromJson(Map<String, dynamic>.from(cuerpo)),
+    );
+  } catch (err) {
+    return ResultadoDeCopia(motivo: 'No se pudo traer el plan: $err');
   }
 }
 

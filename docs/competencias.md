@@ -673,7 +673,7 @@ la tanda y no por `main`.
 | **A0** | `ConfiguracionColegio` lee los cuatro campos del `/login`. No cambia una sola pantalla | **hecha el 19 sep 2026** — ver abajo |
 | **A2** | La pantalla del docente, leer y escribir en su alcance, leyendo `materia_id` y `grado_id` | **hecha el 19 sep 2026** — ver abajo |
 | **A3** | Las líneas en la tarjeta de `MisNotasScreen` | **hecha el 19 sep 2026** — ver abajo |
-| **A4** | `PUT desempenos/copiar` desde la app: «tráeme lo del periodo pasado» | A2 |
+| **A4** | `PUT desempenos/copiar` desde la app: «tráeme lo del periodo pasado» | **hecha el 19 sep 2026** — ver abajo |
 | **A5** | Las frases del grupo en una petición — §9 | **hecha el 19 sep 2026** — ver §9 |
 
 *(«Bloqueada por nada» es de construir. **Encender** cualquiera de ellas sí espera
@@ -885,6 +885,83 @@ Tres cosas del contrato que hay que respetar y son fáciles de romper:
 3. **El 403 del `PUT` llega antes de mirar el cuerpo** y lo demás va en
    transacción: un `motivo` significa siempre «no se guardó nada», nunca «se
    guardó a medias». Por eso no hay ningún contador de saltados, y es a propósito.
+
+### A4, entregada — 19 sep 2026
+
+`copiarCompetencias` y `CopiaDelPlan` en [CompetenciasApi](../lib/Http/CompetenciasApi.dart),
+[HojaTraerPlan](../lib/Widgets/HojaTraerPlan.dart), y el botón «Traer de…» en
+la tarjeta de cada clase. **12 pruebas nuevas, 663 en verde.**
+
+**Y lo primero es una corrección a este repositorio, no una entrega.** El
+docblock de `CompetenciasApi` decía que copiar *«es trabajo de escritorio, de
+los que se hacen una vez en agosto: va en la web administrativa, no en el
+teléfono»* — y esta misma §8 lo tenía como A4 de la app. Dos frases del mismo
+día que se contradicen. **Gana la de aquí, y no por antigüedad: se abrió el
+controlador.** `putCopiarPlantilla` no copia el catálogo del colegio, copia
+**un par (materia, grado) y un periodo**, y su permiso es el mismo
+`exigirEscrituraDelPlan` que usa escribir una a mano. O sea que mueve
+exactamente lo que el docente ya puede escribir en esta app.
+
+#### La trampa del periodo destino se esquiva, no se resuelve
+
+El plan decía que haría falta traerse la bandera del periodo destino antes de
+ofrecer el botón. **No hace falta, porque el destino no se elige**: es siempre
+el periodo de la barra. Con eso, `profes_pueden_editar_notas` que la app tiene
+en `ConfiguracionColegio` **es** la del periodo en el que el backend va a
+escribir, y la pregunta desaparece.
+
+No se pierde nada real: lo que se hace es «tráeme lo del periodo pasado»
+estando en el nuevo, no colocar filas en un periodo que no se está mirando.
+
+#### Copiando de otro año, el periodo NO viaja
+
+Los ids de `periodos` son **por año y disjuntos**, así que mandar el del
+destino como origen no casa ninguna fila del otro año: **200 con `copiados: 0`**,
+indistinguible de «el año pasado no había nada». Omitiéndolo, el backend lo
+resuelve por **número de periodo** y, si ese año no lo tiene, contesta un 422
+que lo dice.
+
+No es teórico: lo destapó el front web construyendo su diálogo —mandaba justo
+ese cuerpo— y midió las dos formas, **0 copiadas con el malo, 2 y 3 con el
+bueno, sobre las mismas filas**. Está contado dentro de
+`DesempenosController::putCopiarPlantilla`, y aquí hay una prueba que falla si
+alguien vuelve a mandarlo.
+
+#### Los tres desenlaces de un 200, que no se pueden aplanar
+
+**Dos de ellos traen `copiados: 0`** y significan cosas opuestas:
+
+| lo que contesta | lo que dice la pantalla |
+|---|---|
+| `saltadas_sin_catalogo: 1` | «En Periodo 2 no hay nada escrito.» → te equivocaste de sitio |
+| `copiados: 0`, `saltados_por_duplicado: 4` | «Ya tenías las 4.» → el trabajo está hecho |
+| `copiados: 3`, `saltados_por_duplicado: 2` | «Se trajeron 3 · 2 ya estaban.» |
+
+Juntarlos en «no se copió nada» deja al docente sin saber cuál de las dos le
+tocó. Y ojo con `saltadas_sin_catalogo`: **su nombre miente**, no es un
+recuento sino `$candidatos === [] ? 1 : 0`. Se lee como bandera.
+
+#### Lo que no se ofrece, y por qué
+
+El backend admite un tercer origen —**otro grado**, `origen.tipo: 'grado'` con
+`origen.grado_id`— y la app no lo pinta: `Profesor::asignaturas` **no manda el
+nombre del grado**, así que esa lista saldría con los grados sin nombre y nadie
+sabría dónde está eligiendo escribir. El día que el nombre llegue es añadir una
+sección a la hoja. `fe95da8` añade el id, no el nombre.
+
+#### Dos detalles que decidió la construcción
+
+- **El periodo en el que se está no sale en la lista.** Copiar un grupo sobre sí
+  mismo es 422, y con razón. Se quita de la lista en vez de dejar pulsarlo.
+- **Sólo se relee el catálogo si de verdad entró alguna.** La respuesta trae
+  contadores y no filas, así que hay que releer — pero un «ya las tenías todas»
+  no cambió nada que repintar.
+
+Y una anotación que salió al escribir las pruebas y **no es de esta pantalla**:
+los avisos salen **por duplicado**. `ScaffoldMessenger` enseña el `SnackBar` en
+cada `Scaffold` registrado y `PantallaConMenu` añade el suyo, así que son dos
+idénticos uno encima de otro. Le pasa a todas las pantallas con menú. Medido con
+una sonda: la pantalla se construye una vez y los `Scaffold` son dos.
 
 ### A5, entregada — 19 sep 2026
 
