@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Menu/MenuLateral.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 void main() {
   setUp(AuthService.limpiar);
@@ -149,8 +151,10 @@ void main() {
       ('un alumno', UserAutenticado(username: 'a', tipo: 'Alumno')),
       ('un acudiente', UserAutenticado(username: 'b', tipo: 'Acudiente')),
       ('un docente', UserAutenticado(username: 'c', tipo: 'Profesor')),
-      ('un administrador',
-          UserAutenticado(username: 'd', tipo: 'Usuario', isSuperuser: true)),
+      (
+        'un administrador',
+        UserAutenticado(username: 'd', tipo: 'Usuario', isSuperuser: true)
+      ),
     ]) {
       testWidgets('la ve ${caso.$1}', (WidgetTester tester) async {
         AuthService.user = caso.$2;
@@ -175,6 +179,52 @@ void main() {
       expect(find.text('Configuración'), findsNothing);
       expect(find.text('Notas perdidas'), findsNothing);
       expect(find.text('Usuarios'), findsNothing);
+    });
+  });
+
+  group('las competencias del docente, todavía apagadas', () {
+    tearDown(ContextoAcademico.instancia.limpiar);
+
+    test('el interruptor sigue en false', () {
+      // Centinela, como el de `notasLote`. Espera a DOS despliegues: las siete
+      // rutas de `desempenos/` y las dos columnas de `listasignaturas`. Si
+      // alguien lo enciende, que sea leyendo por qué.
+      expect(Interruptores.competenciasDocente, isFalse);
+    });
+
+    testWidgets(
+        'con el interruptor apagado, la opción no sale ni en un año'
+        ' que vaya por competencias', (WidgetTester tester) async {
+      AuthService.user = UserAutenticado(username: 'x', tipo: 'Profesor');
+      ContextoAcademico.instancia.tomarDelLogin({
+        'modelo_evaluacion': 'competencias',
+        'desempeno_displayname': 'Competencia',
+        'desempenos_displayname': 'Competencias',
+      });
+
+      // La segunda puerta está abierta y la primera no, que es lo que se
+      // comprueba: hacen falta las dos.
+      expect(
+        ContextoAcademico.instancia.config.vaPorCompetencias,
+        isTrue,
+        reason: 'el año va por competencias, o esta prueba no prueba nada',
+      );
+
+      await montar(tester);
+
+      expect(find.text('Competencias'), findsNothing);
+      expect(find.text('Unidades'), findsOneWidget);
+    });
+
+    testWidgets('y un año que no va por competencias tampoco la enseña',
+        (WidgetTester tester) async {
+      AuthService.user = UserAutenticado(username: 'x', tipo: 'Profesor');
+      ContextoAcademico.instancia.tomarDelLogin({'year_id': 9});
+
+      await montar(tester);
+
+      expect(find.text('Competencias'), findsNothing);
+      expect(find.text('Desempeños'), findsNothing);
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 /// El menú lateral, uno solo para toda la app.
@@ -137,6 +138,28 @@ class MenuLateral extends StatelessWidget {
       texto: 'Unidades',
       ruta: '/unidades',
     ));
+
+    // Debajo de Unidades porque es la otra mitad de «con qué evalúo»: allí los
+    // porcentajes y aquí el texto que sale en el boletín.
+    //
+    // **Dos puertas y no una, y las dos hacen falta.** El interruptor espera al
+    // despliegue —de las siete rutas de `desempenos/` y de las dos columnas de
+    // `listasignaturas`—; `vaPorCompetencias` es del colegio, y sin él la opción
+    // llevaría a una pantalla que a ese colegio no le sirve de nada. Enseñar una
+    // pantalla que no se usa nunca es peor que no tenerla: se abre una vez, no
+    // se entiende, y la próxima vez que haga falta ya nadie se fía.
+    //
+    // El rótulo es la palabra del colegio —«Competencias» o «Desempeños»—,
+    // nunca una de la app. Ver `ConfiguracionColegio.competencias`.
+    if (Interruptores.competenciasDocente &&
+        ContextoAcademico.instancia.config.vaPorCompetencias) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.checklist_outlined,
+        texto: ContextoAcademico.instancia.config.competencias,
+        ruta: '/mis-competencias',
+      ));
+    }
 
     // «Disciplina» y no «Convivencia» ni «Observador»: es como se llama la
     // pantalla equivalente en la plataforma web y como la nombra el colegio al

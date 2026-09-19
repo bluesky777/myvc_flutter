@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
+import 'package:myvc_flutter/Screens/MisCompetenciasScreen.dart';
 import 'package:myvc_flutter/Screens/MisNotasScreen.dart';
 import 'package:myvc_flutter/Screens/MuroScreen.dart';
 import 'package:myvc_flutter/Screens/NotasPerdidasScreen.dart';
@@ -82,6 +83,10 @@ class RouteGenerator {
       case '/unidades':
         return MaterialPageRoute(
             settings: settings, builder: (context) => UnidadesScreen());
+      case '/mis-competencias':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const MisCompetenciasScreen());
       // Solo la de entrada tiene nombre. La ficha del alumno, el editor de
       // situaciones y los uniformes se abren con push directo: reciben modelos
       // ya cargados y devuelven el alumno recalculado, y por una ruta con

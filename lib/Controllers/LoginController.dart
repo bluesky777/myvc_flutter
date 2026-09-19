@@ -259,6 +259,7 @@ class LoginController implements LoginBaseController {
     AuthService.user.sexo = '${datos['sexo'] ?? 'M'}';
     AuthService.user.isSuperuser = entero(datos['is_superuser']) == 1;
     AuthService.user.roles = _rolesDe(datos['roles']);
+    AuthService.user.perms = _permsDe(datos['perms']);
 
     // El año y el periodo con los que entra. De aquí cuelga todo lo demás.
     ContextoAcademico.instancia.tomarDelLogin(datos);
@@ -368,6 +369,29 @@ Set<String> _rolesDe(dynamic crudos) {
     if (nombre == null) continue;
 
     final limpio = nombre.toString().trim().toLowerCase();
+    if (limpio.isNotEmpty) nombres.add(limpio);
+  }
+  return nombres;
+}
+
+/// Los nombres de los permisos que manda /login, en minúsculas.
+///
+/// Es una **lista plana de cadenas** —no filas con `name`, como los roles— con
+/// los permisos de todos sus roles juntos, y con repetidos: el backend
+/// reagrupa por rol y un permiso que dan dos roles sale dos veces. El `Set` los
+/// deja en uno.
+///
+/// Se lee aparte de [_rolesDe] porque son dos cosas distintas que hoy se
+/// parecen: un rol es un cargo del colegio y un permiso es una puerta, y el día
+/// que una de las dos listas cambie de forma no debe arrastrar a la otra.
+Set<String> _permsDe(dynamic crudos) {
+  if (crudos is! List) return {};
+
+  final nombres = <String>{};
+  for (final permiso in crudos) {
+    if (permiso == null) continue;
+
+    final limpio = permiso.toString().trim().toLowerCase();
     if (limpio.isNotEmpty) nombres.add(limpio);
   }
   return nombres;

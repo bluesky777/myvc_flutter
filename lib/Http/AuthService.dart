@@ -31,6 +31,22 @@ class UserAutenticado {
   /// Aquí se normalizan al entrar para que la comparación sea una sola.
   Set<String> roles;
 
+  /// Los nombres de los permisos de **todos** sus roles, en minúsculas.
+  ///
+  /// El backend los aplana en una sola lista y la manda en la respuesta del
+  /// login —`ContextoDeUsuario`, que los junta en una consulta y los repite si
+  /// dos roles dan el mismo—. Aquí se guardan en un `Set`, así que los
+  /// repetidos se caen solos: lo único que se pregunta es si está o no.
+  ///
+  /// Se normalizan a minúsculas por lo mismo que [roles], aunque el motivo no
+  /// muerda igual: éstos nacen de código —`can_edit_plantilla_notas`, de una
+  /// migración— y no de lo que teclee un colegio. **Y la normalización deja
+  /// esto más ancho que el servidor**, que compara con `in_array(..., true)`,
+  /// o sea exacto: una fila escrita `Can_Edit_Plantilla_Notas` pasaría aquí y
+  /// daría 403 allí. Se prefiere ese lado: lo que abre de verdad es el backend,
+  /// y aquí lo peor que pasa es enseñar un botón que después explica que no.
+  Set<String> perms;
+
   bool isSuperuser;
 
   /// El id de la ficha —profesor, alumno, acudiente—, que no es el del usuario.
@@ -45,11 +61,22 @@ class UserAutenticado {
     this.nombres,
     this.periodo,
     Set<String>? roles,
+    Set<String>? perms,
     this.isSuperuser = false,
     this.personaId,
-  }) : roles = roles ?? {};
+  })  : roles = roles ?? {},
+        perms = perms ?? {};
 
   bool tieneRol(String nombre) => roles.contains(nombre.toLowerCase());
+
+  /// Si tiene ese permiso por alguno de sus roles.
+  ///
+  /// **No mira [isSuperuser]**, y es a propósito: en el servidor el
+  /// superusuario es una rama aparte de cada guarda —`Autoriza` pregunta
+  /// primero por él y después por el permiso—, así que quien copie una de esas
+  /// reglas tiene que ver las dos ramas escritas y no una escondida aquí
+  /// dentro.
+  bool tienePermiso(String nombre) => perms.contains(nombre.toLowerCase());
 
   bool get esAlumno => tipo == 'Alumno' || tieneRol('alumno');
 

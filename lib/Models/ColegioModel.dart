@@ -250,6 +250,29 @@ class EscalaDeValoracion {
   /// Si este tramo cuenta como perdido.
   final bool perdido;
 
+  /// El prefijo que el boletín le antepone al texto de una competencia:
+  /// «**Fortaleza en** interpretar gráficas…», «**Dificultad en**…».
+  ///
+  /// **No es [desempenio]**, que es el nombre corto de la banda —«Alto»,
+  /// «Superior»— y sirve para otra cosa. Esto es
+  /// `escalas_de_valoracion.descripcion`, la frase del SIEE que el colegio
+  /// escribe una vez al año y que el boletín por competencias imprime delante
+  /// de cada línea.
+  ///
+  /// **Vacía significa «como siempre, sin prefijo»**, y `NULL` y `''` son lo
+  /// mismo: el backend lo decide con un `trim` en
+  /// `BoletinPorCompetenciasController::conElPrefijo`, y aquí se lee con
+  /// [texto] para que un `NULL` llegue como cadena vacía y no como la palabra
+  /// «null».
+  ///
+  /// Medido en el colegio de desarrollo el **17 sep 2026: de las 36 escalas
+  /// vivas, 5 tenían `descripcion` a `NULL` y 31 a cadena vacía — ninguna con
+  /// texto**. O sea que hoy esto no cambia ni un boletín ni pinta nada en
+  /// ninguna pantalla, que es exactamente lo que se quería: el día que aparezca
+  /// será porque un colegio escribió la frase de su SIEE, que es cuando tiene
+  /// que aparecer.
+  final String descripcion;
+
   const EscalaDeValoracion({
     required this.id,
     this.desempenio = '',
@@ -257,6 +280,7 @@ class EscalaDeValoracion {
     this.porcInicial = 0,
     this.porcFinal = 0,
     this.perdido = false,
+    this.descripcion = '',
   });
 
   /// El tramo como se lee: «91 a 100».
@@ -272,6 +296,7 @@ class EscalaDeValoracion {
       porcInicial: _numero(json['porc_inicial']),
       porcFinal: _numero(json['porc_final']),
       perdido: _si(json['perdido'], false),
+      descripcion: texto(json['descripcion']) ?? '',
     );
   }
 }

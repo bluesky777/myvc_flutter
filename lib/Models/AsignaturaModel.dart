@@ -13,6 +13,25 @@ class AsignaturaModel {
   final String nombreGrupo;
   final String abrevGrupo;
 
+  /// La materia y el grado **por id**, que es como se dirige el plan de área.
+  ///
+  /// Hoy llegan null en los dieciséis colegios y no es un fallo: las dos
+  /// columnas están escritas en `Profesor::asignaturas` desde el 19 sep 2026
+  /// —`fe95da8`, rama `feat/materia-id-y-grado-id-en-asignaturas`— pero **sin
+  /// fundir a `main` y sin desplegar**. La pantalla que las necesita vive detrás
+  /// de `Interruptores.competenciasDocente`, que está apagado por esto y por las
+  /// rutas de `desempenos/`.
+  ///
+  /// Hacen falta porque `Autoriza::puedeEscribirDesempenos` filtra literalmente
+  /// por `a.materia_id` y `g.grado_id`, y sin ellas el par (materia, grado) hay
+  /// que reconstruirlo desde fuera emparejando el **nombre** de la materia
+  /// contra `GET materias` —que es lo que hace el front—: `materias` no tiene
+  /// índice único sobre `(materia, alias)`, así que eso funciona por casualidad
+  /// de los datos de un colegio y falla callando en el que tenga un par
+  /// repetido.
+  final int? materiaId;
+  final int? gradoId;
+
   AsignaturaModel({
     required this.id,
     required this.grupoId,
@@ -21,6 +40,8 @@ class AsignaturaModel {
     required this.aliasMateria,
     required this.nombreGrupo,
     required this.abrevGrupo,
+    this.materiaId,
+    this.gradoId,
   });
 
   factory AsignaturaModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +53,10 @@ class AsignaturaModel {
       aliasMateria: '${json['alias_materia'] ?? ''}',
       nombreGrupo: '${json['nombre_grupo'] ?? ''}',
       abrevGrupo: '${json['abrev_grupo'] ?? ''}',
+      // Sin respaldo y sin `required`: null aquí es «este colegio todavía no
+      // manda estas columnas», y un 0 se confundiría con un id de verdad.
+      materiaId: entero(json['materia_id']),
+      gradoId: entero(json['grado_id']),
     );
   }
 
