@@ -81,7 +81,7 @@ flowchart LR
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
     T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
-    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3 ✓<br/>docente y familia, y los<br/>datos de A5<br/>634 pruebas ✓<br/>⛔ sólo el despliegue"]
+    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3, A5 ✓<br/>docente, familia y las<br/>frases por grupo<br/>651 pruebas ✓<br/>⛔ sólo el despliegue"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -731,9 +731,14 @@ eso. Lo que queda no es un bloqueo sino un coste, y está en
 `main` de `8myvc` y no en los quince, igual que las cuatro columnas del año — que
 ni siquiera están en el volcado del esquema.
 
-Y de rebote: las dos rutas nuevas de `frases_asignatura/grupo/{asignatura_id}`
-arreglan un fallo que la app ya tiene —pone las frases de una en una y no puede
-elegir el periodo—. Ver [competencias.md](competencias.md) §9.
+Y de rebote, **A5, hecha el 19 sep**: las dos rutas nuevas de
+`frases_asignatura/grupo/{asignatura_id}` arreglaban un fallo que la app ya
+tenía —ponía las frases de una en una y no podía elegir el periodo—, y ahora
+hay pantalla. Se entra por el libro de notas de la asignatura, se escribe el
+grupo entero y se guarda en una petición: de **322 a 14** en un periodo de
+«Transición». Detrás de `Interruptores.frasesPorGrupo`, que espera al despliegue
+de `53b50fa`. Las de una en una no se van: la ficha de **un** alumno no necesita
+el grupo. Ver [competencias.md](competencias.md) §9.
 
 **Y el documento viejo del tema, [plantilla-y-competencias.md](plantilla-y-competencias.md),
 caducó en su mitad de competencias** y lleva el aviso arriba: describía un modelo

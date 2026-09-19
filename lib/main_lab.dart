@@ -16,6 +16,12 @@
 // de desarrollo no puede enseñar: dos grupos en el mismo grado, una fila del
 // colegio con su candado, y las frases por banda escritas para que se vea el
 // previo de impresión.
+//
+// Lo mismo vale para «Frases del boletín» (19 sep 2026), que espera a que
+// `53b50fa` se despliegue: aquí se abre, se escribe y se guarda contra un `PUT`
+// simulado, con el periodo cerrado y con el caso que no se puede ver en ningún
+// colegio sin crear la cuenta a propósito — sólo lectura **con** el periodo
+// abierto.
 
 import 'dart:convert';
 
@@ -26,6 +32,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/LineaDeBoletinModel.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
+import 'package:myvc_flutter/Screens/FrasesDelGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/LibroAsignaturaScreen.dart';
 import 'package:myvc_flutter/Screens/MisCompetenciasScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
@@ -99,6 +106,332 @@ class ServidorDeCompetencias extends Server {
     return http.Response(jsonEncode({'id': id}), 200);
   }
 }
+
+/// El servidor de «Frases del boletín»: **un grupo por periodo, y escribe**.
+///
+/// El `PUT` se simula de verdad —reconoce las filas por su `id`, se lleva las
+/// que no vuelven, cuenta lo que hizo— porque lo que hay que mirar aquí es
+/// justo eso: que guardar diga qué pasó y que la pantalla se quede con las
+/// filas nuevas ya con su id. Un servidor que contestara «OK» dejaría sin
+/// probar la mitad interesante.
+///
+/// Lo que escriba no sobrevive a recargar: esto no es una base.
+class ServidorDeFrases extends Server {
+  ServidorDeFrases({
+    required this.sobres,
+    this.catalogo = const [],
+    this.periodoDeLaSesion = 34,
+  });
+
+  /// El sobre de cada periodo, con la forma que manda el backend. Se muta.
+  final Map<int, Map<String, dynamic>> sobres;
+
+  final List<Map<String, dynamic>> catalogo;
+
+  /// En qué periodo está la sesión, que es lo que contesta un `GET` sin
+  /// `periodo_id` — igual que el de verdad.
+  final int periodoDeLaSesion;
+
+  int _siguienteId = 5000;
+
+  int _periodoDe(String direccion) {
+    final pedido = Uri.parse(direccion).queryParameters['periodo_id'];
+    return int.tryParse(pedido ?? '') ?? periodoDeLaSesion;
+  }
+
+  @override
+  Future get(String direccion) async {
+    // Antes que `/frases` a secas, que es prefijo de ésta.
+    if (direccion.startsWith('/frases_asignatura/grupo/')) {
+      final periodo = _periodoDe(direccion);
+      final sobre = sobres[periodo];
+
+      if (sobre == null) {
+        return http.Response(
+          jsonEncode({'message': 'Ese periodo no es del año de la asignatura.'}),
+          422,
+        );
+      }
+
+      return http.Response(jsonEncode(_leido(sobre)), 200);
+    }
+
+    if (direccion.startsWith('/frases')) {
+      return http.Response(jsonEncode(catalogo), 200);
+    }
+
+    if (direccion.startsWith('/years')) {
+      return http.Response(jsonEncode(_years), 200);
+    }
+
+    return http.Response('[]', 200);
+  }
+
+  @override
+  Future put(String direccion, params) async {
+    if (!direccion.startsWith('/frases_asignatura/grupo/')) {
+      return http.Response('{}', 200);
+    }
+
+    final cuerpo = Map<String, dynamic>.from(params as Map);
+    final periodo =
+        int.tryParse('${cuerpo['periodo_id'] ?? ''}') ?? periodoDeLaSesion;
+    final sobre = sobres[periodo];
+
+    if (sobre == null) {
+      return http.Response(
+        jsonEncode({'message': 'Ese periodo no es del año de la asignatura.'}),
+        422,
+      );
+    }
+
+    // Los dos 403 del contrato, que se distinguen sólo por el texto.
+    if (sobre['puede_escribir'] != true) {
+      return http.Response(
+        jsonEncode({
+          'message': sobre['periodo_abierto'] == true
+              ? 'No tiene permiso para escribir las frases del boletín.'
+              : 'El periodo está cerrado: no se puede escribir en él.',
+        }),
+        403,
+      );
+    }
+
+    return http.Response(jsonEncode(_guardar(sobre, cuerpo)), 200);
+  }
+
+  Map<String, dynamic> _leido(Map<String, dynamic> sobre) {
+    final alumnos = (sobre['alumnos'] as List).cast<Map<String, dynamic>>();
+    final conFrases =
+        alumnos.where((a) => (a['frases'] as List).isNotEmpty).length;
+
+    return {
+      ...sobre,
+      'poblacion': {
+        'alumnos': alumnos.length,
+        'frases': alumnos.fold<int>(
+            0, (suma, a) => suma + (a['frases'] as List).length),
+        'alumnos_con_frases': conFrases,
+        'alumnos_sin_frases': alumnos.length - conFrases,
+        'frases_fuera_del_grupo': sobre['_de_fuera'] ?? 0,
+      },
+    };
+  }
+
+  Map<String, dynamic> _guardar(
+    Map<String, dynamic> sobre,
+    Map<String, dynamic> cuerpo,
+  ) {
+    var escritas = 0;
+    var cambiadas = 0;
+    var sinCambio = 0;
+    var borradas = 0;
+    var vacias = 0;
+    var revisadas = 0;
+
+    final alumnos = (sobre['alumnos'] as List).cast<Map<String, dynamic>>();
+    final pedidos = (cuerpo['alumnos'] as List).cast<Map>();
+
+    for (final pedido in pedidos) {
+      final fila = alumnos.firstWhere(
+        (a) => a['alumno_id'] == pedido['alumno_id'],
+        orElse: () => <String, dynamic>{},
+      );
+      if (fila.isEmpty) continue;
+
+      final antes = (fila['frases'] as List).cast<Map<String, dynamic>>();
+      final despues = <Map<String, dynamic>>[];
+
+      for (final entrada in (pedido['frases'] as List).cast<Map>()) {
+        revisadas++;
+
+        final fraseId = entrada['frase_id'];
+        final texto = '${entrada['frase'] ?? ''}'.trim();
+
+        // Sin frase del catálogo y sin texto no es una frase: no se escribe, y
+        // si traía `id` esa fila se va con las que no vinieron.
+        if (fraseId == null && texto.isEmpty) {
+          vacias++;
+          continue;
+        }
+
+        final previa = antes.firstWhere(
+          (f) => entrada['id'] != null && f['id'] == entrada['id'],
+          orElse: () => <String, dynamic>{},
+        );
+
+        if (previa.isEmpty) {
+          escritas++;
+          despues.add(_nuevaFila(fraseId, texto));
+        } else if (previa['frase_id'] != fraseId ||
+            '${previa['frase_escrita'] ?? ''}' != texto) {
+          cambiadas++;
+          despues.add({...previa, ..._nuevaFila(fraseId, texto), 'id': previa['id']});
+        } else {
+          sinCambio++;
+          despues.add(previa);
+        }
+      }
+
+      borradas += antes
+          .where((f) => !despues.any((d) => d['id'] == f['id']))
+          .length;
+
+      fila['frases'] = despues;
+    }
+
+    return {
+      ...sobre,
+      'poblacion': {
+        'alumnos_del_grupo': alumnos.length,
+        'alumnos_revisados': pedidos.length,
+        'frases_revisadas': revisadas,
+        'escritas': escritas,
+        'cambiadas': cambiadas,
+        'sin_cambio': sinCambio,
+        'borradas': borradas,
+        'vacias': vacias,
+      },
+    };
+  }
+
+  Map<String, dynamic> _nuevaFila(dynamic fraseId, String texto) {
+    final delCatalogo = catalogo.firstWhere(
+      (f) => f['id'] == fraseId,
+      orElse: () => const <String, dynamic>{},
+    );
+
+    return {
+      'id': _siguienteId++,
+      // `frase` es lo que imprime el boletín y `frase_escrita` lo que guarda la
+      // fila: una del catálogo no guarda texto ninguno.
+      'frase': fraseId == null ? texto : '${delCatalogo['frase'] ?? ''}',
+      'frase_escrita': fraseId == null ? texto : null,
+      'frase_id': fraseId,
+      'tipo_frase': fraseId == null ? null : '${delCatalogo['tipo_frase'] ?? ''}',
+    };
+  }
+}
+
+/// Los cuatro periodos del año, para que salga el selector.
+const _years = [
+  {
+    'id': 9,
+    'year': '2026',
+    'actual': 1,
+    'periodos': [
+      {'id': 34, 'numero': 1},
+      {'id': 35, 'numero': 2},
+      {'id': 36, 'numero': 3},
+      {'id': 37, 'numero': 4},
+    ],
+  },
+];
+
+/// El catálogo del colegio, recortado: en producción pasa de cuatrocientas.
+const _catalogoDeFrases = [
+  {
+    'id': 301,
+    'frase': 'Demuestra interés y participa con agrado en las actividades.',
+    'tipo_frase': 'Fortaleza',
+  },
+  {
+    'id': 302,
+    'frase': 'Se le dificulta terminar sus trabajos en el tiempo previsto.',
+    'tipo_frase': 'Debilidad',
+  },
+  {
+    'id': 303,
+    'frase': 'Comparte con sus compañeros y respeta la palabra del otro.',
+    'tipo_frase': 'Fortaleza',
+  },
+];
+
+Map<String, dynamic> _alumnoConFrases(
+  int id,
+  String apellidos,
+  String nombres, {
+  List<Map<String, dynamic>> frases = const [],
+}) {
+  return {
+    'alumno_id': id,
+    'matricula_id': 900 + id,
+    'nombres': nombres,
+    'apellidos': apellidos,
+    'frases': frases,
+  };
+}
+
+/// El periodo 1: unos con frases, otros sin ninguna, y dos retirados con las
+/// suyas — que es el renglón que sólo se puede ver aquí.
+Map<String, dynamic> _sobreDelPeriodo1() => {
+      'asignatura_id': 1,
+      'grupo_id': 7,
+      'year_id': 9,
+      'periodo_id': 34,
+      'periodo_abierto': true,
+      'puede_escribir': true,
+      '_de_fuera': 12,
+      'alumnos': [
+        _alumnoConFrases(101, 'Acosta Pérez', 'Ana', frases: [
+          {
+            'id': 4001,
+            'frase': 'Demuestra interés y participa con agrado en las '
+                'actividades.',
+            'frase_escrita': null,
+            'frase_id': 301,
+            'tipo_frase': 'Fortaleza',
+          },
+          {
+            'id': 4002,
+            'frase': 'Le cuesta entregar a tiempo, aunque el trabajo está '
+                'bien hecho.',
+            'frase_escrita': 'Le cuesta entregar a tiempo, aunque el trabajo '
+                'está bien hecho.',
+            'frase_id': null,
+            'tipo_frase': null,
+          },
+        ]),
+        _alumnoConFrases(102, 'Bolaño Díaz', 'Luis'),
+        _alumnoConFrases(103, 'Gómez Pico', 'Dámaris', frases: [
+          {
+            'id': 4003,
+            'frase': 'Avanzó mucho en lectura este periodo.',
+            'frase_escrita': 'Avanzó mucho en lectura este periodo.',
+            'frase_id': null,
+            'tipo_frase': null,
+          },
+        ]),
+        _alumnoConFrases(104, 'Herrera Ruiz', 'Julián'),
+        _alumnoConFrases(105, 'Ibarra Solano', 'Marcela'),
+      ],
+    };
+
+/// El periodo 2, **cerrado**: se ve y no se toca.
+Map<String, dynamic> _sobreDelPeriodo2() => {
+      'asignatura_id': 1,
+      'grupo_id': 7,
+      'year_id': 9,
+      'periodo_id': 35,
+      'periodo_abierto': false,
+      'puede_escribir': false,
+      'alumnos': [
+        _alumnoConFrases(101, 'Acosta Pérez', 'Ana'),
+        _alumnoConFrases(102, 'Bolaño Díaz', 'Luis'),
+        _alumnoConFrases(103, 'Gómez Pico', 'Dámaris'),
+        _alumnoConFrases(104, 'Herrera Ruiz', 'Julián'),
+        _alumnoConFrases(105, 'Ibarra Solano', 'Marcela'),
+      ],
+    };
+
+/// El caso que no se puede ver en un colegio sin crear la cuenta a propósito:
+/// **periodo abierto y aun así sólo lectura**, que es lo que le pasa a un
+/// secretario sin `is_superuser`.
+Map<String, dynamic> _sobreDeSoloLectura() => {
+      ..._sobreDelPeriodo1(),
+      'periodo_abierto': true,
+      'puede_escribir': false,
+    };
 
 /// Las cuatro bandas **con sus frases escritas**.
 ///
@@ -517,6 +850,38 @@ class _Indice extends StatelessWidget {
             detalle: 'Las dos una debajo de otra, para comparar dónde queda el '
                 'nombre de la banda.',
             construir: () => const _LasDosTarjetas(),
+          ),
+          const SizedBox(height: 20),
+          _seccion('Frases del boletín'),
+          _boton(
+            context,
+            titulo: 'El grupo entero, y se puede elegir el periodo',
+            detalle: 'Cinco alumnos, una frase del catálogo y dos a mano. El '
+                'P2 está cerrado: el chip lo enseña sin salir de aquí.',
+            construir: () => FrasesDelGrupoScreen(
+              asignaturaId: 1,
+              materia: 'Matemáticas',
+              nombreGrupo: 'Décimo B',
+              servidor: ServidorDeFrases(
+                sobres: {34: _sobreDelPeriodo1(), 35: _sobreDelPeriodo2()},
+                catalogo: _catalogoDeFrases,
+              ),
+            ),
+          ),
+          _boton(
+            context,
+            titulo: 'Sólo lectura CON el periodo abierto',
+            detalle: 'Lo que le pasa a un secretario sin is_superuser. No se '
+                'puede ver en un colegio sin crearle la cuenta a propósito.',
+            construir: () => FrasesDelGrupoScreen(
+              asignaturaId: 1,
+              materia: 'Matemáticas',
+              nombreGrupo: 'Décimo B',
+              servidor: ServidorDeFrases(
+                sobres: {34: _sobreDeSoloLectura()},
+                catalogo: _catalogoDeFrases,
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           _seccion('Libro de notas'),

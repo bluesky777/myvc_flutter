@@ -102,4 +102,24 @@ class Interruptores {
   /// de `8myvc` (`8329718`). O sea que este interruptor espera a **dos** cosas,
   /// y las dos se comprueban por el hash de la tanda.
   static const bool competenciasDocente = false;
+
+  /// Las frases del boletín de un grupo entero, con `GET` y
+  /// `PUT frases_asignatura/grupo/{asignatura_id}`.
+  ///
+  /// **Lo que enciende no es una pantalla más: arregla dos cosas que la app
+  /// hace mal hoy.** Las frases se ponen de una en una —una petición por
+  /// frase— y **siempre en el periodo de la sesión**, porque el `postStore`
+  /// viejo escribe en `$user->periodo_id` y no mira lo que se le mande. Medido
+  /// por el front sobre «Transición» de 2018 —18 matriculados, 7 asignaturas—,
+  /// un periodo entero pasa de **322 peticiones a 14**.
+  ///
+  /// Las dos rutas entraron con el contrato de preescolar (`53b50fa`) y están
+  /// en `main` de `8myvc` **sin desplegar**, así que apagado el camino viejo
+  /// sigue siendo el que corre: [FichaAlumnoNotasScreen] no cambia y lo único
+  /// que esconde este `false` es el botón del libro de notas.
+  ///
+  /// Y cuando se encienda, las de una en una **se quedan**: la ficha de un
+  /// alumno no necesita el grupo. Ver `docs/competencias.md` §9 y
+  /// [FrasesDelGrupoScreen].
+  static const bool frasesPorGrupo = false;
 }

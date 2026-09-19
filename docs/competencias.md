@@ -674,7 +674,7 @@ la tanda y no por `main`.
 | **A2** | La pantalla del docente, leer y escribir en su alcance, leyendo `materia_id` y `grado_id` | **hecha el 19 sep 2026** — ver abajo |
 | **A3** | Las líneas en la tarjeta de `MisNotasScreen` | **hecha el 19 sep 2026** — ver abajo |
 | **A4** | `PUT desempenos/copiar` desde la app: «tráeme lo del periodo pasado» | A2 |
-| **A5** | Las frases del grupo en una petición — §9 | despliegue |
+| **A5** | Las frases del grupo en una petición — §9 | **hecha el 19 sep 2026** — ver §9 |
 
 *(«Bloqueada por nada» es de construir. **Encender** cualquiera de ellas sí espera
 al despliegue en todos los colegios, que es lo de siempre y lo lleva
@@ -855,8 +855,9 @@ peticiones a 14**.
 
 **La capa de datos está hecha** (19 sep 2026): `traerFrasesDelGrupo` y
 `guardarFrasesDelGrupo` en [FrasesApi](../lib/Http/FrasesApi.dart), con sus
-modelos y **22 pruebas**. Las funciones viejas se quedan intactas y son las que
-corren: `53b50fa` no está desplegado. Falta la pantalla.
+modelos y **22 pruebas**. **Y la pantalla, el 19 sep 2026** — abajo. Las
+funciones viejas se quedan intactas y son las que corren: `53b50fa` no está
+desplegado.
 
 Tres cosas del contrato que hay que respetar y son fáciles de romper:
 
@@ -884,6 +885,76 @@ Tres cosas del contrato que hay que respetar y son fáciles de romper:
 3. **El 403 del `PUT` llega antes de mirar el cuerpo** y lo demás va en
    transacción: un `motivo` significa siempre «no se guardó nada», nunca «se
    guardó a medias». Por eso no hay ningún contador de saltados, y es a propósito.
+
+### A5, entregada — 19 sep 2026
+
+[FrasesDelGrupoScreen](../lib/Screens/FrasesDelGrupoScreen.dart), más el botón
+que la abre en [LibroAsignaturaScreen](../lib/Screens/LibroAsignaturaScreen.dart),
+el interruptor y dos entradas del banco de pruebas. **17 pruebas nuevas, 651 en
+verde**, `analyze` limpio.
+
+**Entra por el libro de notas de la asignatura y no por el menú**, en un botón
+de la barra. No es una pantalla del día: es lo que se hace al cerrar un periodo,
+y necesita una asignatura y un grupo que el docente ya tiene abiertos. Del menú
+habría que elegirlos otra vez.
+
+**Siete cosas que decidió la construcción:**
+
+1. **El botón de escribir no abre ninguna hoja.** Añadir una frase a mano mete
+   la casilla en la tarjeta y le abre el teclado; la hoja del catálogo se queda
+   en el otro botón. Lo que se hace aquí son dieciocho frases seguidas y **611
+   de las 686 del grupo 3 están escritas a mano**, así que un modal por alumno
+   convertiría un rato en una tarde.
+2. **Sólo viajan los alumnos que se tocaron.** Es la propiedad que hace seguro
+   el guardado por partes —el `PUT` no mira a quien no viene—, y se sostiene
+   comparando **la codificación del cuerpo** de cada alumno contra la que tenía
+   recién leído: los dos lados salen del mismo `paraElCuerpo()`, así que un
+   espacio de más en el texto del servidor no puede contar como un cambio.
+3. **Una casilla vacía sin `id` no es nada y una con `id` es un borrado.** La
+   primera es «pulsé escribir y no escribí» y ni se manda ni cuenta; la segunda
+   tiene que viajar, porque es como se quita una frase.
+4. **El periodo que viaja al guardar es el que dijo el `GET`**, nunca el de la
+   sesión ni el que se pidió. Si alguien la cambia desde otra pantalla mientras
+   esto está abierto, omitirlo escribiría en un periodo distinto del que se está
+   mirando.
+5. **La población de lo leído no la pisa la del `PUT`.** Aquélla trae
+   `frases_fuera_del_grupo` y ésta no, así que dejar que la segunda la
+   sustituyera haría que después de guardar la pantalla dijera que no hay
+   retirados con frases. El `PUT` no toca esas filas: lo que dijo el `GET` sigue
+   valiendo.
+6. **El libro sólo se recarga si se escribió en el periodo de la sesión.** Es lo
+   único que devuelve esta pantalla al salir. `notas/detailed` trae las frases
+   dentro y es la consulta más cara del proyecto: pagarla porque alguien entró y
+   salió, o porque escribió en el periodo 1 estando la sesión en el 3, sería
+   pagarla para nada.
+7. **La marca del catálogo no se edita aquí.** Una fila del catálogo no guarda
+   texto —el boletín lo resuelve con un `IFNULL` contra lo que el colegio tenga
+   hoy—, así que corregirla en esta pantalla sería corregírsela a todo el
+   colegio. Quien la quiera distinta la quita y escribe una a mano.
+
+**Y la trampa de A4 aquí no existe, por el contrato y no por cuidado nuestro.**
+A4 tiene que traerse la bandera del periodo destino antes de ofrecer el botón;
+aquí el `GET` se pide **con el periodo** y `periodo_abierto` y `puede_escribir`
+que devuelve son los de **ese** periodo. Cambiar de chip es volver a preguntar y
+la respuesta trae su propio permiso. Es la diferencia entre una ruta que acepta
+el periodo y una que lo da por sabido.
+
+**Una medida que salió de las pruebas y no de mirar**: los dos botones de añadir
+**no caben** en la tarjeta de un teléfono con el relleno normal de Material — se
+desbordaba por 1,9 px en uno de 420 dp, y en uno de 360 por bastantes más—. Van
+apretados y dentro de un `Wrap`.
+
+**Lo que no hace y no es por falta de tiempo**: no reordena —la tabla no tiene
+más clave que la primaria y cada fila es una línea del boletín—, no toca
+[FichaAlumnoNotasScreen](../lib/Screens/FichaAlumnoNotasScreen.dart) —que sigue
+poniendo las de **un** alumno por el camino viejo, y es lo correcto allí— y **no
+enseña las frases de los alumnos que ya no están en el grupo**: las cuenta y lo
+dice, porque el `GET` da el número y no las filas.
+
+**Y lo que no está medido**: las dos rutas **no se han llamado contra un
+servidor**. El `PUT` del banco de pruebas lo escribí yo mirando el contrato, así
+que lo que prueba es que la pantalla usa bien lo que el contrato promete, no que
+el servidor lo cumpla.
 
 > **Y una cifra del backend que se contradice con ella misma**: la ruta dice que
 > un periodo pasa de **322 peticiones a 14**, y la §5 del doc 39 dice **«175

@@ -4,10 +4,12 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Screens/FichaAlumnoNotasScreen.dart';
+import 'package:myvc_flutter/Screens/FrasesDelGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/PlanillaScreen.dart';
 import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
@@ -180,6 +182,36 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
     if (cambios.hayQueRecargar) await _cargar();
   }
 
+  /// Las frases del boletín del grupo entero, en una pantalla y un guardado.
+  ///
+  /// Es el otro grano del mismo dato: la ficha pone las de **un** alumno y esto
+  /// las de los dieciocho, con el periodo elegible. Ver
+  /// [FrasesDelGrupoScreen] y `docs/competencias.md` §9.
+  ///
+  /// **Sólo se recarga el libro si se escribió en el periodo de la sesión**,
+  /// que es el único caso en que las frases que este libro tiene en memoria se
+  /// quedaron viejas: `notas/detailed` las trae dentro, y es la consulta más
+  /// cara del proyecto.
+  Future<void> _abrirFrasesDelGrupo() async {
+    final periodoEscrito = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco: el
+        // observador de pantallas solo registra las rutas que lo tienen.
+        settings: const RouteSettings(name: 'frases-del-grupo'),
+        builder: (_) => FrasesDelGrupoScreen(
+          asignaturaId: widget.asignatura.id,
+          materia: widget.asignatura.materia,
+          nombreGrupo: widget.asignatura.nombreGrupo,
+        ),
+      ),
+    );
+
+    if (periodoEscrito == null) return;
+    if (periodoEscrito != ContextoAcademico.instancia.periodoId) return;
+
+    await _cargar();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Dos pestañas y no dos pantallas: es el mismo libro ya cargado, leído por
@@ -194,6 +226,18 @@ class _LibroAsignaturaScreenState extends State<LibroAsignaturaScreen> {
             titulo: widget.asignatura.materia,
             subtitulo: widget.asignatura.nombreGrupo,
           ),
+          actions: [
+            // Sin comprobar aquí quién puede escribir: eso lo contesta el `GET`
+            // de esa pantalla y allí se pinta con su respuesta. Un secretario
+            // las puede leer todas y no escribir ninguna, así que esconderle el
+            // botón sería quitarle algo que sí puede hacer.
+            if (Interruptores.frasesPorGrupo)
+              IconButton(
+                icon: const Icon(Icons.rate_review_outlined),
+                tooltip: 'Frases del boletín',
+                onPressed: _abrirFrasesDelGrupo,
+              ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(text: 'Por ${_config.subunidad.toLowerCase()}'),
