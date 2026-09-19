@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Http/BoletinCompetenciasApi.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/NotasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
+import 'package:myvc_flutter/Models/LineaDeBoletinModel.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
-import 'package:myvc_flutter/constantes.dart';
+import 'package:myvc_flutter/Widgets/TarjetaDeAsignatura.dart';
 
 /// Las notas de un alumno, periodo a periodo.
 ///
@@ -43,6 +46,21 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
   bool cargando = true;
   String? error;
   NotasBloqueadas? bloqueo;
+
+  /// Las líneas del boletín por competencias, **por periodo**.
+  ///
+  /// `notas/alumno` trae los cuatro periodos de una vez y esta pantalla cambia
+  /// entre ellos sin volver a preguntar. El boletín por competencias no: es de
+  /// **un** periodo. Así que se pide el del periodo que se está mirando y se
+  /// guarda aquí — volver a uno ya visto no cuesta nada.
+  ///
+  /// Sin esto, una familia que repase los cuatro periodos dispararía **cuatro
+  /// informes de grupo entero**, que es justo la carga que este proyecto lleva
+  /// un año esquivando en un servidor de un núcleo.
+  final Map<int, BoletinDeCompetencias> _competenciasPorPeriodo = {};
+
+  /// El periodo cuyas líneas se están pidiendo ahora mismo, si alguno.
+  int? _pidiendoCompetencias;
 
   @override
   void initState() {
@@ -152,7 +170,11 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
         docentes = mapa;
         periodoMostrado = _periodoDeEntrada(traido);
         cargando = false;
+        _competenciasPorPeriodo.clear();
       });
+
+      // Y **después**, sin bloquear nada. Ver [_traerCompetencias].
+      _traerCompetencias();
     } on NotasBloqueadas catch (parado) {
       if (!mounted) return;
       setState(() {
@@ -166,6 +188,74 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
         cargando = false;
       });
     }
+  }
+
+  /// Pide las líneas del periodo que se está mirando, si el año va por
+  /// competencias.
+  ///
+  /// **Se llama DESPUÉS de pintar las notas y a propósito.** La ruta que las
+  /// trae es de informe —arma el boletín del grupo entero y filtra después— y
+  /// **nadie la ha medido**. Pidiéndola en paralelo y esperando a las dos, una
+  /// ruta lenta retrasaría el número que la familia vino a ver; así, si tarda o
+  /// si falla, la pantalla se queda exactamente como está hoy.
+  ///
+  /// **Y sólo se pide si las notas llegaron.** Eso no es orden casual: el
+  /// interruptor `alumnos_can_see_notas` —con el que el colegio cierra las notas
+  /// mientras cuadra los boletines— **lo comprueba `NotasController::getAlumno`
+  /// y sólo él**, así que esta ruta de informe seguiría entregando el boletín
+  /// con las notas cerradas. Colgando la petición de que las notas hayan
+  /// entrado, la app queda del lado estricto sin tener que saberlo.
+  Future<void> _traerCompetencias() async {
+    if (!Interruptores.competenciasDocente) return;
+    if (!ContextoAcademico.instancia.config.vaPorCompetencias) return;
+
+    final alumno = boletin;
+    final periodo = periodoMostrado;
+    final grupoId = alumno?.grupoId;
+
+    if (alumno == null || periodo == null || grupoId == null) return;
+    if (_competenciasPorPeriodo.containsKey(periodo.id)) return;
+    if (_pidiendoCompetencias == periodo.id) return;
+
+    setState(() => _pidiendoCompetencias = periodo.id);
+
+    try {
+      final traido = await traerBoletinPorCompetencias(
+        server,
+        grupoId: grupoId,
+        alumnoId: alumno.alumnoId,
+        periodoId: periodo.id,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _competenciasPorPeriodo[periodo.id] = traido;
+        _pidiendoCompetencias = null;
+      });
+    } catch (_) {
+      // **Se traga el fallo a propósito, y es la única vez que esta app lo
+      // hace.** Lo que cuelga de aquí es un añadido: si no llega, la tarjeta es
+      // la de siempre. Enseñar «no se pudieron traer las competencias» encima
+      // de unas notas que sí llegaron le daría a la familia un error por algo
+      // que no vino a buscar.
+      if (!mounted) return;
+      setState(() => _pidiendoCompetencias = null);
+    }
+  }
+
+  /// Las líneas de una asignatura en el periodo que se está mirando.
+  List<LineaDeBoletin> _lineasDe(int asignaturaId) {
+    final periodo = periodoMostrado;
+    if (periodo == null) return const [];
+
+    final boletinDelPeriodo = _competenciasPorPeriodo[periodo.id];
+    if (boletinDelPeriodo == null) return const [];
+
+    for (final asignatura in boletinDelPeriodo.asignaturas) {
+      if (asignatura.asignaturaId == asignaturaId) return asignatura.lineas;
+    }
+
+    return const [];
   }
 
   /// El periodo con el que se abre: el que el usuario tiene elegido arriba.
@@ -301,8 +391,13 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
                           ),
                         ))
                     .toList(),
-                onChanged: (nuevo) =>
-                    setState(() => periodoMostrado = nuevo),
+                onChanged: (nuevo) {
+                  setState(() => periodoMostrado = nuevo);
+                  // Las notas de los cuatro periodos ya están en memoria; las
+                  // competencias son de UN periodo, así que cambiar arriba
+                  // pide las del nuevo. Si ya se vieron, no cuesta nada.
+                  _traerCompetencias();
+                },
               ),
             ),
           ),
@@ -333,76 +428,16 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
       ];
     }
 
-    return periodo.asignaturas.map(_buildAsignatura).toList();
+    return periodo.asignaturas.map(_tarjetaDe).toList();
   }
 
-  Widget _buildAsignatura(AsignaturaNotaModel asignatura) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          AvatarPersona(
-            nombre: asignatura.docente,
-            fotoNombre: asignatura.fotoDocente,
-            radio: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  asignatura.materia,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  asignatura.docente.isEmpty
-                      ? 'Sin docente asignado'
-                      : asignatura.docente,
-                  style: const TextStyle(fontSize: 12.5, color: Colors.black54),
-                ),
-                if (asignatura.desempenio != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    asignatura.desempenio!,
-                    style: const TextStyle(fontSize: 12, color: Colors.black45),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          _buildNota(asignatura),
-        ],
-      ),
+  Widget _tarjetaDe(AsignaturaNotaModel asignatura) {
+    return TarjetaDeAsignatura(
+      asignatura: asignatura,
+      lineas: _lineasDe(asignatura.asignaturaId),
     );
   }
 
-  Widget _buildNota(AsignaturaNotaModel asignatura) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          asignatura.notaEscrita,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: asignatura.tieneNota ? kPrimaryColor : Colors.black26,
-          ),
-        ),
-        if (asignatura.recuperada)
-          Text('recuperada',
-              style: TextStyle(fontSize: 10, color: Colors.black45)),
-      ],
-    );
-  }
 
   /// Los dos bloqueos, cada uno con lo suyo.
   Widget _buildBloqueo(NotasBloqueadas parado) {
