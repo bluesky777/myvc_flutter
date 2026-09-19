@@ -1,0 +1,191 @@
+# Compila la app para la web y la sube por FTP a app.micolevirtual.com.
+#
+# Cómo se dispara, de las dos maneras:
+#
+#   * A mano — Actions → «Desplegar la web a app.micolevirtual.com» → Run
+#     workflow. Con tres interruptores: ensayo, saltarse las pruebas y limpiar.
+#   * Solo — cada push a `main` que toque código de la app. Los commits que solo
+#     mueven `docs/`, Android o iOS no gastan un despliegue.
+#
+# Los secretos que necesita y cómo se crea la cuenta de FTP en cPanel están en
+# docs/despliegue-web.md. Sin ellos el primer paso falla y lo dice con nombre y
+# apellido, en vez de morirse dentro del FTP con un error de tres palabras.
+
+name: Desplegar la web a app.micolevirtual.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      ensayo:
+        description: "Ensayo: conecta y dice qué subiría, sin tocar el servidor"
+        type: boolean
+        default: false
+      saltar_pruebas:
+        description: "Saltarse analyze y test (solo para un despliegue urgente)"
+        type: boolean
+        default: false
+      limpiar:
+        description: "Borrar lo que haya en el servidor y subirlo todo otra vez"
+        type: boolean
+        default: false
+
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "android/**"
+      - "ios/**"
+      - "test/**"
+      - ".github/**"
+      - ".vscode/**"
+
+# Dos despliegues a la vez sobre el mismo FTP dejan el sitio a medias: uno sube
+# `main.dart.js` mientras el otro sube el `index.html` que no le corresponde. Se
+# encolan. Y no se cancela el que está corriendo —cortar a mitad de subida es
+# justo lo que deja el servidor inconsistente—: se espera a que termine.
+concurrency:
+  group: despliegue-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  desplegar:
+    name: Compilar y subir
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ── Antes de gastar cinco minutos compilando ────────────────────────────
+      - name: Comprobar que las credenciales están puestas
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          faltan=""
+          [ -n "$FTP_SERVER" ]   || faltan="$faltan FTP_SERVER"
+          [ -n "$FTP_USERNAME" ] || faltan="$faltan FTP_USERNAME"
+          [ -n "$FTP_PASSWORD" ] || faltan="$faltan FTP_PASSWORD"
+          if [ -n "$faltan" ]; then
+            echo "::error::Faltan estos secretos del repositorio:$faltan — se crean en Settings → Secrets and variables → Actions. Ver docs/despliegue-web.md §2."
+            exit 1
+          fi
+          echo "Credenciales presentes. Destino: $FTP_SERVER"
+
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      # La misma versión con la que se trabaja en la máquina de Joseth. Cuando
+      # allá se haga `flutter upgrade`, este número sube con él: si CI compila
+      # con otra versión, lo que se publica no es lo que se probó.
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+
+      - name: Bajar las dependencias
+        run: flutter pub get
+
+      # La regla de la casa antes de commitear —analyze sin avisos y test en
+      # verde— aplicada también antes de publicar. Se puede saltar a mano para
+      # un despliegue urgente, y entonces queda dicho en el resumen.
+      - name: Analizar
+        if: ${{ inputs.saltar_pruebas != true }}
+        run: flutter analyze
+
+      - name: Probar
+        if: ${{ inputs.saltar_pruebas != true }}
+        run: flutter test --concurrency=2
+
+      # `--base-href /` porque la app cuelga de la raíz del subdominio. Si algún
+      # día se sirviera desde una carpeta, aquí es donde se dice.
+      - name: Compilar para la web
+        run: flutter build web --release --base-href /
+
+      # 37 de los 43 megas que salen del compilador son un motor gráfico que esta
+      # app NO sirve: `flutter build web` siempre escribe `build/web/canvaskit/`,
+      # pero el arranque lo carga de `gstatic.com/flutter-canvaskit` —el CDN de
+      # Google— y el que queda en disco no lo pide nadie. Comprobado contra la
+      # web que ya está en pie: `canvaskit/canvaskit.wasm` y `canvaskit/skwasm.wasm`
+      # dan 404 ahí desde agosto y la app funciona.
+      #
+      # Se borra antes de subir en vez de excluirlo en el FTP, y mirando primero
+      # el arranque de verdad: el día que se compile con `--no-web-resources-cdn`
+      # —para dejar de depender de Google, que es una decisión de privacidad y no
+      # de despliegue— esto se da cuenta solo y sube el motor completo.
+      - name: Quitar el motor que no se sirve
+        run: |
+          if grep -q "gstatic.com/flutter-canvaskit" build/web/flutter_bootstrap.js; then
+            rm -rf build/web/canvaskit
+            echo "canvaskit local retirado: esta compilación lo carga del CDN de Google."
+          else
+            echo "::notice::Esta compilación NO usa el CDN, así que el motor local (37 MB) se sube entero."
+          fi
+          echo "Se va a subir: $(du -sh build/web | cut -f1)"
+
+      # Un archivo de dos líneas para poder abrir app.micolevirtual.com/despliegue.txt
+      # y saber qué hay arriba sin adivinar por el aspecto de la pantalla.
+      - name: Dejar la firma del despliegue
+        run: |
+          version=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          {
+            echo "version:  $version"
+            echo "commit:   ${{ github.sha }}"
+            echo "fecha:    $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "disparo:  ${{ github.event_name }}"
+          } > build/web/despliegue.txt
+          cat build/web/despliegue.txt
+
+      # `server-dir` depende de dónde deje la cuenta de FTP al entrar: si es una
+      # cuenta creada para el subdominio, entra ya dentro y vale `./`; si es la
+      # del hosting entero, hay que decirle la carpeta. Por eso es una variable
+      # del repositorio y no algo escrito aquí —se cambia sin tocar el código—.
+      - name: Subir por FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          port: ${{ vars.FTP_PORT || '21' }}
+          local-dir: build/web/
+          server-dir: ${{ vars.FTP_SERVER_DIR || './' }}
+          dry-run: ${{ inputs.ensayo == true }}
+          dangerous-clean-slate: ${{ inputs.limpiar == true }}
+          # La acción compara contra `.ftp-deploy-sync-state.json`, que deja en
+          # el servidor, y sube solo lo que cambió. En un hosting compartido eso
+          # es la diferencia entre subir cuatro megas o cuarenta kilos.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.DS_Store
+            **/*.symbols
+            **/node_modules/**
+
+      - name: Contar qué pasó
+        if: always()
+        run: |
+          {
+            echo "## Despliegue a app.micolevirtual.com"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| Resultado | ${{ job.status }} |"
+            if [ "${{ inputs.ensayo }}" = "true" ]; then
+              echo "| Modo | **ensayo** — no se subió nada |"
+            fi
+            if [ "${{ inputs.saltar_pruebas }}" = "true" ]; then
+              echo "| ⚠️ | se publicó **sin pasar** analyze ni test |"
+            fi
+            if [ "${{ inputs.limpiar }}" = "true" ]; then
+              echo "| Modo | **limpieza** — se borró el destino y se subió todo |"
+            fi
+            echo ""
+            echo "https://app.micolevirtual.com/despliegue.txt dice qué quedó arriba."
+          } >> "$GITHUB_STEP_SUMMARY"

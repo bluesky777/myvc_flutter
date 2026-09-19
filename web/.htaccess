@@ -1,0 +1,83 @@
+# Lo que el servidor de app.micolevirtual.com necesita saber para servir esta
+# app. Vive en `web/` porque `flutter build web` copia esta carpeta entera
+# dentro de `build/web/`, y es `build/web/` lo que sube el despliegue.
+#
+# Allá corre LiteSpeed, que lee los .htaccess con la sintaxis de Apache.
+# Comprobado el 16 de septiembre de 2026 contra la web que ya está en pie.
+#
+# Ver docs/despliegue-web.md §5.
+
+# ── 1. Caché: esto es lo que hace que un despliegue se vea ────────────────────
+#
+# Flutter NO le pone un hash al nombre de sus archivos: después de publicar, el
+# navegador vuelve a pedir `main.dart.js`, el mismo nombre de ayer. Y hoy el
+# servidor lo manda con `cache-control: max-age=604800, public` —medido—, o sea
+# que quien ya abrió la app se queda con la copia vieja durante UNA SEMANA. El
+# service worker tampoco salva: el que genera Flutter está deprecado y lo único
+# que hace al instalarse es darse de baja.
+#
+# `no-cache` no quiere decir «no guardes»; quiere decir «guarda, pero pregunta
+# antes de usarlo». El navegador manda su ETag, el servidor contesta 304 sin
+# cuerpo, y no se vuelve a bajar nada de lo que no cambió. O sea: despliegues
+# que se ven el mismo día, y casi el mismo ahorro de datos.
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, must-revalidate"
+
+  # Lo único que sí puede cachearse a lo bruto: los iconos y el favicon cambian
+  # cuando cambia la marca, y eso no pasa en un despliegue.
+  <FilesMatch "\.(png|jpg|jpeg|ico|webp)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>
+
+# ── 2. Tipos que hay que anunciar bien ────────────────────────────────────────
+#
+# Hoy esto no cambia nada: el motor gráfico se carga del CDN de Google y en el
+# servidor no queda ni un .wasm —ver el paso «Quitar el motor que no se sirve»
+# del workflow—. Está puesto para el día que se compile con
+# `--no-web-resources-cdn` y el motor pase a servirse desde aquí: el navegador
+# lo compila mientras lo descarga, pero sólo si el servidor lo anuncia como
+# application/wasm. Como octet-stream, la app sale en blanco sin decir por qué.
+<IfModule mod_mime.c>
+  AddType application/wasm .wasm
+  AddType text/javascript .js
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+</IfModule>
+
+# ── 3. Comprimir, por si algún día deja de hacerlo solo ───────────────────────
+#
+# LiteSpeed ya comprime por su cuenta: `main.dart.js` son cuatro megas en disco
+# y baja en 970 KB con `content-encoding: br` —medido el 16 sep—. Esto es la red
+# por si ese ajuste se cae o el sitio se muda a un Apache pelado; mientras tanto
+# no hace nada, que es justo lo que tiene que hacer.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/javascript
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE application/wasm image/svg+xml
+</IfModule>
+
+# ── 4. El cuaderno del FTP, fuera de la vista ─────────────────────────────────
+#
+# El despliegue deja en el servidor un `.ftp-deploy-sync-state.json` con la
+# lista y el hash de cada archivo subido: es lo que le permite subir sólo lo que
+# cambió. No lleva credenciales, pero tampoco tiene por qué poder leerlo
+# cualquiera que pase por app.micolevirtual.com.
+<Files ".ftp-deploy-sync-state.json">
+  Require all denied
+</Files>
+
+<IfModule !mod_authz_core.c>
+  <Files ".ftp-deploy-sync-state.json">
+    Order allow,deny
+    Deny from all
+  </Files>
+</IfModule>
+
+# ── 5. Las rutas de la app las resuelve la propia app ─────────────────────────
+#
+# Flutter usa aquí la estrategia de almohadilla —app.micolevirtual.com/#/notas—,
+# así que el servidor nunca ve la ruta y no hacen falta reglas de reescritura.
+# Si algún día se pasa a URLs limpias con `usePathUrlStrategy()`, hay que mandar
+# todo lo que no sea un archivo real a index.html; hasta entonces, sobra.
