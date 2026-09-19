@@ -1,7 +1,10 @@
 # Lo que la app necesita del servidor
 
-Cinco cosas, y ninguna se puede hacer desde el lado Flutter — **tres de ellas
-ya entregadas**. La quinta es la única con prisa: se anotó el 2 de septiembre de
+Siete cosas, y ninguna se puede hacer desde el lado Flutter — **tres de ellas
+ya entregadas**. La sexta (§6) **no es una ruta ni bloquea nada**: son dos
+columnas en un `SELECT` que ya existe, y su apartado conserva la ruta nueva que se
+pidió primero y se retiró el mismo día, porque la lección de por qué se retiró es
+reutilizable. La quinta es la única con prisa: se anotó el 2 de septiembre de
 2026 y es el 99 % de una respuesta que la app descarta, pagado en cada apertura
 por un hosting compartido de un núcleo. El backend (`~/DESARROLLOS/8myvc`) es **de solo lectura** para esta
 app: se lee para saber qué devuelve cada endpoint y nunca se edita. Esto es la
@@ -30,12 +33,16 @@ flowchart LR
     C["3 · Notificaciones<br/>endpoint + comando + cron"] --> C1["avisar sin sondear<br/><i>paso 0 cerrado ✓</i>"]
     D["4 · La versión mínima<br/>un campo en /login"] --> D1["se puede retirar<br/>un endpoint<br/><i>falta el servidor</i>"]
     E["5 · GET muro/app<br/>⚡ el muro sin el calendario"] --> E1["108 KB → ~5<br/>el 99% que la app tira<br/><b>urgente</b>"]
+    F["6 · dos columnas en<br/>listasignaturas"] --> F1["materia_id + grado_id<br/>borra alcance.ts del front<br/><i>escritas, sin fundir</i>"]
+    G["7 · el candado de la<br/>plantilla (P6)"] --> G1["el % del colegio deja<br/>de ser editable<br/><b>toca a los dieciséis</b>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
     style B fill:#e8f4e8,stroke:#5a8f5a
     style C fill:#e8f4e8,stroke:#5a8f5a
     style D fill:#fff0e6,stroke:#c98a4b
     style E fill:#ffe6e6,stroke:#c94b4b
+    style F fill:#f0f0f5,stroke:#8a8aa0
+    style G fill:#ffe6e6,stroke:#c94b4b
 ```
 
 ---
@@ -497,6 +504,300 @@ un `DB::select` dentro se arregla con un solo `WHERE year_id IN (...)`.
 
 ---
 
+## 6. Dos columnas en `listasignaturas` — ESCRITAS, sin fundir
+
+> **Pedido y aprobado el 19 sep 2026.** Joseth lo autorizó con el precio delante y
+> la sesión de la API lo escribió el mismo día: commit **`fe95da8`**, rama
+> `feat/materia-id-y-grado-id-en-asignaturas`. **Sin fundir a `main` y sin
+> desplegar** — las dos cosas son de Joseth y van por separado.
+>
+> **Y ninguna ruta nueva: el router sigue en 600**, que es donde empezó todo esto.
+>
+> Lo que lleva dentro:
+>
+> - `a.materia_id` y `g.grado_id` en `Profesor::asignaturas` **y en el gemelo de
+>   Piars, en el mismo commit** — que era la mitad que muerde;
+> - **tres** instantáneas regeneradas, `+2` claves cada una. La tercera es
+>   `muestreo-piars-asignaturas`, y **sólo se mueve porque se tocó el gemelo**: en
+>   la medición previa no se había movido. Ésa es la prueba de que sin tocarlo la
+>   ruta habría contestado dos formas con la suite en verde;
+> - los dos ficheros quedan con un aviso apuntando al otro, para que el próximo
+>   que añada una columna ahí no repita el agujero.
+>
+> ```
+> Tests: 2116 passed, 1 skipped (19747 assertions)   --testsuite=Contrato
+> Tests: 147 passed (Unit) · 9 passed (Feature) · larastan nivel 7: [OK] 651 ficheros
+> ```
+>
+> **Lo que sigue abierto y no es de este repositorio**: borrar `alcance.ts` del
+> front —que no se puede hasta que esto esté **desplegado** en los dieciséis, no
+> fundido— y el hash de `lal`, que se comprueba mirando y es de Joseth.
+>
+> **Para la app esto todavía no cambia nada**: escrito no es desplegado. Ver «Lo
+> que hace la app mientras tanto», al final.
+>
+> La pantalla que lo usa está en [competencias.md](competencias.md) §3.
+
+### Lo que pasa hoy, medido
+
+La pantalla «Mis competencias» del docente necesita, por clase, el par
+**(`materia_id`, `grado_id`)**: el plan de área se dirige por ids.
+
+`GET asignaturas/listasignaturas[/{profesor_id}]` sale de `Profesor::asignaturas`
+(`8myvc/app/Models/Profesor.php:110`). Hace **los tres `JOIN`** —`materias`,
+`grupos`, `grados`— y **no nombra `a.materia_id` ni `g.grado_id`**. Sus trece
+claves son `asignatura_id · grupo_id · profesor_id · creditos · orden · materia ·
+alias_materia · nombre_grupo · abrev_grupo · titular_id · caritas ·
+nivel_educativo_id · unidades`.
+
+**El front se lo encontró igual y lo resolvió en el cliente**, en
+`myvc_front/app2/src/app/paginas/docente-competencias/alcance.ts`:
+
+```
+grupo_id        ->  GET grupos    ->  grado_id     exacto: es la clave primaria
+materia+alias   ->  GET materias  ->  id           POR NOMBRE, que es lo que hay
+```
+
+Y si el par `materia`+`alias` no es único, **descarta esa asignatura** y lo cuenta
+(`sinEmparejar`), porque *«callarlo convierte una limitación nuestra en “el sistema
+no me deja”»*.
+
+### Lo que se pide
+
+**Dos columnas en un `SELECT` que ya tiene las tres tablas dentro.**
+
+| | |
+|---|---|
+| Dónde | `Profesor::asignaturas`, `app/Models/Profesor.php:108` (en `ebbae74`) |
+| Qué | `a.materia_id` y `g.grado_id` — los dos `JOIN` ya están puestos |
+| Guarda | ninguna nueva — `listasignaturas` ya lleva `persona.propia` |
+| Ruta nueva | **no**. El contador de rutas no se mueve |
+| Compatibilidad | claves **añadidas** a una lectura: una app vieja las ignora. No es el caso de `notas/nivelar`, que era escritura |
+
+> ### Pero el precio NO es «una respuesta», son ONCE — medido por la sesión de la API
+>
+> Lo que se comparte no es la ruta: **es el método**, y lo llaman **once sitios en
+> nueve controladores**, todos devolviendo esas filas en su respuesta:
+>
+> ```
+> AsignaturasController ×3   listasignaturas · listasignaturas-alone · listasignaturas-year
+> NotasController:413 · UnidadesController:257 · PlanillasController:116
+> PiarsAsignaturasController:19 · PlanillasAusenciasController:84 · NotasPerdidasController:164
+> ```
+>
+> **Eso no lo mata** —dos ids no son datos de nadie, y ninguno de los cuatro
+> clientes pinta estas filas recorriendo sus claves— pero el precio que hay que
+> ponerle delante a Joseth es **«once respuestas»**, no «una». Esta página decía
+> «una» y era mi encuadre, no la medida.
+>
+> **Y hay una trampa que no habíamos visto ninguno de los dos**:
+> `PiarsAsignaturasController` tiene un **gemelo copiado a mano** del mismo
+> `SELECT` para su rama `Usuario` (líneas 23-31). Tocar sólo el método deja esa
+> ruta contestando **dos formas distintas según quién pregunte**: un `Profesor`
+> con los ids y un `Usuario` sin ellos. Se tocan los dos, o el gemelo se borra y
+> llama al método.
+
+### El precio, MEDIDO — 19 sep 2026
+
+Lo corrió la sesión de la API sobre `main` (`ebbae74`), en árbol y base propios,
+con las dos columnas puestas. Queda commiteado como medición en
+`medicion/dos-columnas-en-listasignaturas` (`7a2df03`), con **NO FUSIONAR** en el
+mensaje:
+
+```
+Tests: 2 failed, 1 skipped, 2114 passed (19747 assertions)   --testsuite=Contrato
+Duration: 921.02s
+```
+
+**Dos instantáneas se mueven**, y su diff es literalmente
+`+ 'materia_id' => 'int'` y `+ 'grado_id' => 'int'`:
+`muestreo-notas-perdidas-show-profesor.json` y
+`muestreo-planillas-ausencias-show-profesor.json`. **Ni un rojo más en 2.117
+pruebas.**
+
+> ### Y el hallazgo no es el dos: es lo que NO se pone rojo
+>
+> De los once llamantes, **la suite mira dos**. Las otras nueve
+> —`listasignaturas` ×3, notas, unidades, planillas y la rama `Profesor` de
+> `piars/asignaturas`— **cambian de forma en silencio**.
+>
+> **Y la ruta que motiva esta petición es una de las nueve**: `listasignaturas`
+> **no tiene instantánea de forma**, así que hoy nadie notaría si su respuesta
+> cambiara. Ver abajo, en «Lo que la app necesita que NO se rompa».
+>
+> **El gemelo de Piars queda demostrado y no supuesto**:
+> `muestreo-piars-asignaturas.json` **no se movió**, porque esa instantánea es de
+> la rama `Usuario` —la del `SELECT` copiado a mano—. O sea que aplicar esto
+> tocando sólo el método dejaría esa ruta contestando **dos formas según quién
+> pregunte, con la suite en verde**. Eso no se dedujo: se contó.
+
+**Y no es para la app solamente: borra `alcance.ts` del front**, y con él el
+emparejamiento de materias por nombre. Es una deuda que hoy pagan los dos clientes.
+
+#### El argumento fuerte no es el mantenimiento: es que el rodeo del front no está garantizado
+
+Esto lo aportó la sesión de la API y **es mejor que lo que yo tenía escrito**.
+Medido en el colegio de desarrollo: **35 materias vivas y cero pares
+(`materia`, `alias`) repetidos**, o sea que el emparejamiento por nombre funciona
+ahí. Lo que le faltaba a mi argumento es que **el esquema no lo impide**:
+`materias` **no tiene ningún índice único sobre `(materia, alias)`**, sólo la
+clave primaria de `id`.
+
+O sea que la premisa del rodeo es **una casualidad de los datos de un colegio, no
+una garantía**, y son dieciséis. El día que un colegio tenga dos materias que se
+llamen y se abrevien igual, el front **descarta esas asignaturas en silencio** y el
+docente ve que «el sistema no le deja».
+
+Con eso la pantalla se arma con **dos peticiones a rutas que existen**: ésa —que
+la app ya llama en otras pantallas— y `GET desempenos?periodo_id=`, filtrando en
+el cliente como hace el front. Y las escrituras **ya están**: `POST desempenos`,
+`PUT`/`DELETE desempenos/{id}` y `PUT desempenos/copiar`, así que la función queda
+entera y no a medias — que es la lección de `horario/versiones`.
+
+### La ruta que se retiró, y por qué — porque la lección es reutilizable
+
+Lo pedido primero fue `GET desempenos/mis-clases`: una petición que devolvía las
+clases del docente ya resueltas, con `puede_escribir` por clase y `editable` por
+fila. **El argumento que la sostenía era falso y se cayó al ir a comprobarlo** para
+contestar a la sesión de la API, que pidió justificarla punto por punto.
+
+El argumento era: *«sin la ruta, la app tiene que reimplementar
+`Autoriza::puedeEscribirDesempenos`, y una regla de autorización escrita dos veces
+se separa»*. Comprobado, **la app puede calcular esa regla exacta** —no aproximada—
+con lo que ya recibe:
+
+| parte de la regla | de dónde la saca la app |
+|---|---|
+| rama 1 · `can_edit_plantilla_notas` | `Autoriza::puedeEditarPlantillaNotas` (`Autoriza.php:576` en `ebbae74`) lo lee de `$user->perms`, y **`perms` viaja en el `/login`** (`ContextoDeUsuario.php:408`, y su comentario lo dice). La app parsea `roles` y **no** parsea `perms`: eso es trabajo de este lado |
+| rama 2 · «doy esa materia en ese grado» | es **la propia lista de asignaturas**, en cuanto traiga los ids. `Autoriza::puedeEscribirDesempenos` (`Autoriza.php:640`) filtra literalmente por `a.materia_id = ? AND g.grado_id = ?` — **el par que falta es exactamente el que se pide** |
+| el periodo cerrado | `profes_pueden_editar_notas`, que ya lee [ConfiguracionColegio](../lib/Utils/ConfiguracionColegio.dart) |
+| `grado_id IS NULL` es del colegio | una constante |
+
+Queda un argumento de **mantenimiento** —la regla escrita en dos idiomas puede
+separarse el día que el backend la cambie— y ése no paga una ruta nueva: en ese
+repositorio estrenar una mueve el contador de `CLAUDE.md` y tres o cuatro
+instantáneas, y es una decisión de Joseth con el precio delante.
+
+> **La lección, que es la que costó las dos veces**: medí **lo que al endpoint le
+> falta** y no miré **si lo que faltaba era una ruta o una columna**. Es la misma
+> forma del error de §5 de [competencias.md](competencias.md) —dar algo por
+> bloqueado sin abrir el cliente que ya lo hace—, cometida dos veces seguidas en
+> el mismo trazo. La pregunta que las dos veces habría bastado: **¿esto existe y
+> devuelve de menos, o no existe?**
+
+### La pregunta abierta, ya más pequeña de lo que la dejé
+
+Aquí ponía que la app se traería *«el catálogo del colegio entero»* y que el techo
+era ése. **Es más débil que eso, y el dato estaba en un fichero que yo había
+leído**: `GET desempenos` **ya acepta `materia_id` y `grado_id` como filtros**
+(`DesempenosController:104-115`). Así que la app **no está obligada** a bajarse
+nada del colegio entero — puede acotar por clase hoy mismo, al precio de N
+peticiones en vez de una.
+
+O sea que el techo real es *«una petición por clase»* —cinco o seis—, no *«el
+colegio entero»*. Un `?mias=1` en esa misma ruta seguiría ahorrando viajes, pero
+**ahorra viajes, no evita un desastre**, y por eso **no se pide**. Queda escrito
+con su salida elegida por si alguna vez estorba.
+
+### Una trampa para quien busque un atajo en la app
+
+`listasignaturas/{id}` trae un bloque **`grados_comp` que sí lleva `grado_id`**, y
+es tentador. **No sirve**: su consulta filtra `g.titular_id = :profe_id`, o sea
+**sólo los grupos de los que el docente es titular**, no los que da. Quien lo tome
+por el mapa completo se queda corto **sin enterarse**. Lo levantó la sesión de la
+API y se apunta aquí para que nadie lo proponga como alternativa a la columna.
+
+---
+
+## 7. El candado de la plantilla, y un interruptor que no viaja
+
+> **Decidido por Joseth el 19 sep 2026**, mirando el banco de pruebas: *«los
+> porcentajes de las unidades ahora no serían por asignatura sino por colegio, y
+> cada asignatura tiene subunidades/logros que se enlazan a ese porcentaje hecho
+> por la coordinadora o docente»*. Y a la pregunta de si el docente deja de poder
+> cambiarlos: **sí, pero primero el backend**.
+>
+> **No es una idea nueva: es P6**, que ya está escrita en
+> `myvc_front/CORRECCIONES-MODELO-DE-EVALUACION.md`. Esto la pide desde el lado
+> de la app y añade lo que se midió aquí.
+
+### 7.1 · El candado de `por_defecto` — **la más delicada de todo el trazo**
+
+**Lo que pasa hoy, medido.** `unidades.por_defecto` y `subunidades.por_defecto`
+existen en el **esquema desplegado** (`tinyint(1) DEFAULT '0'`) y **ya viajan** a
+los clientes: `AsignaturasController::putDetalleAsignatura` las nombra en sus dos
+`SELECT` (líneas 71 y 83). O sea que el dato está.
+
+Lo que no está es el candado. Medido el 13 sep con el token de un docente **sin**
+`can_edit_plantilla_notas`: `PUT unidades/update/18501` contesta **200**. Puede
+cambiar su «Seguimiento 70 %» a 60 en su asignatura, y el colegio **no puede
+verlo**: cree que tiene un reparto y tiene ciento treinta y cuatro.
+
+**Lo que se pide** (es P6 tal cual, y se copia aquí para no depender de otro repo):
+
+| | |
+|---|---|
+| `unidades/update`, `subunidades/update`, `unidades/update-orden` | **rechazar** el cambio de **nombre** y de **porcentaje** cuando `por_defecto = 1` y quien llama no tiene `can_edit_plantilla_notas` |
+| lo que **sigue permitido** | **añadir subunidades dentro** de una unidad del colegio. Es el trabajo del docente (D14) y es justo lo que Joseth describe: *«cada asignatura tiene subunidades/logros que se enlazan a ese porcentaje»* |
+| ruta nueva | «volver a aplicar»: actualiza las copias **de los periodos no cerrados** en vez de saltárselas, y contesta con su recuento como `sembrar` |
+
+### 7.2 · Por qué esto no se hace sólo en la app, y no es pereza
+
+**Bloquear el campo aquí sería teatro**: la misma cuenta abre la web y hace el
+`PUT` sin candado. Y hay algo peor que el teatro —**le quita a un docente algo que
+hoy hace de verdad**—, que es exactamente lo que P6 dice con todas las letras:
+
+> *«Un docente que hoy ajusta sus porcentajes deja de poder hacerlo. Eso es una
+> decisión de producto, no un arreglo: hay que decirlo colegio a colegio antes, no
+> después.»*
+
+Por eso la app no pinta nada hasta que el servidor lo rechace. **El día que lo
+haga**, aquí es una entrega corta: `UnidadModel` y `SubunidadModel` leen
+`por_defecto` —que ya viene—, `UnidadesScreen` deja el nombre y el porcentaje en
+gris con su motivo, y el botón de añadir subunidad **se queda encendido**.
+
+### 7.3 · Y lo que NO se pide, que es la mitad de la respuesta
+
+Joseth preguntó si los porcentajes pasan a ser «del colegio y no de la
+asignatura». **La respuesta escrita es que se copian, no se comparten**, y está
+decidida en P6.bis con su medición: `unidades.asignatura_id` es `NOT NULL`, once
+modelos calculan sobre él, y con el 70 % en una sola fila del año **corregirlo en
+octubre recalcularía los boletines del periodo 1 que ya fueron a casa**.
+
+La tabla del colegio ya existe y **está desplegada** —`unidades_por_defecto`— y
+`UnidadesController` siembra desde ella la primera vez que alguien abre una
+asignatura sin unidades. O sea que «se define arriba y se lee abajo» **ya ocurre**:
+lo que falta es que se *comporte* así, y eso es el candado de §7.1.
+
+### 7.4 · `reparto_subunidades` no viaja, y su hermano sí
+
+Lo pequeño, y es una asimetría que sólo se ve desde aquí.
+`years.reparto_subunidades` —`porcentaje` | `promedio`, el interruptor que hace
+que **las subunidades dejen de llevar porcentaje**— **no está en el volcado del
+esquema y no sale en ninguna de las cuatro consultas de `ContextoDeUsuario`**:
+
+```bash
+grep -c reparto_subunidades 8myvc/database/schema/mysql-schema.sql   # 0
+grep -c reparto_subunidades 8myvc/app/Services/ContextoDeUsuario.php # 0
+```
+
+Su hermano `modelo_evaluacion` **sí sale en las cuatro**. Los dos son columnas de
+`years` que gobiernan lo que ve un docente, así que se pide **la misma línea**: que
+`reparto_subunidades` viaje en el contexto del login.
+
+Sin eso la app no puede esconder el campo de porcentaje de la subunidad, que es lo
+que el colegio va a notar el primer día. Lo que la app hará con él ya está escrito
+en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
+
+> **Y no se atan a `modelo_evaluacion`** — Joseth, 19 sep 2026. Un año puede ir por
+> competencias y seguir ponderando. El motivo es **D3**: *«el interruptor gobierna
+> lo que se ve, nunca el cálculo»*, y `modelo_evaluacion` hoy no mueve ninguna
+> definitiva. Atarlos habría hecho que encender el boletín por competencias
+> recalculara las notas de todo un año, que es una clase de sorpresa que este
+> sistema no se puede permitir.
+
+---
+
 ## Cómo arrancar la sesión que hace esto
 
 Se trabaja **desde dentro del backend** —`cd ~/DESARROLLOS/8myvc && claude`—, no
@@ -591,6 +892,24 @@ profesor que haya que respetar: quitar esos campos es quitar lo que nadie lee.
 **Lo que sí rompería es cerrarlo con un 403.** No tumba la pantalla —el mapa de
 docentes va en un `catch` y se queda vacío— pero deja a todo alumno y acudiente
 sin el nombre de su titular, en los quince colegios a la vez.
+
+### `GET asignaturas/listasignaturas` — y nadie lo vigila, medido
+
+**Es la única puerta de la app a las asignaturas de un docente**: de ahí salen
+[NotasScreen](../lib/Screens/NotasScreen.dart),
+[UnidadesScreen](../lib/Screens/UnidadesScreen.dart) y
+[AsignaturaModel](../lib/Models/AsignaturaModel.dart), que lee `asignatura_id`,
+`grupo_id`, `profesor_id`, `materia`, `alias_materia`, `nombre_grupo` y
+`abrev_grupo`.
+
+**No tiene instantánea de forma en el backend.** No es una sospecha: salió de la
+medición de §6 —al añadirle dos columnas se movieron dos instantáneas y **ninguna
+era la suya**—. O sea que **si esa respuesta cambiara, no se pondría rojo nada, ni
+allí ni aquí**, y el síntoma sería la pantalla de poner notas vacía para todos los
+docentes a la vez.
+
+Lo que la app necesita que no se mueva son esas siete claves. Añadir es seguro
+—`JsonBackend` ignora lo que no conoce—; **renombrar o quitar, no**.
 
 ### `GET perfiles/username/{u}` — hoy no limita a cuáles
 

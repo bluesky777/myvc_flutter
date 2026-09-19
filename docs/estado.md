@@ -25,15 +25,41 @@ código sino de esta página.
 
 ## Dos cifras que hay que corregir donde se lean
 
-- **Son quince colegios, no dieciséis**, desde el 25 de agosto de 2026. Uno se
-  dio de baja y se borró del servidor, y además nunca estuvo en ninguna tanda de
-  despliegue: no tenía ni repositorio git ni aplicación, así que jamás pudo
-  devolver un hash. Importa porque «desplegado en los dieciséis» es la condición
-  de encendido de los interruptores, y escrita así **no se puede cumplir nunca**.
-  Barrido entero el 26 ago: documentos y comentarios de código. Lo único que
-  sigue diciendo «dieciséis» a propósito son las frases que corrigen la cifra, y
-  [SelectorDocente](../lib/Widgets/SelectorDocente.dart), que habla de dieciséis
-  **docentes** y no de colegios.
+- **Son DIECISÉIS colegios, y el «quince» de esta página llevaba desde el 30 de
+  agosto de 2026 siendo falso.** Fueron dieciséis, luego quince cinco días por
+  una baja el 25 ago —que es cuando se barrió el repositorio entero y se escribió
+  aquí—, y **dieciséis otra vez el 30 ago, cuando entró `lal`**, montado en la
+  otra cuenta de cPanel (`lalvirtual.edu.co`). Lo levantó la sesión de la API el
+  19 sep 2026 y se comprobó desde aquí: `8myvc/docs/DESPLIEGUE.md:966` y `:143`
+  — **el bucle de despliegue devuelve 17 carpetas: dieciséis colegios y `demo`**.
+
+  **La lección no es el número: es que la condición no debe llevar ninguno.**
+  Un recuento escrito en un docblock envejece en silencio y **falla del lado
+  peligroso** — quien verifique «los quince» habiendo dieciséis enciende un
+  interruptor con un colegio sin desplegar. Por eso
+  [Interruptores](../lib/Utils/Interruptores.dart) ya no dice un número, sino
+  **«todos los que recorre el bucle de despliegue»**, que se lee del servidor y
+  no hay que mantener al día. Y ojo: el `for` de `micolev1` **no alcanza a
+  `lal`**, que está en otra cuenta.
+
+  **El resto del repositorio sigue diciendo «quince» en unas cuarenta frases** y
+  **no se ha barrido**, a propósito: muchas son ciertas en su contexto —«se
+  desplegó en los quince el 25 ago» lo era ese día— y un reemplazo a ciegas
+  rompería las que cuentan otras cosas. Mover la cifra donde de verdad afirma el
+  presente es decisión de Joseth, no un efecto secundario.
+
+  **Y una comprobación que queda pendiente, sin alarmar**: `disciplinaMisFichas` se
+  encendió el 26 ago contra la tanda `eb95cbc`, **cuatro días antes de que `lal`
+  existiera**. Aquí se escribió primero *«lo más probable es que se montara con
+  código posterior y lo tenga de sobra»* — **y esa inferencia no vale**: la sesión
+  de la API avisó de que `lal` **se trasladó desde otro servidor**
+  (`8myvc/docs/TRASLADO-LAL.md`), así que **lo que tenga depende de qué copia se
+  llevó, no de la fecha**. Se comprueba mirando su hash en el servidor, que es una
+  orden contra producción y por tanto de Joseth. Es el mismo error en pequeño que
+  el de la cifra: razonar donde había que medir.
+
+  [SelectorDocente](../lib/Widgets/SelectorDocente.dart) habla de dieciséis
+  **docentes**, no de colegios: ése no se toca.
 - **«Desplegado» se comprueba contra el hash de la tanda, no contra `main`.** Lo
   que corre en los quince es el commit que Joseth verificó igual en todos, y
   `main` va por delante. La pregunta correcta es «¿el commit que trae esto es
@@ -55,6 +81,7 @@ flowchart LR
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
     T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
+    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3 ✓<br/>docente y familia, y los<br/>datos de A5<br/>634 pruebas ✓<br/>⛔ sólo el despliegue"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -67,6 +94,7 @@ flowchart LR
     style V1 fill:#fff0e6,stroke:#c98a4b
     style T0 fill:#e8f4e8,stroke:#5a8f5a
     style I0 fill:#f0f0f5,stroke:#8a8aa0
+    style K0 fill:#fff0e6,stroke:#c98a4b
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
@@ -640,3 +668,74 @@ en `es-419` y no en `es-CO`.
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)
 tienen los textos. Si algún día entran las notificaciones, los dos hay que
 retocarlos: hay que declarar el identificador de dispositivo de FCM.
+
+### La web, publicada con un botón — [despliegue-web.md](despliegue-web.md)
+
+**Escrito el 16 de septiembre de 2026, a falta de poner los secretos en GitHub.**
+`app.micolevirtual.com` llevaba desde el 20 de agosto sirviendo una compilación
+subida a mano. Ahora hay un workflow —[desplegar-web.yml](../.github/workflows/desplegar-web.yml)—
+que compila, pasa `analyze` y `test`, y sube por FTPS solo lo que cambió: a mano
+desde Actions, o solo en cada push a `main` que toque código de la app.
+
+Lo que falta es de una vez: los tres secretos (`FTP_SERVER`, `FTP_USERNAME`,
+`FTP_PASSWORD`) y **un ensayo antes de la primera subida**, para ver en qué
+carpeta entra la cuenta de FTP. Esa comprobación no es ceremonia: el interruptor
+de limpieza borra la carpeta de destino, y si la cuenta entrara en la casa
+entera, esa carpeta son los diecisiete colegios.
+
+De paso entra [web/.htaccess](../web/.htaccess), que es lo que hace que un
+despliegue **se vea**: Flutter no le pone hash al nombre de sus archivos y hoy
+el servidor manda `main.dart.js` con `max-age=604800` —una semana—, así que
+hasta ahora publicar no significaba que la gente lo viera. Y el despliegue pasó
+de 43 MB a 6: los 37 restantes son un motor gráfico que la app carga del CDN de
+Google y que nadie le pide al servidor.
+
+### Competencias — [competencias.md](competencias.md)
+
+**El plan de pantallas, escrito el 19 de septiembre de 2026.** El modelo por
+competencias ya está construido en el backend (siete rutas) y en el front web
+(cinco pantallas), y **no está desplegado en los quince**. De la app le tocan dos
+pantallas y sólo dos: **la del docente**, donde ve y corrige las competencias de
+su materia y su grado, y **las líneas del boletín** en la tarjeta de
+`MisNotasScreen`. El catálogo del colegio, adoptar del MEN y las frases por banda
+se quedan en la web, por la misma regla de siempre.
+
+**A0 y A2 están hechas** (19 sep). A0: `ConfiguracionColegio` lee del `/login`
+`modelo_evaluacion` y los tres rótulos, con el valor de hoy por defecto; no
+cambia una pantalla y no necesita interruptor, porque una clave que no viene no
+puede encender nada.
+
+**A2 es la pantalla del docente**, `/mis-competencias`: sus clases agrupadas por
+(materia, grado) —no por asignatura, que es la decisión que ordena todo lo
+demás—, las filas del colegio en su bloque y sin botones, y una hoja para
+escribir que enseña **cómo va a salir impresa en cada banda** mientras se teclea.
+Nueve ficheros nuevos, **579 pruebas en verde**.
+
+Está detrás de **dos** puertas, las dos cerradas: `Interruptores.competenciasDocente`
+y que el año del colegio vaya por competencias. Hoy no la ve nadie.
+
+Y al implementarla salió una corrección al propio plan: **esas cuatro columnas no
+están en el volcado del esquema**, o sea que están en `main` del backend y **no
+desplegadas**. Probar esto contra un colegio va a dar siempre el camino viejo.
+
+**Aquí decía que faltaban dos campos del backend y era falso** — lo corrigió
+Joseth el 19 sep: el front y el backend ya hicieron su parte, y **las dos
+pantallas se pueden construir hoy**. `listasignaturas` efectivamente no trae
+`materia_id` ni `grado_id`, pero **el front se lo encontró igual y lo resolvió en
+el cliente** (`alcance.ts`), y la app puede portarlo; y la familia **sí** puede
+pedir su boletín, porque `ExigirBoletinPropio` tiene una rama escrita justo para
+eso. Lo que queda no es un bloqueo sino un coste, y está en
+[competencias.md](competencias.md) §5.
+
+**Lo único que espera de verdad es el despliegue**: las siete rutas están en
+`main` de `8myvc` y no en los quince, igual que las cuatro columnas del año — que
+ni siquiera están en el volcado del esquema.
+
+Y de rebote: las dos rutas nuevas de `frases_asignatura/grupo/{asignatura_id}`
+arreglan un fallo que la app ya tiene —pone las frases de una en una y no puede
+elegir el periodo—. Ver [competencias.md](competencias.md) §9.
+
+**Y el documento viejo del tema, [plantilla-y-competencias.md](plantilla-y-competencias.md),
+caducó en su mitad de competencias** y lleva el aviso arriba: describía un modelo
+de dos pisos que se abolió y nombra un interruptor que no existe en el esquema.
+Su mitad de plantilla de notas sigue valiendo entera.

@@ -1,11 +1,26 @@
 # Plantilla de notas y competencias — lo que le toca a la app
 
-> El diseño completo está en el backend:
-> `8myvc/docs/migracion/28-competencias-e-indicadores.md`. Aquí sólo está lo que
-> cambia en `myvc_flutter`.
+> ## ⚠ Las competencias de este documento caducaron el 17 sep 2026
 >
-> **Estado: propuesta. El backend no existe todavía.** Nada de esto se escribe
-> hasta que las rutas estén desplegadas en los dieciséis colegios.
+> El modelo por competencias **se rehízo entero** ese día: se quedó en un solo
+> piso, la rejilla del docente se borró y el nivel pasó a derivarse de la
+> definitiva. El plan de pantallas al día está en
+> **[competencias.md](competencias.md)**, y su §0 detalla las tres cosas que este
+> documento afirma y ya no son verdad — entre ellas un interruptor
+> (`show_competencias_bol`) **que no existe en el esquema**.
+>
+> **Lo que de este documento sigue valiendo es la plantilla de notas**: §0, §1,
+> §2, §3.1, §3.1.bis y §3.2.bis. Nada de eso lo toca el modelo nuevo. **§3.2 y
+> §3.3 están muertas**: la primera describe mal de dónde llegan las competencias,
+> y la segunda planifica un piso de indicadores que se abolió.
+>
+> El diseño original estaba en
+> `8myvc/docs/migracion/28-competencias-e-indicadores.md`; el vigente es
+> `8myvc/docs/migracion/39-el-modelo-plano-por-competencias.md`.
+>
+> *(Este aviso decía que sus «dieciséis colegios» eran quince. **La cifra de este
+> documento estaba bien y la corrección era el error**: son dieciséis desde que
+> entró `lal` el 30 ago 2026. Ver [competencias.md](competencias.md) §0.)*
 
 ---
 
@@ -91,6 +106,16 @@ colegios que no enciendan `show_competencias_bol`.
 con **`false` por defecto**, igual que los demás.
 
 ### 3.2.bis · El año que va por promedio *(Entrega 5)*
+
+> **Decidido el 19 sep 2026: este interruptor NO se ata a `modelo_evaluacion`.**
+> Un año puede ir por competencias y seguir ponderando sus subunidades. El motivo
+> es D3 —*«el interruptor gobierna lo que se ve, nunca el cálculo»*—: atarlos
+> haría que encender el boletín por competencias recalculara las definitivas de
+> todo un año.
+>
+> Y **hoy esta columna no viaja en el `/login`**, aunque su hermana
+> `modelo_evaluacion` sí. Pedido en [backend-pendiente.md](backend-pendiente.md)
+> §7.4; hasta entonces la app no puede esconder el campo.
 
 `years.reparto_subunidades` = `'porcentaje'` (lo de hoy y el defecto) o `'promedio'`.
 Lo elige el colegio. **`ConfiguracionColegio.dart` y `ColegioModel` lo leen con
