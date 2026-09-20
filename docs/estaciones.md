@@ -85,14 +85,35 @@ Así que el aviso se parte en dos, y se dice cuál es cuál:
 | | Qué es | Cuándo está |
 |---|---|---|
 | **La cola, dentro de la app** | La pantalla 02 vuelve a preguntar cada ~20 s mientras está abierta, y siempre al volver de marcar. Es lo que hace aparecer al recién llegado | **Es lo único que hace falta para que el día de matrículas funcione** |
-| **El push** | Un tema por estación, publicado **en el momento**, no en la tanda de los quince minutos | **Entra ahora. Decidido por Joseth el 20 sep 2026** |
+| **El push** | Un tema por estación | ~~Entra ahora~~ → **NO ENTRA. Rectificado por Joseth el 20 sep 2026**, ver abajo |
 
-> **«El push inmediato entre ahora.»** Eso cambia lo que esta sección decía —*«no bloquea
-> nada»*— y hay que decir lo que cuesta, porque **el lado Flutter no está empezado**: hay que
-> meter `firebase_messaging` en `pubspec.yaml`, resolver permisos de notificación en iOS y
-> Android, y suscribir al tema. Y en el servidor, **publicar en el momento**: el comando
-> `notificaciones:enviar` y su disparo de quince minutos sirven para las notas y **no** para
-> esto.
+> ## ⛔ RECTIFICADO EL 20 SEP 2026: EL PUSH INMEDIATO NO ENTRA
+>
+> **Esta casilla decía «Entra ahora» y mandaba a este repo a meter `firebase_messaging` en
+> `pubspec.yaml` por ello. NO hay que hacerlo por esto.** Al ir a construir la mitad del
+> servidor se destapó que **dos documentos se contradecían**, se le puso delante a Joseth y
+> contestó: *«que llegue cuando tenga que llegar, no me voy a complicar con que le llegue de
+> inmediato, por ahora no importa»*.
+>
+> **La contradicción, dicha entera porque el día que esto se retome ahorra la derivación:**
+> `notificaciones.md` §«Cuándo se envía» prohíbe **publicar dentro de una petición** y lo
+> prohíbe **con la medición hecha** —*«el docente espera a que Google responda»*—, mientras que
+> lo que esta tabla pedía era exactamente eso. Y la prohibición tiene **dos motivos, de los que
+> aquí sólo aplicaba uno, el peor**: el de *volumen* no aplica —cerrar un paso es **una** acción
+> por familia, no treinta— pero el de *latencia* **aplica más fuerte**, porque quien atiende
+> tiene una fila delante y está en un patio con mala señal.
+>
+> Había una salida que ninguno de los dos documentos contemplaba —**el cron ya entra cada
+> minuto** en los dieciséis, y el cuarto de hora es una elección de Laravel cuyo motivo escrito
+> es *agrupar las notas*, que no aplica a una estación— y aun así la respuesta fue que **la
+> inmediatez no importa hoy**: contesta al problema en vez de a la solución.
+>
+> El porqué entero, con lo medido y lo que quedó sin medir, está en
+> `8myvc/docs/migracion/46-las-estaciones-en-la-app.md` §5.3.
+>
+> **Lo que esto cambia para este repo, en una línea: nada de lo que hay que construir.** El
+> orden de la §5 no se mueve —el push era el paso 5 y ahora no está— y las doce pantallas se
+> hacen igual, porque **lo que sostiene el día es la cola sondeada**, no el push.
 >
 > **La cola sondeada sigue siendo la que sostiene el día**, y no por desconfianza: un push
 > puede perderse, llegar tarde o estar apagado en los ajustes del teléfono, y la fila del
@@ -394,10 +415,10 @@ Es la Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
 3. **Pantallas 01, 02, 04, 05, 07** — con eso ya se atiende una estación entera, y el día de
    matrículas funciona.
 4. **06, 08** — el motivo y el salteado, que son las que ahorran el tiempo de verdad.
-5. **El push**: `firebase_messaging` en la app, el tema por estación y el del acudiente, y la
-   publicación **en el momento** en el servidor. Va **aquí y no al final** porque Joseth lo
-   pidió ahora; y va **después de que la cola funcione** porque la cola es lo que garantiza
-   que nadie se quede invisible cuando un push se pierde (§2.2).
+5. ~~**El push**~~ — **FUERA, rectificado el 20 sep 2026** (§2.2). No hay que meter
+   `firebase_messaging` por esto. *Y el orden no se resiente, que es lo que demuestra que
+   estaba bien puesto: iba **después** de que la cola funcionara porque la cola es lo que
+   garantiza que nadie se quede invisible — así que quitarlo no deja ningún hueco.*
 6. **12 y el globo** — las notas entre estaciones. Va aquí y no antes porque **la nota sin la
    cola no sirve de nada**, y la cola sin notas sí: se puede atender un día entero sin ellas.
 7. **09** (sin señal), y **03** con el código tecleado.
