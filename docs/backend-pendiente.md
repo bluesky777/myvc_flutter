@@ -1013,12 +1013,44 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 > GET requisitos/mi-recorrido/{alumno_id}   boletin.propio:sin-paz-y-salvo  <- la FAMILIA
 > ```
 >
-> **Tres caracteres de diferencia y públicos opuestos.** Lo levantó `myvc-flutter-1a`:
-> *«eso se va a confundir solo»*, y es el repo que las va a llamar, así que el aviso
-> viene del sitio que sabe. El nombre se conserva —«mi» es lo que significa, y es el de
-> su propia pantalla «Mi proceso»—, **pero si al cablearlas se confunde una vez,
-> decídselo a quien lleve la rama y se renombra: sigue sin fundir, o sea que hoy es
-> gratis.**
+> **Tres caracteres de diferencia y públicos opuestos.** El nombre **se conserva**, y el
+> argumento que cerró la discusión es que el prefijo **ya es un idioma en ese `routes/`**:
+> `disciplina/mis-fichas` hace exactamente lo mismo. Renombrar rompería una convención
+> que un lector decodifica sin pensar.
+>
+> **Pero equivocarse de ruta no falla igual en los dos sentidos, y la asimetría es lo
+> que hay que saber antes de cablear nada:**
+>
+> ```
+> familia   -> requisitos/recorrido      403 SIEMPRE                        ruidoso, seguro
+> personal  -> requisitos/mi-recorrido   200 SIEMPRE, con dos campos menos  SILENCIOSO
+> ```
+>
+> El motivo está en `ExigirBoletinPropio.php:70`, y es deliberado: el guard **deja pasar
+> de largo a todo el que no sea `Alumno` ni `Acudiente`**, para que secretaría pueda
+> abrir la vista de la familia y enseñársela a una madre por teléfono. Comprobado contra
+> el código, y comprobados también los campos: `getRecorrido` trae `ra.descripcion AS
+> observacion`, `ra.cerrado_por` y el nombre de quien cerró; `getMiRecorrido` selecciona
+> `ra.id, ra.estado, ra.motivo_devolucion, ra.cerrado_at` **y nada más**.
+>
+> **Así que una pantalla de personal mal cableada a `mi-recorrido` no se cae nunca.**
+> Devuelve 200, y el síntoma no es un error: son **la observación interna y el nombre
+> del docente, que dejan de aparecer**. Eso no lo caza una prueba con usuarios
+> sintéticos. Se descubre el día que alguien en el patio pregunta por qué no ve la
+> observación.
+>
+> > **Y al revés no ocurre, pero por un motivo que puede caducar.** La fuga inversa
+> > —una pantalla de familia leyendo la observación interna— no existe porque el
+> > personal y los acudientes son **cuentas distintas**: en la copia de desarrollo,
+> > cuentas de personal que además tengan ficha de acudiente son **cero**. Pero eso es
+> > **un colegio de diecisiete y en los otros dieciséis no ha mirado nadie**. Lo que lo
+> > impide no es una regla del código: es que ningún colegio le haya puesto ficha de
+> > acudiente a una cuenta de personal. *Un `0` sin su condición al lado se lee como un
+> > invariante.*
+>
+> Medido por `8myvc-6f` y verificado aquí; el riesgo lo levantó `myvc-flutter-1a`, que
+> es el repo que las va a llamar, y la primera versión del escenario era **la contraria
+> a la real**.
 
 **Lo que se decidió el 20 sep y no lo escribía nadie**: *«al acudiente se le avisa en
 CADA estación»* ([estaciones.md](estaciones.md) §2.2 bis). Ya está escrito, y trae dos
@@ -1067,14 +1099,17 @@ interna ni el nombre del docente**, que son entre el personal.
 hecho:** es **probable** que en los dieciséis colegios no haya credenciales de Firebase
 puestas, y entonces hoy no llegaría un push ni metiendo el paquete en la app.
 
-> **Va en condicional porque la fuente no es una medición**: `8myvc/app/Console/Kernel.php:53-54`
-> dice *«en el colegio que no tenga credenciales de Firebase esto no hace nada y lo dice
-> — es lo que **va a pasar** en los dieciséis hasta que se pongan»*. Está **en futuro** y
-> es del **23 ago 2026** (commit `98e6311`, `feat(notificaciones): los temas con HMAC, el
-> comando y la línea del scheduler`), el día que se desplegó el módulo: documenta **lo
-> que se esperaba entonces**, no lo que hay hoy. Sigue siendo lo más probable con
-> diferencia, pero **saberlo de verdad es mirar el `.env` de los diecisiete**, y eso
-> sólo puede hacerlo Joseth — como el barrido de `tools/correo-de-los-colegios.sh`.
+> **Va en condicional porque no hay medición, y ya no la finge nadie.** El comentario
+> que lo decía fue reescrito en origen el 20 sep (`e2988fd`) y ahora dice lo que de
+> verdad se sabe: *«cuántas las tienen HOY no se sabe desde aquí»*. **Saberlo es mirar
+> el `.env` de cada instalación**, y eso sólo puede hacerlo Joseth — como el barrido de
+> `tools/correo-de-los-colegios.sh`.
+>
+> Decía antes *«es lo que **va a pasar** en los dieciséis hasta que se pongan»*,
+> escrito el **23 ago 2026** (`98e6311`) el día que se desplegó el módulo. Una
+> expectativa fechada que **envejeció a afirmación sin que nadie la reescribiera**:
+> veintiocho días después esta app la citó como censo. *Un comentario en futuro
+> describe un día que ya pasó, y no lleva la fecha dentro.*
 >
 > *Un comentario en futuro envejece a afirmación sin que nadie lo reescriba.*
 

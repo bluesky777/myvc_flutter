@@ -578,16 +578,27 @@ docente pasando una columna de treinta notas genere **un** aviso y no treinta, y
 el cron del sistema sí entra cada minuto — el cuarto de hora es una elección, no
 un techo.
 
-Y una tercera que **hay que decir con su asterisco, porque casi la escribo como
-un hecho y no lo es**. Ese mismo `Kernel.php` dice que «en el colegio que no
-tenga credenciales de Firebase esto no hace nada y lo dice — es lo que **va a
-pasar** en los dieciséis hasta que se pongan». Está **en futuro y es del 23 de
-agosto** (commit `98e6311`, el día que se desplegó el módulo): documenta lo que
-se esperaba entonces, **no una medición de hoy**. Lo más probable con diferencia
-es que siga siendo cierto —y entonces el push no llegaría ni con
-`firebase_messaging` metido—, pero **comprobarlo es mirar el `.env` de los
-diecisiete, y eso solo puede hacerlo Joseth**. Un comentario en futuro envejece
-a afirmación sin que nadie lo reescriba, y este estuvo a punto de hacerlo aquí.
+Y una tercera **que no se sabe, y que casi escribo aquí como un hecho**: cuántos
+de los diecisiete colegios tienen credenciales de Firebase puestas. Sin ellas el
+envío no hace nada, así que de eso depende que un push llegue siquiera. Hoy
+`8myvc/app/Console/Kernel.php` lo dice tal cual —**«cuántas las tienen HOY no se
+sabe desde aquí»**—, y **comprobarlo es mirar el `.env` de cada instalación, que
+solo puede correr Joseth**.
+
+> **Cómo llegó esa frase a este documento, que es lo que vale de la anécdota.**
+> Hasta el 20 sep 2026 ese comentario decía *«es lo que **va a pasar** en los
+> dieciséis hasta que se pongan»*, escrito el **23 de agosto** (`98e6311`) el día
+> que se desplegó el módulo. Era **una expectativa fechada**, y la leí como un
+> censo medido: escribí aquí «en los dieciséis no hay credenciales» y lo
+> commiteé. Lo cazó la sesión `8myvc-6f`, y `8myvc-11` reescribió el comentario
+> en origen (`e2988fd`) para que no vuelva a pasar.
+>
+> **Un comentario en futuro describe un día que ya pasó.** Y es peor que una
+> cifra envejecida, porque una cifra al menos invita a recontar: un tiempo verbal
+> no lleva fecha dentro, se lee en presente para siempre, y cuanto mejor escrito
+> está, más creíble resulta. Ése llevaba **veintiocho días** siendo cierto como
+> expectativa y falso como censo, y lo que lo destapó no fue leerlo — fue citarlo
+> y que a un tercero le chirriara.
 
 Por eso la cola se sondea con una huella barata y el push queda para después,
 sin bloquear nada.

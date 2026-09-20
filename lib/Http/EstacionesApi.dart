@@ -155,13 +155,12 @@ class PendientesEstaciones {
   ///
   /// Lo que falta sigue siendo de los dos lados, el día que se retome. De este:
   /// la app no tiene `firebase_messaging`, solo `firebase_core` y
-  /// `firebase_analytics`. Del otro, **probablemente** las credenciales de
-  /// Firebase de cada colegio — `8myvc/app/Console/Kernel.php` dice que sin
-  /// ellas el envío no hace nada, y que eso «es lo que **va a pasar** en los
-  /// dieciséis hasta que se pongan», pero está **en futuro y escrito el 23 ago
-  /// 2026**: es lo que se esperaba al desplegar, no una medición de hoy.
-  /// Comprobarlo es mirar el `.env` de los diecisiete, que solo puede hacer
-  /// Joseth. **No lo des por hecho al encender esto.**
+  /// `firebase_analytics`. Y del otro, **algo que nadie sabe**: cuántos de los
+  /// diecisiete colegios tienen credenciales de Firebase puestas. Sin ellas el
+  /// envío no hace nada, y `8myvc/app/Console/Kernel.php` dice hoy que «cuántas
+  /// las tienen HOY no se sabe desde aquí» — se mira en el `.env` de cada
+  /// instalación y eso solo lo corre Joseth. **No lo des por hecho al encender
+  /// esto, en ninguno de los dos sentidos.**
   ///
   /// **La cola sondeada no se retira si esto se enciende algún día.** Un push se
   /// pierde, llega tarde o está apagado en los ajustes del teléfono, y la fila
@@ -993,6 +992,25 @@ Future<List<PersonaEncontrada>> buscarPersonas(
 /// entregó Joseth el 20 sep 2026 y está en `main` de `8myvc`, así que espera
 /// solo a un despliegue y no a que se autorice el contrato de estaciones. De ahí
 /// que lleve su propio interruptor.
+///
+/// > **⚠️ NO la llames desde una pantalla de familia, y no confundas su nombre
+/// > con el de su vecina.** Existirá `GET requisitos/mi-recorrido/{alumno_id}`
+/// > —hoy en una rama sin fundir— para el acudiente. Se diferencian en tres
+/// > caracteres y **son para públicos opuestos**:
+/// >
+/// > - **Ésta** lleva `auth.personal` y trae la observación interna y el nombre
+/// >   de quien cerró cada paso. Es **entre el personal**.
+/// > - **`mi-recorrido`** lleva `boletin.propio` y trae solo `estado`,
+/// >   `motivo_devolucion` y `cerrado_at`.
+/// >
+/// > **Equivocarse no duele igual en los dos sentidos.** Una pantalla de familia
+/// > que llame a ésta recibe **403 siempre**: ruidoso y seguro. Pero una de
+/// > personal cableada a `mi-recorrido` recibe **200 siempre** —el guard deja
+/// > pasar de largo a quien no es `Alumno` ni `Acudiente`, a propósito, para que
+/// > secretaría pueda enseñarle la vista a una madre— y el síntoma no es un
+/// > error: son **dos campos que faltan**. Eso no lo caza ninguna prueba.
+/// >
+/// > El contrato entero y lo medido, en `docs/backend-pendiente.md` §7.bis.
 Future<RecorridoDeMatricula?> traerElRecorrido(
   Server server,
   int alumnoId,
