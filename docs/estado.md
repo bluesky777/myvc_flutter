@@ -474,16 +474,27 @@ endpoint que entrega los temas.
 
 ### Estaciones de matrícula — [estaciones.md](estaciones.md)
 
-**Solo el diseño**, escrito el 20 de septiembre de 2026: las once pantallas de
+**Solo el diseño**, escrito el 20 de septiembre de 2026: las doce pantallas de
 teléfono con las que alguien del personal atiende una estación del día de
 matrículas sin tocar la web, la cola que se llena sola cuando la estación
-anterior cierra, el que llega salteado y buscar a cualquiera del colegio.
-Maqueta navegable dentro del documento.
+anterior cierra, el que llega salteado, buscar a cualquiera del colegio y el
+globo de notas de §2.10. Maqueta navegable dentro del documento.
 
-**Cero código, y no por falta de ganas**: necesita siete rutas que no existen
-—el contrato está en `8myvc/docs/migracion/44-las-estaciones-en-la-app.md`— y
+**Cero código, y no por falta de ganas**: necesita ocho rutas que no existen
+—el contrato está en `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`— y
 antes de eso, que el backend le cierre el vocabulario a
 `requisitos_alumno.estado`, que hoy guarda lo que le manden.
+
+**Y una cosa que este documento daba por abierta y ya estaba contestada.**
+El diseño pedía que cerrar un paso lo permitiera solo el rol de esa estación, y
+Joseth lo contestó el mismo 20 de septiembre: **cierra cualquiera del personal,
+pero queda con su nombre y su hora**. No es un plan, está desplegado —la
+migración `2026_09_20_300000` del backend puso `cerrado_por` y `cerrado_at`—.
+Para estas pantallas significa que **la 04 y la 11 no se abren en sólo-lectura
+por no ser tu estación**: se abren, y lo que protege el paso es la firma
+visible, el deshacer de ocho segundos y el motivo escrito que lee la familia.
+Lo único que sigue pidiendo un dueño de estación es **resolver una nota
+pendiente** (§2.10), y ese dueño ya no existe como concepto en el esquema.
 
 Dos cosas que salieron midiendo y afectan a esta app más allá de estas
 pantallas: **no tenemos `firebase_messaging`** (solo `firebase_core` y
