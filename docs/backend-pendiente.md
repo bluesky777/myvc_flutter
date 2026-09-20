@@ -1083,6 +1083,21 @@ GET estaciones/{nro}/cola
 
 Son dos agregados sobre una tabla pequeña y ya filtrada por estación y por día.
 
+**3. El buscador solo sabe buscar por nombre y por apellido.** El diseño pide
+*«nombre, apellido, documento o código»*, y de los cuatro, dos no existen:
+`BuscarController` hace `WHERE a.nombres LIKE ?` en una ruta y `a.apellidos` en
+la otra, y ya. Por documento y por el código de la hoja **no hay por dónde**.
+
+La pantalla lo dice en su sitio en vez de fingirlo —*«hoy el servidor solo sabe
+buscar por esos dos; por documento o por el código todavía no. Está pedido»*—,
+porque quien lo lee es quien puede pedirlo.
+
+Y una cosa que ya está mal hoy y que esta pantalla **no empeora pero sí destapa**:
+`buscar/por-nombre` hace `LIKE '%texto%'` **sin límite de filas**. Buscar «a»
+devuelve el colegio entero. La app se defiende exigiendo tres letras y esperando
+400 ms desde la última tecla, pero **eso es un parche del lado del cliente**: la
+web puede seguir pidiéndolo sin límite. Un `LIMIT` ahí es una línea.
+
 ### Lo que ya está hecho del lado Flutter
 
 **Tres pantallas, escritas y apagadas** detrás de

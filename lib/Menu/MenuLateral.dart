@@ -214,6 +214,25 @@ class MenuLateral extends StatelessWidget {
       ));
     }
 
+    // **Buscar a cualquiera y ver en qué va su matrícula.** Va detrás del
+    // recorrido y no de las estaciones, y la diferencia importa: buscar
+    // funciona hoy —`buscar/por-nombre` lleva desplegada desde mucho antes—
+    // pero encontrar a alguien para chocar contra una pantalla apagada no
+    // sirve de nada. Lo que hace útil esta entrada es poder abrir el recorrido.
+    //
+    // **Y por eso puede salir meses antes que «Estaciones»**: su ruta no es de
+    // las ocho, es la que Joseth entregó el 20 sep. Esto contesta «¿y mi hija
+    // en qué va?» un lunes en secretaría, sin nada del día de matrículas
+    // montado.
+    if (Interruptores.recorridoDeMatricula) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.person_search_outlined,
+        texto: 'Buscar',
+        ruta: '/buscar-matriculas',
+      ));
+    }
+
     // La última, y para todo el personal aunque casi todo lo que hay dentro
     // solo lo pueda mover un administrador: la mitad de su gracia es explicarle
     // a un docente por qué hoy no puede editar notas, o qué significa un 85.

@@ -99,11 +99,39 @@ enum EstadoDelPaso {
   /// `AlumnosController:899` inserta `"falta"` en minúscula. Las dos formas de
   /// nacer una fila ya no se ponen de acuerdo, así que comparar tal cual sería
   /// leer mal a la mitad de las filas. Ver `docs/backend-pendiente.md` §8.
-  static EstadoDelPaso deTexto(String? crudo) {
+  /// ## La regla NO es una lista blanca, y eso se corrigió leyendo el servidor
+  ///
+  /// Esta función empezó siendo *«cumple, cumplido u ok son cumplido; lo demás,
+  /// pendiente»*, y **estaba mal**. `RequisitosController::getRecorrido` lo
+  /// tiene escrito en su SQL, con su motivo:
+  ///
+  /// > *«**«Cumplido» es cualquier estado que NO sea el de partida.** El seed
+  /// > trae `falta` y el legacy escribe lo que la pantalla mande, así que una
+  /// > lista blanca de estados buenos se quedaría corta en silencio el día que
+  /// > un colegio escriba «Entregado» con mayúscula.»*
+  ///
+  /// Con una lista blanca, un colegio que escriba «Entregado» vería ese paso en
+  /// gris **para siempre y sin que nada fallara**. Así que la regla se invierte:
+  /// lo seguro es que `falta` —y una fila que no existe— significan que no está;
+  /// lo demás está, salvo las dos palabras que sabemos que significan otra cosa.
+  ///
+  /// **Esto es alinearse con el servidor, no imitarlo por gusto**: si las dos
+  /// mitades contestan distinto a la misma fila, la cola y la ficha se
+  /// contradicen delante de la familia.
+  ///
+  /// [hayMarca] es si existe fila en `requisitos_alumno`. Sin ella no hay nada
+  /// hecho, y es el caso más común de la mañana: el de quien acaba de llegar.
+  static EstadoDelPaso deTexto(String? crudo, {bool hayMarca = true}) {
     final limpio = (crudo ?? '').trim().toLowerCase();
 
-    if (limpio == 'cumple' || limpio == 'cumplido' || limpio == 'ok') {
-      return EstadoDelPaso.cumplido;
+    if (!hayMarca || limpio.isEmpty || limpio == 'falta') {
+      return EstadoDelPaso.pendiente;
+    }
+
+    if (limpio == 'devuelto' ||
+        limpio == 'rechazado' ||
+        limpio == 'bloqueado') {
+      return EstadoDelPaso.devuelto;
     }
     if (limpio == 'observado' ||
         limpio == 'observacion' ||
@@ -112,15 +140,9 @@ enum EstadoDelPaso {
         limpio == 'revisión') {
       return EstadoDelPaso.observado;
     }
-    if (limpio == 'devuelto' ||
-        limpio == 'rechazado' ||
-        limpio == 'bloqueado') {
-      return EstadoDelPaso.devuelto;
-    }
 
-    // Todo lo demás —'falta', 'Falta', vacío, o una palabra que este colegio
-    // usa y esta versión no conoce— cae aquí a propósito. Ver el docblock.
-    return EstadoDelPaso.pendiente;
+    // Cualquier otra cosa que alguien escribió a propósito: está hecho.
+    return EstadoDelPaso.cumplido;
   }
 
   Color get color => switch (this) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Screens/BuscarEnMatriculasScreen.dart';
 import 'package:myvc_flutter/Screens/EstacionesScreen.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
@@ -104,6 +105,9 @@ class RouteGenerator {
       case '/estaciones':
         return MaterialPageRoute(
             settings: settings, builder: (context) => EstacionesScreen());
+      case '/buscar-matriculas':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => BuscarEnMatriculasScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());

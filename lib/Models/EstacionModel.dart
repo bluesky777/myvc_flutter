@@ -358,3 +358,129 @@ bool _verdad(dynamic valor, {bool siFalta = false}) {
   if (crudo.isEmpty) return siFalta;
   return crudo == '1' || crudo == 'true' || crudo == 'si' || crudo == 'sí';
 }
+
+/// Alguien encontrado buscando en todo el colegio, no solo en una cola.
+///
+/// Sale de `PUT buscar/por-nombre` y `por-apellido`, que llevan desplegadas
+/// desde mucho antes que nada de esto. **La forma la manda ese endpoint viejo**
+/// y no el contrato nuevo, así que los nombres de clave son los suyos.
+class PersonaEncontrada {
+  const PersonaEncontrada({
+    required this.alumnoId,
+    required this.nombres,
+    required this.apellidos,
+    this.fotoNombre,
+    this.grupo,
+    this.noMatricula,
+    this.estadoMatricula,
+  });
+
+  final int alumnoId;
+  final String nombres;
+  final String apellidos;
+  final String? fotoNombre;
+  final String? grupo;
+  final String? noMatricula;
+
+  /// El estado de la MATRÍCULA, que no es el de un requisito.
+  ///
+  /// Se llaman igual —`estado`— y vienen de tablas distintas: éste sale de
+  /// `matriculas.estado` y el otro de `requisitos_alumno.estado`. Llevan nombre
+  /// distinto aquí para que nadie los cruce.
+  final String? estadoMatricula;
+
+  String get nombreCompleto => '$nombres $apellidos'.trim();
+
+  factory PersonaEncontrada.fromJson(Map<String, dynamic> json) =>
+      PersonaEncontrada(
+        alumnoId: enteroO(json['alumno_id']),
+        nombres: texto(json['nombres']) ?? '',
+        apellidos: texto(json['apellidos']) ?? '',
+        fotoNombre: texto(json['foto_nombre']),
+        grupo: texto(json['nombre_grupo']) ?? texto(json['abrev_grupo']),
+        noMatricula: texto(json['no_matricula']),
+        estadoMatricula: texto(json['estado']),
+      );
+}
+
+/// El recorrido de matrícula de una persona: los N pasos, con quién y cuándo.
+///
+/// Sale de `GET requisitos/recorrido/{alumno_id}`, entregada el 20 sep 2026.
+/// **No es de las ocho rutas del contrato de estaciones**, así que esta pantalla
+/// puede encenderse mucho antes que el resto del módulo.
+class RecorridoDeMatricula {
+  const RecorridoDeMatricula({
+    required this.pasos,
+    this.nombres,
+    this.apellidos,
+    this.documento,
+    this.devolverALaEstacion,
+  });
+
+  final List<PasoDelRecorrido> pasos;
+  final String? nombres;
+  final String? apellidos;
+  final String? documento;
+
+  /// A qué estación hay que devolverlo, si el servidor lo dice.
+  final int? devolverALaEstacion;
+
+  int get cerrados =>
+      pasos.where((p) => p.estado != EstadoDelPaso.pendiente).length;
+
+  /// Los que frenan y todavía no están. Son los que importan de verdad.
+  List<PasoDelRecorrido> get loQueFrena => pasos
+      .where((p) => p.obligatorio && p.estado == EstadoDelPaso.pendiente)
+      .toList();
+
+  factory RecorridoDeMatricula.fromJson(dynamic json) {
+    // El endpoint puede contestar la lista pelada o un objeto con `pasos`
+    // dentro. Se aceptan las dos formas en vez de suponer una: la ruta se
+    // entregó hoy y su envoltorio es lo único que podría moverse.
+    final crudos = json is Map ? json['pasos'] : json;
+    final alumno = json is Map ? json['alumno'] : null;
+
+    final pasos = <PasoDelRecorrido>[];
+    if (crudos is List) {
+      for (final uno in crudos) {
+        if (uno is Map) {
+          pasos.add(_pasoDelRecorridoViejo(Map<String, dynamic>.from(uno)));
+        }
+      }
+    }
+
+    return RecorridoDeMatricula(
+      pasos: pasos,
+      nombres: alumno is Map ? texto(alumno['nombres']) : null,
+      apellidos: alumno is Map ? texto(alumno['apellidos']) : null,
+      documento: alumno is Map ? texto(alumno['documento']) : null,
+      devolverALaEstacion: json is Map ? entero(json['devolver_a']) : null,
+    );
+  }
+}
+
+/// Un paso tal como lo manda `getRecorrido`, que usa otros nombres de clave.
+///
+/// `estacion` en vez de `nro`, `requisito` en vez de `nombre`, y **manda
+/// `marca_id`**: si es null, nadie ha tocado ese requisito todavía. Esa columna
+/// es la que distingue «no está» de «no se ha mirado», y por eso viaja hasta
+/// [EstadoDelPaso.deTexto].
+PasoDelRecorrido _pasoDelRecorridoViejo(Map<String, dynamic> json) {
+  final quien = [
+    texto(json['cerrado_por_nombres']) ?? '',
+    texto(json['cerrado_por_apellidos']) ?? '',
+  ].join(' ').trim();
+
+  return PasoDelRecorrido(
+    nro: enteroO(json['estacion']),
+    nombre: texto(json['requisito']) ?? 'Paso ${enteroO(json['estacion'])}',
+    estado: EstadoDelPaso.deTexto(
+      texto(json['estado']),
+      hayMarca: json['marca_id'] != null,
+    ),
+    cerradoPor: quien.isEmpty ? null : quien,
+    cerradoHace: texto(json['cerrado_at']),
+    motivo: texto(json['observacion']),
+    obligatorio: _verdad(json['bloquea'], siFalta: true),
+  );
+}

@@ -178,4 +178,23 @@ class Interruptores {
   /// nombre porque **es una línea de servidor que decide si esta pantalla miente
   /// en silencio**.
   static const bool estaciones = false;
+
+  /// El recorrido de matrícula de una persona, con `GET requisitos/recorrido/{id}`.
+  ///
+  /// **Se separa de [estaciones] a propósito, y ésa es la gracia.** Esa ruta
+  /// **no es de las ocho**: la entregó Joseth el 20 sep 2026 en la tanda del día
+  /// de matrículas y está en `main` de `8myvc`. O sea que **esta pantalla no
+  /// espera a que se autoricen las ocho rutas**: espera solo a un despliegue, y
+  /// puede encenderse meses antes que el resto del módulo.
+  ///
+  /// Es la que contesta *«¿y mi hija en qué va?»*, que era la mitad de la
+  /// pregunta con la que nació todo esto, y la contesta **sin nada del día de
+  /// matrículas montado**: sirve el lunes siguiente, en la secretaría, con la
+  /// mamá delante.
+  ///
+  /// **Lo que hay al lado no lleva interruptor**, y conviene saber por qué: la
+  /// búsqueda por nombre y por apellido usa `PUT buscar/por-nombre` y
+  /// `por-apellido`, que llevan desplegadas desde mucho antes. Buscar funciona
+  /// hoy; abrir el recorrido de lo encontrado es lo que espera.
+  static const bool recorridoDeMatricula = false;
 }

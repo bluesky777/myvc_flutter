@@ -483,12 +483,28 @@ globo de notas de §2.10. Maqueta navegable dentro del documento.
 
 ### Lo que ya está escrito, detrás de `Interruptores.estaciones`
 
-**Las pantallas 01, 02 y 04** —elegir estación, la cola y la ficha—, con su capa
-de datos, sus modelos y 23 pruebas:
+**Las pantallas 01, 02, 04, 10 y 11** —elegir estación, la cola, la ficha,
+buscar y el recorrido completo—, con su capa de datos, sus modelos y 33 pruebas:
 [EstacionesScreen](../lib/Screens/EstacionesScreen.dart),
 [ColaDeEstacionScreen](../lib/Screens/ColaDeEstacionScreen.dart),
-[FichaDeEstacionScreen](../lib/Screens/FichaDeEstacionScreen.dart) y
+[FichaDeEstacionScreen](../lib/Screens/FichaDeEstacionScreen.dart),
+[BuscarEnMatriculasScreen](../lib/Screens/BuscarEnMatriculasScreen.dart),
+[RecorridoDeMatriculaScreen](../lib/Screens/RecorridoDeMatriculaScreen.dart) y
 [EstacionesApi](../lib/Http/EstacionesApi.dart).
+
+**Y las dos últimas NO esperan a las ocho rutas**, que es lo que las hace
+interesantes. Buscar se apoya en `buscar/por-nombre` y `por-apellido`, que llevan
+desplegadas desde mucho antes; el recorrido, en
+`GET requisitos/recorrido/{alumno_id}`, entregada el 20 de septiembre y ya en
+`main`. Así que **`Interruptores.recorridoDeMatricula` puede encenderse meses
+antes que `Interruptores.estaciones`**: espera a una tanda de despliegue, no a
+que se autorice el contrato. Con eso solo ya se contesta *«¿y mi hija en qué
+va?»* un lunes en secretaría, sin nada del día de matrículas montado.
+
+**En tablet, la lista y el detalle a la vez.** Decidido el 20 de septiembre:
+celular **y** tablet, así que el maestro-detalle dejó de ser mejora y pasó a ser
+requisito ([tablets.md](tablets.md), problema 2). A partir de 900 px, la cola y
+la ficha se ven juntas, y la búsqueda y el recorrido también — sin navegar.
 
 **Apagadas no salen en el menú**, y con el interruptor en `false`
 [EstacionesApi](../lib/Http/EstacionesApi.dart) **no le pide nada al servidor** —
@@ -500,12 +516,22 @@ Dentro, cada botón que todavía no se puede pulsar **dice por qué**, nunca «n
 disponible»: cerrar el paso espera a las pantallas 05 y 07, escanear espera a la
 cámara, y resolver una nota espera a una ruta que nadie ha pedido todavía.
 
-**Y dos cosas que aparecieron al escribirlas, las dos anotadas en
+**Y tres cosas que aparecieron al escribirlas, las tres anotadas en
 [backend-pendiente.md](backend-pendiente.md) §8**: no hay ruta para dar por
-resuelta una nota —así que el globo ámbar no se podría apagar nunca—, y la cola
-no devuelve «atendidos hoy» ni «espera media», que no se pueden calcular en el
-teléfono. La pantalla enseña solo la cifra que sabe en vez de inventarse las
-otras dos.
+resuelta una nota —así que el globo ámbar no se podría apagar nunca—; la cola no
+devuelve «atendidos hoy» ni «espera media», que no se pueden calcular en el
+teléfono; y el buscador **solo sabe buscar por nombre y por apellido**, no por
+documento ni por el código de la hoja, aunque el diseño pedía los cuatro. Las
+pantallas dicen en su sitio lo que no pueden, en vez de fingirlo.
+
+**Una corrección que salió de leer el servidor**, y merece quedar escrita:
+`EstadoDelPaso.deTexto` empezó con una lista blanca —«cumple, cumplido, ok»— y
+estaba mal. `RequisitosController::getRecorrido` ya tenía escrito el porqué en su
+SQL: *«una lista blanca de estados buenos se quedaría corta en silencio el día
+que un colegio escriba "Entregado" con mayúscula»*. Ese colegio habría visto su
+paso en gris **para siempre y sin que nada fallara**. La regla se invirtió para
+coincidir con la del servidor: si las dos mitades contestan distinto a la misma
+fila, la cola y la ficha se contradicen delante de la familia.
 
 **Cero código encendido, y no por falta de ganas**: necesita ocho rutas que no existen
 —el contrato está en `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`— y

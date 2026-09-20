@@ -417,6 +417,19 @@ que se decidió se lee mejor al lado de la alternativa que se descartó.
    (`8myvc/docs/migracion/44-el-dia-de-matriculas.md` §2). Para la barra de §3 eso no es una
    respuesta cómoda: significa que **tiene que aguantar un número que no conocemos**, así que
    se diseña para desplazarse y no para cinco.
-4. **¿La estación la atiende un teléfono o la tablet del colegio?** — **la única que sigue
-   abierta.** Cambia el orden de `docs/tablets.md`: si es tablet, el maestro-detalle de §3
-   deja de ser mejora y pasa a ser requisito.
+4. ~~**¿La estación la atiende un teléfono o la tablet del colegio?**~~ — **las dos**,
+   decidido el 20 sep 2026. Y eso **no es la respuesta cómoda**: si fuera solo teléfono, el
+   maestro-detalle de §3 sería una mejora que se deja para luego; con las dos, **pasa a ser
+   requisito** (`docs/tablets.md`, problema 2).
+
+   Lo que obliga, en concreto: a partir de `Anchos.maestroDetalle` (900 px) la cola y la
+   ficha **se ven a la vez**, la lista a la izquierda con `Anchos.maestro` (380) y el detalle
+   a la derecha, **sin navegar**. Por debajo de 900 no cambia nada. Es el mismo patrón que ya
+   usan `LibroAsignaturaScreen` y `MisCompetenciasScreen`, así que no hay que inventarlo.
+
+   **Y aquí muerde más que en el libro de notas**: quien atiende tiene una fila delante, y en
+   una columna estirada cada persona de la cola cuesta ir y volver. En maestro-detalle,
+   tocar el siguiente de la fila es un toque y el recorrido ya está a la derecha.
+
+**Ya no queda ninguna abierta.** Las cinco preguntas con las que nació este diseño están
+contestadas.

@@ -60,6 +60,9 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
   bool cargando = true;
   String? error;
 
+  /// A quién se está mirando en el panel derecho. Solo en tablet.
+  PersonaEnCola? elegida;
+
   Timer? _sondeo;
   String? _ultimaHuella;
   DateTime? _ultimaVezQueSeMovio;
@@ -145,15 +148,67 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
           conFlecha: true,
         ),
       ),
-      body: ColumnaDeFicha(
-        child: Column(
-          children: [
-            _LaFrescura(desde: _ultimaVezQueSeMovio, cargando: cargando),
-            Expanded(child: _cuerpo()),
-            _elPie(),
-          ],
+      body: _hayEspacioParaLosDos(context)
+          ? _maestroDetalle()
+          : ColumnaDeFicha(child: _laColumna()),
+    );
+  }
+
+  bool _hayEspacioParaLosDos(BuildContext context) =>
+      MediaQuery.of(context).size.width >= Anchos.maestroDetalle;
+
+  /// Tablet: la cola a la izquierda y la ficha a la derecha, **sin navegar**.
+  ///
+  /// Decidido el 20 sep 2026 —celular y tablet—, así que esto dejó de ser una
+  /// mejora y pasó a ser requisito (`docs/tablets.md`, problema 2). Y es donde
+  /// más se nota: en una columna estirada, cada persona de la fila cuesta ir y
+  /// volver, con la familia de pie delante.
+  Widget _maestroDetalle() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(width: Anchos.maestro, child: _laColumna()),
+        const VerticalDivider(width: 1, thickness: 1),
+        Expanded(child: _elDetalle()),
+      ],
+    );
+  }
+
+  Widget _laColumna() {
+    return Column(
+      children: [
+        _LaFrescura(desde: _ultimaVezQueSeMovio, cargando: cargando),
+        Expanded(child: _cuerpo()),
+        _elPie(),
+      ],
+    );
+  }
+
+  Widget _elDetalle() {
+    final quien = elegida;
+
+    if (quien == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            cola.isEmpty
+                ? 'Cuando llegue alguien, aparece aquí.'
+                : 'Toca a alguien de la fila para abrir su ficha.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.black54),
+          ),
         ),
-      ),
+      );
+    }
+
+    return FichaDeEstacionScreen(
+      // La clave hace que Flutter sepa que es otra persona.
+      key: ValueKey(quien.id),
+      estacion: widget.estacion,
+      persona: quien,
+      servidor: widget.servidor,
+      encajada: true,
     );
   }
 
@@ -199,6 +254,7 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
           child: _TarjetaDeLaCola(
             persona: cola[i],
             esElPrimero: i == 0,
+            estaAbierta: cola[i].id == elegida?.id,
             alTocar: () => _abrirFicha(cola[i]),
           ),
         ),
@@ -207,6 +263,12 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
   }
 
   Future<void> _abrirFicha(PersonaEnCola persona) async {
+    if (_hayEspacioParaLosDos(context)) {
+      // En tablet no se navega: cambia el panel de la derecha.
+      setState(() => elegida = persona);
+      return;
+    }
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -311,16 +373,20 @@ class _TarjetaDeLaCola extends StatelessWidget {
     required this.persona,
     required this.esElPrimero,
     required this.alTocar,
+    this.estaAbierta = false,
   });
 
   final PersonaEnCola persona;
   final bool esElPrimero;
   final VoidCallback alTocar;
 
+  /// Si es la que está abierta a la derecha. Solo pasa en tablet.
+  final bool estaAbierta;
+
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: estaAbierta ? PaletaEstaciones.primarioSuave : Colors.white,
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
         onTap: alTocar,

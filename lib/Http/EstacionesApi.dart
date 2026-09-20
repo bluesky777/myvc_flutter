@@ -202,6 +202,70 @@ Future<String?> dejarUnaNota(
   );
 }
 
+/// Cuántas letras hacen falta antes de preguntarle al servidor.
+///
+/// **No es una manía de interfaz: `buscar/por-nombre` hace `LIKE '%texto%'` sin
+/// límite de filas**, así que buscar «a» devolvería el colegio entero —más de
+/// dos mil personas— por cada tecla. Sobre un hosting de un núcleo eso no es
+/// lento: es una caída.
+const int letrasMinimasParaBuscar = 3;
+
+/// Busca en TODO el colegio, no solo en una cola.
+///
+/// Es la pantalla que contesta *«¿y mi hija en qué va?»* a quien se acerca a
+/// preguntar, y **funciona hoy**: `PUT buscar/por-nombre` y `por-apellido`
+/// llevan desplegadas desde mucho antes que nada del día de matrículas. Por eso
+/// esto **no lleva interruptor**.
+///
+/// **Se piden las dos y se juntan**, porque son dos endpoints y quien busca
+/// escribe un nombre sin pensar en cuál de los dos campos es. Buscar «Mejía» por
+/// nombre no devuelve nada, y quien lo escribió no tiene por qué saberlo.
+Future<List<PersonaEncontrada>> buscarPersonas(
+    Server server, String texto) async {
+  final limpio = texto.trim();
+  if (limpio.length < letrasMinimasParaBuscar) return const [];
+
+  // Las dos a la vez: son independientes, y en serie se nota con mala señal.
+  final respuestas = await Future.wait([
+    server.put('/buscar/por-nombre', {'texto_a_buscar': limpio}),
+    server.put('/buscar/por-apellido', {'texto_a_buscar': limpio}),
+  ]);
+
+  // Quien se llame «Laura Laura» saldría dos veces: se junta por id.
+  final porId = <int, PersonaEncontrada>{};
+  for (final res in respuestas) {
+    final crudo = _cuerpo(res, 'las personas del colegio');
+    for (final persona in _listaDe(crudo, PersonaEncontrada.fromJson)) {
+      if (persona.alumnoId != 0) porId[persona.alumnoId] = persona;
+    }
+  }
+
+  final salida = porId.values.toList();
+  salida.sort((a, b) => a.nombreCompleto.compareTo(b.nombreCompleto));
+  return salida;
+}
+
+/// El recorrido de matrícula de una persona: los N pasos, con quién y cuándo.
+///
+/// **Esta ruta NO es de las ocho.** `GET requisitos/recorrido/{alumno_id}` la
+/// entregó Joseth el 20 sep 2026 y está en `main` de `8myvc`, así que espera
+/// solo a un despliegue y no a que se autorice el contrato de estaciones. De ahí
+/// que lleve su propio interruptor.
+Future<RecorridoDeMatricula?> traerElRecorrido(
+  Server server,
+  int alumnoId,
+) async {
+  if (!Interruptores.recorridoDeMatricula) return null;
+
+  final crudo = _cuerpo(
+    await server.get('/requisitos/recorrido/$alumnoId'),
+    'el recorrido de esa persona',
+  );
+
+  if (crudo == null) return null;
+  return RecorridoDeMatricula.fromJson(crudo);
+}
+
 // ---------------------------------------------------------------------------
 // Los ayudantes, con la misma forma que en el resto de `lib/Http/`.
 // ---------------------------------------------------------------------------

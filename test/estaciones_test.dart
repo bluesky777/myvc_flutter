@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/EstacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/EstacionModel.dart';
+import 'package:myvc_flutter/Screens/BuscarEnMatriculasScreen.dart';
 import 'package:myvc_flutter/Screens/EstacionesScreen.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
@@ -27,6 +28,14 @@ class ServidorQueApunta extends Server {
   Future post(String direccion, params) async {
     pedidos.add(direccion);
     return http.Response('{}', 200);
+  }
+
+  /// `buscar/por-nombre` y `por-apellido` son PUT, no GET. Sin este `override`
+  /// la prueba saldría por el `Server` de verdad, que en pruebas no tiene URL.
+  @override
+  Future put(String direccion, params) async {
+    pedidos.add(direccion);
+    return http.Response('[]', 200);
   }
 }
 
@@ -52,13 +61,27 @@ void main() {
       expect(EstadoDelPaso.deTexto('  FALTA  '), EstadoDelPaso.pendiente);
     });
 
-    test('una palabra que esta versión no conoce NO rompe la pantalla', () {
-      // docs/estaciones.md §2.8: una sola app para dieciséis colegios, y una
-      // versión vieja convive meses. Un tipo de paso desconocido se pinta con
-      // el control genérico en vez de romperse.
-      expect(EstadoDelPaso.deTexto('en_veremos'), EstadoDelPaso.pendiente);
+    test('sin texto y sin marca, pendiente', () {
       expect(EstadoDelPaso.deTexto(null), EstadoDelPaso.pendiente);
       expect(EstadoDelPaso.deTexto(''), EstadoDelPaso.pendiente);
+      expect(
+        EstadoDelPaso.deTexto('cumple', hayMarca: false),
+        EstadoDelPaso.pendiente,
+      );
+    });
+
+    test('NO es una lista blanca, y por eso «Entregado» cuenta', () {
+      // Esta prueba existe por un error que tuvo esta función: empezó con una
+      // lista blanca —cumple/cumplido/ok— y `RequisitosController::getRecorrido`
+      // ya tenía escrito por qué eso está mal: «una lista blanca de estados
+      // buenos se quedaría corta en silencio el día que un colegio escriba
+      // "Entregado" con mayúscula». Ese colegio habría visto su paso en gris
+      // para siempre sin que nada fallara.
+      expect(EstadoDelPaso.deTexto('Entregado'), EstadoDelPaso.cumplido);
+      expect(EstadoDelPaso.deTexto('recibido'), EstadoDelPaso.cumplido);
+      // Y lo seguro sigue siendo seguro: «falta» es lo único que significa que
+      // no está.
+      expect(EstadoDelPaso.deTexto('falta'), EstadoDelPaso.pendiente);
     });
 
     test('los que sí se conocen se leen', () {
@@ -323,6 +346,138 @@ void main() {
       // menú dice «Estaciones», la pantalla dice «Estaciones».
       await montar(tester);
       expect(find.text('Estaciones'), findsOneWidget);
+    });
+  });
+
+  group('buscar en todo el colegio', () {
+    test('con menos de tres letras no se le pregunta al servidor', () async {
+      // `buscar/por-nombre` hace LIKE '%texto%' SIN límite de filas, así que
+      // buscar «a» devolvería el colegio entero —más de dos mil— por cada
+      // tecla. Sobre un hosting de un núcleo eso no es lento: es una caída.
+      final servidor = ServidorQueApunta();
+
+      expect(await buscarPersonas(servidor, 'a'), isEmpty);
+      expect(await buscarPersonas(servidor, 'la'), isEmpty);
+      expect(await buscarPersonas(servidor, '  '), isEmpty);
+      expect(servidor.pedidos, isEmpty);
+    });
+
+    test('con tres o más pregunta por nombre Y por apellido', () async {
+      // Son dos endpoints y quien busca escribe un nombre sin pensar en cuál
+      // de los dos campos es: «Mejía» por nombre no devuelve nada, y quien lo
+      // escribió no tiene por qué saberlo.
+      final servidor = ServidorQueApunta();
+      await buscarPersonas(servidor, 'Mejía');
+
+      expect(servidor.pedidos, contains('/buscar/por-nombre'));
+      expect(servidor.pedidos, contains('/buscar/por-apellido'));
+    });
+
+    test('esto NO lleva interruptor: buscar funciona hoy', () {
+      // Las dos rutas llevan desplegadas desde mucho antes que el día de
+      // matrículas. Lo que espera a un despliegue es el recorrido.
+      expect(letrasMinimasParaBuscar, 3);
+    });
+  });
+
+  group('el recorrido de matrícula', () {
+    test('espera a SU despliegue, no a las ocho rutas', () async {
+      // `requisitos/recorrido/{id}` la entregó Joseth el 20 sep y está en main
+      // de 8myvc: no es de las ocho, así que puede encenderse mucho antes.
+      expect(Interruptores.recorridoDeMatricula, isFalse);
+
+      final servidor = ServidorQueApunta();
+      expect(await traerElRecorrido(servidor, 31), isNull);
+      expect(servidor.pedidos, isEmpty);
+    });
+
+    test('un requisito sin marca es pendiente, no «no está»', () {
+      // El SQL del servidor usa LEFT JOIN a propósito: «un requisito que nadie
+      // ha tocado todavía no tiene fila en requisitos_alumno, y es justo el que
+      // hay que enseñar». Si `marca_id` es null, nadie lo ha mirado.
+      final recorrido = RecorridoDeMatricula.fromJson({
+        'pasos': [
+          {'estacion': 1, 'requisito': 'Registro civil', 'marca_id': null},
+          {
+            'estacion': 2,
+            'requisito': 'Certificado',
+            'marca_id': 9,
+            'estado': 'Entregado',
+            'cerrado_por_nombres': 'Nancy',
+            'cerrado_por_apellidos': 'Ariza',
+          },
+        ],
+      });
+
+      expect(recorrido.pasos.first.estado, EstadoDelPaso.pendiente);
+      expect(recorrido.pasos.last.estado, EstadoDelPaso.cumplido);
+      expect(recorrido.pasos.last.cerradoPor, 'Nancy Ariza');
+      expect(recorrido.cerrados, 1);
+    });
+
+    test('lo que frena se dice aparte de lo que falta', () {
+      final recorrido = RecorridoDeMatricula.fromJson({
+        'pasos': [
+          {'estacion': 1, 'requisito': 'Registro civil', 'bloquea': 1},
+          {'estacion': 2, 'requisito': 'Carné de vacunas', 'bloquea': 0},
+        ],
+      });
+
+      // Los dos están pendientes, pero solo uno frena.
+      expect(recorrido.cerrados, 0);
+      expect(recorrido.loQueFrena.length, 1);
+      expect(recorrido.loQueFrena.first.nombre, 'Registro civil');
+    });
+
+    test('acepta la lista pelada y el objeto con «pasos» dentro', () {
+      // La ruta se entregó hoy: su envoltorio es lo único que podría moverse,
+      // así que se aceptan las dos formas en vez de suponer una.
+      final pelada = RecorridoDeMatricula.fromJson([
+        {'estacion': 1, 'requisito': 'Registro civil'},
+      ]);
+      expect(pelada.pasos.length, 1);
+    });
+  });
+
+  group('en tablet se ven los dos a la vez', () {
+    testWidgets('la búsqueda parte la pantalla a partir de 900',
+        (tester) async {
+      // Decidido el 20 sep: celular y tablet. El maestro-detalle dejó de ser
+      // mejora y pasó a ser requisito (docs/tablets.md, problema 2).
+      AuthService.user =
+          UserAutenticado(username: 'nancy', tipo: 'Profesor', id: 12);
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+            home: BuscarEnMatriculasScreen(servidor: ServidorQueApunta())),
+      );
+      await tester.pumpAndSettle();
+
+      // El panel derecho existe y dice qué hacer, en vez de estar en blanco.
+      expect(find.byType(VerticalDivider), findsOneWidget);
+      expect(find.textContaining('Busca a alguien'), findsOneWidget);
+    });
+
+    testWidgets('en celular no se parte: una sola columna', (tester) async {
+      AuthService.user =
+          UserAutenticado(username: 'nancy', tipo: 'Profesor', id: 12);
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+            home: BuscarEnMatriculasScreen(servidor: ServidorQueApunta())),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(VerticalDivider), findsNothing);
+      expect(find.textContaining('al menos tres letras'), findsOneWidget);
     });
   });
 

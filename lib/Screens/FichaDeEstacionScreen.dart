@@ -35,6 +35,7 @@ class FichaDeEstacionScreen extends StatefulWidget {
     required this.estacion,
     required this.persona,
     this.servidor,
+    this.encajada = false,
   });
 
   final Estacion estacion;
@@ -42,6 +43,13 @@ class FichaDeEstacionScreen extends StatefulWidget {
 
   /// Con qué servidor hablar. Null es el de verdad, que es lo normal.
   final Server? servidor;
+
+  /// Si va dentro del panel derecho de un maestro-detalle, en tablet.
+  ///
+  /// Encajada **no lleva `AppBar` propia**: ya está la de la cola, y dos barras
+  /// seguidas en una tablet son media pantalla perdida. El nombre de quien se
+  /// atiende sale entonces de la propia ficha, que ya lo enseña grande.
+  final bool encajada;
 
   @override
   State<FichaDeEstacionScreen> createState() => _FichaDeEstacionScreenState();
@@ -97,7 +105,30 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
   }
 
   @override
+  void didUpdateWidget(FichaDeEstacionScreen anterior) {
+    super.didUpdateWidget(anterior);
+    // En maestro-detalle el panel derecho no se recrea al tocar a otra persona
+    // de la cola: se le cambia la persona. Sin esto, la tablet enseñaría la
+    // ficha del anterior bajo el nombre del nuevo — el peor error posible aquí,
+    // porque es silencioso y decide si una familia sigue en la fila.
+    if (anterior.persona.id != widget.persona.id) _cargar();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (widget.encajada) {
+      final pie = _elPie();
+      return Container(
+        color: PaletaEstaciones.fondo,
+        child: Column(
+          children: [
+            Expanded(child: ColumnaDeFicha(child: _cuerpo())),
+            if (pie != null) pie,
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: PaletaEstaciones.fondo,
       appBar: AppBar(
