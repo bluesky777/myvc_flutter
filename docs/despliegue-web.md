@@ -33,6 +33,29 @@ dentro de `build/web/` y por eso viaja en cada despliegue.
 único disparo automático es `push` a `main`: no hay `pull_request`, que es por
 donde un fork ajeno podría pedir prestados los secretos.
 
+> ### ⚠️ Medido el 19 sep 2026: esto **todavía no se ha hecho**, y por eso el despliegue nunca ha corrido
+>
+> `gh secret list --repo bluesky777/myvc_flutter` devuelve **vacío**, y
+> `gh variable list` también. Las dos únicas ejecuciones del workflow que
+> existen —`cd0a00f` y `df72105`— **fallaron las dos en el paso 2**, «Comprobar
+> que las credenciales están puestas», con el mensaje que ese paso escribe:
+> *«Faltan estos secretos del repositorio: FTP_SERVER FTP_USERNAME
+> FTP_PASSWORD»*.
+>
+> **O sea que lo que sirve hoy `app.micolevirtual.com` sigue siendo el
+> `index.html` de agosto subido a mano.** El botón está montado y nunca ha
+> publicado nada.
+>
+> Y la parte buena, que conviene decir porque era el riesgo de diseño: **falla
+> limpio y antes de tocar el servidor**. No compila, no se conecta, no sube un
+> byte. El paso 2 hace exactamente lo que esta sección prometía — parar con un
+> mensaje claro en vez de morirse cinco minutos después dentro del FTP con un
+> error de tres palabras.
+>
+> Los dos primeros valores están escritos aquí abajo y se pueden poner desde
+> consola; **la contraseña no está en ningún sitio del repositorio, a
+> propósito**, y sólo la puede poner Joseth.
+
 ## 2. Lo que hay que poner en GitHub, una vez
 
 En **Settings → Secrets and variables → Actions**. Los tres primeros son
