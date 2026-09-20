@@ -973,6 +973,116 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 
 ---
 
+## 7.bis El aviso de matrícula y «mi recorrido» — ⚠️ EN UNA RAMA, **SIN FUNDIR**
+
+> ## ⛔ NO CONSTRUYAS CONTRA ESTO TODAVÍA
+>
+> **Nada de esta sección existe en `main` de `8myvc`.** Vive sólo en la rama
+> `feat/el-proceso-de-matriculas` (worktree `.worktrees/mat`), que sigue moviéndose.
+> Comprobado contra el código, no supuesto:
+>
+> ```
+> git grep mi-recorrido main -- routes/ app/     ->  nada
+> main: TemasDeNotificacion::TIPOS = ['notas', 'asistencia', 'disciplina']   (tres, no cuatro)
+> ```
+>
+> **Y el rótulo de esta sección era el problema, no un detalle.** Decía *«ESCRITOS el
+> 20 sep, sin desplegar»*, que es **exactamente la misma frase** que usa el §8 de aquí
+> abajo para las nueve de `estaciones/*`. Pero son dos estados distintos:
+>
+> | | dónde está |
+> |---|---|
+> | §8 · las nueve de `estaciones/*` | **fundidas en `main`** y sin desplegar |
+> | §7.bis · esto | **en una rama, sin fundir** y sin desplegar |
+>
+> Con el mismo rótulo para las dos, este repo se pone a construir contra una ruta que
+> **no existiría ni desplegando `main`**. Lo cazó `myvc-flutter-1a` midiéndolo contra el
+> código, y tenía razón. *Corregido por la sesión de `8myvc` que lo escribió.*
+>
+> **Lo que sí puedes usar hoy** es `GET requisitos/recorrido/{alumno_id}`
+> (`auth.personal`), que está en `main` desde el 20 sep y es la que esta app ya llama.
+
+> **Esta sección no pide nada al backend: dice qué va a llegar y qué le tocará a esta
+> app.** Escrita por la sesión de `8myvc` el 20 sep 2026, junto con el portal de la
+> familia (`8myvc/docs/migracion/47-el-portal-de-la-familia.md`).
+>
+> ### ⚠️ Y OJO AL NOMBRE, que se parece demasiado al de su vecina
+>
+> ```
+> GET requisitos/recorrido/{alumno_id}      auth.personal                   <- el PERSONAL
+> GET requisitos/mi-recorrido/{alumno_id}   boletin.propio:sin-paz-y-salvo  <- la FAMILIA
+> ```
+>
+> **Tres caracteres de diferencia y públicos opuestos.** Lo levantó `myvc-flutter-1a`:
+> *«eso se va a confundir solo»*, y es el repo que las va a llamar, así que el aviso
+> viene del sitio que sabe. El nombre se conserva —«mi» es lo que significa, y es el de
+> su propia pantalla «Mi proceso»—, **pero si al cablearlas se confunde una vez,
+> decídselo a quien lleve la rama y se renombra: sigue sin fundir, o sea que hoy es
+> gratis.**
+
+**Lo que se decidió el 20 sep y no lo escribía nadie**: *«al acudiente se le avisa en
+CADA estación»* ([estaciones.md](estaciones.md) §2.2 bis). Ya está escrito, y trae dos
+cosas para esta app:
+
+```
+GET requisitos/mi-recorrido/{alumno_id}     boletin.propio:sin-paz-y-salvo
+```
+
+### 1 · Hay un CUARTO tema de notificación, y el contrato de `temas` cambió
+
+`GET notificaciones/temas` devolvía tres claves por alumno —`notas`, `asistencia`,
+`disciplina`— y ahora devuelve **cuatro**: entra `matricula`.
+
+**Tiene que ser un interruptor propio** y no colgarse de ninguno de los tres: metido
+dentro de `disciplina`, apagar las situaciones apagaría el aviso de que la devolvieron
+en Documentos. Son cinco avisos en una mañana de sábado una vez al año contra un goteo
+de todo el curso.
+
+**Una app vieja simplemente no se apunta al tema nuevo y no recibe estos avisos**, así
+que esto **no rompe ninguna versión desplegada**. Lo que hay que hacer aquí es incluir
+`matricula` en la pantalla de preferencias cuando se suscriba a los temas.
+
+### 2 · El aviso NO lleva el motivo dentro, y por eso hace falta una pantalla
+
+Los textos son **«Laura pasó a Tesorería»** y **«Laura fue devuelta en Documentos. Abre
+la app para ver por qué.»** — con el nombre, que `notificaciones.md` permite, y **sin el
+motivo**, que prohíbe: una notificación se ve en la pantalla bloqueada de un bus.
+
+El motivo lo escribió un docente **para que lo lea la familia**, y se lee abriendo la
+app. `GET requisitos/mi-recorrido/{alumno_id}` es lo que la app abre: los N pasos con
+`cumplido`, `devuelto`, `motivo_devolucion` y `cerrado_at`. **No lleva la observación
+interna ni el nombre del docente**, que son entre el personal.
+
+> **Un aviso que apunta a una pantalla que no existe es peor que no avisar**, porque
+> enseña que los avisos no sirven. Esa pantalla del acudiente **todavía no está
+> diseñada en este repo**: las doce de [estaciones.md](estaciones.md) son todas del que
+> atiende. Es lo que falta para cerrar el círculo.
+
+### 3 · Y el push sigue sin poder llegar, por DOS motivos y no uno
+
+**El de esta app:** `firebase_messaging` no está en `pubspec.yaml`, medido otra vez el
+20 sep.
+
+**Y el del servidor, que aporta `myvc-flutter-1a`, pero como sospecha fundada y no como
+hecho:** es **probable** que en los dieciséis colegios no haya credenciales de Firebase
+puestas, y entonces hoy no llegaría un push ni metiendo el paquete en la app.
+
+> **Va en condicional porque la fuente no es una medición**: `8myvc/app/Console/Kernel.php:53-54`
+> dice *«en el colegio que no tenga credenciales de Firebase esto no hace nada y lo dice
+> — es lo que **va a pasar** en los dieciséis hasta que se pongan»*. Está **en futuro** y
+> es del **23 ago 2026** (commit `98e6311`, `feat(notificaciones): los temas con HMAC, el
+> comando y la línea del scheduler`), el día que se desplegó el módulo: documenta **lo
+> que se esperaba entonces**, no lo que hay hoy. Sigue siendo lo más probable con
+> diferencia, pero **saberlo de verdad es mirar el `.env` de los diecisiete**, y eso
+> sólo puede hacerlo Joseth — como el barrido de `tools/correo-de-los-colegios.sh`.
+>
+> *Un comentario en futuro envejece a afirmación sin que nadie lo reescriba.*
+
+Mientras tanto, lo que sostiene el día de matrículas sigue siendo **la cola sondeada**
+(§2.1), no el push.
+
+---
+
 ## 8. Las nueve rutas de `estaciones/*` — ESCRITAS el 20 sep, sin desplegar
 
 > **Esta sección cambió de naturaleza la misma tarde en que se escribió.** Nació
