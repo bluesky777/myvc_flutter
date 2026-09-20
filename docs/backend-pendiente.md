@@ -973,7 +973,23 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 
 ---
 
-## 8. Las ocho rutas de `estaciones/*` — el día de matrículas desde el teléfono
+## 8. Las nueve rutas de `estaciones/*` — ESCRITAS el 20 sep, sin desplegar
+
+> **Esta sección cambió de naturaleza la misma tarde en que se escribió.** Nació
+> pidiendo ocho rutas que no existían, y para cuando se cerró el día **existían
+> las nueve, fundidas en `main` de `8myvc`** (`routes/api/estaciones.php`). Lo
+> que pide ahora no es una decisión: es **un despliegue**. Se conserva entera
+> porque explica por qué se pidió así, y porque **dos de sus peticiones siguen
+> abiertas**.
+>
+> **La novena la encontró esta app escribiendo las pantallas**, y no estaba en el
+> contrato: `PUT estaciones/nota/{id}/resuelta`. Sin ella, `resuelta_por` y
+> `resuelta_at` no las escribía nadie y el globo ámbar **no se apagaba nunca**.
+>
+> **Y la línea de `cerrado_at` está arreglada**, con una mejora que aquí no se
+> había pedido: `RequisitosController.php:305-308` limpia `cerrado_por` y
+> `cerrado_at` al reabrir, y **cuenta `devuelto` como reabrir** — un paso
+> devuelto es un paso que se sigue debiendo.
 
 **Es la más grande de esta página y la única que tiene pantallas esperándola.**
 Anotada el 20 de septiembre de 2026. El contrato entero, con su precio contado en
@@ -1033,7 +1049,7 @@ segundos después, en un patio con mala señal.
   escanear lee **ese** código; acuñar otro sería un segundo papel para la misma
   familia.
 
-### Una línea del backend que va antes que las ocho rutas
+### ~~Una línea del backend que va antes que las ocho rutas~~ — HECHA
 
 `cerrado_at` se escribe con `COALESCE`, o sea **una sola vez**. Si alguien reabre
 un paso, la fecha se queda puesta y **la cola lo vería cerrado**. Limpiarla al
@@ -1053,18 +1069,33 @@ No son opiniones de diseño: son cosas que el contrato promete en un sitio y no
 entrega en otro. Salieron al construir, que es para lo que sirve construir antes
 de pedir.
 
-**1. No hay ninguna ruta para dar por resuelta una nota.** El permiso está
-decidido y escrito —quien la escribió, o `Admin`, `Secretario` o `Rector`— y la
-tabla `notas_estacion` tiene sus columnas `resuelta_por` y `resuelta_at`. Pero de
-las ocho rutas, `POST estaciones/{nro}/nota` **crea** y no hay hermana que
-resuelva. Sin ella el globo ámbar no se puede apagar nunca, y una nota pendiente
-es para siempre.
-
-Cabe en la familia sin ensancharla mucho:
+**1. ~~No hay ninguna ruta para dar por resuelta una nota.~~ — RESUELTO el mismo
+día, y con la ruta exacta que se propuso aquí:**
 
 ```
-PUT  estaciones/nota/{id}/resuelta    (auth.personal + el permiso de arriba)
+PUT  estaciones/nota/{id}/resuelta    →  EstacionesController::putNotaResuelta
 ```
+
+`Autoriza::puedeResolverNotaDeEstacion` (`Autoriza.php:883`) implementa la regla
+de Joseth tal cual: **quien la escribió**, un superusuario, o los roles `Admin`,
+`Secretario` y `Rector`.
+
+> **Y una lección de coordinación que vale más que la ruta.** La sesión del
+> backend avisó de que esta ruta **no** filtraba por dentro y de que el botón lo
+> vería todo el personal. Comprobado contra el código, era al revés: es **la
+> única de las nueve con candado dentro**. Su error no vino de leer `routes/`
+> —donde las nueve llevan el mismo `auth.personal`— sino de leer bien una frase
+> del `CLAUDE.md` del backend y entenderla al revés: la frase nombraba **cuál**
+> lleva permiso, y se leyó como cuál es la excepción que no lo lleva.
+>
+> **Lo que lo hacía peligroso no era el error, era su arreglo natural**: quien
+> crea que es abierta, «corrige» quitando la comprobación por coherencia con las
+> otras ocho — y eso rompe una decisión de Joseth sin que nadie lo note.
+> **Comprobar contra el código lo que dice otra sesión no es desconfianza: es
+> barato y aquí evitó eso.**
+
+**El 403 trae el motivo dentro**, así que el texto del botón apagado lo da el
+servidor: la app no tiene que escribirlo ni mantenerlo sincronizado.
 
 **2. La cola no devuelve las tres cifras que la pantalla enseña arriba.** El
 diseño pide **atendidos hoy**, **esperando** y **espera media**, y de las tres

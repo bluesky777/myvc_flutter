@@ -88,16 +88,32 @@ class PendientesEstaciones {
 
   /// Dar por resuelta una nota pendiente.
   ///
-  /// **Esto no espera a un despliegue: espera a una ruta que nadie ha pedido.**
-  /// El permiso está decidido y escrito —quien la escribió, o `Admin`,
-  /// `Secretario` o `Rector`— y la tabla `notas_estacion` tiene sus columnas
-  /// `resuelta_por` y `resuelta_at`, pero **entre las ocho rutas del contrato no
-  /// hay ninguna que las escriba**: `POST estaciones/{nro}/nota` crea, y no hay
-  /// hermana que resuelva.
+  /// **El hueco que esto describía está cerrado: la ruta existe desde el 20 sep
+  /// 2026.** `PUT estaciones/nota/{id}/resuelta` →
+  /// `EstacionesController::putNotaResuelta`, y el contrato pasó de ocho rutas a
+  /// **nueve**. Sin ella, `resuelta_por` y `resuelta_at` no las escribía nadie y
+  /// el globo ámbar no se apagaba nunca.
   ///
-  /// Queda anotado aquí y en `docs/backend-pendiente.md` §8 porque un hueco de
-  /// contrato que solo vive en la cabeza de alguien se descubre el día del
-  /// despliegue.
+  /// **Y el permiso es el que decidió Joseth, comprobado en el código y no
+  /// supuesto.** `Autoriza::puedeResolverNotaDeEstacion` (`Autoriza.php:883`)
+  /// devuelve verdadero para **quien la escribió**, para un superusuario y para
+  /// los roles `Admin`, `Secretario` y `Rector`. Ni uno más.
+  ///
+  /// > **Y esto hubo que comprobarlo contra una afirmación en contra.** La
+  /// > sesión del backend avisó de que las nueve rutas llevan `auth.personal` y
+  /// > que ésta **no** filtra por dentro, o sea que el botón lo vería todo el
+  /// > personal. Mirando `routes/api/estaciones.php` esa lectura cuadra —las
+  /// > nueve llevan el mismo `middleware`—, pero el permiso vive **dentro del
+  /// > método**, que es la forma de esta casa: *«guard en la ruta, permiso
+  /// > dentro»*. Es la misma trampa que tuvo el agujero de `putResetPassword`
+  /// > abierto tres días de más. **Leer `routes/` y concluir es el error.**
+  ///
+  /// Así que esta pantalla **sí filtra el botón**, y lo apaga con el motivo
+  /// escrito para quien no pueda: «esta nota puede darla por resuelta quien la
+  /// escribió, o Secretaría, Rectoría o un administrador».
+  ///
+  /// Lo que queda apagado ya no es la ruta: es la **pantalla 12** —las notas
+  /// entre estaciones—, que todavía no está escrita, y el despliegue.
   static bool resolverUnaNota = false;
 
   /// Deja los interruptores como vienen de fábrica. Para las pruebas.

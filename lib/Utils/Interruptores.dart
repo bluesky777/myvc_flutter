@@ -151,11 +151,16 @@ class Interruptores {
 
   /// Las estaciones del día de matrículas, atendidas desde el teléfono.
   ///
-  /// **Lo que espera no es un endpoint: son ocho**, la familia `estaciones/*`
-  /// entera (`docs/backend-pendiente.md` §8, y el contrato con su precio en
-  /// `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`). Y esperan juntas a
-  /// propósito: **el censo de rutas del backend recoge mal una familia que entra
-  /// a trozos**, así que se autorizan de una vez o no se empieza.
+  /// **Lo que espera cambió el 20 sep 2026 por la tarde, y a mejor.** Esto decía
+  /// «espera a que se autoricen ocho rutas que no existen». Existen: la familia
+  /// `estaciones/*` entera está escrita en `main` de `8myvc`
+  /// (`routes/api/estaciones.php`), y son **nueve** —la novena,
+  /// `PUT estaciones/nota/{id}/resuelta`, salió de un hueco que esta app
+  /// encontró escribiendo las pantallas—.
+  ///
+  /// **Así que ya no espera a una decisión: espera a un despliegue.** Que es una
+  /// espera distinta y mucho más corta, pero se comprueba igual: por el hash de
+  /// la tanda, no por `main`. Y hoy `main` acumula meses sin desplegar.
   ///
   /// **Lo que hay escrito detrás de este `false`** son tres pantallas —elegir
   /// estación, la cola y la ficha— con su capa de datos y sus modelos. No están
