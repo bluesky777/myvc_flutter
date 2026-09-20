@@ -426,8 +426,23 @@ Del desglose de la respuesta por clave, para un acudiente:
 
 **El calendario es el 99 % de la respuesta y la app no lo lee.** La consulta es
 `SELECT * FROM calendario WHERE solo_profes=0 and deleted_at is null`, **sin
-filtro de año y sin filtro de fecha**: 593 filas, de las que 123 son de 2019 a
-2023. El recorte de columnas de hoy lo dejó en la mitad, y sigue siendo el 99 %
+filtro de año y sin filtro de fecha**: 593 filas, de las que 123 serían de 2019
+a 2023.
+
+> **Ese 123 está en duda y pierde.** La sesión del backend contó **86**
+> anteriores a 2024 con `YEAR(start)`, sobre el mismo rango. El 123 de aquí
+> **no lleva anotado de dónde salió** —ni la columna ni la consulta—, y en esta
+> casa lo que se mide manda sobre lo que está escrito sin fuente. Se queda el
+> 86 hasta que alguien encuentre la consulta del 123.
+>
+> Y lo que de verdad añade su medición no es el número: **ninguna de las 593
+> filas es de 2026**. Van de 2019 a 2025. O sea que el problema del calendario
+> no es sólo que viaje entero, es que **nadie ha curado esa tabla**.
+>
+> De paso midieron una que no nos toca pero conviene que esté escrita:
+> **`calendario/this-year` no filtra por año pese al nombre** y sigue mandando
+> **215,5 KB** con `SELECT *`. El recorte del 2 sep arregló `to-me` y a ella
+> no. La app no la llama; el panel web sí, al pulsar «Actualizar». El recorte de columnas de hoy lo dejó en la mitad, y sigue siendo el 99 %
 de lo que la app descarta.
 
 O sea que cada vez que alguien abre la app se serializan y se mandan ~108 KB
@@ -435,14 +450,87 @@ para que Flutter lea unos 5.
 
 ### Lo que se pide
 
-Un endpoint propio para la app:
+Un endpoint propio para la app.
 
-    GET muro/app  →  { "publicaciones": [...], "alumnos": [...], "horario_hoy": [...] }
+> ### ⚠️ Corrección del 19 sep 2026: son CINCO claves, no tres
+>
+> Aquí ponía tres —`publicaciones`, `alumnos`, `horario_hoy`— y **la app lee
+> cinco**. Lo levantó la sesión del backend al escribirlo, y se comprueba en un
+> grep sobre [MuroApi](../lib/Http/MuroApi.dart):
+>
+> ```
+> cuerpo['horario_hoy']        cuerpo['publicaciones']    cuerpo['alumnos']
+> cuerpo['horario_version_id'] cuerpo['ausencias_periodo']
+> ```
+>
+> Las dos que faltaban no son adorno:
+>
+> - **`horario_version_id`**, que decide si se sabe algo del horario. Ver
+>   abajo, porque la consecuencia de omitirla no es la que parece.
+> - **`ausencias_periodo`** en la raíz: sin ella `asistenciaPropia` vuelve a ser
+>   lista vacía para el rol Alumno.
+>
+> Se corrige aquí porque el contrato, tal como estaba, **invitaba a entregar
+> tres**.
 
-Tres claves. **Sin `eventos`** —que es todo el peso—, y con `alumnos` trayendo
-solo lo que [AcudidoModel.fromJson](../lib/Http/MuroApi.dart) lee: `alumno_id`,
-`nombres`, `apellidos`, `foto_nombre`, `nombre_grupo`, `grupo_abrev`,
-`pazysalvo` y `ausencias_periodo`.
+    GET muro/app  →  { "publicaciones": [...], "alumnos": [...],
+                       "horario_hoy": [...], "horario_version_id": 12,
+                       "ausencias_periodo": [...] }
+
+**Sin `eventos`** —que es todo el peso—, y con `alumnos` trayendo solo lo que
+[AcudidoModel.fromJson](../lib/Http/MuroApi.dart) lee: `alumno_id`, `nombres`,
+`apellidos`, `foto_nombre`, `nombre_grupo`, `grupo_abrev`, `pazysalvo` y
+`ausencias_periodo`.
+
+### Lo que omitir `horario_version_id` haría de verdad, que no es lo que se dijo
+
+La sesión del backend lo justificó diciendo que sin esa clave *«vuestro `seSabe`
+volvería a valer `true` con cero clases»*, o sea que volvería el mensaje falso.
+**Es al revés**, y conviene que quede escrito porque de ahí puede salir una
+prueba que afirme lo contrario de lo que pasa.
+
+`HorarioDeHoy.tomar` hace `_clases = versionOficial == null ? null : clasesDeHoy`
+y `seSabe => _clases != null`. Sin la clave, `versionOficial` llega **null**, así
+que `seSabe` vale **`false`**: la app no dice «hoy no tienes clases», **no dice
+nada** —el muro esconde el bloque y el filtro «sólo las de hoy» de
+`NotasScreen` se queda apagado—.
+
+O sea que la función **se apagaría en silencio**, que es un fallo más barato que
+el de agosto pero igual de invisible. Y es a propósito: el docblock de
+[HorarioDeHoy](../lib/Utils/HorarioDeHoy.dart) dice que la clave ausente cuenta
+como null porque *«un servidor que todavía no tiene ese commit desplegado es
+exactamente un servidor del que no se sabe si hay horario»*. La conclusión no
+cambia —la clave tiene que ir—, el motivo sí.
+
+### La forma por rol, tal como quedó escrita
+
+Cada rol recibe **lo que hoy recibe en `to-me`, ni una clave más**:
+
+| rol | claves |
+|---|---|
+| Acudiente | `publicaciones`, `alumnos` (cada acudido con `alumno_id, nombres, apellidos, pazysalvo, foto_id, foto_nombre, nombre_grupo, grupo_abrev, orden` + `ausencias_periodo`) |
+| Profesor | `publicaciones`, `horario_hoy`, `horario_version_id` |
+| Alumno | `publicaciones`, `ausencias_periodo` |
+| nadie | `eventos` |
+
+Hay un test allí que falla si se cuela una columna de más en un acudido, y **no
+es por peso: son datos personales de un menor**.
+
+> **Y una decisión de producto que queda abierta**: un Alumno **no** recibe
+> `horario_hoy`, igual que hoy en `to-me`. Dárselo sería probablemente una
+> mejora, pero una ruta que se estrena para ahorrar peso no es donde se decide
+> eso. Es de Joseth, y aparte.
+
+### Por qué hizo falta la ruta nueva y no bastaba la línea barata
+
+Esta página ofrecía como salida *«no mandar `eventos` a quien no lo pinta»*, sin
+estrenar ruta. **No vale, y el motivo es del backend**: ese servidor **no
+distingue la app del front web** —mismo token, mismo `tipo`, y no hay cabecera
+de cliente; `version_minima_app` viaja hacia la app, no desde ella—. Vaciar
+`eventos` para un acudiente se lo quitaría también al acudiente que abre el
+panel **en el navegador**, cuya carga inicial sale de ese mismo
+`ChangesAsked/to-me`. La ruta nueva no era la cara: era la única que no le quita
+nada a nadie. La vieja no se tocó, y hay un test que lo ata.
 
 Eso quita del bucle por acudido `comportamiento`, `situaciones`, `libro`,
 `uniformes`, `prematricula` y `matri_next` —seis de las siete llamadas—, y deja
@@ -455,6 +543,19 @@ pintan esas cosas. Es uno nuevo al lado.
 > beneficio está en una línea**: no mandar `eventos` a quien no lo pinta, igual
 > que hoy `profes_actuales` ya vuelve vacío para un alumno. La app no lee esa
 > clave en ningún rol, comprobado en `MuroApi.traerMuro`.
+
+### Cuándo la puede llamar la app, que no es cuando esté fundida
+
+**`app/` es una copia por colegio**, así que `muro/app` no se puede llamar hasta
+que esté desplegada en **los diecisiete** —los dieciséis colegios y `demo`—. Antes
+de eso, cada apertura en un colegio rezagado gasta un 404 antes de caer a la ruta
+vieja, que es justo la carga que este endpoint existe para quitar.
+
+O sea que la mitad de app va detrás de su interruptor, como todo lo demás, y se
+enciende por el hash de la tanda y no por «ya está fundido».
+
+**Estado al 19 sep 2026**: escrita y en verde en el worktree `.worktrees/muro`
+del backend, rama `feat/muro-para-la-app`, commit `eb13d8e`. **Sin fundir.**
 
 ### Por qué corre prisa
 
