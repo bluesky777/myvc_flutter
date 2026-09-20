@@ -1000,8 +1000,11 @@ Future<List<PersonaEncontrada>> buscarPersonas(
 /// >
 /// > - **Ésta** lleva `auth.personal` y trae la observación interna y el nombre
 /// >   de quien cerró cada paso. Es **entre el personal**.
-/// > - **`mi-recorrido`** lleva `boletin.propio` y trae solo `estado`,
-/// >   `motivo_devolucion` y `cerrado_at`.
+/// > - **`mi-recorrido`** lleva `boletin.propio` y **no** trae ni `observacion`
+/// >   ni `cerrado_por`. Sí trae `descripcion` —**la del requisito**, que es lo
+/// >   que se le pide a la familia—, y ojo con eso: `requisitos_matricula` y
+/// >   `requisitos_alumno` **tienen las dos una columna `descripcion`**, y la
+/// >   interna es la que en esta ruta sale con el alias `observacion`.
 /// >
 /// > **Equivocarse no duele igual en los dos sentidos.** Una pantalla de familia
 /// > que llame a ésta recibe **403 siempre**: ruidoso y seguro. Pero una de

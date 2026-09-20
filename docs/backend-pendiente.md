@@ -973,34 +973,33 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 
 ---
 
-## 7.bis El aviso de matrícula y «mi recorrido» — ⚠️ EN UNA RAMA, **SIN FUNDIR**
+## 7.bis El aviso de matrícula y «mi recorrido» — FUNDIDO en `main`, sin desplegar
 
-> ## ⛔ NO CONSTRUYAS CONTRA ESTO TODAVÍA
+> ## ✅ YA SE PUEDE CONSTRUIR CONTRA ESTO — pero sigue sin desplegar
 >
-> **Nada de esta sección existe en `main` de `8myvc`.** Vive sólo en la rama
-> `feat/el-proceso-de-matriculas` (worktree `.worktrees/mat`), que sigue moviéndose.
-> Comprobado contra el código, no supuesto:
+> **Fundido el 20 sep 2026 en el merge `74d5028`**, «el proceso de matrículas — el
+> portal de la familia, el tablero y las dos respuestas de Joseth». Comprobado, no
+> supuesto: `git grep mi-recorrido main -- routes/` devuelve
+> `routes/api/alumnos.php`. Queda **el despliegue**, que es el otro estado.
 >
-> ```
-> git grep mi-recorrido main -- routes/ app/     ->  nada
-> main: TemasDeNotificacion::TIPOS = ['notas', 'asistencia', 'disciplina']   (tres, no cuatro)
-> ```
+> ### Y este rótulo caducó en una vuelta, que es justo lo que enseña
 >
-> **Y el rótulo de esta sección era el problema, no un detalle.** Decía *«ESCRITOS el
-> 20 sep, sin desplegar»*, que es **exactamente la misma frase** que usa el §8 de aquí
-> abajo para las nueve de `estaciones/*`. Pero son dos estados distintos:
+> Esta misma sección decía, hace unas horas, *«EN UNA RAMA, SIN FUNDIR»*, y antes de
+> eso *«ESCRITOS el 20 sep, sin desplegar»* — la misma frase que usa el §8 para las
+> nueve de `estaciones/*`, que sí estaban fundidas. Aquel rótulo **mandaba a este repo
+> a construir contra una ruta que no existía ni desplegando `main`**, y el de después
+> **envejeció al revés en menos de un día**: manda a esperar una fusión que ya ocurrió.
 >
 > | | dónde está |
 > |---|---|
-> | §8 · las nueve de `estaciones/*` | **fundidas en `main`** y sin desplegar |
-> | §7.bis · esto | **en una rama, sin fundir** y sin desplegar |
+> | §8 · las nueve de `estaciones/*` | fundidas en `main`, **sin desplegar** |
+> | §7.bis · esto | fundido en `main` (`74d5028`), **sin desplegar** |
 >
-> Con el mismo rótulo para las dos, este repo se pone a construir contra una ruta que
-> **no existiría ni desplegando `main`**. Lo cazó `myvc-flutter-1a` midiéndolo contra el
-> código, y tenía razón. *Corregido por la sesión de `8myvc` que lo escribió.*
->
-> **Lo que sí puedes usar hoy** es `GET requisitos/recorrido/{alumno_id}`
-> (`auth.personal`), que está en `main` desde el 20 sep y es la que esta app ya llama.
+> **La lección no es «poner bien el rótulo»: es que el rótulo no es el dato.** «Fundido»
+> y «desplegado» son dos estados distintos y los dos se mueven solos, sin que nadie
+> toque este documento. Lo que no caduca es la orden de medir:
+> `git grep <ruta> main` y `git log origin/main..main`. **Créele a eso, no a esta
+> caja.**
 
 > **Esta sección no pide nada al backend: dice qué va a llegar y qué le tocará a esta
 > app.** Escrita por la sesión de `8myvc` el 20 sep 2026, junto con el portal de la
@@ -1029,9 +1028,20 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 > El motivo está en `ExigirBoletinPropio.php:70`, y es deliberado: el guard **deja pasar
 > de largo a todo el que no sea `Alumno` ni `Acudiente`**, para que secretaría pueda
 > abrir la vista de la familia y enseñársela a una madre por teléfono. Comprobado contra
-> el código, y comprobados también los campos: `getRecorrido` trae `ra.descripcion AS
-> observacion`, `ra.cerrado_por` y el nombre de quien cerró; `getMiRecorrido` selecciona
-> `ra.id, ra.estado, ra.motivo_devolucion, ra.cerrado_at` **y nada más**.
+> el código, y comprobados también los campos. **Ojo aquí, que hay dos columnas que se
+> llaman igual en dos tablas y es donde se equivoca todo el mundo —yo el primero:**
+>
+> | | `requisitos_matricula.descripcion` | `requisitos_alumno.descripcion` |
+> |---|---|---|
+> | qué es | **lo que se le pide** a la familia | la **observación interna** del personal |
+> | `getRecorrido` (personal) | viaja como `descripcion` | viaja **con el alias `observacion`** |
+> | `getMiRecorrido` (familia) | **viaja** — y la familia la necesita | **no viaja** |
+>
+> O sea que `mi-recorrido` **sí trae `descripcion`**, además de `requisito`, `bloquea`,
+> `estado`, `motivo_devolucion`, `cerrado_at` y `marca_id`. Lo que **no** trae es
+> `observacion` y `cerrado_por`. Escribí antes que traía «solo estado, motivo y
+> cerrado_at» y era falso por defecto: habría dejado la pantalla de la familia sin poder
+> decir **qué le están pidiendo**. Lo corrigió `8myvc-fc`.
 >
 > **Así que una pantalla de personal mal cableada a `mi-recorrido` no se cae nunca.**
 > Devuelve 200, y el síntoma no es un error: son **la observación interna y el nombre

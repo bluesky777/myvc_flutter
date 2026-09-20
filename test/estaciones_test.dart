@@ -720,6 +720,38 @@ void main() {
       expect(recorrido.cerrados, 1);
     });
 
+    test(
+        'si cierra un administrativo no hay nombre, y eso es ausente y no vacío',
+        () {
+      // **Éste es el caso NORMAL en la ventanilla, no el raro.**
+      // `cerrado_por_nombres` sale de `profesores`, y `8myvc-fc` midió el 20 sep
+      // 2026 que **0 de las 22 cuentas de tipo `Usuario` tienen ficha ahí**. O
+      // sea que cuando cierra el paso un administrativo —que es justo quien
+      // atiende— las dos claves llegan NULL.
+      //
+      // Lo que esta prueba sujeta es el `.trim()` de `_pasoDelRecorridoViejo`:
+      // sin él, juntar dos vacíos da `' '`, que **no es vacío**, `cerradoPor`
+      // dejaría de ser null y las pantallas —que preguntan `!= null`— pintarían
+      // «Cerrado por » con el hueco en blanco. Peor que no decir nada, porque
+      // parece un dato perdido en vez de uno que no existe.
+      final recorrido = RecorridoDeMatricula.fromJson({
+        'pasos': [
+          {
+            'estacion': 1,
+            'requisito': 'Tesorería',
+            'marca_id': 7,
+            'estado': 'Entregado',
+            'cerrado_por': 44,
+            'cerrado_por_nombres': null,
+            'cerrado_por_apellidos': null,
+          },
+        ],
+      });
+
+      expect(recorrido.pasos.single.estado, EstadoDelPaso.cumplido);
+      expect(recorrido.pasos.single.cerradoPor, isNull);
+    });
+
     test('lo que frena se dice aparte de lo que falta', () {
       final recorrido = RecorridoDeMatricula.fromJson({
         'pasos': [

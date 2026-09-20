@@ -767,6 +767,16 @@ class RecorridoDeMatricula {
 /// es la que distingue «no está» de «no se ha mirado», y por eso viaja hasta
 /// [EstadoDelPaso.deTexto].
 PasoDelRecorrido _pasoDelRecorridoViejo(Map<String, dynamic> json) {
+  // **El `.trim()` no es cosmético y no se puede quitar.** `cerrado_por_nombres`
+  // sale de `profesores`, y quien atiende la ventanilla es un administrativo:
+  // `8myvc-fc` midió el 20 sep 2026 que **0 de las 22 cuentas de tipo `Usuario`
+  // tienen ficha en `profesores`**, así que las dos claves llegan NULL y esto es
+  // el caso normal, no el raro. Sin el `trim`, `''.join(' ')` da `' '`, que **no
+  // es vacío**: `cerradoPor` dejaría de ser null y las pantallas pintarían
+  // «Cerrado por » con el nombre en blanco, que es peor que no decir nada.
+  //
+  // Se trata como **ausente** a propósito. Enseñar algo en su lugar espera a que
+  // Joseth decida qué —`users` solo tiene `username`, no hay columna de nombre—.
   final quien = [
     texto(json['cerrado_por_nombres']) ?? '',
     texto(json['cerrado_por_apellidos']) ?? '',
