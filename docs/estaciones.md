@@ -400,7 +400,40 @@ Es la Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
    que nadie se quede invisible cuando un push se pierde (§2.2).
 6. **12 y el globo** — las notas entre estaciones. Va aquí y no antes porque **la nota sin la
    cola no sirve de nada**, y la cola sin notas sí: se puede atender un día entero sin ellas.
-7. **03** (el QR), **10 y 11** (buscar y mirar), **09** (sin señal).
+7. **09** (sin señal), y **03** con el código tecleado.
+
+### Lo que este orden daba por supuesto y era falso: 10 y 11 no esperaban a nada
+
+Estaban las últimas de la lista, y **se escribieron el mismo día que las primeras**. El motivo
+es que ninguna de las dos usa las nueve rutas: **buscar** se apoya en `PUT buscar/por-nombre` y
+`por-apellido`, desplegadas desde mucho antes, y **el recorrido** en
+`GET requisitos/recorrido/{alumno_id}`, entregada el 20 sep. O sea que van detrás de **su
+propio interruptor** y pueden encenderse meses antes que el resto.
+
+Y eso no es un detalle de orden: son **las dos que contestan «¿y mi hija en qué va?»**, que era
+la mitad de la pregunta con la que nació este documento. Se puede tener eso funcionando **sin
+nada del día de matrículas montado**, un lunes cualquiera en secretaría.
+
+**La lección, para el próximo plan:** el orden se escribió suponiendo que todo el módulo
+esperaba a lo mismo, y no era verdad. Lo que se puede encender solo hay que buscarlo **antes**
+de ordenar, no después.
+
+### Y el escáner no entra por ahora — decidido el 20 sep 2026
+
+La pantalla 03 tiene dos mitades y **solo una cuesta**: teclear el código
+(`2027-4K7M2`, el del formulario de inscripción) no cuesta nada; **la cámara cuesta los
+permisos de las dos tiendas**. Hoy esta app no pide cámara en ninguna, y meterla añade
+`android.permission.CAMERA` a la ficha de Play —que los dieciséis colegios ven cambiar— y
+`NSCameraUsageDescription` en iOS, sin el cual la app **se cae** al abrir la cámara.
+
+**Y una trampa que no avisa**: los paquetes de escáner añaden solos un
+`<uses-feature android:name="android.hardware.camera">`, y sin `required="false"` explícito
+**Play deja de ofrecer la app a los aparatos sin cámara**. No falla nada, no llega ningún
+aviso: se desaparece de algunas tablets —que es justo el aparato del patio—.
+
+Así que **la 03 se escribirá con el código tecleado y sin cámara**, y el escáner es una
+decisión aparte con ese precio delante. El detalle entero, en
+[seguridad-datos-play.md](seguridad-datos-play.md).
 
 ## 6. Lo que falta decidir, y no lo decide esta app
 

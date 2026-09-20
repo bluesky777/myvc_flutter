@@ -172,3 +172,19 @@ llaman las unidades—. Esos no son datos personales y no se declaran.
   ejemplo— no cambia nada aquí: sigue siendo el servidor del colegio.
 - **Si se vuelve a guardar la contraseña** en el dispositivo, hay que marcar
   *Contraseñas* y corregir la política.
+- **Si entra el escáner de QR** de la pantalla 03 de
+  [estaciones.md](estaciones.md): **decidido el 20 sep 2026 que NO entra por
+  ahora**, justamente para no tocar esto. El día que se retome, lo que cambia:
+  entra `android.permission.CAMERA` —visible en la ficha— y
+  `NSCameraUsageDescription` en iOS, que sin él **tira la app** al abrir la
+  cámara.
+
+  **La trampa que no avisa** es el `<uses-feature android:name="android.hardware.camera">`
+  que los paquetes de escáner añaden solos: sin `required="false"` explícito,
+  **Play deja de ofrecer la app a los aparatos sin cámara** y no lo notifica
+  nadie. Justo las tablets, que es donde esto se usa.
+
+  Aquí, en esta ficha, **probablemente no haya que marcar «Fotos»**: el escáner
+  lee un código y manda el código, no la imagen. Pero hay que mirarlo con el
+  paquete elegido delante, porque quien decide es lo que la librería hace, no lo
+  que la pantalla enseña.

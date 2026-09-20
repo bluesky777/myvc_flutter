@@ -42,10 +42,35 @@ class PendientesEstaciones {
 
   /// Leer el QR de la hoja de ruta (pantalla 03).
   ///
-  /// La ruta existe en el contrato (`GET estaciones/codigo/{codigo}`) y el
-  /// código es **el del formulario de inscripción**, ya desplegado
-  /// (`8myvc/docs/migracion/41`). Lo que falta es la pantalla de cámara y su
-  /// permiso en iOS y Android, que son dos cosas más.
+  /// **DECIDIDO por Joseth el 20 sep 2026: el escáner no entra por ahora, para
+  /// no tocar los permisos de las tiendas.** No es una postergación vaga: es una
+  /// decisión con un precio medido detrás.
+  ///
+  /// Hoy esta app **no pide cámara en ninguna de las dos tiendas** —Android
+  /// declara `INTERNET` y las dos de `AD_ID` que arrastra Analytics; iOS solo
+  /// `NSLocalNetworkUsageDescription`—. Meter un escáner rompe eso:
+  ///
+  /// - `android.permission.CAMERA` es de las peligrosas: se pide en tiempo de
+  ///   ejecución **y sale en la lista de permisos de la ficha**, que los
+  ///   dieciséis colegios ven cambiar al actualizar.
+  /// - **Y la que no avisa**: los paquetes de escáner meten solos un
+  ///   `<uses-feature android:name="android.hardware.camera">`, y sin un
+  ///   `required="false"` explícito **Play deja de ofrecer la app a los
+  ///   aparatos sin cámara**. No falla nada y no llega ningún correo: se
+  ///   desaparece de algunas tablets, que es justo el aparato del patio.
+  /// - En iOS, `NSCameraUsageDescription` pasa a ser obligatorio: sin él la app
+  ///   **se cae** al abrir la cámara, y un texto genérico se rechaza.
+  ///
+  /// Lo que **no** pasa, para que no se exagere el precio: la cámara no es de
+  /// los permisos restringidos de Play, así que no hay formulario ni ronda extra
+  /// de revisión. Y el público declarado es **13+**, así que esto no entra en la
+  /// *Families Policy*.
+  ///
+  /// **La salida, cuando se retome:** el código se puede teclear —`2027-4K7M2`,
+  /// el mismo del formulario de inscripción—, así que la pantalla 03 se puede
+  /// escribir **entera sin cámara** y el escáner queda aparte. Lo que esa
+  /// pantalla sigue esperando entonces no es un permiso: es
+  /// `GET estaciones/codigo/{codigo}`, que es de las nueve rutas.
   static bool escanearElCodigo = false;
 
   /// El aviso inmediato cuando llega alguien a tu estación.
