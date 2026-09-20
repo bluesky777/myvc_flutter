@@ -6,7 +6,7 @@ y `myvc_front/PANTALLAS-MATRICULA.md` (las quince pantallas y los seis roles). A
 las estaciones **en `app2`, o sea en la web**. Esto contesta la pregunta que quedaba:
 **cómo atiende una estación alguien que solo tiene el teléfono en la mano.**
 
-**Maqueta navegable de las once pantallas:**
+**Maqueta navegable de las doce pantallas:**
 https://claude.ai/artifact/3fixY3xaQsjGT2V4LAWPbE
 
 ---
@@ -31,7 +31,7 @@ número de pasos — y cuando el teléfono que lo abre es de hace tres versiones
 
 ---
 
-## 1. El recorrido del que atiende, en once pantallas
+## 1. El recorrido del que atiende, en doce pantallas
 
 Cada línea: **qué ve · qué toca · qué queda escrito · a quién le pasa el turno.**
 
@@ -48,10 +48,11 @@ Cada línea: **qué ve · qué toca · qué queda escrito · a quién le pasa el
 | 09 | **Sin señal** | el que atiende | Se sigue atendiendo. Lo marcado espera en el teléfono, y **se ve que espera** |
 | 10 | **Buscar** | cualquiera del personal | Todo el colegio, no solo la cola: nombre, apellido, documento o código |
 | 11 | **El recorrido completo** | cualquiera del personal | Los N pasos de esa persona con quién los cerró y cuándo. Solo lectura |
+| 12 | **Las notas de cualquier estación** | cualquiera del personal | Lo que otras estaciones dejaron escrito de esa familia, en la suya o en cualquier otra, y dejar la propia |
 
 ---
 
-## 2. Las nueve decisiones de diseño, y por qué
+## 2. Las diez decisiones de diseño, y por qué
 
 ### 2.1 · La cola es una CONSULTA, no una bandeja de avisos
 
@@ -182,6 +183,50 @@ toca a Orientación»*.
 la app es una sola para dieciséis colegios y el guard de la ruta es lo único que de verdad
 protege.
 
+### 2.10 · El globo de notas sale en cualquier estación, haya llegado o no
+
+*«Puede ser que se adelante el tesorero a poner una nota antes de empezar el proceso»* —y eso
+no es un caso raro: es **lo más útil que puede pasar**. El tesorero sabe el lunes que esa
+familia tiene un saldo pendiente; la estación 5 la ve el sábado. Entre esas dos fechas la
+información existe y no la ve nadie.
+
+Por eso la barra de pasos lleva un **globo de conversación con un número**, flotando sobre el
+círculo de **cualquier** estación —la 1, la 4 o la 5, esté cerrada, en curso o sin empezar— y
+lo ve quien sea que esté mirando la ficha, aunque no atienda esa estación. Quien atiende
+Documentos tiene que poder ver que Tesorería escribió algo en la 5 **antes** de mandar a la
+familia a hacer cuatro colas.
+
+**Dos colores y una forma, y la forma es la que manda:**
+
+| | |
+|---|---|
+| Globo **pizarra** `#2B2740` | hay algo escrito ahí. Léelo cuando puedas |
+| Globo **ámbar** `#B26A00` | hay algo **sin resolver**. Léelo antes de seguir |
+
+El globo se distingue de los cuatro estados del paso **por su silueta**, no por su color:
+ninguno de los otros indicadores de esta pantalla tiene forma de bocadillo. Y el número nunca
+va solo: debajo de la barra, la misma información en palabras —*«Tesorería dejó 2 notas en la
+5, una sin resolver»*— que es lo que se lee de verdad con sol en la cara. En la cola y en la
+búsqueda el mismo globo va sobre la foto y sobre el punto de la estación, con su chip de texto
+al lado.
+
+**Cuatro reglas que hacen que esto no se convierta en un chat:**
+
+1. **Escribe cualquiera del personal, en cualquier estación.** Es la contrapartida exacta de
+   §2.9: ver todo, escribir una nota en cualquier paso, **cerrar solo el tuyo**.
+2. **Resolver una nota pendiente le toca al dueño de esa estación.** Desde fuera se lee y se
+   sigue; el botón de darla por resuelta aparece apagado, con el motivo escrito. Si cualquiera
+   pudiera cerrarla, el aviso del tesorero lo apagaría el primero a quien le estorbe.
+3. **Una nota NO es el motivo de una devolución.** El motivo pertenece al paso, lo lee la
+   familia y va en su propia columna (§2.4). La nota es **entre el personal** y la familia no
+   la ve. Mezclarlas es la forma de que un comentario interno acabe en el celular de una mamá.
+4. **Una nota reservada cuenta para el globo y no se lee.** Orientación tiene un campo que solo
+   ven orientación y rectoría; el globo sale igual, con el candado y sin el texto. Es
+   literalmente lo que ya pedía el plan del front: *«si hay algo que tesorería deba mirar, le
+   llega la señal sin el texto»* (`PANTALLAS-MATRICULA.md`, pantalla 11). **Que el número
+   incluya lo reservado es a propósito**: esconder que existe una nota es peor que esconder su
+   contenido — quien no puede leerla sí puede ir a preguntar.
+
 ---
 
 ## 3. La forma, y por qué se ve así
@@ -233,7 +278,7 @@ desaparece de la fila de la estación siguiente y nadie se entera.
 Es lo primero que hay que cerrar, y es del backend: **fijar los estados, migrar lo que haya
 escrito y rechazar lo que no esté en la lista**. No es trabajo de esta app.
 
-### 4.3 · El contrato que la app necesita — siete rutas, PROPUESTA
+### 4.3 · El contrato que la app necesita — ocho rutas, PROPUESTA
 
 Está escrito, con sus porqués y con lo que mueve, en
 **`8myvc/docs/migracion/44-las-estaciones-en-la-app.md`**. En resumen:
@@ -246,10 +291,17 @@ GET  estaciones/alumno/{id}         la ficha: los N pasos + lo mío
 GET  estaciones/codigo/{codigo}     lo mismo, por el QR de la hoja
 PUT  estaciones/{n}/marcar          cumple | observación | devolver(motivo)
 PUT  estaciones/{n}/enviar-a/{m}    el salteado: registra el intento y avisa
+POST estaciones/{n}/nota            una nota en CUALQUIER estación, la tuya o no
 ```
 
-**Siete rutas son una decisión, no un efecto secundario**, y las autoriza Joseth con el precio
-delante. Ninguna de las once pantallas de aquí arriba se puede empezar antes de eso.
+Y **el globo necesita que el conteo viaje en lo que ya se pide**, no en una llamada aparte:
+cada paso de la ficha trae `notas:{total, pendientes, reservadas}` y cada fila de la cola trae
+`notas_total` y `notas_pendientes`. Una pantalla que tuviera que preguntar «¿y notas?» alumno
+por alumno no dibujaría la cola: la dibujaría cuatro segundos después, en un patio con mala
+señal.
+
+**Ocho rutas son una decisión, no un efecto secundario**, y las autoriza Joseth con el precio
+delante. Ninguna de las doce pantallas de aquí arriba se puede empezar antes de eso.
 
 ---
 
@@ -260,12 +312,14 @@ Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
 
 1. **El backend cierra el vocabulario de `estado`** (§4.2) y ensancha las dos tablas con
    `estacion_nro`, `rol_id`, `obligatorio` y `bloquea`.
-2. **Las siete rutas** (§4.3).
+2. **Las ocho rutas** (§4.3) y la tabla de notas.
 3. **Pantallas 01, 02, 04, 05, 07** — con eso ya se atiende una estación entera, y el día de
    matrículas funciona.
 4. **06, 08** — el motivo y el salteado, que son las que ahorran el tiempo de verdad.
-5. **03** (el QR), **10 y 11** (buscar y mirar), **09** (sin señal).
-6. El push inmediato por estación, cuando entre el lado Flutter de `notificaciones.md`.
+5. **12 y el globo** — las notas entre estaciones. Va aquí y no antes porque **la nota sin la
+   cola no sirve de nada**, y la cola sin notas sí: se puede atender un día entero sin ellas.
+6. **03** (el QR), **10 y 11** (buscar y mirar), **09** (sin señal).
+7. El push inmediato por estación, cuando entre el lado Flutter de `notificaciones.md`.
 
 ## 6. Lo que falta decidir, y no lo decide esta app
 
