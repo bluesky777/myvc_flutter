@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Screens/EstacionesScreen.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
 import 'package:myvc_flutter/Screens/MisCompetenciasScreen.dart';
@@ -100,6 +101,9 @@ class RouteGenerator {
       case '/usuarios':
         return MaterialPageRoute(
             settings: settings, builder: (context) => UsuariosScreen());
+      case '/estaciones':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => EstacionesScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());

@@ -474,13 +474,40 @@ endpoint que entrega los temas.
 
 ### Estaciones de matrícula — [estaciones.md](estaciones.md)
 
-**Solo el diseño**, escrito el 20 de septiembre de 2026: las doce pantallas de
+**Tres pantallas escritas y apagadas, y el resto en diseño.** Escrito el 20 de
+septiembre de 2026: las doce pantallas de
 teléfono con las que alguien del personal atiende una estación del día de
 matrículas sin tocar la web, la cola que se llena sola cuando la estación
 anterior cierra, el que llega salteado, buscar a cualquiera del colegio y el
 globo de notas de §2.10. Maqueta navegable dentro del documento.
 
-**Cero código, y no por falta de ganas**: necesita ocho rutas que no existen
+### Lo que ya está escrito, detrás de `Interruptores.estaciones`
+
+**Las pantallas 01, 02 y 04** —elegir estación, la cola y la ficha—, con su capa
+de datos, sus modelos y 23 pruebas:
+[EstacionesScreen](../lib/Screens/EstacionesScreen.dart),
+[ColaDeEstacionScreen](../lib/Screens/ColaDeEstacionScreen.dart),
+[FichaDeEstacionScreen](../lib/Screens/FichaDeEstacionScreen.dart) y
+[EstacionesApi](../lib/Http/EstacionesApi.dart).
+
+**Apagadas no salen en el menú**, y con el interruptor en `false`
+[EstacionesApi](../lib/Http/EstacionesApi.dart) **no le pide nada al servidor** —
+hay una prueba que comprueba justo ese silencio, porque las ocho rutas no existen
+en ningún colegio y llamarlas sería un 404 por apertura sobre un hosting de un
+núcleo.
+
+Dentro, cada botón que todavía no se puede pulsar **dice por qué**, nunca «no
+disponible»: cerrar el paso espera a las pantallas 05 y 07, escanear espera a la
+cámara, y resolver una nota espera a una ruta que nadie ha pedido todavía.
+
+**Y dos cosas que aparecieron al escribirlas, las dos anotadas en
+[backend-pendiente.md](backend-pendiente.md) §8**: no hay ruta para dar por
+resuelta una nota —así que el globo ámbar no se podría apagar nunca—, y la cola
+no devuelve «atendidos hoy» ni «espera media», que no se pueden calcular en el
+teléfono. La pantalla enseña solo la cifra que sabe en vez de inventarse las
+otras dos.
+
+**Cero código encendido, y no por falta de ganas**: necesita ocho rutas que no existen
 —el contrato está en `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`— y
 antes de eso, que el backend le cierre el vocabulario a
 `requisitos_alumno.estado`, que hoy guarda lo que le manden.

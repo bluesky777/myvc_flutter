@@ -1,7 +1,9 @@
 # Lo que la app necesita del servidor
 
-Siete cosas, y ninguna se puede hacer desde el lado Flutter — **tres de ellas
-ya entregadas**. La sexta (§6) **no es una ruta ni bloquea nada**: son dos
+Ocho cosas, y ninguna se puede hacer desde el lado Flutter — **tres de ellas
+ya entregadas**. La octava (§8) es la más grande y la más nueva: **las ocho rutas
+de las estaciones de matrícula**, sin las cuales tres pantallas ya escritas no se
+pueden encender. La sexta (§6) **no es una ruta ni bloquea nada**: son dos
 columnas en un `SELECT` que ya existe, y su apartado conserva la ruta nueva que se
 pidió primero y se retiró el mismo día, porque la lección de por qué se retiró es
 reutilizable. La quinta es la única con prisa: se anotó el 2 de septiembre de
@@ -22,9 +24,15 @@ comprueba contra el hash de la tanda, no contra `main`**, y preguntar «¿está 
 `main`?» da la respuesta equivocada en los dos sentidos —`main` va por delante de
 lo que corre, y lo que corre puede tener de sobra lo que aquí se pide.
 
-**Son quince colegios y no dieciséis** desde el 25 ago 2026: uno se dio de baja y
-se borró del servidor, y nunca estuvo en ninguna tanda porque no tenía ni
-repositorio git ni aplicación.
+~~**Son quince colegios y no dieciséis** desde el 25 ago 2026~~ — **y volvió a
+ser dieciséis el 30 de agosto de 2026**, cuando entró `lal`, montado en la otra
+cuenta de cPanel (`lalvirtual.edu.co`). Este párrafo estuvo mal veinte días y se
+corrige aquí por lo mismo que se corrigió en
+[Interruptores.dart](../lib/Utils/Interruptores.dart): **un recuento escrito a
+mano envejece en silencio y falla del lado peligroso**. La condición buena no
+lleva número: *«todos los que recorre el bucle de despliegue»*, que hoy devuelve
+diecisiete carpetas —dieciséis colegios y `demo`—. Y ojo con la segunda cuenta:
+el `for` de `micolev1` **no alcanza a `lal`**.
 
 ```mermaid
 flowchart LR
@@ -35,6 +43,7 @@ flowchart LR
     E["5 · GET muro/app<br/>⚡ el muro sin el calendario"] --> E1["108 KB → ~5<br/>el 99% que la app tira<br/><b>urgente</b>"]
     F["6 · dos columnas en<br/>listasignaturas"] --> F1["materia_id + grado_id<br/>borra alcance.ts del front<br/><i>escritas, sin fundir</i>"]
     G["7 · el candado de la<br/>plantilla (P6)"] --> G1["el % del colegio deja<br/>de ser editable<br/><b>toca a los dieciséis</b>"]
+    H["8 · las ocho rutas de<br/>estaciones/*"] --> H1["el día de matrículas<br/>atendido desde el teléfono<br/><b>3 pantallas esperando</b>"]
 
     style A fill:#e8f4e8,stroke:#5a8f5a
     style B fill:#e8f4e8,stroke:#5a8f5a
@@ -43,6 +52,7 @@ flowchart LR
     style E fill:#ffe6e6,stroke:#c94b4b
     style F fill:#f0f0f5,stroke:#8a8aa0
     style G fill:#ffe6e6,stroke:#c94b4b
+    style H fill:#f0f0f5,stroke:#8a8aa0
 ```
 
 ---
@@ -960,6 +970,130 @@ en [plantilla-y-competencias.md](plantilla-y-competencias.md) §3.2.bis.
 > definitiva. Atarlos habría hecho que encender el boletín por competencias
 > recalculara las notas de todo un año, que es una clase de sorpresa que este
 > sistema no se puede permitir.
+
+---
+
+## 8. Las ocho rutas de `estaciones/*` — el día de matrículas desde el teléfono
+
+**Es la más grande de esta página y la única que tiene pantallas esperándola.**
+Anotada el 20 de septiembre de 2026. El contrato entero, con su precio contado en
+el árbol del backend, está en `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`;
+el diseño de las doce pantallas y el porqué de cada decisión, en
+[estaciones.md](estaciones.md).
+
+### Lo que se pide
+
+```
+GET  estaciones                     el recorrido del colegio y cuál atiendo yo
+GET  estaciones/{n}/cola            los que me llegan
+GET  estaciones/huella              ~300 bytes: ¿cambió algo?
+GET  estaciones/alumno/{id}         la ficha: los N pasos + lo mío
+GET  estaciones/codigo/{codigo}     lo mismo, por el QR de la hoja
+PUT  estaciones/{n}/marcar          cumple | observación | devolver(motivo)
+PUT  estaciones/{n}/enviar-a/{m}    el salteado: registra el intento y avisa
+POST estaciones/{n}/nota            una nota en CUALQUIER estación, la tuya o no
+```
+
+Todas con `auth.personal`. **Las ocho entran en un commit o no entran**: son una
+familia nueva, y el censo de rutas del backend las recogería mal a trozos.
+
+### Por qué la huella es una ruta aparte, y no «pedir la cola otra vez»
+
+La pantalla de la estación pregunta *«¿ha llegado alguien?»* cada veinte segundos
+durante ocho horas. **Ninguna de las lecturas de arriba manda `ETag` ni
+`Last-Modified`**, así que hoy preguntar barato no se puede.
+
+Es exactamente el caso de `GET sincronizacion/huella`
+(`8myvc/docs/migracion/34-la-huella-de-sincronizacion.md`), que contesta en **345
+bytes** en vez de los 121 KB que costaba traerse los datos. Con diez estaciones
+abiertas una jornada son unas **14.400 peticiones de 300 bytes** — menos que abrir
+la app dos veces. Pedir la cola entera cada veinte segundos serían las mismas
+peticiones multiplicadas por cien, y esto corre sobre un hosting de un núcleo.
+
+**Y la regla dura del 34 se hereda entera: la huella se calcula sobre lo que
+devuelve la cola, no sobre la tabla.** Una nota escrita en la estación 5 tiene que
+hacer aparecer el globo al que atiende la 2 —es él quien tiene delante a esa
+familia—, y eso sólo pasa si la huella de la 2 mira lo que la 2 devuelve.
+
+### El conteo de notas viaja dentro, no en una llamada aparte
+
+Cada paso de la ficha trae `notas:{total, pendientes, reservadas}` y cada fila de
+la cola trae `notas_total` y `notas_pendientes`. Una pantalla que tuviera que
+preguntar «¿y notas?» alumno por alumno no dibujaría la cola: la dibujaría cuatro
+segundos después, en un patio con mala señal.
+
+### Lo que YA está, medido el 20 sep 2026, para que no se pida dos veces
+
+- Las dos tablas (`requisitos_matricula`, `requisitos_alumno`), y ya con
+  `bloquea`, `cerrado_por` y `cerrado_at` — migración `2026_09_20_300000`.
+- `GET requisitos/recorrido/{alumno_id}` y seis rutas más de `requisitos/*`.
+- `PUT buscar/por-nombre` y `por-apellido`: **la pantalla de buscar no necesita
+  ruta nueva.**
+- El código y el QR del formulario (`8myvc/docs/migracion/41`). La pantalla de
+  escanear lee **ese** código; acuñar otro sería un segundo papel para la misma
+  familia.
+
+### Una línea del backend que va antes que las ocho rutas
+
+`cerrado_at` se escribe con `COALESCE`, o sea **una sola vez**. Si alguien reabre
+un paso, la fecha se queda puesta y **la cola lo vería cerrado**. Limpiarla al
+reabrir es una línea en `postAlumno`, y sin ella la cola miente en silencio, que
+es el modo de fallo que este módulo entero existe para evitar.
+
+Es más barato que la alternativa que esta página consideró primero —cerrarle el
+vocabulario a `requisitos_alumno.estado`, que hoy es un `varchar` sin lista
+cerrada—. Ese trabajo sigue haciendo falta, pero **ya no bloquea**: el desacuerdo
+de mayúsculas existe hoy —`AlumnosController:899` inserta `"falta"` y el defecto
+de la tabla es `'Falta'`— y sin embargo `cerrado_at` es inmune, porque `postAlumno`
+compara con `mb_strtolower`.
+
+### DOS HUECOS DEL CONTRATO, encontrados escribiendo las pantallas
+
+No son opiniones de diseño: son cosas que el contrato promete en un sitio y no
+entrega en otro. Salieron al construir, que es para lo que sirve construir antes
+de pedir.
+
+**1. No hay ninguna ruta para dar por resuelta una nota.** El permiso está
+decidido y escrito —quien la escribió, o `Admin`, `Secretario` o `Rector`— y la
+tabla `notas_estacion` tiene sus columnas `resuelta_por` y `resuelta_at`. Pero de
+las ocho rutas, `POST estaciones/{nro}/nota` **crea** y no hay hermana que
+resuelva. Sin ella el globo ámbar no se puede apagar nunca, y una nota pendiente
+es para siempre.
+
+Cabe en la familia sin ensancharla mucho:
+
+```
+PUT  estaciones/nota/{id}/resuelta    (auth.personal + el permiso de arriba)
+```
+
+**2. La cola no devuelve las tres cifras que la pantalla enseña arriba.** El
+diseño pide **atendidos hoy**, **esperando** y **espera media**, y de las tres
+solo `esperando` se puede sacar de lo que hay (contando la lista). Las otras dos
+**no se pueden calcular en el teléfono**: «atendidos hoy» son los que ya salieron
+de la cola —que por definición no están en ella— y la espera media necesita las
+horas de entrada y salida de todos, no de los cuatro que quedan.
+
+La pantalla, hoy, **enseña solo la que sabe** en vez de inventarse las otras dos.
+Si se quieren, van dentro de la respuesta de la cola y no en una llamada aparte:
+
+```
+GET estaciones/{nro}/cola
+  -> { nro, nombre, al_dia_at, atendidos_hoy, espera_media_min, cola:[…] }
+```
+
+Son dos agregados sobre una tabla pequeña y ya filtrada por estación y por día.
+
+### Lo que ya está hecho del lado Flutter
+
+**Tres pantallas, escritas y apagadas** detrás de
+[`Interruptores.estaciones`](../lib/Utils/Interruptores.dart): elegir estación, la
+cola y la ficha. Apagadas no salen en el menú —ni siquiera vacías— porque *«el
+colegio no configuró estaciones»* y *«esto todavía no existe»* se leen igual y no
+son lo mismo.
+
+**Encenderlo es cambiar un `false` por un `true`**, con la condición de siempre:
+desplegado en todos los colegios que recorre el bucle, comprobado por el hash de
+la tanda y no por `main`.
 
 ---
 

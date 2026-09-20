@@ -148,4 +148,34 @@ class Interruptores {
   ///
   /// Ver `docs/backend-pendiente.md` §5.
   static const bool muroApp = false;
+
+  /// Las estaciones del día de matrículas, atendidas desde el teléfono.
+  ///
+  /// **Lo que espera no es un endpoint: son ocho**, la familia `estaciones/*`
+  /// entera (`docs/backend-pendiente.md` §8, y el contrato con su precio en
+  /// `8myvc/docs/migracion/46-las-estaciones-en-la-app.md`). Y esperan juntas a
+  /// propósito: **el censo de rutas del backend recoge mal una familia que entra
+  /// a trozos**, así que se autorizan de una vez o no se empieza.
+  ///
+  /// **Lo que hay escrito detrás de este `false`** son tres pantallas —elegir
+  /// estación, la cola y la ficha— con su capa de datos y sus modelos. No están
+  /// a medias: están enteras y apagadas, que es lo que hace barato encender el
+  /// día que las ocho rutas estén desplegadas.
+  ///
+  /// **Apagado, la entrada NO sale en el menú, y eso es la mitad del diseño.**
+  /// `docs/estaciones.md` §2.8: *«si el colegio no configuró estaciones, la
+  /// entrada del menú no aparece — no una pantalla vacía que parezca rota»*. Una
+  /// lista vacía y «esto todavía no existe» **se leen igual y no son lo mismo**,
+  /// y aquí hay una tercera que tampoco lo es: «tu colegio no armó el recorrido».
+  /// Por eso el día que esto se encienda **siguen haciendo falta dos puertas**,
+  /// como en [competenciasDocente]: el interruptor espera al despliegue, y la
+  /// respuesta de `GET estaciones` dice si **este** colegio tiene recorrido.
+  ///
+  /// **Y una que no se puede comprobar desde aquí**: la cola pregunta «¿cerró el
+  /// paso anterior?», y eso sólo es fiable si el backend limpia `cerrado_at` al
+  /// reabrir un paso. Hoy se escribe con `COALESCE`, o sea una sola vez, así que
+  /// un paso reabierto seguiría contando como cerrado. Va en la §8 con ese
+  /// nombre porque **es una línea de servidor que decide si esta pantalla miente
+  /// en silencio**.
+  static const bool estaciones = false;
 }

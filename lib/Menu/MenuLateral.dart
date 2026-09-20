@@ -190,6 +190,30 @@ class MenuLateral extends StatelessWidget {
       ));
     }
 
+    // **El día de matrículas, y para todo el personal**: quien atiende una
+    // estación es un docente de pie en un aula, no un administrador. Es la
+    // contrapartida de que cerrar un paso lo pueda hacer cualquiera del
+    // personal —decidido el 20 sep 2026—, así que esconderla por rol aquí
+    // contradiría la pantalla.
+    //
+    // **Apagada no sale, en vez de salir vacía.** `docs/estaciones.md` §2.8: un
+    // colegio que no armó su recorrido y un módulo que todavía no existe se
+    // leen igual, y no son lo mismo. Mientras el interruptor esté apagado no
+    // hay ninguna de las dos cosas que enseñar.
+    //
+    // **Y cuando se encienda harán falta dos puertas, no una**, como en
+    // «Mis competencias»: ésta espera al despliegue de las ocho rutas, y la
+    // segunda —si este colegio configuró estaciones— solo se sabe preguntando
+    // a `GET estaciones`, que hoy no existe.
+    if (Interruptores.estaciones) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.how_to_reg_outlined,
+        texto: 'Estaciones',
+        ruta: '/estaciones',
+      ));
+    }
+
     // La última, y para todo el personal aunque casi todo lo que hay dentro
     // solo lo pueda mover un administrador: la mitad de su gracia es explicarle
     // a un docente por qué hoy no puede editar notas, o qué significa un 85.
