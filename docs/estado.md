@@ -576,10 +576,21 @@ disparo de Laravel **va cada quince minutos a propósito**, no por descuido: el
 motivo escrito en `8myvc/app/Console/Kernel.php` es que agrupar hace que un
 docente pasando una columna de treinta notas genere **un** aviso y no treinta, y
 el cron del sistema sí entra cada minuto — el cuarto de hora es una elección, no
-un techo. Y ese mismo fichero deja escrito que **en los dieciséis colegios
-todavía no hay credenciales de Firebase puestas**, así que hoy el push no
-llegaría ni con `firebase_messaging` metido. Por eso la cola se sondea con una
-huella barata y el push queda para después, sin bloquear nada.
+un techo.
+
+Y una tercera que **hay que decir con su asterisco, porque casi la escribo como
+un hecho y no lo es**. Ese mismo `Kernel.php` dice que «en el colegio que no
+tenga credenciales de Firebase esto no hace nada y lo dice — es lo que **va a
+pasar** en los dieciséis hasta que se pongan». Está **en futuro y es del 23 de
+agosto** (commit `98e6311`, el día que se desplegó el módulo): documenta lo que
+se esperaba entonces, **no una medición de hoy**. Lo más probable con diferencia
+es que siga siendo cierto —y entonces el push no llegaría ni con
+`firebase_messaging` metido—, pero **comprobarlo es mirar el `.env` de los
+diecisiete, y eso solo puede hacerlo Joseth**. Un comentario en futuro envejece
+a afirmación sin que nadie lo reescriba, y este estuvo a punto de hacerlo aquí.
+
+Por eso la cola se sondea con una huella barata y el push queda para después,
+sin bloquear nada.
 
 ### Usuarios — [usuarios.md](usuarios.md)
 

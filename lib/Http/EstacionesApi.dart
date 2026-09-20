@@ -153,11 +153,15 @@ class PendientesEstaciones {
   /// el último paso e iba después de la cola, así que quitarlo no dejó hueco —
   /// y que no lo dejara es lo que demuestra que el orden estaba bien puesto.
   ///
-  /// Lo que falta sigue siendo de los dos lados, el día que se retome: esta app
-  /// no tiene `firebase_messaging` (solo `firebase_core` y `firebase_analytics`)
-  /// y **en los dieciséis colegios todavía no hay credenciales de Firebase
-  /// puestas**, según deja escrito `8myvc/app/Console/Kernel.php`. O sea que hoy
-  /// no llegaría un push ni metiendo el paquete.
+  /// Lo que falta sigue siendo de los dos lados, el día que se retome. De este:
+  /// la app no tiene `firebase_messaging`, solo `firebase_core` y
+  /// `firebase_analytics`. Del otro, **probablemente** las credenciales de
+  /// Firebase de cada colegio — `8myvc/app/Console/Kernel.php` dice que sin
+  /// ellas el envío no hace nada, y que eso «es lo que **va a pasar** en los
+  /// dieciséis hasta que se pongan», pero está **en futuro y escrito el 23 ago
+  /// 2026**: es lo que se esperaba al desplegar, no una medición de hoy.
+  /// Comprobarlo es mirar el `.env` de los diecisiete, que solo puede hacer
+  /// Joseth. **No lo des por hecho al encender esto.**
   ///
   /// **La cola sondeada no se retira si esto se enciende algún día.** Un push se
   /// pierde, llega tarde o está apagado en los ajustes del teléfono, y la fila
