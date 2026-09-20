@@ -493,8 +493,22 @@ migración `2026_09_20_300000` del backend puso `cerrado_por` y `cerrado_at`—.
 Para estas pantallas significa que **la 04 y la 11 no se abren en sólo-lectura
 por no ser tu estación**: se abren, y lo que protege el paso es la firma
 visible, el deshacer de ocho segundos y el motivo escrito que lee la familia.
-Lo único que sigue pidiendo un dueño de estación es **resolver una nota
-pendiente** (§2.10), y ese dueño ya no existe como concepto en el esquema.
+
+**Y las cuatro que quedaban se contestaron el mismo 20 de septiembre**, así que
+de las cinco preguntas con las que nació este diseño **solo sigue abierta una**:
+
+| | |
+|---|---|
+| El aviso al acudiente | **en cada estación**, no solo al devolver. Con el nombre dentro y **sin el motivo** — el motivo se lee abriendo la app |
+| El push inmediato | **entra ahora.** Deja de ser «para después»: hay que meter `firebase_messaging`, que esta app no tiene, y publicar en el momento en vez de en la tanda de quince minutos |
+| Una nota de estación | **no avisa a nadie, espera ahí.** El globo ya la enseña a cualquiera que abra la ficha |
+| Resolver una nota pendiente | **quien la escribió, o Admin, Secretario o Rector.** Sustituye al «dueño de la estación», que dejó de existir cuando cerrar se abrió a todo el personal. Los tres roles existen en la tabla `roles` |
+| **Sigue abierta** | **¿teléfono o la tablet del colegio?** Si es tablet, el maestro-detalle de `tablets.md` deja de ser mejora y pasa a ser requisito |
+
+**Lo que eso mueve en el orden del trabajo**: el push sube de último a quinto, y
+la cola sondeada **no se va con él** — un push se pierde, se retrasa o está
+apagado en los ajustes, y la fila del patio no se puede parar por eso. El push
+adelanta el aviso; la cola garantiza que nadie se quede invisible.
 
 Dos cosas que salieron midiendo y afectan a esta app más allá de estas
 pantallas: **no tenemos `firebase_messaging`** (solo `firebase_core` y

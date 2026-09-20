@@ -85,7 +85,20 @@ Así que el aviso se parte en dos, y se dice cuál es cuál:
 | | Qué es | Cuándo está |
 |---|---|---|
 | **La cola, dentro de la app** | La pantalla 02 vuelve a preguntar cada ~20 s mientras está abierta, y siempre al volver de marcar. Es lo que hace aparecer al recién llegado | **Es lo único que hace falta para que el día de matrículas funcione** |
-| **El push** | Un tema por estación, publicado **en el momento**, no en la tanda de los quince minutos | Cuando entre el lado Flutter de `notificaciones.md`. No bloquea nada |
+| **El push** | Un tema por estación, publicado **en el momento**, no en la tanda de los quince minutos | **Entra ahora. Decidido por Joseth el 20 sep 2026** |
+
+> **«El push inmediato entre ahora.»** Eso cambia lo que esta sección decía —*«no bloquea
+> nada»*— y hay que decir lo que cuesta, porque **el lado Flutter no está empezado**: hay que
+> meter `firebase_messaging` en `pubspec.yaml`, resolver permisos de notificación en iOS y
+> Android, y suscribir al tema. Y en el servidor, **publicar en el momento**: el comando
+> `notificaciones:enviar` y su disparo de quince minutos sirven para las notas y **no** para
+> esto.
+>
+> **La cola sondeada sigue siendo la que sostiene el día**, y no por desconfianza: un push
+> puede perderse, llegar tarde o estar apagado en los ajustes del teléfono, y la fila del
+> patio no se puede parar por eso. El push **adelanta** el aviso; la cola **garantiza** que
+> nadie se quede invisible. Construir solo el push sería volver a la bandeja de avisos que la
+> §2.1 descarta.
 
 **Preguntar cada 20 segundos no puede costar lo que cuesta pedir la cola.** El patrón ya
 existe en esta casa y está medido: `GET sincronizacion/huella`
@@ -95,9 +108,28 @@ mismo: sondea la huella, y **solo cuando se mueve** pide la cola de verdad. Con 
 estaciones abiertas ocho horas son 14.400 peticiones de 300 bytes al día — menos que abrir la
 app dos veces.
 
-> **Y cuando el push exista, el que se manda a una estación NO lleva el nombre del menor
-> dentro.** Es la regla que ya está escrita en `notificaciones.md`: una notificación se ve en
-> la pantalla bloqueada, con gente al lado. «Llegó alguien a tu estación» y se abre la app.
+> **El que se manda a una estación NO lleva el nombre del menor dentro.** Es la regla que ya
+> está escrita en `notificaciones.md`: una notificación se ve en la pantalla bloqueada, con
+> gente al lado. «Llegó alguien a tu estación» y se abre la app.
+
+### 2.2 bis · Al acudiente se le avisa en CADA estación
+
+**Decidido por Joseth el 20 sep 2026**, contra la otra opción que esta casa se planteó
+—avisar solo cuando devuelven—. La familia sabe en todo momento dónde va y a dónde sigue, sin
+preguntarle a nadie, que es justo lo que hace la fila más corta.
+
+**Lo que eso obliga, dicho una vez y sin re-litigar:** son tantos avisos como estaciones tenga
+el colegio, cinco mañanas de un sábado. El riesgo no es el volumen —FCM ni lo nota— sino que
+la familia **aprenda a ignorarlos**, y entonces el que importa de verdad, el de la devolución,
+llegue al mismo sitio que los otros cuatro. **Por eso el de devolución tiene que verse
+distinto**: es el único que pide algo, y la pantalla 05 ya enseña su texto exacto antes de
+confirmar (§2.3).
+
+**Y el nombre sí va, el motivo no.** `notificaciones.md` permite nombrar al menor —*«Laura
+tiene 4 notas nuevas»*— y prohíbe el contenido: aquí eso se traduce en *«Laura pasó a la
+Estación 3 · Tesorería»*, y en *«Laura fue devuelta en Documentos»* **sin el motivo dentro**.
+El motivo lo escribió un docente para que lo lea la familia (§2.4), pero se lee **abriendo la
+app**, no en la pantalla bloqueada del bus.
 
 ### 2.3 · Antes de confirmar se enseña a quién se avisa
 
@@ -221,13 +253,31 @@ va solo: debajo de la barra, la misma información en palabras —*«Tesorería 
 búsqueda el mismo globo va sobre la foto y sobre el punto de la estación, con su chip de texto
 al lado.
 
+**La nota no le avisa a nadie: espera ahí.** *«Espera ahí»* —Joseth, 20 sep 2026—. Es la
+decisión barata y es la correcta: el globo ya hace el trabajo. Quien abra la ficha lo ve, y lo
+ve **cualquiera**, no solo la estación anotada (§2.10), así que el saldo que el tesorero
+escribió el lunes lo encuentra el sábado el primero que atienda a esa familia. Un aviso
+añadiría ruido a un canal —el del personal— que el día de matrículas ya está lleno, y su única
+ventaja sería adelantar unas horas algo que **nadie puede resolver hasta que la familia
+llegue**.
+
 **Cuatro reglas que hacen que esto no se convierta en un chat:**
 
 1. **Escribe cualquiera del personal, en cualquier estación.** Es la contrapartida exacta de
    §2.9: ver todo, escribir una nota en cualquier paso, **cerrar solo el tuyo**.
-2. **Resolver una nota pendiente le toca al dueño de esa estación.** Desde fuera se lee y se
-   sigue; el botón de darla por resuelta aparece apagado, con el motivo escrito. Si cualquiera
-   pudiera cerrarla, el aviso del tesorero lo apagaría el primero a quien le estorbe.
+2. **Resolver una nota pendiente: quien la escribió, o Admin, Secretario o Rector.**
+   **Decidido por Joseth el 20 sep 2026**, y sustituye a lo que este documento pedía —«el
+   dueño de esa estación»—, que ya no existe: desde que cerrar un paso lo puede hacer
+   cualquiera del personal (§2.9), **la estación no tiene dueño**. Los tres roles existen tal
+   cual en la tabla `roles` —`Admin` (1), `Rector` (10), `Secretario` (12)—, así que la regla
+   es comprobable y no hay que inventar un concepto nuevo para sostenerla.
+
+   Lo que protege sigue siendo lo mismo y ahora se sostiene mejor: **el aviso del tesorero no
+   lo puede apagar el primero a quien le estorbe**, porque el que atiende la estación 5 no es
+   ni quien la escribió ni ninguno de esos tres. Desde fuera se lee y se sigue; el botón de
+   darla por resuelta aparece **apagado, con el motivo escrito** —*«esta nota la puso
+   Tesorería; puede darla por resuelta quien la escribió, o Secretaría, Rectoría o un
+   administrador»*—, que es lo que convierte un botón muerto en una instrucción.
 3. **Una nota NO es el motivo de una devolución.** El motivo pertenece al paso, lo lee la
    familia y va en su propia columna (§2.4). La nota es **entre el personal** y la familia no
    la ve. Mezclarlas es la forma de que un comentario interno acabe en el celular de una mamá.
@@ -318,30 +368,55 @@ delante. Ninguna de las doce pantallas de aquí arriba se puede empezar antes de
 
 ## 5. Por dónde se empieza
 
-**Nada de esto depende de la pasarela, ni del portal de la familia, ni del push.** Es la
-Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
+**Nada de esto depende de la pasarela ni del portal de la familia.** Del push **sí depende
+ahora**, por decisión del 20 sep (§2.2), y por eso cambió el orden que este documento traía.
+Es la Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
 
-1. **El backend cierra el vocabulario de `estado`** (§4.2) y ensancha las dos tablas con
-   `estacion_nro`, `rol_id`, `obligatorio` y `bloquea`.
-2. **Las ocho rutas** (§4.3) y la tabla de notas.
+1. **El backend decide sobre qué se apoya la cola.** El plan decía *«cerrar el vocabulario de
+   `estado`»* y sigue haciendo falta, pero **medido el 20 sep hay un camino más corto**:
+   `AlumnosController:899` inserta `"falta"` en minúscula mientras el defecto de la tabla es
+   `'Falta'` con mayúscula —o sea que **el desacuerdo ya existe hoy**—, pero `cerrado_at`
+   **ya está desplegado** y `postAlumno` lo escribe comparando en minúsculas, así que es
+   inmune a eso. Una cola que pregunte `cerrado_at IS NOT NULL` no se rompe con una pantalla
+   vieja; una que pregunte `estado = 'Cumple'` sí.
+
+   **Con una trampa que hay que cerrar antes de fiarse**: `cerrado_at` se escribe con
+   `COALESCE`, o sea **una sola vez**. Si alguien reabre un paso, la fecha se queda puesta y
+   la cola creería que sigue cerrado. Limpiarla al reabrir es una línea; migrar el vocabulario
+   de dieciséis colegios es un trabajo. **Las dos cosas son del backend**, pero ya no están
+   empatadas.
+
+   De las columnas que este documento pedía, **`bloquea` ya está** (migración
+   `2026_09_20_300000`) y **`estacion_nro` y `rol_id` se descartaron con motivo escrito**: el
+   número impreso **es** `requisitos_matricula.orden`, y no hay rol porque cierra cualquiera
+   del personal.
+2. **Las ocho rutas** (§4.3) y la tabla de notas, con el permiso de resolver que dice §2.10.
 3. **Pantallas 01, 02, 04, 05, 07** — con eso ya se atiende una estación entera, y el día de
    matrículas funciona.
 4. **06, 08** — el motivo y el salteado, que son las que ahorran el tiempo de verdad.
-5. **12 y el globo** — las notas entre estaciones. Va aquí y no antes porque **la nota sin la
+5. **El push**: `firebase_messaging` en la app, el tema por estación y el del acudiente, y la
+   publicación **en el momento** en el servidor. Va **aquí y no al final** porque Joseth lo
+   pidió ahora; y va **después de que la cola funcione** porque la cola es lo que garantiza
+   que nadie se quede invisible cuando un push se pierde (§2.2).
+6. **12 y el globo** — las notas entre estaciones. Va aquí y no antes porque **la nota sin la
    cola no sirve de nada**, y la cola sin notas sí: se puede atender un día entero sin ellas.
-6. **03** (el QR), **10 y 11** (buscar y mirar), **09** (sin señal).
-7. El push inmediato por estación, cuando entre el lado Flutter de `notificaciones.md`.
+7. **03** (el QR), **10 y 11** (buscar y mirar), **09** (sin señal).
 
 ## 6. Lo que falta decidir, y no lo decide esta app
 
-1. ~~**¿Quién puede atender una estación?**~~ — **CONTESTADA el 20 sep, ver §2.9**: cualquiera
-   del personal, firmado con nombre y hora. Sigue abierto **quién resuelve una nota pendiente**
-   (§2.10), que es la única pieza que aún pide un dueño de estación.
-2. **¿Se avisa al acudiente en cada estación, o solo cuando lo devuelven?** Cinco avisos por
-   familia en una mañana es spam; uno solo cuando algo sale mal puede llegar tarde.
-3. **¿Cuántas estaciones tiene un día de matrículas típico y cómo se llaman?** La misma
-   pregunta que dejó abierta `PANTALLAS-MATRICULA.md` §5.3, y aquí decide cuántos pasos caben
-   en la barra sin que haya que desplazarla.
-4. **¿La estación la atiende un teléfono o la tablet del colegio?** Cambia el orden de
-   `docs/tablets.md`: si es tablet, el maestro-detalle de §3 deja de ser mejora y pasa a ser
-   requisito.
+**Las tres primeras se contestaron el 20 sep 2026 y quedan aquí tachadas, no borradas**: lo
+que se decidió se lee mejor al lado de la alternativa que se descartó.
+
+1. ~~**¿Quién puede atender una estación?**~~ — **cualquiera del personal**, firmado con
+   nombre y hora (§2.9). Y su cola, **quién resuelve una nota pendiente**, también:
+   **quien la escribió, o Admin, Secretario o Rector** (§2.10).
+2. ~~**¿Se avisa al acudiente en cada estación, o solo cuando lo devuelven?**~~ — **en cada
+   estación** (§2.2 bis). Con el nombre dentro y **sin el motivo**.
+3. ~~**¿Cuántas estaciones tiene un día de matrículas típico y cómo se llaman?**~~ — **las que
+   el colegio quiera**: es un editor de pasos, no un diagrama grabado en el código
+   (`8myvc/docs/migracion/44-el-dia-de-matriculas.md` §2). Para la barra de §3 eso no es una
+   respuesta cómoda: significa que **tiene que aguantar un número que no conocemos**, así que
+   se diseña para desplazarse y no para cinco.
+4. **¿La estación la atiende un teléfono o la tablet del colegio?** — **la única que sigue
+   abierta.** Cambia el orden de `docs/tablets.md`: si es tablet, el maestro-detalle de §3
+   deja de ser mejora y pasa a ser requisito.
