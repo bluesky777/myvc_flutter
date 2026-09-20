@@ -183,6 +183,17 @@ toca a Orientación»*.
 la app es una sola para dieciséis colegios y el guard de la ruta es lo único que de verdad
 protege.
 
+> **Leído al fundir (20 sep):** esta sección se escribió sin la respuesta de Joseth delante, y
+> la respuesta la cambia. **Cierra cualquiera del personal** —*«pero queda con su nombre y su
+> hora»*—, así que **el 403 por rol no existe** y `rol_id` se descartó con motivo escrito
+> (`8myvc/docs/migracion/44-el-dia-de-matriculas.md` §2, ya desplegado). Lo que protege el paso
+> es lo que este diseño ya traía: **la firma visible, el deshacer de ocho segundos y el motivo
+> escrito que lee la familia**. Para la pantalla eso significa que **04 y 11 no se abren en
+> sólo-lectura por no ser tu estación** —se abren, y enseñan de quién es el paso y quién lo
+> cerró—. Lo que sigue abierto es si eso vale también para **resolver** una nota pendiente
+> (§2.10, regla 2), donde este documento pide el dueño de la estación y el dueño ya no existe
+> como concepto.
+
 ### 2.10 · El globo de notas sale en cualquier estación, haya llegado o no
 
 *«Puede ser que se adelante el tesorero a poner una nota antes de empezar el proceso»* —y eso
@@ -281,7 +292,7 @@ escrito y rechazar lo que no esté en la lista**. No es trabajo de esta app.
 ### 4.3 · El contrato que la app necesita — ocho rutas, PROPUESTA
 
 Está escrito, con sus porqués y con lo que mueve, en
-**`8myvc/docs/migracion/44-las-estaciones-en-la-app.md`**. En resumen:
+**`8myvc/docs/migracion/46-las-estaciones-en-la-app.md`**. En resumen:
 
 ```
 GET  estaciones                     el recorrido del colegio y cuál atiendo yo
@@ -323,9 +334,9 @@ Fase 1 de `INVESTIGACION-MATRICULAS.md` §9, rendida en el teléfono:
 
 ## 6. Lo que falta decidir, y no lo decide esta app
 
-1. **¿Quién puede atender una estación?** El plan dice «rol»; la tabla de hoy tiene
-   `editable_por_profe_id`, que es **una persona**. Un docente que atiende Documentos el
-   martes no es el mismo del miércoles.
+1. ~~**¿Quién puede atender una estación?**~~ — **CONTESTADA el 20 sep, ver §2.9**: cualquiera
+   del personal, firmado con nombre y hora. Sigue abierto **quién resuelve una nota pendiente**
+   (§2.10), que es la única pieza que aún pide un dueño de estación.
 2. **¿Se avisa al acudiente en cada estación, o solo cuando lo devuelven?** Cinco avisos por
    familia en una mañana es spam; uno solo cuando algo sale mal puede llegar tarde.
 3. **¿Cuántas estaciones tiene un día de matrículas típico y cómo se llaman?** La misma
