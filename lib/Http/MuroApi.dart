@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Models/AsistenciaPeriodoModel.dart';
 import 'package:myvc_flutter/Models/PublicacionModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
 import 'package:myvc_flutter/Utils/MuroEnMemoria.dart';
 import 'package:myvc_flutter/Utils/VerificacionSesion.dart';
@@ -86,14 +87,21 @@ class AcudidoModel {
 /// Sale de `GET ChangesAsked/to-me`, que es de donde lo saca también el panel
 /// del front web. No es un endpoint del muro: es el cajón de sastre del panel y
 /// según el rol trae además historial de sesiones, intentos de login fallidos y
-/// solicitudes de cambio, nada de lo cual mira esta app. Se usa igualmente
-/// porque no hay otro —`publicaciones/ultimas` es el de la pantalla de login,
-/// sin sesión— y el backend no se puede tocar por ahora. El día que se pueda,
-/// aquí hay que apuntar a un endpoint que traiga solo esto. **Ese día dejó de
-/// ser lejano**: mientras la app era de docentes esto costaba lo que costaba un
-/// panel, pero la rama del acudiente recorre a sus acudidos uno a uno lanzando
-/// seis consultas por cada uno, y son las familias las que van a entrar ahora.
-/// Está pedido en [docs/backend-pendiente.md](../../docs/backend-pendiente.md) §5.
+/// solicitudes de cambio, nada de lo cual mira esta app. Se usó porque no había
+/// otro —`publicaciones/ultimas` es el de la pantalla de login, sin sesión—.
+///
+/// **Ya hay otro**: `GET muro/app`, escrito el 19 sep 2026 y **sin fundir**.
+/// Trae las mismas cinco claves con los mismos nombres y sin el calendario, que
+/// es el 99 % de lo que se manda y el 0 % de lo que esta app lee. Por eso
+/// cambiar de uno a otro **no toca ni una línea de lo que se lee aquí abajo**:
+/// sólo la dirección, detrás de [Interruptores.muroApp].
+///
+/// Y por eso el camino viejo se queda escrito y funcionando. `app/` es una
+/// copia por colegio: hasta que la ruta nueva esté en los diecisiete, encender
+/// el interruptor sería gastar un 404 por apertura antes de caer aquí, que es
+/// justo la carga que se quiere quitar.
+///
+/// Ver [docs/backend-pendiente.md](../../docs/backend-pendiente.md) §5.
 ///
 /// **`refrescar` decide si se pregunta o se sirve lo guardado.** Por defecto
 /// vale lo de [MuroEnMemoria], que es lo que quieren las tres pantallas que
@@ -106,7 +114,9 @@ Future<MuroCargado> traerMuro(Server server, {bool refrescar = false}) async {
     if (guardado != null) return guardado;
   }
 
-  final res = await server.get('/ChangesAsked/to-me');
+  final res = await server.get(
+    Interruptores.muroApp ? '/muro/app' : '/ChangesAsked/to-me',
+  );
 
   // El token dejó de valer —le cambiaron la clave, le desactivaron la cuenta—.
   // Se tira el sello de la comprobación para que el próximo arranque sí le

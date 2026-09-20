@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/MuroEnMemoria.dart';
 import 'package:myvc_flutter/Utils/VerificacionSesion.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,9 +23,13 @@ class ServidorQueCuenta extends Server {
 
   int veces = 0;
 
+  /// A qué direcciones se le preguntó, en orden.
+  final List<String> direcciones = [];
+
   @override
   Future get(String direccion) async {
     veces++;
+    direcciones.add(direccion);
     return http.Response(
       jsonEncode(cuerpo ??
           {
@@ -214,6 +220,108 @@ void main() {
       final muro = await traerMuro(server);
 
       expect(muro.asistenciaPropia, isEmpty);
+    });
+  });
+  group('de qué endpoint sale el muro', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      MuroEnMemoria.instancia.limpiar();
+      HorarioDeHoy.instancia.limpiar();
+    });
+
+    test('apagado se pide al cajón de sastre del panel', () async {
+      final servidor = ServidorQueCuenta();
+      await traerMuro(servidor, refrescar: true);
+
+      // El interruptor está apagado y así tiene que seguir mientras
+      // `muro/app` no esté desplegado en los diecisiete.
+      expect(Interruptores.muroApp, isFalse);
+      expect(servidor.direcciones, ['/ChangesAsked/to-me']);
+    });
+
+    test('la respuesta nueva se lee con el mismo lector, clave por clave',
+        () async {
+      // **Es la prueba que hace barato encender el interruptor**: `muro/app`
+      // devuelve un subconjunto de `to-me` con los mismos nombres, así que lo
+      // que hay que comprobar no es la ruta sino que las cinco claves se
+      // siguen leyendo igual. Si esto pasa, cambiar la dirección no puede
+      // romper nada.
+      final servidor = ServidorQueCuenta(cuerpo: {
+        'publicaciones': [],
+        'alumnos': [
+          {
+            'alumno_id': 31,
+            'nombres': 'Dámaris',
+            'apellidos': 'Gómez Pico',
+            'nombre_grupo': 'Séptimo A',
+            'grupo_abrev': '7A',
+            'pazysalvo': 0,
+            'ausencias_periodo': [
+              {'periodo': 1, 'ausencias': 2, 'tardanzas': 1},
+            ],
+          },
+        ],
+        'horario_hoy': [],
+        'horario_version_id': 12,
+        'ausencias_periodo': [
+          {'periodo': 1, 'ausencias': 3, 'tardanzas': 0},
+        ],
+      });
+
+      final muro = await traerMuro(servidor, refrescar: true);
+
+      expect(muro.acudidos.single.grupoAbrev, '7A');
+      expect(muro.acudidos.single.pazYSalvo, isFalse);
+      expect(muro.acudidos.single.asistencia, hasLength(1));
+      expect(muro.asistenciaPropia, hasLength(1));
+      // Con `horario_version_id` presente sí se sabe, aunque no haya clases.
+      expect(HorarioDeHoy.instancia.seSabe, isTrue);
+      expect(HorarioDeHoy.instancia.cuantas, 0);
+    });
+
+    test('a un Profesor le llegan las dos claves del horario y se sabe',
+        () async {
+      final servidor = ServidorQueCuenta(cuerpo: {
+        'publicaciones': [],
+        'horario_hoy': [],
+        'horario_version_id': 7,
+      });
+
+      await traerMuro(servidor, refrescar: true);
+
+      expect(HorarioDeHoy.instancia.seSabe, isTrue);
+    });
+
+    test('sin horario_version_id NO se sabe, y eso no es «no tienes clases»',
+        () async {
+      // La sesión del backend lo contó al revés al escribir `muro/app` —dijo
+      // que `seSabe` volvería a valer true con cero clases, o sea el mensaje
+      // falso de agosto— y lo corrigió. Aquí queda atado por si vuelve: sin la
+      // clave, la app **no dice nada**, que es el fallo barato y silencioso.
+      final servidor = ServidorQueCuenta(cuerpo: {
+        'publicaciones': [],
+        'horario_hoy': [],
+      });
+
+      await traerMuro(servidor, refrescar: true);
+
+      expect(HorarioDeHoy.instancia.seSabe, isFalse);
+    });
+
+    test('a un Alumno no le llega horario_hoy, y eso no es un fallo', () async {
+      // Igual que hoy en `to-me`. Dárselo sería una decisión de producto y una
+      // ruta que se estrena para ahorrar peso no es donde se toma.
+      final servidor = ServidorQueCuenta(cuerpo: {
+        'publicaciones': [],
+        'ausencias_periodo': [
+          {'periodo': 1, 'ausencias': 3, 'tardanzas': 0},
+        ],
+      });
+
+      final muro = await traerMuro(servidor, refrescar: true);
+
+      expect(muro.asistenciaPropia, hasLength(1));
+      expect(HorarioDeHoy.instancia.seSabe, isFalse);
     });
   });
 }

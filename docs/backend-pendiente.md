@@ -555,7 +555,19 @@ O sea que la mitad de app va detrás de su interruptor, como todo lo demás, y s
 enciende por el hash de la tanda y no por «ya está fundido».
 
 **Estado al 19 sep 2026**: escrita y en verde en el worktree `.worktrees/muro`
-del backend, rama `feat/muro-para-la-app`, commit `eb13d8e`. **Sin fundir.**
+del backend, rama `feat/muro-para-la-app` (`eb13d8e`, más `f357db0` que corrige
+el docblock del `seSabe`). **Sin fundir.**
+
+> Si algún día leéis `eb13d8e` suelto, **su mensaje de commit lleva el error
+> dentro** —dice que sin `horario_version_id` la app enseñaría cero clases— y
+> no se reescribió a propósito, porque la rama podía estar ya en el árbol de
+> quien funde. La corrección va encima.
+
+**Y la mitad de app ya está escrita**, detrás de `Interruptores.muroApp`
+(apagado): es un `?:` en la dirección y nada más, porque la respuesta nueva es
+un subconjunto de la vieja con los mismos nombres de clave. Lo que se probó no
+es la ruta sino que **las cinco claves se siguen leyendo igual**, que es lo que
+hace barato encender el interruptor el día del despliegue.
 
 ### Por qué corre prisa
 

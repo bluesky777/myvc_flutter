@@ -122,4 +122,30 @@ class Interruptores {
   /// alumno no necesita el grupo. Ver `docs/competencias.md` §9 y
   /// [FrasesDelGrupoScreen].
   static const bool frasesPorGrupo = false;
+
+  /// Pedir el muro por `GET muro/app` en vez de por `ChangesAsked/to-me`.
+  ///
+  /// **Lo que ahorra es peso, y el peso es casi todo calendario.** `to-me` es
+  /// el cajón de sastre del panel del front web: a un acudiente le manda
+  /// **108 KB** de los que la app lee unos **5**, y el 99 % es la tabla
+  /// `calendario` entera —593 filas, ninguna de 2026, sin filtro de año ni de
+  /// fecha— que **esta app no lee en ningún rol**.
+  ///
+  /// Y lo que lo hace urgente no es el coste medio sino **el pico, que lo
+  /// fabrica el push**: una notificación de «ya están las notas» abre cientos
+  /// de teléfonos en el mismo medio minuto, sobre un hosting de un núcleo.
+  ///
+  /// **La respuesta nueva es un subconjunto de la vieja, con los mismos
+  /// nombres de clave**, así que encender esto no cambia una línea de lo que
+  /// lee [traerMuro]: cambia la dirección y nada más. Cada rol recibe lo que ya
+  /// recibía, ni una clave de más — y ninguno recibe `eventos`.
+  ///
+  /// Está escrito en `8myvc` (rama `feat/muro-para-la-app`) y **sin fundir**,
+  /// así que apagado no es prudencia: la ruta todavía no existe en ningún
+  /// sitio. Encenderlo antes del despliegue **en los diecisiete** gasta un 404
+  /// por apertura antes de caer al camino viejo, que es exactamente la carga
+  /// que este endpoint existe para quitar.
+  ///
+  /// Ver `docs/backend-pendiente.md` §5.
+  static const bool muroApp = false;
 }
