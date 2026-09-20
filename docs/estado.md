@@ -483,8 +483,11 @@ globo de notas de §2.10. Maqueta navegable dentro del documento.
 
 ### Lo que ya está escrito, detrás de `Interruptores.estaciones`
 
-**Las pantallas 01, 02, 04, 10 y 11** —elegir estación, la cola, la ficha,
-buscar y el recorrido completo—, con su capa de datos, sus modelos y 33 pruebas:
+**LAS DOCE PANTALLAS, escritas y apagadas**, con su capa de datos, sus modelos
+y **más de 170 pruebas** propias. Elegir estación, la cola, escanear —el código
+tecleado, sin cámara—, la ficha, cerrar el paso, devolver con motivo, el listo
+con deshacer, el salteado, sin señal, buscar, el recorrido completo y las notas
+entre estaciones:
 [EstacionesScreen](../lib/Screens/EstacionesScreen.dart),
 [ColaDeEstacionScreen](../lib/Screens/ColaDeEstacionScreen.dart),
 [FichaDeEstacionScreen](../lib/Screens/FichaDeEstacionScreen.dart),

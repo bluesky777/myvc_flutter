@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/EstacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/EstacionModel.dart';
 import 'package:myvc_flutter/Screens/FichaDeEstacionScreen.dart';
+import 'package:myvc_flutter/Screens/SalteadoScreen.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
@@ -56,12 +57,26 @@ class ColaDeEstacionScreen extends StatefulWidget {
 class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
   late final Server server = widget.servidor ?? Server();
 
-  List<PersonaEnCola> cola = [];
+  /// La cola **entera**: la cabecera del día y la fila.
+  ///
+  /// Guardaba sólo la lista de personas, y con ella se iban a la basura
+  /// `atendidos_hoy` —una de las tres cifras de la cabecera del diseño, que el
+  /// servidor ya calcula— y los `avisos` de cada persona. Ver [LaCola].
+  LaCola datos = (
+    nro: null,
+    nombre: null,
+    alDiaAt: null,
+    atendidosHoy: null,
+    fila: const [],
+  );
+
+  List<EnLaCola> get cola => datos.fila;
+
   bool cargando = true;
   String? error;
 
   /// A quién se está mirando en el panel derecho. Solo en tablet.
-  PersonaEnCola? elegida;
+  EnLaCola? elegida;
 
   Timer? _sondeo;
   String? _ultimaHuella;
@@ -101,9 +116,9 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
     });
 
     try {
-      final traida = await traerLaCola(server, widget.estacion.nro);
+      final traida = await traerLaColaEntera(server, widget.estacion.nro);
       setState(() {
-        cola = traida;
+        datos = traida;
         cargando = false;
         _ultimaVezQueSeMovio = DateTime.now();
       });
@@ -177,6 +192,10 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
   Widget _laColumna() {
     return Column(
       children: [
+        _LasTresCifras(
+          atendidosHoy: datos.atendidosHoy,
+          esperando: cola.length,
+        ),
         _LaFrescura(desde: _ultimaVezQueSeMovio, cargando: cargando),
         Expanded(child: _cuerpo()),
         _elPie(),
@@ -202,24 +221,45 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
       );
     }
 
+    // El que se saltó el orden entra por la 08 también en tablet: si el panel
+    // de la derecha enseñara la ficha de siempre, la banda que avisa quedaría
+    // justo donde no se mira — dentro del scroll, debajo de la barra de pasos.
+    if (dicenQueSeSaltoElOrden(quien.avisos)) {
+      return SalteadoScreen(
+        key: ValueKey('salteado-${quien.persona.id}'),
+        estacion: widget.estacion,
+        persona: quien.persona,
+        avisos: quien.avisos,
+        servidor: widget.servidor,
+        encajada: true,
+      );
+    }
+
     return FichaDeEstacionScreen(
       // La clave hace que Flutter sepa que es otra persona.
-      key: ValueKey(quien.id),
+      key: ValueKey(quien.persona.id),
       estacion: widget.estacion,
-      persona: quien,
+      persona: quien.persona,
       servidor: widget.servidor,
       encajada: true,
     );
   }
 
+  /// «Estación 2 · 4 esperando».
+  ///
+  /// **Aquí había un sitio y el sitio no existe.** Este subtítulo pintaba
+  /// `estacion.donde` —«Estación 2 · Aula 101 · 4 esperando»— y el servidor no
+  /// manda ninguna ubicación: la única clave `donde` de todo el controlador es
+  /// el nombre de la estación de destino al devolver a alguien. Ver el docblock
+  /// de [Estacion], 20 sep 2026.
+  ///
+  /// La `descripcion` que sí manda el servidor **no entra aquí**: es la
+  /// instrucción sobre el papel que se entrega, y esto es una barra de título
+  /// de una línea que ya lleva el nombre de la estación encima.
   String _subtitulo() {
-    final donde = widget.estacion.donde;
     final cuantos =
         cola.length == 1 ? '1 esperando' : '${cola.length} esperando';
-    if (donde == null || donde.isEmpty) {
-      return 'Estación ${widget.estacion.nro} · $cuantos';
-    }
-    return 'Estación ${widget.estacion.nro} · $donde · $cuantos';
+    return 'Estación ${widget.estacion.nro} · $cuantos';
   }
 
   Widget _cuerpo() {
@@ -244,6 +284,11 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
       );
     }
 
+    // Se recalcula en cada pintado a propósito: la fila cambia cada veinte
+    // segundos, y el empate de ahora puede no ser el de dentro de un minuto.
+    final repetidos =
+        losNombresQueSeRepiten(cola.map((uno) => uno.persona).toList());
+
     return RefreshIndicator(
       onRefresh: Analitica.refresco('estacion_cola', _cargar),
       child: ListView.builder(
@@ -252,32 +297,52 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
         itemBuilder: (_, i) => Padding(
           padding: const EdgeInsets.only(bottom: 9),
           child: _TarjetaDeLaCola(
-            persona: cola[i],
+            enLaCola: cola[i],
             esElPrimero: i == 0,
-            estaAbierta: cola[i].id == elegida?.id,
-            alTocar: () => _abrirFicha(cola[i]),
+            estaAbierta: cola[i].persona.id == elegida?.persona.id,
+            hayOtroQueSeLlamaIgual:
+                repetidos.contains(cola[i].persona.claveDelNombre),
+            alTocar: () => _abrir(cola[i]),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _abrirFicha(PersonaEnCola persona) async {
+  /// Abre a quien se tocó: la ficha de siempre, **o la 08 si se saltó el
+  /// orden**.
+  ///
+  /// Quien lo decide es el servidor, con su aviso, y no una regla escrita aquí
+  /// (ver [dicenQueSeSaltoElOrden]). La 08 es la que dice en voz alta lo que
+  /// hoy depende de que quien atiende mire bien la hoja — y con fila detrás no
+  /// mira.
+  Future<void> _abrir(EnLaCola quien) async {
     if (_hayEspacioParaLosDos(context)) {
       // En tablet no se navega: cambia el panel de la derecha.
-      setState(() => elegida = persona);
+      setState(() => elegida = quien);
       return;
     }
+
+    final salteado = dicenQueSeSaltoElOrden(quien.avisos);
 
     await Navigator.push(
       context,
       MaterialPageRoute(
-        settings: const RouteSettings(name: 'ficha-de-estacion'),
-        builder: (_) => FichaDeEstacionScreen(
-          estacion: widget.estacion,
-          persona: persona,
-          servidor: widget.servidor,
+        settings: RouteSettings(
+          name: salteado ? 'salteado-de-estacion' : 'ficha-de-estacion',
         ),
+        builder: (_) => salteado
+            ? SalteadoScreen(
+                estacion: widget.estacion,
+                persona: quien.persona,
+                avisos: quien.avisos,
+                servidor: widget.servidor,
+              )
+            : FichaDeEstacionScreen(
+                estacion: widget.estacion,
+                persona: quien.persona,
+                servidor: widget.servidor,
+              ),
       ),
     );
     // Siempre al volver de la ficha, como dice §2.2: la cola se vuelve a pedir
@@ -307,6 +372,178 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
       motivo: 'La cámara todavía no está escrita. El código es el mismo del '
           'formulario de inscripción, que ya funciona: mientras tanto, busca a '
           'la persona en esta lista.',
+    );
+  }
+}
+
+/// Un chip de una tarjeta de la cola: lo que hay que saber antes de llamarla.
+typedef ChipDeLaCola = ({String texto, IconData icono, bool grave});
+
+/// Los chips de una fila, **con el texto que escribió el servidor**.
+///
+/// ## Por qué el texto no se escribe aquí
+///
+/// `getCola` manda `avisos: [{tipo, texto}]` por persona con la frase ya hecha
+/// —*«Cerró una estación posterior sin pasar por ésta»*, *«Ya estuvo aquí y se
+/// le devolvió»*— y **el modelo los ignoraba**, así que el salteado que el
+/// servidor calcula **no se veía en la cola**. Ahora se pintan, y se pintan con
+/// sus palabras: quien calcula la regla es quien sabe decirla, y una frase
+/// escrita en la app envejece en silencio cuando la del servidor cambia.
+///
+/// ## El «devuelto una vez» de toda la vida es ahora el RESPALDO
+///
+/// `devuelto_antes` y el aviso de tipo `devuelto` dicen lo mismo, así que
+/// pintar los dos daría **dos chips seguidos con la misma noticia** en una
+/// tarjeta que se mira de pie. Manda el del servidor; el de la app sólo sale
+/// cuando no vino ninguno —un servidor anterior a `avisos`—, que es el caso en
+/// el que sigue siendo lo único que hay.
+///
+/// Vive suelta y no dentro del widget para que se pueda probar: es una regla,
+/// no un adorno. Y un `tipo` desconocido **no se descarta**: se pinta con el
+/// icono genérico, porque el vocabulario lo pone el colegio (§2.8).
+List<ChipDeLaCola> losChipsDeLaFila(EnLaCola uno) {
+  final chips = <ChipDeLaCola>[
+    for (final aviso in uno.avisos)
+      (
+        texto: aviso.texto,
+        icono: switch (aviso.tipo) {
+          'salteado' => Icons.alt_route,
+          'devuelto' => Icons.undo,
+          _ => Icons.info_outline,
+        },
+        // Lo grave es lo que cambia lo que hay que hacer con la familia que
+        // está delante; un aviso que sólo informa va en ámbar.
+        grave: aviso.tipo == 'salteado' || aviso.tipo == 'devuelto',
+      ),
+  ];
+
+  final loDijoElServidor = uno.avisos.any((a) => a.tipo == 'devuelto');
+
+  if (uno.persona.devueltoAntes && !loDijoElServidor) {
+    chips.add((texto: 'devuelto una vez', icono: Icons.undo, grave: true));
+  }
+
+  return chips;
+}
+
+/// Las tres cifras del día, y **la que no existe se dice que no existe**.
+///
+/// La cabecera del diseño (§1, pantalla 02) enseña *atendidos, esperando y
+/// espera media*, porque quien atiende necesita saber **si el tapón es suyo o
+/// de la estación de al lado**. Medido contra `getCola` el 20 sep 2026:
+///
+/// - **Atendidos hoy** — `atendidos_hoy` **ya llegaba y se tiraba**: esta capa
+///   se quedaba sólo con `cola`. No hace falta nada del servidor.
+/// - **Esperando** — es el largo de la fila que vino en la misma respuesta.
+/// - **Espera media** — **el servidor no la manda.** Y no se calcula aquí con
+///   los `llego_at` de los que siguen esperando, que es el atajo que parece
+///   gratis: eso mide *«cuánto llevan de pie los que aún no he atendido»* y
+///   **baja justo cuando la cosa va mal** —al atender a los más viejos, la
+///   media de los que quedan cae—. Una cifra que mejora cuando empeora el
+///   tapón es peor que un hueco, así que queda el hueco, con su renglón
+///   diciendo qué falta y quién lo puede poner.
+///
+/// Un hueco dicho no es lo mismo que un cero: [atendidosHoy] en `null` es «el
+/// servidor no lo dijo» —una versión anterior a este campo— y se pinta con la
+/// raya, no con un 0 que nadie contó.
+class _LasTresCifras extends StatelessWidget {
+  const _LasTresCifras({required this.atendidosHoy, required this.esperando});
+
+  final int? atendidosHoy;
+  final int esperando;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _UnaCifra(
+            cifra: atendidosHoy == null ? '—' : '$atendidosHoy',
+            rotulo: 'Atendidos hoy',
+            icono: Icons.task_alt,
+            color: PaletaEstaciones.verde,
+            nota: atendidosHoy == null ? 'tu colegio no lo manda' : null,
+          ),
+          _UnaCifra(
+            cifra: '$esperando',
+            rotulo: 'Esperando',
+            icono: Icons.groups_outlined,
+            color: PaletaEstaciones.primarioOscuro,
+          ),
+          const _UnaCifra(
+            cifra: '—',
+            rotulo: 'Espera media',
+            icono: Icons.timer_outlined,
+            color: PaletaEstaciones.tintaApagada,
+            // El hueco dice qué falta: quien lo lee es quien puede pedirlo.
+            nota: 'el servidor aún no la calcula',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Una de las tres. **Icono y palabra, nunca sólo el color** (§3).
+class _UnaCifra extends StatelessWidget {
+  const _UnaCifra({
+    required this.cifra,
+    required this.rotulo,
+    required this.icono,
+    required this.color,
+    this.nota,
+  });
+
+  final String cifra;
+  final String rotulo;
+  final IconData icono;
+  final Color color;
+  final String? nota;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icono, size: 14, color: color),
+              const SizedBox(width: 5),
+              Text(
+                cifra,
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            rotulo,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: PaletaEstaciones.tintaSuave,
+            ),
+          ),
+          if (nota != null)
+            Text(
+              nota!,
+              style: const TextStyle(
+                fontSize: 10.5,
+                height: 1.25,
+                color: PaletaEstaciones.tintaApagada,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -367,24 +604,36 @@ class _LaFrescura extends StatelessWidget {
   }
 }
 
-/// Alguien de la fila.
+/// Alguien de la fila, con lo que el servidor dijo de él.
 class _TarjetaDeLaCola extends StatelessWidget {
   const _TarjetaDeLaCola({
-    required this.persona,
+    required this.enLaCola,
     required this.esElPrimero,
     required this.alTocar,
     this.estaAbierta = false,
+    this.hayOtroQueSeLlamaIgual = false,
   });
 
-  final PersonaEnCola persona;
+  final EnLaCola enLaCola;
+
+  PersonaEnCola get persona => enLaCola.persona;
+
   final bool esElPrimero;
   final VoidCallback alTocar;
 
   /// Si es la que está abierta a la derecha. Solo pasa en tablet.
   final bool estaAbierta;
 
+  /// Si otra persona de la misma fila tiene el mismo nombre completo.
+  ///
+  /// Entonces —y solo entonces— la tarjeta enseña el documento. Mientras la
+  /// cola no mande la foto, es lo único que distingue a dos hermanos.
+  final bool hayOtroQueSeLlamaIgual;
+
   @override
   Widget build(BuildContext context) {
+    final abajo = _elRenglonDeAbajo();
+
     return Material(
       color: estaAbierta ? PaletaEstaciones.primarioSuave : Colors.white,
       borderRadius: BorderRadius.circular(13),
@@ -426,29 +675,32 @@ class _TarjetaDeLaCola extends StatelessWidget {
                         color: PaletaEstaciones.tinta,
                       ),
                     ),
-                    if (persona.grupo != null && persona.grupo!.isNotEmpty) ...[
+                    if (abajo != null) ...[
                       const SizedBox(height: 3),
                       Text(
-                        persona.esAspirante
-                            ? '${persona.grupo} · aspirante'
-                            : persona.grupo!,
+                        abajo,
                         style: const TextStyle(
                           fontSize: 12.5,
                           color: PaletaEstaciones.tintaSuave,
                         ),
                       ),
                     ],
-                    if (persona.devueltoAntes || persona.tieneNotas) ...[
+                    if (_losChips.isNotEmpty || persona.tieneNotas) ...[
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          if (persona.devueltoAntes)
-                            const _Chip(
-                              texto: 'devuelto una vez',
-                              color: PaletaEstaciones.rojoTinta,
-                              fondo: PaletaEstaciones.rojoFondo,
+                          for (final chip in _losChips)
+                            _Chip(
+                              texto: chip.texto,
+                              icono: chip.icono,
+                              color: chip.grave
+                                  ? PaletaEstaciones.rojoTinta
+                                  : PaletaEstaciones.ambar,
+                              fondo: chip.grave
+                                  ? PaletaEstaciones.rojoFondo
+                                  : PaletaEstaciones.ambarFondo,
                             ),
                           if (persona.tieneNotas)
                             _Chip(
@@ -493,6 +745,27 @@ class _TarjetaDeLaCola extends StatelessWidget {
     );
   }
 
+  /// El grupo y, **solo cuando hace falta**, el documento.
+  ///
+  /// El documento entra únicamente si otra persona de la fila se llama igual
+  /// (ver `losNombresQueSeRepiten`). Lleva su rótulo —«doc.»— porque un número
+  /// suelto debajo de un nombre se lee como cualquier cosa: un teléfono, un
+  /// código de la hoja de ruta.
+  String? _elRenglonDeAbajo() {
+    final grupo = persona.grupo;
+
+    final trozos = <String>[
+      if (grupo != null && grupo.isNotEmpty) grupo,
+      if (persona.esAspirante) 'aspirante',
+      if (hayOtroQueSeLlamaIgual && persona.documento != null)
+        'doc. ${persona.documento}',
+    ];
+
+    return trozos.isEmpty ? null : trozos.join(' · ');
+  }
+
+  List<ChipDeLaCola> get _losChips => losChipsDeLaFila(enLaCola);
+
   String _textoDeLasNotas() {
     final cuantas =
         persona.notasTotal == 1 ? '1 nota' : '${persona.notasTotal} notas';
@@ -506,6 +779,13 @@ class _TarjetaDeLaCola extends StatelessWidget {
 /// **La foto y no un desplegable ni unas iniciales a secas**: en una fila con
 /// dos hermanos apellidados igual, la cara es lo que distingue. [AvatarPersona]
 /// ya cae en las iniciales cuando no hay foto.
+///
+/// **Y hoy cae siempre**, porque `getCola` no manda `foto_nombre` —comprobado
+/// campo por campo el 20 sep 2026; el porqué y qué haría falta en el servidor
+/// están en el docblock de `PersonaEnCola.fotoNombre`—. Esto no se apaga
+/// mientras tanto: el avatar sigue siendo el sitio donde la foto va a entrar, y
+/// el globo de notas cuelga de él. El desempate de hoy es el documento, y lo
+/// pone la tarjeta.
 class _ElAvatarConSuGlobo extends StatelessWidget {
   const _ElAvatarConSuGlobo({required this.persona});
 
@@ -614,12 +894,18 @@ class _Chip extends StatelessWidget {
             Icon(icono, size: 12, color: color),
             const SizedBox(width: 4),
           ],
-          Text(
-            texto,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: color,
+          // Flexible porque **el texto lo escribe el servidor** y es una frase
+          // entera —«Cerró una estación posterior sin pasar por ésta»—, no las
+          // dos palabras de los chips de antes: sin esto se sale de la tarjeta
+          // en un teléfono estrecho.
+          Flexible(
+            child: Text(
+              texto,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],

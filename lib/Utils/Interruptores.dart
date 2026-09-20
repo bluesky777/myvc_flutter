@@ -176,12 +176,17 @@ class Interruptores {
   /// como en [competenciasDocente]: el interruptor espera al despliegue, y la
   /// respuesta de `GET estaciones` dice si **este** colegio tiene recorrido.
   ///
-  /// **Y una que no se puede comprobar desde aquí**: la cola pregunta «¿cerró el
-  /// paso anterior?», y eso sólo es fiable si el backend limpia `cerrado_at` al
-  /// reabrir un paso. Hoy se escribe con `COALESCE`, o sea una sola vez, así que
-  /// un paso reabierto seguiría contando como cerrado. Va en la §8 con ese
-  /// nombre porque **es una línea de servidor que decide si esta pantalla miente
-  /// en silencio**.
+  /// **Y una que estuvo abierta unas horas y ya no lo está.** Aquí ponía que la
+  /// cola no era fiable porque `cerrado_at` se escribía con `COALESCE` —una
+  /// sola vez— y un paso reabierto seguiría contando como cerrado. **Está
+  /// arreglado el mismo día** (`RequisitosController.php:305-308`): reabrir pone
+  /// `cerrado_por` y `cerrado_at` a NULL, y **`devuelto` cuenta como reabrir**,
+  /// que es más de lo que esta app había pedido y es lo correcto — un paso
+  /// devuelto es un paso que se sigue debiendo.
+  ///
+  /// Se deja escrito en vez de borrado porque la corrección **vino de medir el
+  /// modo de fallo, no de leer el código**: una pantalla que miente en silencio
+  /// no la encuentra nadie leyendo.
   static const bool estaciones = false;
 
   /// El recorrido de matrícula de una persona, con `GET requisitos/recorrido/{id}`.

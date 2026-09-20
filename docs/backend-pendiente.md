@@ -1129,6 +1129,52 @@ devuelve el colegio entero. La app se defiende exigiendo tres letras y esperando
 400 ms desde la última tecla, pero **eso es un parche del lado del cliente**: la
 web puede seguir pidiéndolo sin límite. Un `LIMIT` ahí es una línea.
 
+### SEIS HALLAZGOS MÁS, de escribir las doce pantallas (20 sep, tarde)
+
+Todos salieron de comparar campo por campo lo que el controlador emite contra lo
+que la app lee. Ninguno es opinión de diseño.
+
+**1. Ninguna de las nueve rutas sabe DESHACER un paso.** `RESULTADOS` es una
+lista cerrada de tres —cumple, observado, devuelto— y **ninguna es el estado de
+partida `Falta`**; tampoco hay ruta de borrado. Eso decide el diseño del
+deshacer de ocho segundos de §2.7: **no se puede deshacer después de escribir**,
+así que la marca se retiene en el teléfono durante esos ocho segundos y deshacer
+es *no mandarla*. Un deshacer posterior sólo podría encadenar un `devuelto`, que
+le manda un aviso a la familia y le deja escrito un motivo falso.
+
+**2. `siguiente` apunta hacia adelante también al devolver.** `putMarcar` llama a
+`siguienteDe($nro, …)` sin mirar el resultado, y esa función sólo mira
+`$candidato > $nro`. Tras un devuelto —que reabre **esta** estación— la respuesta
+nombra la siguiente, o sea **manda a la familia a la estación equivocada**. La
+app lo descarta con un `if` y dice «vuelve contigo»; en el servidor es también un
+`if` en `putMarcar`, y ahí estaría mejor.
+
+**3. «Atenderlo de todas formas» no tiene dónde registrarse.** §2.5 exige que
+quede **con el nombre de quien lo autorizó**, y `envios_estacion` sólo tiene
+`enviado_por` —quien manda a la familia a otra estación—, mientras que
+`putMarcar` firma con quien cierra. **Falta una columna.** El botón nace apagado
+diciéndolo: encenderlo sin ella sería el mismo papel que se quiere evitar, pero
+con la app de coartada.
+
+**4. El aviso `salteado` de la cola sólo lo emite la PRIMERA estación.**
+`quienesEsperan` filtra por el paso inmediatamente anterior, así que el caso
+típico —alguien se presenta en la 4 sin haber cerrado la 3— **nunca aparece en la
+cola de la 4**. La pantalla 08 está escrita y lo detecta bien, pero por la vía de
+la cola sólo cubre el caso de la estación 1; al resto se llega por ficha,
+búsqueda o código.
+
+**5. `ficha()` nunca devuelve `Observado` a nivel de paso**:
+`'estado' => $devuelto ? 'Devuelto' : ($cerrada ? 'Cumple' : 'Falta')`. Un paso
+marcado como observado vuelve como `Cumple`, y la observación sólo sobrevive
+dentro de `requisitos[].observacion`. O sea que el ámbar del diseño **no puede
+venir nunca de un paso**, sólo de un requisito.
+
+**6. La firma de la cabecera y la del `recorrido` pueden contradecirse.**
+`putMarcar` contesta siempre `cerrado_por` = quien pulsó, pero `escribirElPaso`
+la guarda con `COALESCE`, o sea sólo la primera vez. Volver a marcar un paso ya
+cerrado devuelve en la cabecera la firma del segundo y deja en la base la del
+primero. La app lee la del `recorrido`, que es la de la base.
+
 ### Lo que ya está hecho del lado Flutter
 
 **Tres pantallas, escritas y apagadas** detrás de

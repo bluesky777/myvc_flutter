@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/EstacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/EstacionModel.dart';
+import 'package:myvc_flutter/Screens/DevolverConMotivoScreen.dart';
+import 'package:myvc_flutter/Screens/MarcarPasoScreen.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
@@ -102,6 +104,59 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
       if (paso.nro == widget.estacion.nro) return paso;
     }
     return null;
+  }
+
+  /// Cerrar el paso: la 05, que es donde se elige y se ve la consecuencia.
+  ///
+  /// **Este botón no decide nada**, y eso es a propósito: lo que decide es la
+  /// 05 —cumple, cumple con observación o devolver— con el bloque de la
+  /// consecuencia delante. Aquí sólo se abre.
+  Future<void> _cerrarElPaso() async {
+    final paso = _miPaso;
+    if (paso == null) return;
+
+    final cambio = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        // Con nombre para que la analítica no la vea como un hueco.
+        settings: const RouteSettings(name: 'marcar-paso'),
+        builder: (_) => MarcarPasoScreen(
+          estacion: widget.estacion,
+          ficha: ficha!,
+          servidor: widget.servidor,
+        ),
+      ),
+    );
+
+    // Sólo si de verdad se escribió: si se deshizo dentro de los ocho
+    // segundos, el servidor no se enteró de nada y volver a pedir la ficha
+    // sería una petición para leer lo mismo.
+    if (cambio == true) await _cargar();
+  }
+
+  /// El atajo de devolver: salta la 05 y va directo a escribir el motivo.
+  ///
+  /// Existe porque hay un caso en el que quien atiende **ya sabe** que devuelve
+  /// —mira el papel y le falta la firma— y pasarle por las tres salidas es un
+  /// toque de más con una fila detrás. La 06 enseña lo mismo que enseñaría la
+  /// 05 sobre la consecuencia de devolver, así que no se salta ningún aviso.
+  Future<void> _devolver() async {
+    final paso = _miPaso;
+    if (paso == null) return;
+
+    final cambio = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        settings: const RouteSettings(name: 'devolver-con-motivo'),
+        builder: (_) => DevolverConMotivoScreen(
+          estacion: widget.estacion,
+          ficha: ficha!,
+          servidor: widget.servidor,
+        ),
+      ),
+    );
+
+    if (cambio == true) await _cargar();
   }
 
   @override
@@ -218,10 +273,20 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
               const Text(
                 // Se dice el motivo entero, y por qué el orden es ése: quien lo
                 // lee es quien puede decidir encenderlo.
-                'Cerrar el paso está apagado hasta que estén las pantallas que '
-                'lo acompañan: enseñar a qué estación pasa y qué le llega a la '
-                'familia antes de confirmar, y el deshacer de ocho segundos. Un '
-                'botón que cierre sin eso sería peor que no tenerlo.',
+                //
+                // **Y el motivo cambió el 20 sep 2026.** Aquí ponía que
+                // faltaban las pantallas que acompañan al botón —la
+                // consecuencia antes de confirmar, el motivo obligatorio y el
+                // deshacer—. Ya están escritas: son la 05, la 06 y la 07. Lo
+                // que queda debajo de este `false` es lo mismo que debajo de
+                // `Interruptores.estaciones`: las nueve rutas están en `main`
+                // de `8myvc` y **no desplegadas en ningún colegio**.
+                'Cerrar el paso está apagado hasta que las nueve rutas de '
+                'estaciones estén desplegadas en todos los colegios. Las tres '
+                'pantallas que lo acompañan ya están escritas —a qué estación '
+                'pasa y qué le llega a la familia antes de confirmar, el '
+                'motivo obligatorio al devolver y el deshacer de ocho '
+                'segundos—: lo que falta es el despliegue.',
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.4,
@@ -246,16 +311,25 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
               width: double.infinity,
               height: PaletaEstaciones.alturaDeBoton,
               child: FilledButton(
-                // El botón no se enciende mientras quede un obligatorio sin
-                // resolver. Los opcionales nunca lo apagan.
-                onPressed:
-                    (_miPaso?.obligatoriosQueFaltan ?? 0) == 0 ? () {} : null,
+                // **Lo único que lo apaga es que esta persona no tenga este
+                // paso**, que sólo ocurre si la estación no está en el
+                // recorrido de su año.
+                //
+                // Aquí había otra condición —«mientras quede un obligatorio sin
+                // resolver»— y **estaba mal de una forma que no fallaba**:
+                // `requisitos_alumno.estado` sólo pasa a `Cumple` cuando
+                // alguien cierra la estación, o sea cuando se pulsa este botón.
+                // Quien acaba de llegar los tiene todos en `Falta`, así que el
+                // botón habría estado apagado justo para el caso más común de
+                // la mañana. Lo que falta se enseña en la lista de arriba y en
+                // la 05, que es información, no un candado.
+                onPressed: _miPaso == null ? null : _cerrarElPaso,
                 child: Text('Cerrar ${widget.estacion.nombre}'),
               ),
             ),
             if (PendientesEstaciones.devolverConMotivo)
               TextButton(
-                onPressed: () {},
+                onPressed: _miPaso == null ? null : _devolver,
                 child: const Text(
                   'Devolver a la familia',
                   style: TextStyle(color: PaletaEstaciones.rojo),

@@ -39,6 +39,17 @@ class ServidorQueApunta extends Server {
   }
 }
 
+/// Una marca de tiempo escrita como la manda el servidor: `Y-m-d H:i:s`.
+///
+/// Sin zona y sin la «T» de ISO, que es lo que sale de MySQL a través de
+/// `Carbon::now('America/Bogota')`. Se escribe aquí y no se toma prestada de la
+/// app para que una prueba falle si algún día el formato deja de ser ése.
+String _comoLaMandaElServidor(DateTime cuando) {
+  String dos(int numero) => numero.toString().padLeft(2, '0');
+  return '${cuando.year}-${dos(cuando.month)}-${dos(cuando.day)} '
+      '${dos(cuando.hour)}:${dos(cuando.minute)}:${dos(cuando.second)}';
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -146,6 +157,300 @@ void main() {
       expect(alumno.esAspirante, isFalse);
       expect(aspirante.id, 77);
       expect(aspirante.esAspirante, isTrue);
+    });
+
+    test('la persona de la FICHA llega con «id», y no por eso es aspirante',
+        () {
+      // La cola manda `alumno_id` y la ficha manda la fila de `alumnos` tal
+      // cual, o sea `id` (EstacionesController:1185). Leyendo solo `alumno_id`,
+      // la persona de la ficha entraba con id 0 —y marcada como aspirante—:
+      // un renglón que no lleva a ninguna parte y una etiqueta falsa encima.
+      final deLaFicha = PersonaEnCola.fromJson({
+        'id': 31,
+        'nombres': 'Laura Sofía',
+        'apellidos': 'Mejía Ariza',
+        'documento': '1092345678',
+      });
+
+      expect(deLaFicha.id, 31);
+      expect(deLaFicha.esAspirante, isFalse);
+      expect(deLaFicha.documento, '1092345678');
+    });
+  });
+
+  group('«hace 2 min», que lo calcula el teléfono y no el servidor', () {
+    // Todo este grupo existe por lo mismo: el 20 sep 2026 se leyó campo por
+    // campo `EstacionesController.php` y la cola manda `llego_at` y la ficha
+    // `cerrado_at` —marcas de MySQL—, mientras que esta app leía `llego_hace`
+    // y `cerrado_hace`, que NO EXISTEN en ninguna de las nueve rutas. O sea
+    // que el «hace 2 min» de la fila no salía nunca y el «cerrado» del
+    // recorrido salía en crudo: «2026-09-20 14:32:00».
+    final ahora = DateTime(2026, 9, 20, 14, 32);
+
+    test('dos minutos son «hace 2 min»', () {
+      expect(haceCuanto('2026-09-20 14:30:00', ahora: ahora), 'hace 2 min');
+    });
+
+    test('pasada la hora se dicen las dos cifras: «hace 1 h 10 min»', () {
+      // Quien atiende necesita saber si el de delante lleva diez minutos o
+      // una hora: «hace 70 min» hay que convertirlo mentalmente, y esto se
+      // lee de pie y con sol en la cara.
+      expect(
+          haceCuanto('2026-09-20 13:22:00', ahora: ahora), 'hace 1 h 10 min');
+      expect(haceCuanto('2026-09-20 12:32:00', ahora: ahora), 'hace 2 h');
+    });
+
+    test('recién llegado no dice «hace 0 min»', () {
+      // Cero minutos se lee como «no ha llegado» y es justo al revés: acaba
+      // de llegar.
+      expect(
+        haceCuanto('2026-09-20 14:31:45', ahora: ahora),
+        'hace menos de 1 min',
+      );
+    });
+
+    test('un reloj adelantado NO produce «hace -3 min»: enseña la hora', () {
+      // El reloj del teléfono de un docente en el patio no es una fuente de
+      // verdad —la marca la pone el servidor en hora de Bogotá y la resta la
+      // hace el aparato—. «a las 14:35» es verdad aunque el reloj vaya mal;
+      // «hace -3 min» es mentira y además no dice qué está roto.
+      expect(haceCuanto('2026-09-20 14:35:00', ahora: ahora), 'a las 14:35');
+    });
+
+    test('una marca de hace más de un día se enseña con su fecha', () {
+      // El día de matrículas es un día: una marca de anteayer en la cola de
+      // hoy es un dato raro, y «hace 54 h» no ayuda a nadie a entenderlo.
+      expect(haceCuanto('2026-09-18 08:05:00', ahora: ahora), '18/09 08:05');
+    });
+
+    test('sin marca, o con una que no se puede leer, no se inventa nada', () {
+      // La pantalla no pinta nada, que es mejor que pintar un hueco con
+      // guiones donde debería ir una hora.
+      expect(haceCuanto(null), isNull);
+      expect(haceCuanto(''), isNull);
+      expect(haceCuanto('   '), isNull);
+      expect(haceCuanto('ayer por la tarde'), isNull);
+    });
+
+    test('la cola lo arma desde «llego_at», que es el campo que sí existe', () {
+      // La prueba de que el arreglo llega hasta el modelo y no se queda en la
+      // función suelta.
+      final persona = PersonaEnCola.fromJson({
+        'alumno_id': 31,
+        'nombres': 'Laura Sofía',
+        'apellidos': 'Mejía Ariza',
+        'llego_at': _comoLaMandaElServidor(
+          DateTime.now().subtract(const Duration(minutes: 5)),
+        ),
+      });
+
+      expect(persona.llegoHace, 'hace 5 min');
+    });
+
+    test('un paso cerrado ya no enseña la fila de la base de datos', () {
+      // Esto es lo que se veía a simple vista en el recorrido: «Cerrado por
+      // Nancy Ariza · 2026-09-20 14:32:00».
+      final paso = PasoDelRecorrido.fromJson({
+        'nro': 2,
+        'nombre': 'Documentos',
+        'estado': 'cumple',
+        'cerrado_por': 'Nancy Ariza',
+        'cerrado_at': _comoLaMandaElServidor(
+          DateTime.now().subtract(const Duration(minutes: 10)),
+        ),
+      });
+
+      expect(paso.cerradoHace, 'hace 10 min');
+      expect(paso.cerradoHace, isNot(contains(':')));
+    });
+  });
+
+  group('una estación no tiene ni sitio ni dueño, y es del contrato', () {
+    test('lo que llega por estación es «descripcion», y se lee con su nombre',
+        () {
+      // `donde` se quitó el 20 sep 2026 porque NO EXISTE: la única clave con
+      // ese nombre en todo el controlador es la estación de DESTINO al
+      // devolver a alguien (líneas 586, 1165 y 1306). Aquí se le manda
+      // igualmente para dejar dicho que, aunque alguien lo mande, este modelo
+      // ya no lo lee ni lo pinta como una ubicación.
+      final estacion = Estacion.fromJson({
+        'nro': 2,
+        'nombre': 'Documentos',
+        'descripcion': 'Fotocopia ampliada al 150%',
+        'donde': 'Aula 101',
+      });
+
+      expect(estacion.nombre, 'Documentos');
+      expect(estacion.descripcion, 'Fotocopia ampliada al 150%');
+    });
+
+    test('una descripción en blanco no deja un renglón con un separador', () {
+      // La pantalla vieja de requisitos guarda `descripcion = ''` de verdad:
+      // sin esto, la tarjeta pintaría « · la tuya».
+      expect(
+          Estacion.fromJson({'nro': 1, 'descripcion': ''}).descripcion, isNull);
+      expect(Estacion.fromJson({'nro': 1, 'descripcion': '   '}).descripcion,
+          isNull);
+    });
+  });
+
+  group('la fila sin fotos, y el desempate que sí se puede hacer hoy', () {
+    PersonaEnCola alguien(int id, String nombres, String apellidos,
+            [String? documento]) =>
+        PersonaEnCola.fromJson({
+          'alumno_id': id,
+          'nombres': nombres,
+          'apellidos': apellidos,
+          'documento': documento,
+        });
+
+    test('la cola no manda foto, y aquí no se inventa el campo', () {
+      // `getCola` manda alumno_id, nombres, apellidos, documento, grupo,
+      // llego_at, devuelto_antes, avisos, notas_total y notas_pendientes. Ni
+      // `foto_nombre` ni `foto_id`. Un campo que la app lee y el servidor no
+      // escribe es el error que este módulo acaba de pagar con `donde`.
+      expect(alguien(31, 'Laura', 'Mejía').fotoNombre, isNull);
+    });
+
+    test('dos hermanas apellidadas igual se marcan; las demás, no', () {
+      // Sin foto, esos dos renglones son idénticos: mismo círculo de
+      // iniciales, mismo grupo, mismo nombre. Quien atiende abre el primero y
+      // le marca el paso a la otra, y eso no se descubre hasta que la familia
+      // vuelve.
+      final cola = [
+        alguien(31, 'Laura Sofía', 'Mejía Ariza', '1092345678'),
+        alguien(32, 'Laura Sofía', 'Mejía Ariza', '1092399999'),
+        alguien(33, 'Mariana', 'Castillo', '1092300000'),
+      ];
+
+      final repetidos = losNombresQueSeRepiten(cola);
+
+      expect(repetidos, contains('laura sofía mejía ariza'));
+      expect(repetidos, isNot(contains('mariana castillo')));
+      expect(repetidos.length, 1);
+    });
+
+    test('una fila sin empates no enseña ningún documento', () {
+      // El documento es un dato personal pintado en una pantalla que se mira
+      // de pie en un patio: donde no hay empate, no distingue nada.
+      final cola = [
+        alguien(31, 'Laura Sofía', 'Mejía Ariza', '1092345678'),
+        alguien(33, 'Mariana', 'Castillo', '1092300000'),
+      ];
+
+      expect(losNombresQueSeRepiten(cola), isEmpty);
+    });
+  });
+
+  group('la ficha, leída contra lo que el servidor manda de verdad', () {
+    test('el acudiente llega como OBJETO, no como un texto', () {
+      // `acudienteDe()` devuelve la fila entera (línea 1262) y el modelo la
+      // leía con `texto(...)`: en Dart eso no falla, devuelve el `toString`
+      // del mapa. O sea que al lado del icono de teléfono se habría pintado
+      // «{id: 4, nombres: Ana, ...}».
+      final ficha = FichaDeEstacion.fromJson({
+        'persona': {'id': 31, 'nombres': 'Laura', 'apellidos': 'Mejía'},
+        'acudiente': {
+          'id': 4,
+          'nombres': 'Ana',
+          'apellidos': 'Gómez Ariza',
+          'celular': '3001234567',
+          'telefono': '6012345',
+        },
+        'pasos': [],
+      });
+
+      expect(ficha.acudiente, 'Ana Gómez Ariza');
+      expect(ficha.acudiente, isNot(contains('{')));
+      // El celular antes que el fijo: el día de matrículas la familia está en
+      // la calle, no en su casa.
+      expect(ficha.telefonoAcudiente, '3001234567');
+    });
+
+    test('sin celular se llama al fijo, y sin ninguno no se pinta el renglón',
+        () {
+      final soloFijo = FichaDeEstacion.fromJson({
+        'persona': {'id': 31},
+        'acudiente': {
+          'nombres': 'Ana',
+          'apellidos': 'Gómez',
+          'telefono': '6012345'
+        },
+        'pasos': [],
+      });
+      expect(soloFijo.telefonoAcudiente, '6012345');
+
+      final sinNada = FichaDeEstacion.fromJson({
+        'persona': {'id': 31},
+        'pasos': [],
+      });
+      expect(sinNada.acudiente, isNull);
+      expect(sinNada.telefonoAcudiente, isNull);
+    });
+
+    test('«si_no» dice a DÓNDE devolverla, y esa clave se llama «donde»', () {
+      // Es el único `donde` que el servidor manda de verdad (línea 1165): el
+      // nombre de la estación de destino. Se leía `nombre`, que ahí no viaja,
+      // así que la banda del salteado decía «Le falta la Estación 1 ·
+      // Estación 1» en vez de «· Recepción».
+      final ficha = FichaDeEstacion.fromJson({
+        'persona': {'id': 31, 'nombres': 'Laura', 'apellidos': 'Mejía'},
+        'pasos': [
+          {'nro': 1, 'nombre': 'Recepción', 'estado': 'falta'},
+          {'nro': 2, 'nombre': 'Documentos', 'estado': 'falta'},
+        ],
+        'puede_atenderlo': false,
+        'si_no': {'devolver_a_nro': 1, 'donde': 'Recepción'},
+      });
+
+      expect(ficha.leFalta?.nro, 1);
+      expect(ficha.leFalta?.nombre, 'Recepción');
+    });
+
+    test('lo que frena llega como «bloquea»: «obligatorio» no viaja', () {
+      // El propio controlador lo dice en el docblock de `getAlumno`:
+      // «publicar los dos campos con el mismo valor invitaría a la app a
+      // distinguir dos cosas que aquí son una». Leyendo solo `obligatorio`,
+      // TODO salía obligatorio y el botón de cerrar se apagaba por un carné
+      // de vacunas que el colegio marcó como opcional.
+      final paso = PasoDelRecorrido.fromJson({
+        'nro': 2,
+        'nombre': 'Documentos',
+        'estado': 'falta',
+        'bloquea': true,
+        'requisitos': [
+          {
+            'id': 1,
+            'requisito': 'Registro civil',
+            'estado': 'cumple',
+            'bloquea': true,
+          },
+          {
+            'id': 2,
+            'requisito': 'Carné de vacunas',
+            'estado': 'falta',
+            'bloquea': false,
+          },
+        ],
+      });
+
+      expect(paso.obligatorio, isTrue);
+      expect(paso.obligatoriosQueFaltan, 0);
+    });
+
+    test('la observación de un requisito llega como «observacion»', () {
+      // Es `requisitos_alumno.descripcion` (línea 1154): lo que el personal
+      // escribió sobre ESTE papel de ESTA persona. El modelo leía `detalle` o
+      // `descripcion`, así que debajo del requisito salía la palabra del
+      // estado en lugar de lo que alguien se molestó en escribir.
+      final requisito = Requisito.fromJson({
+        'id': 1,
+        'requisito': 'Certificado de notas',
+        'estado': 'Observado',
+        'observacion': 'Lo trajo sin firmar, vuelve el lunes',
+      });
+
+      expect(requisito.detalle, 'Lo trajo sin firmar, vuelve el lunes');
     });
   });
 

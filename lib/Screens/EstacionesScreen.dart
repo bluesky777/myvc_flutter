@@ -57,6 +57,21 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
   List<Estacion> estaciones = [];
   int? miEstacion;
 
+  /// Si el colegio tiene campaña de matrículas abierta. **Tres valores, no dos.**
+  ///
+  /// `true` y `false` los dice el servidor en `campana.abierta`. **`null`
+  /// significa que no lo dijo** —un colegio con una versión anterior a que ese
+  /// campo existiera—, y entonces se vuelve a deducirlo de que la lista venga
+  /// vacía, que es lo que esta pantalla hacía antes.
+  ///
+  /// Leerlo hoy **no cambia nada visible**: el servidor lo calcula como
+  /// `count($estaciones) > 0`, o sea exactamente la deducción. Se lee igual por
+  /// dos motivos: por el `null`, y porque **el día que las dos cosas dejen de
+  /// coincidir —un colegio con recorrido armado y campaña cerrada— esta app ya
+  /// obedece sin publicar una versión nueva**. Una sola app, dieciséis colegios,
+  /// y las versiones viejas viven meses.
+  bool? campanaAbierta;
+
   bool cargando = true;
   String? error;
 
@@ -84,9 +99,10 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
     });
 
     try {
-      final traidas = await traerLasEstaciones(server);
+      final traidas = await traerLasEstacionesDelColegio(server);
       setState(() {
-        estaciones = traidas;
+        estaciones = traidas.estaciones;
+        campanaAbierta = traidas.abierta;
         cargando = false;
       });
     } catch (err) {
@@ -161,7 +177,7 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
       );
     }
 
-    if (estaciones.isEmpty) {
+    if (campanaAbierta == false || estaciones.isEmpty) {
       return const _Centrado(
         icono: Icons.route_outlined,
         // Se dice qué falta y no «no disponible»: quien lo lee es quien puede
@@ -284,6 +300,12 @@ class _TarjetaEstacion extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       _elSegundoRenglon(),
+                      // Dos renglones y punto: `descripcion` es un `text` del
+                      // colegio y puede traer un párrafo entero, y una tarjeta
+                      // que crece con el texto de un colegio descoloca la lista
+                      // en los otros quince.
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 13,
                         color: PaletaEstaciones.tintaSuave,
@@ -301,16 +323,23 @@ class _TarjetaEstacion extends StatelessWidget {
     );
   }
 
-  /// Dónde está y quién suele atenderla. Lo segundo **no es un permiso**: es
-  /// para saber a quién buscar si hay que preguntar algo.
+  /// Lo que el colegio escribió sobre este paso, y si es la que atiendes.
+  ///
+  /// **Aquí ya no se pinta ni el sitio ni el dueño, y las dos ausencias son del
+  /// contrato** (20 sep 2026, ver el docblock de [Estacion]): `donde` no viaja
+  /// —la única clave con ese nombre es la estación de DESTINO al devolver a
+  /// alguien— y `rol`/`quien_atiende` tampoco, porque desde ese mismo día la
+  /// estación no tiene dueño. Los dos renglones salían vacíos en los dieciséis
+  /// colegios sin que nada fallara.
+  ///
+  /// Lo que sí manda el servidor es `descripcion`, y **se pinta como lo que es:
+  /// la instrucción del colegio sobre ese paso** —«Ampliada al 150%»—, no una
+  /// ubicación. Si el colegio no escribió nada, el renglón cae en lo que sí se
+  /// sabe: si esta estación frena el recorrido.
   String _elSegundoRenglon() {
     final trozos = <String>[
-      if (estacion.donde != null && estacion.donde!.isNotEmpty) estacion.donde!,
-      if (esLaMia)
-        'la tuya'
-      else if (estacion.quienLaAtiende != null &&
-          estacion.quienLaAtiende!.isNotEmpty)
-        'la atiende ${estacion.quienLaAtiende}',
+      if (estacion.descripcion != null) estacion.descripcion!,
+      if (esLaMia) 'la tuya',
     ];
     if (trozos.isEmpty) return estacion.bloquea ? 'Frena el recorrido' : '';
     return trozos.join(' · ');
