@@ -767,9 +767,11 @@ no se sabe el grado la tarjeta nombra siempre su grupo**, que es justo lo que la
 distingue. `fe95da8` añade el id, no el nombre: esto no se arregla con ese
 despliegue.
 
-**Lo que se dejó escrito y sin hacer**: reordenar arrastrando (`PUT
-desempenos/orden` toca el conjunto entero, incluidas filas que el docente no
-puede escribir), adoptar del MEN, y `GET desempenos/catalogo-men`.
+**Lo que se dejó escrito y sin hacer**: adoptar del MEN y
+`GET desempenos/catalogo-men`. Reordenar arrastrando también estaba en esta
+lista, con el motivo equivocado —«`PUT desempenos/orden` toca el conjunto
+entero, incluidas filas que el docente no puede escribir»—: **se hizo el 19 sep
+al comprobarlo**, ver abajo.
 
 ### A3, entregada — 19 sep 2026
 
@@ -885,6 +887,54 @@ Tres cosas del contrato que hay que respetar y son fáciles de romper:
 3. **El 403 del `PUT` llega antes de mirar el cuerpo** y lo demás va en
    transacción: un `motivo` significa siempre «no se guardó nada», nunca «se
    guardó a medias». Por eso no hay ningún contador de saltados, y es a propósito.
+
+### Reordenar, entregada — 19 sep 2026 · y la tercera vez que algo «bloqueado» no lo estaba
+
+`reordenarCompetencias` en [CompetenciasApi](../lib/Http/CompetenciasApi.dart)
+y el arrastre en la tarjeta. **5 pruebas nuevas.**
+
+**Lo que estaba escrito aquí y en el código era falso**: que `PUT
+desempenos/orden` *«reordena el conjunto entero, que incluye filas que el
+docente no puede escribir, así que un arrastre sería un 403 en la pantalla más
+delicada»*.
+
+Medido en `putOrdenPlantilla`: recibe **`materia_id`, `grado_id` y
+`periodo_id`** y reordena **ese grupo**. Su `grupoDelCatalogo` filtra con
+`grado_id <=> ?`, o sea **igualdad estricta**, así que las filas del colegio
+—`grado_id IS NULL`— **son otro grupo** y sólo se tocan mandando
+`grado_id: null`. «El conjunto entero» es el de la lista que se arrastra, no el
+del catálogo. El propio docblock del backend lo dice en su primera línea:
+*«reordena **un grupo**, en una llamada»*.
+
+**Y el segundo argumento que había era de otra cosa.** Decía que reordenar
+rompería el acuerdo entre la pantalla y el boletín, que ordenan distinto y
+agrupan igual. Eso vale para un cliente que reordene **sólo en su vista**; no
+para uno que llame a esta ruta, que escribe `orden` en la tabla y entonces las
+dos consultas ven lo mismo.
+
+> **Van tres.** «La familia no puede pedir su boletín» (§5.2), «copiar es de la
+> web» (A4) y ésta. Las tres veces el patrón fue el mismo: **un argumento
+> plausible escrito sin abrir el fichero**, heredado luego como hecho. La
+> pregunta que las tres veces habría bastado es la que ya está escrita en
+> `backend-pendiente.md` §6: **¿esto existe y hace de menos, o no existe?**
+
+Tres cosas de la implementación:
+
+- **El asa es explícita** (`buildDefaultDragHandles: false`). Dentro de una
+  lista que ya se desplaza, un arrastre que empiece en cualquier punto de la
+  fila se pelea con el scroll: el dedo quiere bajar la pantalla y acaba
+  moviendo una competencia.
+- **Con una sola fila no sale el asa.** Son tres iconos en una fila de
+  teléfono, y el tercero sobra cuando no hay nada que ordenar.
+- **Se pinta antes de que el servidor conteste y se revierte si dice que no.**
+  Un arrastre que se queda quieto medio segundo se siente roto y se repite — y
+  repetirlo es mandar dos órdenes distintas.
+
+**Y `gradoId` es `int` y no `int?` a propósito.** Mandar `grado_id: null` sería
+pedir reordenar el bloque del colegio, que alcanza a grados que ese docente no
+da: 403 si es docente y, si es coordinador, mover filas de trece grados sin
+querer. Hay una prueba que comprueba que la fila del colegio no se cuela en la
+lista.
 
 ### A4, entregada — 19 sep 2026
 

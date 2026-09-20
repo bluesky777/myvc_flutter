@@ -81,7 +81,7 @@ flowchart LR
     V["Versión mínima<br/>backend-pendiente.md §4"] --> V1["la app, hecha ✓<br/>dormida hasta que<br/>el servidor mande<br/>el número"]
     T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
-    K["Competencias<br/>docs/competencias.md"] --> K0["plan ✓ · A0, A2, A3, A4, A5 ✓<br/>las cuatro entregas<br/>y las frases por grupo<br/>663 pruebas ✓<br/>⛔ sólo el despliegue"]
+    K["Competencias<br/>docs/competencias.md"] --> K0["el plan entero ✓<br/>A0, A2, A3, A4, A5<br/>+ orden y frases por grupo<br/>668 pruebas ✓<br/>⛔ sólo el despliegue"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -736,10 +736,15 @@ aquí. Su trampa conocida —la bandera del periodo destino— **se esquiva**: e
 destino es siempre el periodo de la barra, así que la bandera que la app tiene
 es la que el backend comprueba.
 
-Con eso **las cuatro entregas del plan están hechas**. Lo que queda escrito y
-sin hacer es reordenar arrastrando —`PUT desempenos/orden` toca el conjunto
-entero, incluidas filas que el docente no puede escribir— y adoptar del MEN,
-que es de coordinación y va en la web.
+**Y reordenar arrastrando, el 19 sep**, que estaba en la lista de «no se puede»
+con el motivo equivocado: `PUT desempenos/orden` **no** toca el conjunto
+entero, toca el del trío (materia, grado, periodo) con el grado exacto, así que
+las filas del colegio son otro grupo. Van **tres** veces en este frente que algo
+dado por bloqueado no lo estaba, y las tres por el mismo motivo: un argumento
+plausible escrito sin abrir el fichero.
+
+Con eso **el plan está entero**. Lo único que queda escrito y sin hacer es
+adoptar del MEN, que es de coordinación y va en la web.
 
 **Lo único que espera de verdad es el despliegue**: las siete rutas están en
 `main` de `8myvc` y no en los dieciséis, igual que las cuatro columnas del año

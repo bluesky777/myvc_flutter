@@ -41,15 +41,20 @@ import 'package:myvc_flutter/constantes.dart';
 ///
 /// ## Lo que esta pantalla NO hace, y no es por falta de tiempo
 ///
-///  - **No reordena.** El orden viene hecho del servidor y **las dos rutas usan
-///    expresiones distintas que agrupan igual**: `GET desempenos` ordena por
-///    `materia_id, grado_id, periodo_id, orden, id` y el boletín por
-///    `grado_id IS NOT NULL, orden, id`. Coinciden en lo que importa porque
-///    **MySQL pone los `NULL` delante en un `ASC`**, así que las del colegio
-///    salen arriba en los dos sitios y el papel se lee como la pantalla. Un
-///    cliente que reordene rompe justo eso. Y `PUT desempenos/orden` reordena
-///    **el conjunto entero**, que incluye filas que el docente no puede
-///    escribir, así que un arrastre sería un 403 en la pantalla más delicada.
+///  - **No ordena por su cuenta.** El orden viene hecho del servidor y **las
+///    dos rutas usan expresiones distintas que agrupan igual**: `GET
+///    desempenos` ordena por `materia_id, grado_id, periodo_id, orden, id` y el
+///    boletín por `grado_id IS NOT NULL, orden, id`. Coinciden en lo que
+///    importa porque **MySQL pone los `NULL` delante en un `ASC`**, así que las
+///    del colegio salen arriba en los dos sitios y el papel se lee como la
+///    pantalla. Un cliente que reordenara **sólo en su vista** rompería justo
+///    eso.
+///
+///    **Arrastrar sí se puede, y se hace** —ver [_buildFilasDelGrado]—, porque
+///    eso escribe `orden` en la tabla y entonces las dos consultas ven lo
+///    mismo. Aquí ponía que sería un 403 «porque `PUT desempenos/orden` toca el
+///    conjunto entero»: es falso, el conjunto es el del trío con el grado
+///    exacto. Ver [reordenarCompetencias].
 ///  - **No adopta del Ministerio.** Son 43 peticiones en fila desde el cliente y
 ///    es trabajo de coordinación: va en la web.
 ///  - **No edita las filas de «todos los grados».** Ver [_buildBloqueDelColegio].
@@ -502,7 +507,7 @@ class _MisCompetenciasScreenState extends State<MisCompetenciasScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          ...filas.map((c) => _buildFila(c, editable: permiso.puede)),
+          ..._buildFilasDelGrado(clase, filas, permiso),
         ] else
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -539,8 +544,112 @@ class _MisCompetenciasScreenState extends State<MisCompetenciasScreen> {
     );
   }
 
-  Widget _buildFila(Competencia competencia, {required bool editable}) {
+  /// Las del grado, arrastrables cuando hay más de una y se puede escribir.
+  ///
+  /// **Que esto se pueda es una corrección**: aquí ponía que `PUT
+  /// desempenos/orden` reordena «el conjunto entero, incluidas filas que el
+  /// docente no puede escribir». Falso — el conjunto es el del trío (materia,
+  /// grado, periodo) **con el grado exacto**, así que las del colegio son otro
+  /// grupo y no entran. Ver el docblock de [reordenarCompetencias].
+  ///
+  /// **El asa es explícita y el arrastre sólo empieza en ella**
+  /// (`buildDefaultDragHandles: false`). Dentro de una lista que ya se
+  /// desplaza, un arrastre que empiece en cualquier punto de la fila se pelea
+  /// con el scroll: el dedo quiere bajar la pantalla y acaba moviendo una
+  /// competencia de sitio.
+  ///
+  /// **Con una sola fila no sale el asa**, y no es un detalle de estilo: son
+  /// tres iconos en una fila de teléfono y el tercero sobra cuando no hay nada
+  /// que ordenar.
+  List<Widget> _buildFilasDelGrado(
+    ClaseDelDocente clase,
+    List<Competencia> filas,
+    PermisoDeEscritura permiso,
+  ) {
+    if (!permiso.puede || filas.length < 2) {
+      return filas.map((c) => _buildFila(c, editable: permiso.puede)).toList();
+    }
+
+    return [
+      ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        itemCount: filas.length,
+        itemBuilder: (_, i) => _buildFila(
+          filas[i],
+          editable: true,
+          asa: i,
+          key: ValueKey(filas[i].id),
+        ),
+        onReorderItem: (desde, hasta) => _reordenar(clase, filas, desde, hasta),
+      ),
+    ];
+  }
+
+  /// Mueve una fila y lo guarda, pintando primero y revirtiendo si falla.
+  ///
+  /// Se pinta antes de que el servidor conteste porque un arrastre que se
+  /// queda quieto medio segundo se siente roto y se repite — y repetirlo es
+  /// mandar dos órdenes distintas. Si el servidor dice que no, la lista vuelve
+  /// a donde estaba y el motivo sale en un aviso.
+  Future<void> _reordenar(
+    ClaseDelDocente clase,
+    List<Competencia> filas,
+    int desde,
+    int hasta,
+  ) async {
+    // `onReorderItem` y no el `onReorder` de siempre: aquél entrega el índice
+    // de destino contado **antes** de sacar la fila de su sitio, y obliga a
+    // restarle uno al bajar. Éste ya lo trae ajustado y está deprecado el otro.
+    if (hasta == desde) return;
+
+    final gradoId = clase.gradoId;
+    final periodoId = ContextoAcademico.instancia.periodoId;
+    if (gradoId == null || periodoId == null) return;
+
+    final nuevas = [...filas];
+    nuevas.insert(hasta, nuevas.removeAt(desde));
+
+    final antes = catalogo;
+    setState(() => catalogo = _conEsteOrden(nuevas));
+
+    final motivo = await reordenarCompetencias(
+      server,
+      materiaId: clase.materiaId,
+      gradoId: gradoId,
+      periodoId: periodoId,
+      ids: nuevas.map((c) => c.id).toList(),
+    );
+
+    if (!mounted || motivo == null) return;
+
+    setState(() => catalogo = antes);
+    _avisar(motivo);
+  }
+
+  /// El catálogo con esas filas puestas en ese orden, sin mover nada más.
+  ///
+  /// Se sustituye **hueco a hueco**: las posiciones que ocupaban esas filas se
+  /// rellenan con la secuencia nueva y el resto del catálogo se queda donde
+  /// está. Reordenar una clase no puede mover las de otra.
+  List<Competencia> _conEsteOrden(List<Competencia> nuevas) {
+    final suyas = nuevas.map((c) => c.id).toSet();
+    final cola = [...nuevas];
+
+    return catalogo
+        .map((c) => suyas.contains(c.id) ? cola.removeAt(0) : c)
+        .toList();
+  }
+
+  Widget _buildFila(
+    Competencia competencia, {
+    required bool editable,
+    int? asa,
+    Key? key,
+  }) {
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,6 +692,15 @@ class _MisCompetenciasScreenState extends State<MisCompetenciasScreen> {
               tooltip: 'Quitar',
               onPressed: () => _quitar(competencia),
             ),
+            if (asa != null)
+              ReorderableDragStartListener(
+                index: asa,
+                child: const Padding(
+                  padding: EdgeInsets.fromLTRB(2, 8, 4, 8),
+                  child:
+                      Icon(Icons.drag_handle, size: 18, color: Colors.black38),
+                ),
+              ),
           ],
         ],
       ),

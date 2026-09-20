@@ -31,7 +31,12 @@ class ServidorFingido extends Server {
   final int codigoDeCopiar;
 
   final List<Map<String, dynamic>> copias = [];
+  final List<Map<String, dynamic>> ordenes = [];
   final List<String> pedidos = [];
+
+  /// Con qué contesta `PUT desempenos/orden`. 200 salvo que se diga otra cosa.
+  int codigoDeOrden = 200;
+  String cuerpoDeOrden = '{"reordenados": 2}';
 
   @override
   Future get(String direccion) async {
@@ -60,6 +65,10 @@ class ServidorFingido extends Server {
     if (direccion == '/desempenos/copiar') {
       copias.add(Map<String, dynamic>.from(params as Map));
       return http.Response(jsonEncode(respuestaDeCopiar), codigoDeCopiar);
+    }
+    if (direccion == '/desempenos/orden') {
+      ordenes.add(Map<String, dynamic>.from(params as Map));
+      return http.Response(cuerpoDeOrden, codigoDeOrden);
     }
     return http.Response('{}', 200);
   }
@@ -162,6 +171,34 @@ Future<void> traerDe(WidgetTester tester, String cual) async {
   await tester.tap(find.text('Traer de…'));
   await tester.pumpAndSettle();
   await tester.tap(find.text(cual));
+  await tester.pumpAndSettle();
+}
+
+/// Arrastra la primera fila por debajo de la segunda.
+///
+/// **No vale `tester.drag`**: `ReorderableDragStartListener` arranca con el
+/// dedo ya en movimiento y un `drag` sintético —bajar, mover, soltar sin
+/// bombear entre medias— no le da tiempo a reconocerlo, así que la lista no se
+/// entera y no se manda nada. Con un gesto por pasos sí.
+///
+/// Y se mueve hasta **la posición real de la otra asa**, no una distancia a
+/// ojo: el alto de una fila depende de cuánto texto lleve.
+Future<void> arrastrarLaPrimera(WidgetTester tester) async {
+  final asas = find.byIcon(Icons.drag_handle);
+  final desde = tester.getCenter(asas.at(0));
+  final hasta = tester.getCenter(asas.at(1));
+
+  final gesto = await tester.startGesture(desde);
+  await tester.pump(const Duration(milliseconds: 100));
+
+  // En dos tramos: el primero arranca el reconocedor y el segundo lo lleva
+  // hasta pasar a la de abajo.
+  await gesto.moveTo(Offset(desde.dx, (desde.dy + hasta.dy) / 2));
+  await tester.pump(const Duration(milliseconds: 100));
+  await gesto.moveTo(Offset(desde.dx, hasta.dy + 4));
+  await tester.pump(const Duration(milliseconds: 100));
+
+  await gesto.up();
   await tester.pumpAndSettle();
 }
 
@@ -387,5 +424,115 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(servidor.pedidos.any((p) => p.startsWith('/years')), isTrue);
+  });
+  // ---- reordenar ---------------------------------------------------------
+
+  testWidgets('con dos o más se puede arrastrar, y viaja el grupo entero',
+      (tester) async {
+    // El conjunto que el servidor exige es el del trío (materia, grado,
+    // periodo) con el grado EXACTO: las del colegio son otro grupo y no van.
+    final servidor = ServidorFingido(
+      asignaturas: [asignatura()],
+      desempenos: [
+        desempeno(id: 25, definicion: 'La primera'),
+        desempeno(id: 26, definicion: 'La segunda'),
+        // Una del colegio, que no puede colarse en la lista de orden.
+        {...desempeno(id: 71, definicion: 'La del colegio'), 'grado_id': null},
+      ],
+    );
+
+    await abrir(tester, servidor);
+
+    await arrastrarLaPrimera(tester);
+
+    expect(servidor.ordenes, hasLength(1));
+    expect(servidor.ordenes.last['materia_id'], 13);
+    expect(servidor.ordenes.last['grado_id'], 11);
+    expect(servidor.ordenes.last['periodo_id'], 34);
+    expect(servidor.ordenes.last['orden'], [26, 25]);
+  });
+
+  testWidgets('nunca se manda grado_id null, que es el bloque del colegio',
+      (tester) async {
+    final servidor = ServidorFingido(
+      asignaturas: [asignatura()],
+      desempenos: [
+        desempeno(id: 25, definicion: 'La primera'),
+        desempeno(id: 26, definicion: 'La segunda'),
+        {...desempeno(id: 71, definicion: 'La del colegio'), 'grado_id': null},
+      ],
+    );
+
+    await abrir(tester, servidor);
+    await arrastrarLaPrimera(tester);
+
+    expect(servidor.ordenes.last['grado_id'], isNotNull);
+    expect(
+      (servidor.ordenes.last['orden'] as List).contains(71),
+      isFalse,
+      reason: 'la del colegio alcanza a grados que este docente no da',
+    );
+  });
+
+  testWidgets('con una sola no hay asa: no hay nada que ordenar',
+      (tester) async {
+    await abrir(
+      tester,
+      ServidorFingido(
+        asignaturas: [asignatura()],
+        desempenos: [desempeno(id: 25)],
+      ),
+    );
+
+    expect(find.byIcon(Icons.drag_handle), findsNothing);
+  });
+
+  testWidgets('sin permiso no hay asa aunque haya varias', (tester) async {
+    entrarComoDocente(periodoAbierto: false);
+
+    await abrir(
+      tester,
+      ServidorFingido(
+        asignaturas: [asignatura()],
+        desempenos: [
+          desempeno(id: 25, definicion: 'La primera'),
+          desempeno(id: 26, definicion: 'La segunda'),
+        ],
+      ),
+    );
+
+    expect(find.byIcon(Icons.drag_handle), findsNothing);
+  });
+
+  testWidgets('si el servidor dice que no, la lista vuelve a donde estaba',
+      (tester) async {
+    final servidor = ServidorFingido(
+      asignaturas: [asignatura()],
+      desempenos: [
+        desempeno(id: 25, definicion: 'La primera'),
+        desempeno(id: 26, definicion: 'La segunda'),
+      ],
+    )
+      ..codigoDeOrden = 403
+      ..cuerpoDeOrden = '{"message": "El periodo está cerrado."}';
+
+    await abrir(tester, servidor);
+
+    final antes = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .where((t) => t == 'La primera' || t == 'La segunda')
+        .toList();
+
+    await arrastrarLaPrimera(tester);
+
+    final despues = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .where((t) => t == 'La primera' || t == 'La segunda')
+        .toList();
+
+    expect(despues, antes, reason: 'se revierte al orden que tenía');
+    expect(find.textContaining('El periodo está cerrado.'), findsWidgets);
   });
 }

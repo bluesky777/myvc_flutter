@@ -7,19 +7,37 @@ import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 /// El plan de área por competencias: leerlo y escribirlo.
 ///
-/// La familia del backend tiene siete rutas y aquí viven **cinco**:
+/// La familia del backend tiene siete rutas y aquí viven **seis**:
 /// `GET desempenos`, `POST desempenos`, `PUT desempenos/{id}`,
-/// `DELETE desempenos/{id}` y `PUT desempenos/copiar`. Las otras dos no están
-/// y ninguna por olvido:
+/// `DELETE desempenos/{id}`, `PUT desempenos/copiar` y
+/// `PUT desempenos/orden`. La que falta no está por olvido:
 ///
-///  - **`PUT desempenos/orden` no se implementa**: decidido que la app no
-///    reordena. El orden lo hace el servidor y lo comparten la pantalla y el
-///    boletín —ver `competenciasDeLista`—, así que un botón de subir y bajar
-///    aquí sería la única forma de que los dos dejaran de coincidir;
 ///  - **`GET desempenos/catalogo-men`** es el catálogo de Estándares del MEN
 ///    para sugerir al escribir; no hace falta para la primera pantalla.
 ///
-/// ## Y una corrección a lo que este archivo decía de `copiar`
+/// ## Dos correcciones a lo que este archivo decía, y las dos del mismo tipo
+///
+/// ### `orden`: no era un 403, era otro conjunto
+///
+/// Aquí ponía que `PUT desempenos/orden` *«reordena el conjunto entero, que
+/// incluye filas que el docente no puede escribir, así que un arrastre sería
+/// un 403 en la pantalla más delicada»*. **Falso.** `putOrdenPlantilla` recibe
+/// `materia_id`, `grado_id` y `periodo_id` y reordena **ese grupo exacto**: su
+/// `grupoDelCatalogo` filtra con `grado_id <=> ?`, o sea igualdad estricta. Las
+/// filas del colegio —`grado_id IS NULL`— son **otro grupo**, y sólo se tocan
+/// mandando `grado_id: null`, que la app no hace nunca.
+///
+/// O sea que «el conjunto entero» es el de la lista que se está arrastrando, no
+/// el del catálogo. El docente reordena lo suyo y el servidor no tiene nada que
+/// objetar.
+///
+/// El otro argumento que había —que reordenar rompería el acuerdo entre la
+/// pantalla y el boletín— **es de otra cosa**: vale para un cliente que
+/// reordene **sólo en su vista**, y no para uno que llame a esta ruta. Aquí el
+/// `orden` se escribe en la tabla, así que las dos consultas —la de la pantalla
+/// y la del boletín, que ordenan distinto y agrupan igual— ven lo mismo.
+///
+/// ### `copiar`: no era del colegio, era de una clase
 ///
 /// Aquí ponía que copiar *«es trabajo de escritorio, de los que se hacen una
 /// vez en agosto: va en la web administrativa, no en el teléfono»*. **Es
@@ -223,6 +241,56 @@ Future<String?> borrarCompetencia(Server server, {required int id}) async {
     return _motivoDelRechazo(res, respaldo: 'No se pudo borrar.');
   } catch (err) {
     return 'No se pudo borrar: $err';
+  }
+}
+
+/// Reordena **un grupo** del plan: las de una clase en un periodo.
+///
+/// `PUT desempenos/orden`. **La posición en la lista es el orden**, así que
+/// [ids] tiene que traer las filas de ese grupo en el orden que se quiere, y
+/// **todas**: el servidor compara el conjunto con las suyas y contesta 422 si
+/// falta una o sobra —una lista parcial deja huecos y repetidos, que es el
+/// estado del que se viene—.
+///
+/// ## Qué es «ese grupo», que es lo que hace esto posible
+///
+/// El trío (`materia_id`, `grado_id`, `periodo_id`), con `grado_id` **exacto**:
+/// el servidor filtra con `grado_id <=> ?`. Las filas del colegio —«todos los
+/// grados», `grado_id IS NULL`— **son otro grupo** y sólo se tocan mandando
+/// `grado_id: null`.
+///
+/// Por eso un docente puede reordenar lo suyo sin tropezar con el permiso:
+/// [gradoId] es el de su clase, nunca null, y `exigirEscrituraDelPlan` le pasa
+/// por la misma puerta que usa para escribir una a mano.
+///
+/// **No mandar nunca `grado_id: null` desde la app.** Sería pedir reordenar el
+/// bloque del colegio, que alcanza a grados que este docente no da: 403 si es
+/// docente, y si es coordinador, mover filas de trece grados sin querer. De ahí
+/// que [gradoId] sea `int` y no `int?`.
+///
+/// Devuelve null si entró, o el motivo si no.
+Future<String?> reordenarCompetencias(
+  Server server, {
+  required int materiaId,
+  required int gradoId,
+  required int periodoId,
+  required List<int> ids,
+}) async {
+  assert(ids.isNotEmpty, 'Reordenar nada es un 422.');
+  assert(ids.toSet().length == ids.length,
+      'Un id dos veces en la lista es un 422, y con razón.');
+
+  try {
+    final res = await server.put('/desempenos/orden', {
+      'materia_id': materiaId,
+      'grado_id': gradoId,
+      'periodo_id': periodoId,
+      'orden': ids,
+    });
+
+    return _motivoDelRechazo(res, respaldo: 'No se pudo cambiar el orden.');
+  } catch (err) {
+    return 'No se pudo cambiar el orden: $err';
   }
 }
 
