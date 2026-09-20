@@ -472,6 +472,26 @@ endpoint de temas, el comando `notificaciones:enviar` y la línea de cron; el
 lado Flutter —Firebase, permiso y suscripción— no se puede empezar sin el
 endpoint que entrega los temas.
 
+### Estaciones de matrícula — [estaciones.md](estaciones.md)
+
+**Solo el diseño**, escrito el 20 de septiembre de 2026: las once pantallas de
+teléfono con las que alguien del personal atiende una estación del día de
+matrículas sin tocar la web, la cola que se llena sola cuando la estación
+anterior cierra, el que llega salteado y buscar a cualquiera del colegio.
+Maqueta navegable dentro del documento.
+
+**Cero código, y no por falta de ganas**: necesita siete rutas que no existen
+—el contrato está en `8myvc/docs/migracion/44-las-estaciones-en-la-app.md`— y
+antes de eso, que el backend le cierre el vocabulario a
+`requisitos_alumno.estado`, que hoy guarda lo que le manden.
+
+Dos cosas que salieron midiendo y afectan a esta app más allá de estas
+pantallas: **no tenemos `firebase_messaging`** (solo `firebase_core` y
+`firebase_analytics`), así que hoy la app no recibe ningún push aunque el
+servidor lo publique; y el disparo del servidor **va cada quince minutos**, que
+sirve para avisar de notas y no para una fila en un patio. Por eso la cola se
+sondea con una huella barata y el push queda para después, sin bloquear nada.
+
 ### Usuarios — [usuarios.md](usuarios.md)
 
 **Fase 1 hecha**: menú ▸ Usuarios →
