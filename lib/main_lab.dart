@@ -93,10 +93,14 @@ class ServidorDeCompetencias extends Server {
 
   @override
   Future put(String direccion, params) async {
-    // Antes que el `{id}`: «copiar» no es un número y caería en el camino de
-    // editar, que buscaría la fila 0 y contestaría un objeto vacío.
+    // Antes que el `{id}`: «copiar» y «orden» no son números y caerían en el
+    // camino de editar, que buscaría la fila 0 y contestaría un objeto vacío.
     if (direccion == '/desempenos/copiar') {
       return http.Response(jsonEncode(_copiar(params)), 200);
+    }
+
+    if (direccion == '/desempenos/orden') {
+      return http.Response(jsonEncode(_reordenar(params)), 200);
     }
 
     final id = int.tryParse(direccion.split('/').last) ?? 0;
@@ -106,6 +110,30 @@ class ServidorDeCompetencias extends Server {
     );
     fila.addAll(Map<String, dynamic>.from(params as Map));
     return http.Response(jsonEncode(fila), 200);
+  }
+
+  /// Reordenar un grupo: la posición en la lista **es** el orden.
+  ///
+  /// Se escribe de verdad en las filas para que el orden sobreviva a cerrar y
+  /// volver a abrir la tarjeta, que es lo único que distingue «se guardó» de
+  /// «se movió en la pantalla y ya».
+  Map<String, dynamic> _reordenar(dynamic params) {
+    final cuerpo = Map<String, dynamic>.from(params as Map);
+    final ids = (cuerpo['orden'] as List).cast<int>();
+
+    for (var i = 0; i < ids.length; i++) {
+      final fila = desempenos.firstWhere(
+        (d) => d['id'] == ids[i],
+        orElse: () => <String, dynamic>{},
+      );
+      if (fila.isNotEmpty) fila['orden'] = i;
+    }
+
+    // El backend devuelve las filas ya ordenadas en el `GET` siguiente; aquí se
+    // ordena la lista de mentira para que pase lo mismo.
+    desempenos.sort((a, b) => '${a['orden']}'.compareTo('${b['orden']}'));
+
+    return {'reordenados': ids.length};
   }
 
   /// Traer el plan de otro sitio, con los tres desenlaces que hay que mirar.
@@ -882,7 +910,9 @@ class _Indice extends StatelessWidget {
             context,
             titulo: 'Como se verá cuando esté desplegado',
             detalle: 'Dos grupos en un grado, una fila del colegio con su '
-                'candado, y las frases por banda escritas para ver el previo.',
+                'candado, y las frases por banda escritas para ver el previo. '
+                'Abre una tarjeta: dentro está «Traer de…», que copia el plan '
+                'de otro periodo o de otro año.',
             construir: () => MisCompetenciasScreen(
               servidor: ServidorDeCompetencias(
                 asignaturas: _asignaturasCompletas,
