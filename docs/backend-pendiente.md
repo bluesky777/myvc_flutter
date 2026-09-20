@@ -709,7 +709,7 @@ API y se apunta aquí para que nadie lo proponga como alternativa a la columna.
 
 ---
 
-## 7. El candado de la plantilla, y un interruptor que no viaja
+## 7. El candado de la plantilla, y un interruptor que no viaja — ESCRITAS, sin desplegar
 
 > **Decidido por Joseth el 19 sep 2026**, mirando el banco de pruebas: *«los
 > porcentajes de las unidades ahora no serían por asignatura sino por colegio, y
@@ -741,6 +741,40 @@ verlo**: cree que tiene un reparto y tiene ciento treinta y cuatro.
 | lo que **sigue permitido** | **añadir subunidades dentro** de una unidad del colegio. Es el trabajo del docente (D14) y es justo lo que Joseth describe: *«cada asignatura tiene subunidades/logros que se enlazan a ese porcentaje»* |
 | ruta nueva | «volver a aplicar»: actualiza las copias **de los periodos no cerrados** en vez de saltárselas, y contesta con su recuento como `sembrar` |
 
+> **HECHO en el backend el 19 sep 2026 — y cambia lo que la app tendrá que
+> hacer.** `CandadoDeLaPlantillaTest`, 9 casos en verde, con un control:
+> quitando el candado caen las 4 que lo afirman y siguen verdes las 5 que
+> protegen al docente. **Sin desplegar.** Cuando llegó este aviso, la suite de
+> Contrato entera seguía corriendo allí, así que «verde» es de esos 230 y no de
+> las 2.100.
+>
+> **Lo que más importa para la app: rechaza el CAMBIO, no la presencia del
+> campo.** El servidor compara contra el valor actual y sólo corta 403 si
+> cambiaría de verdad, así que **`UnidadesScreen` puede seguir mandando el
+> objeto entero** —`definicion` y `porcentaje` incluidos— cuando el docente
+> sólo toca `nota_default` o el orden. Un candado por presencia habría obligado
+> a podar el cuerpo en el cliente y habría dado 403 a docentes que no estaban
+> cambiando nada. La prueba que lo fija allí se llama
+> `test_mandar_el_mismo_valor_no_es_un_cambio_y_pasa`, y es la primera que hay
+> que mirar si algo se rompe.
+>
+> Lo mismo al reordenar: se puede mandar la rejilla entera con las del colegio
+> dentro, y sólo corta si una del colegio **se movería de sitio**.
+>
+> **Y una asimetría deliberada que conviene saber antes de pintar nada**:
+> `subunidades/update-orden` y `subunidades/update-varias` **no** se bloquean,
+> aunque `subunidades_por_defecto` también tenga `orden`. El contrato de aquí
+> nombraba tres rutas y ensancharlo le quitaría al docente algo más el mismo
+> día — que es exactamente lo que P6 manda anunciar colegio a colegio **antes**.
+> Dejarlo abierto es reversible; cerrarlo no.
+>
+> Sobre la tercera ruta: **`unidades/update-orden` sólo escribe `orden`**, así
+> que «rechazar el cambio de nombre y de porcentaje» era literalmente un no-op
+> ahí. Se bloqueó igual, pero con evidencia propia y no por simetría:
+> `unidades_por_defecto` **tiene columna `orden`** y el sembrador la copia junto
+> con `por_defecto`, o sea que el orden de la rejilla también viene de la
+> plantilla.
+
 ### 7.2 · Por qué esto no se hace sólo en la app, y no es pereza
 
 **Bloquear el campo aquí sería teatro**: la misma cuenta abre la web y hace el
@@ -771,17 +805,35 @@ lo que falta es que se *comporte* así, y eso es el candado de §7.1.
 
 ### 7.4 · `reparto_subunidades` no viaja, y su hermano sí
 
+> **HECHO en el backend el 19 sep 2026.** Las cuatro consultas de
+> `ContextoDeUsuario` llevan `y.reparto_subunidades`, **sin atarla a
+> `modelo_evaluacion`**, y las cuatro instantáneas `login-contexto-*` se
+> movieron una línea. Sigue **sin desplegar**, como todo lo demás.
+
 Lo pequeño, y es una asimetría que sólo se ve desde aquí.
 `years.reparto_subunidades` —`porcentaje` | `promedio`, el interruptor que hace
-que **las subunidades dejen de llevar porcentaje**— **no está en el volcado del
-esquema y no sale en ninguna de las cuatro consultas de `ContextoDeUsuario`**:
+que **las subunidades dejen de llevar porcentaje**— no salía en ninguna de las
+cuatro consultas de `ContextoDeUsuario`:
 
 ```bash
-grep -c reparto_subunidades 8myvc/database/schema/mysql-schema.sql   # 0
-grep -c reparto_subunidades 8myvc/app/Services/ContextoDeUsuario.php # 0
+grep -c reparto_subunidades 8myvc/app/Services/ContextoDeUsuario.php # 0 → 5
 ```
 
-Su hermano `modelo_evaluacion` **sí sale en las cuatro**. Los dos son columnas de
+> **Aquí había una segunda línea de evidencia y era mala.** Decía
+> `grep -c reparto_subunidades …/mysql-schema.sql # 0` y lo presentaba como
+> prueba de que la columna no estaba, frente a `modelo_evaluacion` que sí. Lo
+> levantó la sesión del backend al hacer esto: **`modelo_evaluacion` también da
+> 0 en el volcado**. Las dos llegan por migración
+> —`2026_09_14_200000_reparto_de_las_subunidades` y
+> `2026_09_13_100000_modelo_de_evaluacion_del_anio`— y el volcado se congeló el
+> 17 de agosto (`1d0d5c4`) sin regenerarse desde entonces. La evidencia que sí
+> separaba las dos era la del `ContextoDeUsuario`, que es la que queda.
+>
+> Se corrige aquí porque tal como estaba **mandaba a la sesión siguiente a
+> buscar una migración que no falta**. Y el mismo error, en grande, estaba en
+> [competencias.md](competencias.md) §5.3.
+
+Su hermano `modelo_evaluacion` **sí salía en las cuatro**. Los dos son columnas de
 `years` que gobiernan lo que ve un docente, así que se pide **la misma línea**: que
 `reparto_subunidades` viaje en el contexto del login.
 

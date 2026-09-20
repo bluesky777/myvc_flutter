@@ -714,9 +714,13 @@ Nueve ficheros nuevos, **579 pruebas en verde**.
 Está detrás de **dos** puertas, las dos cerradas: `Interruptores.competenciasDocente`
 y que el año del colegio vaya por competencias. Hoy no la ve nadie.
 
-Y al implementarla salió una corrección al propio plan: **esas cuatro columnas no
-están en el volcado del esquema**, o sea que están en `main` del backend y **no
-desplegadas**. Probar esto contra un colegio va a dar siempre el camino viejo.
+Y al implementarla salió una corrección al propio plan que **el 19 sep hubo que
+corregir a su vez**: se dijo que esas cuatro columnas no están en el volcado del
+esquema «o sea que no están desplegadas». Lo primero es cierto y lo segundo no se
+sigue — el volcado se congeló una sola vez, el 17 de agosto (`1d0d5c4`), y no se
+regenera, así que decenas de migraciones posteriores tampoco están ahí. Lo llegan
+a ser o no se comprueba por el hash de la tanda. Probar esto contra un colegio
+probablemente dé el camino viejo, pero eso se mira, no se deduce.
 
 **Aquí decía que faltaban dos campos del backend y era falso** — lo corrigió
 Joseth el 19 sep: el front y el backend ya hicieron su parte, y **las dos
@@ -747,8 +751,9 @@ Con eso **el plan está entero**. Lo único que queda escrito y sin hacer es
 adoptar del MEN, que es de coordinación y va en la web.
 
 **Lo único que espera de verdad es el despliegue**: las siete rutas están en
-`main` de `8myvc` y no en los dieciséis, igual que las cuatro columnas del año
-— que ni siquiera están en el volcado del esquema.
+`main` de `8myvc` y no en los dieciséis, igual que las cuatro columnas del año.
+(Que no salgan en el volcado del esquema **no es la prueba**: ese fichero se
+congeló el 17 de agosto y no se regenera.)
 
 Y de rebote, **A5, hecha el 19 sep**: las dos rutas nuevas de
 `frases_asignatura/grupo/{asignatura_id}` arreglaban un fallo que la app ya

@@ -588,10 +588,29 @@ grep -cE "modelo_evaluacion|desempeno_displayname|genero_desempeno" \
   8myvc/database/schema/mysql-schema.sql          # 0
 ```
 
-Las crea `2026_09_13_100000_modelo_de_evaluacion_del_anio.php`, y el volcado **es
-la verdad del esquema** —el argumento de §7.10 del front, más duro que mirar los
-clientes porque no depende de que nadie despliegue nada—. O sea que **hoy el
-`/login` de los colegios no manda esos cuatro campos**.
+Las crea `2026_09_13_100000_modelo_de_evaluacion_del_anio.php`.
+
+> **Y aquí había un argumento que no se sostiene, corregido el 19 sep 2026.**
+> Esto decía que el volcado **es la verdad del esquema** —«más duro que mirar
+> los clientes porque no depende de que nadie despliegue nada»—. **No lo es.**
+> Lo levantó la sesión del backend al pedirle §7.4: `reparto_subunidades`
+> tampoco está en el volcado, y `modelo_evaluacion` **tampoco** —el grep de
+> arriba da 0 para las dos—, y sin embargo las dos existen por migración.
+>
+> Comprobado desde aquí: el volcado se escribió **una sola vez**, el 17 de
+> agosto de 2026, en el commit `1d0d5c4` —*«congelar el esquema real como
+> baseline y archivar las migraciones»*— y **no se regenera al desplegar**. O
+> sea que «no está en el volcado» significa **«se añadió después del 17 de
+> agosto»** y nada más: hay decenas de migraciones posteriores.
+>
+> **La conclusión aguanta, el argumento no.** Que esos cuatro campos lleguen o
+> no a un colegio se comprueba como todo lo demás en este proyecto —por el
+> **hash de la tanda desplegada**, con `git merge-base --is-ancestor`—, no
+> mirando un fichero congelado.
+
+Con eso, lo honrado es decir que **probablemente el `/login` de los colegios no
+manda todavía esos cuatro campos** —la migración es del 13 de septiembre— y que
+saberlo de verdad es una comprobación contra el servidor.
 
 **Eso no bloquea A0: lo define.** Se lee con el valor de hoy por defecto, y por eso
 A0 **no necesita interruptor**: una clave que no viene no puede encender nada. Lo
