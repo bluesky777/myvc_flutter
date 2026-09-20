@@ -139,12 +139,27 @@ class PendientesEstaciones {
 
   /// El aviso inmediato cuando llega alguien a tu estación.
   ///
-  /// **Decidido por Joseth el 20 sep 2026: entra.** Lo que falta es del lado de
-  /// esta app — `pubspec.yaml` tiene `firebase_core` y `firebase_analytics` y
-  /// **no tiene `firebase_messaging`**— y del lado del servidor, publicar en el
-  /// momento en vez de por la tanda de quince minutos.
+  /// **RECTIFICADO el 20 sep 2026: NO entra.** Esta casilla decía «entra» y
+  /// mandaba a meter `firebase_messaging` en `pubspec.yaml` por ello. **No hay
+  /// que hacerlo por esto.** Se le puso delante a Joseth que `notificaciones.md`
+  /// prohíbe publicar dentro de una petición —y lo prohíbe con la medición
+  /// hecha, *«el docente espera a que Google responda»*, que aquí muerde más
+  /// porque quien atiende tiene una fila delante— y contestó: *«que llegue
+  /// cuando tenga que llegar, no me voy a complicar con que le llegue de
+  /// inmediato, por ahora no importa»*. El porqué entero, con lo medido y lo que
+  /// quedó sin medir, en `docs/estaciones.md` §2.2.
   ///
-  /// **La cola sondeada no se retira cuando esto se encienda.** Un push se
+  /// **Lo que eso cambió de lo que hay que construir aquí: nada.** El push era
+  /// el último paso e iba después de la cola, así que quitarlo no dejó hueco —
+  /// y que no lo dejara es lo que demuestra que el orden estaba bien puesto.
+  ///
+  /// Lo que falta sigue siendo de los dos lados, el día que se retome: esta app
+  /// no tiene `firebase_messaging` (solo `firebase_core` y `firebase_analytics`)
+  /// y **en los dieciséis colegios todavía no hay credenciales de Firebase
+  /// puestas**, según deja escrito `8myvc/app/Console/Kernel.php`. O sea que hoy
+  /// no llegaría un push ni metiendo el paquete.
+  ///
+  /// **La cola sondeada no se retira si esto se enciende algún día.** Un push se
   /// pierde, llega tarde o está apagado en los ajustes del teléfono, y la fila
   /// del patio no se puede parar por eso: el push **adelanta** el aviso, la cola
   /// **garantiza** que nadie se quede invisible.

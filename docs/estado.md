@@ -551,27 +551,35 @@ por no ser tu estación**: se abren, y lo que protege el paso es la firma
 visible, el deshacer de ocho segundos y el motivo escrito que lee la familia.
 
 **Y las cuatro que quedaban se contestaron el mismo 20 de septiembre**, así que
-de las cinco preguntas con las que nació este diseño **solo sigue abierta una**:
+de las cinco preguntas con las que nació este diseño **no queda ninguna abierta**:
 
 | | |
 |---|---|
 | El aviso al acudiente | **en cada estación**, no solo al devolver. Con el nombre dentro y **sin el motivo** — el motivo se lee abriendo la app |
-| El push inmediato | **entra ahora.** Deja de ser «para después»: hay que meter `firebase_messaging`, que esta app no tiene, y publicar en el momento en vez de en la tanda de quince minutos |
+| El push inmediato | ~~entra ahora~~ → **NO ENTRA. Rectificado el 20 sep 2026**: *«que llegue cuando tenga que llegar, no me voy a complicar con que le llegue de inmediato, por ahora no importa»*. El porqué entero, con lo medido, en [estaciones.md](estaciones.md) §2.2 |
 | Una nota de estación | **no avisa a nadie, espera ahí.** El globo ya la enseña a cualquiera que abra la ficha |
 | Resolver una nota pendiente | **quien la escribió, o Admin, Secretario o Rector.** Sustituye al «dueño de la estación», que dejó de existir cuando cerrar se abrió a todo el personal. Los tres roles existen en la tabla `roles` |
-| **Sigue abierta** | **¿teléfono o la tablet del colegio?** Si es tablet, el maestro-detalle de `tablets.md` deja de ser mejora y pasa a ser requisito |
+| ¿Teléfono o la tablet del colegio? | **las dos**, así que el maestro-detalle de `tablets.md` dejó de ser mejora y pasó a ser requisito. A partir de `Anchos.maestroDetalle` la cola y la ficha se ven a la vez — es lo que ya dice el párrafo «En tablet, la lista y el detalle a la vez» de esta misma sección |
 
-**Lo que eso mueve en el orden del trabajo**: el push sube de último a quinto, y
-la cola sondeada **no se va con él** — un push se pierde, se retrasa o está
-apagado en los ajustes, y la fila del patio no se puede parar por eso. El push
-adelanta el aviso; la cola garantiza que nadie se quede invisible.
+**Lo que la rectificación del push mueve en el orden del trabajo: nada.** El push
+era el paso 5 de [estaciones.md](estaciones.md) §5 e iba **después** de la cola,
+así que quitarlo no deja hueco — y que no lo deje es justo lo que demuestra que
+el orden estaba bien puesto. **Lo que sostiene el día es la cola sondeada**: un
+push se pierde, se retrasa o está apagado en los ajustes, y la fila del patio no
+se puede parar por eso. El push adelanta el aviso; la cola garantiza que nadie se
+quede invisible.
 
-Dos cosas que salieron midiendo y afectan a esta app más allá de estas
-pantallas: **no tenemos `firebase_messaging`** (solo `firebase_core` y
-`firebase_analytics`), así que hoy la app no recibe ningún push aunque el
-servidor lo publique; y el disparo del servidor **va cada quince minutos**, que
-sirve para avisar de notas y no para una fila en un patio. Por eso la cola se
-sondea con una huella barata y el push queda para después, sin bloquear nada.
+Tres cosas medidas que siguen valiendo aunque el push haya salido de la lista.
+**No tenemos `firebase_messaging`** (solo `firebase_core` y `firebase_analytics`),
+así que hoy la app no recibe ningún push aunque el servidor lo publique. El
+disparo de Laravel **va cada quince minutos a propósito**, no por descuido: el
+motivo escrito en `8myvc/app/Console/Kernel.php` es que agrupar hace que un
+docente pasando una columna de treinta notas genere **un** aviso y no treinta, y
+el cron del sistema sí entra cada minuto — el cuarto de hora es una elección, no
+un techo. Y ese mismo fichero deja escrito que **en los dieciséis colegios
+todavía no hay credenciales de Firebase puestas**, así que hoy el push no
+llegaría ni con `firebase_messaging` metido. Por eso la cola se sondea con una
+huella barata y el push queda para después, sin bloquear nada.
 
 ### Usuarios — [usuarios.md](usuarios.md)
 
