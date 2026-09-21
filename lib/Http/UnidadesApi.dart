@@ -262,19 +262,23 @@ Future<String?> borrarUnidad(
 }
 
 /// `POST subunidades`. El orden lo pone el backend al final de la unidad.
+///
+/// **No manda `nota_default`, y el backend la deja en 0**
+/// (`SubunidadesController:41`). Es la decisión del 21 sep 2026: la casilla
+/// nace vacía y lo que haya que poner se pone con la nota rápida, que escribe
+/// una nota de verdad con autor y fecha. El porqué, en
+/// `8myvc/docs/migracion/43`.
 Future<String?> crearSubunidad(
   Server server, {
   required int unidadId,
   required String definicion,
   required double porcentaje,
-  required double notaDefault,
 }) async {
   return _guardar(
     () => server.post('/subunidades', {
       'unidad_id': unidadId,
       'definicion': definicion,
       'porcentaje': porcentaje,
-      'nota_default': notaDefault,
     }),
     'crear la subunidad',
   );
@@ -282,14 +286,18 @@ Future<String?> crearSubunidad(
 
 /// `PUT subunidades/update/{id}`.
 ///
-/// `nota_default` va siempre, aunque no se haya tocado: el backend la reescribe
-/// con lo que reciba y la deja en 0 si no recibe nada.
+/// **Tampoco manda `nota_default`, y omitirla CONSERVA la que hay** —
+/// `Request::input('nota_default', $subunidad->nota_default)`,
+/// `SubunidadesController:271`—. Aquí decía lo contrario («la deja en 0 si no
+/// recibe nada»), y era verdad cuando se escribió: el backend cambió y la frase
+/// se quedó. Comprobado contra el código el 21 sep 2026 **antes** de quitar el
+/// campo, porque de creerla el cambio habría parecido que borraba el valor de
+/// todas las subunidades que alguien editara.
 Future<String?> actualizarSubunidad(
   Server server, {
   required int id,
   required String definicion,
   required double porcentaje,
-  required double notaDefault,
   required int asignaturaId,
   required int periodoId,
   required int numeroPeriodo,
@@ -298,7 +306,6 @@ Future<String?> actualizarSubunidad(
     () => server.put('/subunidades/update/$id', {
       'definicion': definicion,
       'porcentaje': porcentaje,
-      'nota_default': notaDefault,
       'asignatura_id': asignaturaId,
       'periodo_id': periodoId,
       'num_periodo': numeroPeriodo,

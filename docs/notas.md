@@ -356,6 +356,19 @@ El diálogo dice que la casilla vuelve, porque si no, borrar da miedo de más:
 la forma de deshacer «puse un 40 donde no había nada» sin dejar un cero que
 parezca una nota de verdad.
 
+> **Y desde el 21 sep 2026 esa nota por defecto ya no se puede poner desde la
+> app.** El campo salió del cuadro de subunidades —y del front viejo—, así que
+> las subunidades nuevas nacen con 0 y la casilla vuelve vacía. Las que ya
+> tienen un valor lo conservan: editar una subunidad sin mandar el campo **no lo
+> pisa** (`SubunidadesController:271`).
+>
+> El porqué no es de esta app: en varios colegios el método era **sembrar el
+> techo de la escala y bajarle sólo al que pierde**, así que una casilla intacta
+> significaba «lo hizo todo bien» en unos y «sin calificar» en otros. Eso
+> convirtió el relleno del 20 sep en 408.000 casillas vaciadas, 225.000 de ellas
+> con valor. Está contado en `8myvc/docs/migracion/43`. El sustituto es la nota
+> rápida, que escribe una nota de verdad con autor y fecha.
+
 Y una consecuencia que sí obliga a recargar: **el borrado recalcula la
 definitiva** del alumno. Actualizar una nota también lo hace y la app sí sabe
 seguirlo —ver «Guardar una nota cambia dos cosas»—, pero borrar no: para saber

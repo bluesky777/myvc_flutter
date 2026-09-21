@@ -33,7 +33,7 @@ import 'package:myvc_flutter/Utils/TecladoDeNota.dart';
 ///   POST   /unidades            {asignatura_id, definicion, porcentaje}
 ///   PUT    /unidades/update/{id}
 ///   DELETE /unidades/destroy/{id}
-///   POST   /subunidades         {unidad_id, definicion, porcentaje, nota_default}
+///   POST   /subunidades         {unidad_id, definicion, porcentaje}
 ///   PUT    /subunidades/update/{id}
 ///   DELETE /subunidades/destroy/{id}
 ///
@@ -133,10 +133,14 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
 
   /// Abre una asignatura y, la primera vez, se trae su detalle.
   ///
-  /// El detalle hace falta para poder guardar: el resumen del listado no trae
-  /// la nota por defecto de cada subunidad, y guardar sin ella la pondría en
-  /// cero. Ver [traerUnidadesDe], que además siembra las unidades del año
-  /// cuando la asignatura no tiene ninguna.
+  /// El detalle hace falta para editar: el resumen del listado no trae las
+  /// subunidades. Ver [traerUnidadesDe], que además siembra las unidades del
+  /// año cuando la asignatura no tiene ninguna y renumera el orden.
+  ///
+  /// Aquí decía además que sin el detalle la nota por defecto se guardaría en
+  /// cero. **Ya no aplica**: esta pantalla no la manda desde el 21 sep 2026 y
+  /// el backend, cuando no la recibe, conserva la que hay
+  /// (`SubunidadesController:271`).
   Future<void> _abrir(AsignaturaConUnidades fila) async {
     final id = fila.asignatura.id;
 
@@ -666,7 +670,6 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
       titulo: 'Nueva subunidad',
       definicion: '',
       porcentaje: resto,
-      notaDefault: 0,
     );
     if (datos == null) return;
 
@@ -677,7 +680,6 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
         unidadId: unidad.id,
         definicion: datos.definicion,
         porcentaje: datos.porcentaje,
-        notaDefault: datos.notaDefault ?? 0,
       ),
     );
   }
@@ -691,7 +693,6 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
       titulo: 'Editar subunidad',
       definicion: subunidad.definicion,
       porcentaje: subunidad.porcentaje,
-      notaDefault: subunidad.notaDefault,
     );
     if (datos == null) return;
 
@@ -702,7 +703,6 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
         id: subunidad.id,
         definicion: datos.definicion,
         porcentaje: datos.porcentaje,
-        notaDefault: datos.notaDefault ?? 0,
         asignaturaId: fila.asignatura.id,
         periodoId: ContextoAcademico.instancia.periodoId!,
         numeroPeriodo: ContextoAcademico.instancia.numeroPeriodo ?? 0,
@@ -849,14 +849,15 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
 
   // --- Los cuadros ----------------------------------------------------------
 
-  /// El cuadro de crear y el de editar son el mismo: los datos son los mismos.
+  /// El cuadro de crear y el de editar son el mismo, y el de la unidad y el de
+  /// la subunidad también: los datos son los mismos.
   ///
-  /// Con [notaDefault] es una subunidad y sin él una unidad, que no la tiene.
+  /// Lo que los distinguía era la **nota por defecto**, que sólo tenía la
+  /// subunidad. Salió el 21 sep 2026 y con ella el parámetro: ver [_CuadroUnidad].
   Future<_DatosUnidad?> _pedirDatos({
     required String titulo,
     required String definicion,
     required double porcentaje,
-    double? notaDefault,
   }) {
     return showDialog<_DatosUnidad>(
       context: context,
@@ -864,7 +865,6 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
         titulo: titulo,
         definicion: definicion,
         porcentaje: porcentaje,
-        notaDefault: notaDefault,
       ),
     );
   }
@@ -957,12 +957,10 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
 class _DatosUnidad {
   final String definicion;
   final double porcentaje;
-  final double? notaDefault;
 
   _DatosUnidad({
     required this.definicion,
     required this.porcentaje,
-    this.notaDefault,
   });
 }
 
@@ -971,18 +969,29 @@ class _DatosUnidad {
 /// El porcentaje no se acepta vacío ni fuera de 0–100: es un peso, y el
 /// backend lo guarda tal cual sin mirarlo. Un 1000 ahí descuadra la definitiva
 /// de todo el grupo sin decir nada.
+///
+/// ## Aquí había una «nota por defecto», y se fue el 21 sep 2026
+///
+/// Era el valor con el que nacía la casilla de cada alumno, y en varios
+/// colegios el método de trabajo era **sembrar el techo de la escala y bajarle
+/// sólo al que pierde**. Eso hizo que una casilla intacta significara dos cosas
+/// distintas según el colegio —«sin calificar» o «lo hizo todo bien»— y es lo
+/// que convirtió el relleno del 20 sep en 408.000 casillas vaciadas, 225.000 de
+/// ellas con valor. El relato está en `8myvc/docs/migracion/43`.
+///
+/// El sustituto es la **nota rápida**, que escribe notas de verdad, con autor y
+/// fecha. El campo salió también del front viejo (`unidades.html`), y aquí con
+/// él se va lo único que distinguía el cuadro de la unidad del de la subunidad.
 class _CuadroUnidad extends StatefulWidget {
   const _CuadroUnidad({
     required this.titulo,
     required this.definicion,
     required this.porcentaje,
-    this.notaDefault,
   });
 
   final String titulo;
   final String definicion;
   final double porcentaje;
-  final double? notaDefault;
 
   @override
   State<_CuadroUnidad> createState() => _CuadroUnidadState();
@@ -993,24 +1002,18 @@ class _CuadroUnidadState extends State<_CuadroUnidad> {
 
   late final TextEditingController _definicion;
   late final TextEditingController _porcentaje;
-  late final TextEditingController _notaDefault;
-
-  bool get esSubunidad => widget.notaDefault != null;
 
   @override
   void initState() {
     super.initState();
     _definicion = TextEditingController(text: widget.definicion);
     _porcentaje = TextEditingController(text: _sinCeros(widget.porcentaje));
-    _notaDefault =
-        TextEditingController(text: _sinCeros(widget.notaDefault ?? 0));
   }
 
   @override
   void dispose() {
     _definicion.dispose();
     _porcentaje.dispose();
-    _notaDefault.dispose();
     super.dispose();
   }
 
@@ -1046,17 +1049,6 @@ class _CuadroUnidadState extends State<_CuadroUnidad> {
               ),
               validator: (valor) => _numero(valor, maximo: 100),
             ),
-            if (esSubunidad)
-              TextFormField(
-                controller: _notaDefault,
-                keyboardType: tecladoDeNota,
-                inputFormatters: formateadoresDeNota,
-                decoration: const InputDecoration(
-                  labelText: 'Nota por defecto',
-                  helperText: 'Con la que arranca cada alumno',
-                ),
-                validator: (valor) => _numero(valor, maximo: 100),
-              ),
           ],
         ),
       ),
@@ -1089,7 +1081,6 @@ class _CuadroUnidadState extends State<_CuadroUnidad> {
       _DatosUnidad(
         definicion: _definicion.text.trim(),
         porcentaje: _leer(_porcentaje),
-        notaDefault: esSubunidad ? _leer(_notaDefault) : null,
       ),
     );
   }
