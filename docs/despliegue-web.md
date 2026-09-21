@@ -33,28 +33,42 @@ dentro de `build/web/` y por eso viaja en cada despliegue.
 único disparo automático es `push` a `main`: no hay `pull_request`, que es por
 donde un fork ajeno podría pedir prestados los secretos.
 
-> ### ⚠️ Medido el 19 sep 2026: esto **todavía no se ha hecho**, y por eso el despliegue nunca ha corrido
+> ### ✅ FUNCIONA desde el 21 sep 2026 — y lo que costó no fueron las credenciales
 >
-> `gh secret list --repo bluesky777/myvc_flutter` devuelve **vacío**, y
-> `gh variable list` también. Las dos únicas ejecuciones del workflow que
-> existen —`cd0a00f` y `df72105`— **fallaron las dos en el paso 2**, «Comprobar
-> que las credenciales están puestas», con el mensaje que ese paso escribe:
-> *«Faltan estos secretos del repositorio: FTP_SERVER FTP_USERNAME
-> FTP_PASSWORD»*.
+> **Esta caja decía, hasta el 21 de septiembre, que el despliegue no había corrido
+> nunca.** Era cierto: `gh secret list` devolvía vacío y las ejecuciones que existían
+> habían fallado todas en el paso 2, «Comprobar que las credenciales están puestas»,
+> con *«Faltan estos secretos del repositorio: … FTP_PASSWORD»*. Los cinco intentos
+> del día 20 murieron ahí, en 6–9 segundos, sin compilar ni tocar el servidor.
 >
-> **O sea que lo que sirve hoy `app.micolevirtual.com` sigue siendo el
-> `index.html` de agosto subido a mano.** El botón está montado y nunca ha
-> publicado nada.
+> **Joseth puso `FTP_PASSWORD` el 21 a las 02:57 y el despliegue publicó a la
+> primera**, en 3m43s. Lo que sirve `app.micolevirtual.com` ya no es el `index.html`
+> de agosto.
 >
-> Y la parte buena, que conviene decir porque era el riesgo de diseño: **falla
-> limpio y antes de tocar el servidor**. No compila, no se conecta, no sube un
-> byte. El paso 2 hace exactamente lo que esta sección prometía — parar con un
-> mensaje claro en vez de morirse cinco minutos después dentro del FTP con un
-> error de tres palabras.
+> Y lo que hay que decir del diseño, porque se comprobó: **falló limpio las cinco
+> veces**. No compiló, no se conectó, no subió un byte. El paso 2 hizo exactamente lo
+> que esta sección prometía.
 >
-> Los dos primeros valores están escritos aquí abajo y se pueden poner desde
-> consola; **la contraseña no está en ningún sitio del repositorio, a
-> propósito**, y sólo la puede poner Joseth.
+> #### ⚠️ Pero publicar no era lo mismo que verse, y eso costó dos intentos más
+>
+> Con el despliegue **ya arriba y correcto** —`version.json` idéntico al build local,
+> `main.dart.js` con fecha de hacía minutos— un teléfono que había abierto la app en
+> agosto **seguía viendo el menú de agosto**. El servidor mandaba `main.dart.js` con
+> `cache-control: max-age=604800`: una semana.
+>
+> **Lo taimado es que fallaba solo en los `.js`.** El `.htaccess` sí se aplicaba a
+> `manifest.json` y al favicon, así que `index.html` se renovaba cada hora y el
+> despliegue *parecía* correcto, mientras el fichero que lleva la app entera estaba
+> congelado. Un fallo total se habría visto el primer día.
+>
+> **Y por cabeceras no se puede ganar**, se intentó y se midió: `ExpiresActive Off`,
+> `Header always set` y `unset Expires` se subieron, se leyeron, y los `.js` siguieron
+> igual. LiteSpeed les pone sus propias cabeceras por extensión y eso se configura en
+> el panel del hosting, no en este repositorio. La solución está en §5 bis: **colgarle
+> la versión al nombre**, que es lo único que sí está en nuestra mano.
+>
+> La contraseña sigue **sin estar en ningún sitio del repositorio, a propósito**, y
+> sólo la puede poner Joseth.
 
 ## 2. Lo que hay que poner en GitHub, una vez
 
@@ -158,6 +172,52 @@ Lo demás de ese archivo es red de seguridad y está dicho allí mismo: los tipo
 —por si el motor deja de venir del CDN (§6)—, la compresión —que LiteSpeed ya
 hace solo: los cuatro megas de `main.dart.js` bajan en 970 KB con `br`— y
 esconder el cuaderno del FTP.
+
+## 5 bis. El `.htaccess` NO gana esa pelea, y lo que sí la gana
+
+**Medido el 21 sep 2026, con el primer despliegue ya arriba.** La §5 de arriba tenía
+razón en el diagnóstico y se equivocaba en la cura: el `.htaccess` no puede con esas
+cabeceras. Lo que contesta el servidor, fichero por fichero:
+
+| Archivo | Cabecera | ¿De quién es? |
+|---|---|---|
+| `manifest.json` | `no-cache, must-revalidate` | ✅ nuestra regla |
+| `favicon.png` | `public, max-age=604800` | ✅ nuestra regla |
+| `main.dart.js` | `max-age=604800, public` | ❌ del servidor |
+| `flutter.js` | `max-age=604800, public` | ❌ del servidor |
+
+**El `.htaccess` se sube y se lee** —se comprobó en el log del FTP, `🔁 File replace:
+.htaccess`, y dos de las cuatro filas llevan nuestro sello hasta en el orden de las
+palabras—. Pero **LiteSpeed pone sus propias cabeceras a los estáticos por extensión**,
+y eso se configura en el panel del hosting. Se intentó `ExpiresActive Off`,
+`Header always set` y `Header always unset Expires`: se desplegaron y **no cambiaron
+nada** en los `.js`.
+
+### Lo que sí funciona: colgarle la versión al nombre
+
+Si no se puede mandar en la cabecera, se manda en la URL. El paso **«Romper la caché de
+los `.js`»** del workflow reescribe, después de compilar:
+
+```
+index.html         →  flutter_bootstrap.js?v=<commit corto>
+flutter_bootstrap  →  main.dart.js?v=<commit corto>
+```
+
+Una URL distinta es una entrada distinta de la caché. **El fichero del servidor no
+cambia de nombre**, así que el FTP sigue subiendo solo lo que cambió.
+
+**Hay que romper los dos eslabones y no uno.** La cadena es `index.html` →
+`flutter_bootstrap.js` → `main.dart.js`; rompiendo solo el primero, el bootstrap nuevo
+seguiría pidiendo el `main.dart.js` viejo que el navegador ya tiene.
+
+El `sed` va anclado a las comillas —`"main.dart.js"`— y no al nombre suelto, porque
+dentro del bootstrap ese nombre aparece tres veces y solo las entrecomilladas son la
+carga del entrypoint.
+
+> **Lo peor que puede pasar ahora es una hora**, que es lo que el servidor cachea
+> `index.html`. Antes era una semana — y una semana es tiempo de sobra para que alguien
+> concluya que el despliegue no funciona y se ponga a arreglar lo que no está roto.
+> Esto es justo lo que pasó el 21 de septiembre.
 
 ## 6. Los 37 megas que no se suben
 
