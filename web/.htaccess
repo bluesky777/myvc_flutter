@@ -20,13 +20,43 @@
 # antes de usarlo». El navegador manda su ETag, el servidor contesta 304 sin
 # cuerpo, y no se vuelve a bajar nada de lo que no cambió. O sea: despliegues
 # que se ven el mismo día, y casi el mismo ahorro de datos.
+# ⚠️ **Y `Header set` NO bastaba. Medido en vivo el 21 sep 2026**, con el primer
+# despliegue ya arriba:
+#
+#     manifest.json          no-cache, must-revalidate    ← esta regla, aplicada
+#     favicon.png            public, max-age=604800       ← la de abajo, aplicada
+#     main.dart.js           max-age=604800, public       ← NO es nuestra
+#     flutter.js             max-age=604800, public       ← NO es nuestra
+#
+# O sea que el `.htaccess` **sí se lee** —dos de las cuatro llevan nuestro sello,
+# y se nota hasta en el orden de las palabras—, pero **algo del servidor gana en
+# los `.js`**, que son justo los que hay que renovar. Es `mod_expires` a nivel de
+# cPanel con un `ExpiresByType` para javascript: cuando está activo, escribe
+# `Cache-Control: max-age=…` él mismo y machaca lo que ponga `Header set`.
+#
+# **La consecuencia era exactamente la que este bloque decía evitar**, y pasó: el
+# 21 sep, con el despliegue recién subido y `version.json` correcto en el
+# servidor, un navegador que ya había abierto la app en agosto **seguía viendo el
+# menú de agosto**, sin Notas ni Disciplina. El despliegue estaba bien; lo que
+# fallaba era esta cabecera.
+#
+# Se arregla apagando `mod_expires` aquí dentro —así deja de escribir nada— y
+# usando `always`, que aplica también a las respuestas que no son 200.
+<IfModule mod_expires.c>
+  ExpiresActive Off
+</IfModule>
+
 <IfModule mod_headers.c>
-  Header set Cache-Control "no-cache, must-revalidate"
+  # `unset Expires` primero: si `mod_expires` ya dejó una fecha, un
+  # `Cache-Control` nuevo al lado de un `Expires` viejo es una contradicción que
+  # cada navegador resuelve como quiere.
+  Header always unset Expires
+  Header always set Cache-Control "no-cache, must-revalidate"
 
   # Lo único que sí puede cachearse a lo bruto: los iconos y el favicon cambian
   # cuando cambia la marca, y eso no pasa en un despliegue.
   <FilesMatch "\.(png|jpg|jpeg|ico|webp)$">
-    Header set Cache-Control "public, max-age=604800"
+    Header always set Cache-Control "public, max-age=604800"
   </FilesMatch>
 </IfModule>
 
