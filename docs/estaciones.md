@@ -487,3 +487,81 @@ que se decidió se lee mejor al lado de la alternativa que se descartó.
 
 **Ya no queda ninguna abierta.** Las cinco preguntas con las que nació este diseño están
 contestadas.
+
+---
+
+## 7. La pantalla trece, que no es del que atiende: «Mi proceso»
+
+**Escrita el 20 sep 2026, apagada tras `Interruptores.miMatricula`.**
+
+Las doce de la §1 son todas del personal. Ésta es la primera de la familia, y es **la que
+cierra el círculo que el §2.2 dejó abierto**: el aviso dice *«Laura fue devuelta en
+Documentos. Abre la app para ver por qué»* y **no lleva el motivo dentro**, a propósito.
+El motivo lo escribió un docente para que lo lea la familia, y hasta hoy no había dónde
+leerlo.
+
+> **Un aviso que apunta a una pantalla que no existe es peor que no avisar**, porque enseña
+> que los avisos no sirven. Eso valía aunque el push esté descartado: al acudiente se le va
+> a contar de todas formas, y «entra a la app» tiene que llevar a alguna parte.
+
+```mermaid
+flowchart LR
+    A["Aviso o entrada a mano"] --> B{"¿Quién mira?"}
+    B -->|Alumno| C["su propio personaId"]
+    B -->|Acudiente| D{"¿cuántos acudidos?"}
+    D -->|uno| E["directo, sin preguntar"]
+    D -->|varios| F["SelectorAcudido<br/>con fotos"]
+    C --> G["GET requisitos/mi-recorrido/{id}"]
+    E --> G
+    F --> G
+    G --> H["Devueltos arriba,<br/>con el motivo desplegado"]
+```
+
+### 7.1 · Por qué NO reutiliza la pantalla del personal
+
+«Mi disciplina» sí reutiliza la del personal en sólo lectura, y allí fue lo correcto:
+`disciplina/mis-fichas` devuelve **la misma forma** que la ruta del personal, así que una
+sola pantalla no puede desincronizarse.
+
+Aquí el servidor devuelve **otra cosa, y aposta**. `getMiRecorrido` no manda la observación
+interna ni quién cerró cada paso, y lo dejó escrito: *«un `if ($esFamilia)` dentro del otro
+habría puesto las dos respuestas en un solo sitio, y el día que alguien añada un campo
+tendría que acordarse de que hay un lector que no puede verlo»*. **Reutilizar la pantalla
+desharía en el cliente la separación que el servidor sostiene.**
+
+### 7.2 · Las dos trampas del contrato, que ya mordieron una vez
+
+| | |
+|---|---|
+| **`descripcion` está en DOS tablas** | `requisitos_matricula.descripcion` es **qué le piden** a la familia y sí viaja; `requisitos_alumno.descripcion` es la **observación interna** y viaja solo a la ruta del personal, con el alias `observacion`. Confundirlas le enseñaría a una madre una nota escrita entre docentes |
+| **`cumplido` no se deduce** | lo calcula el servidor con `marca_id != null && cerrado_at != null`, **no desde `estado`**, porque `estado` lo escriben tres pantallas con tres vocabularios. Esta app ya se quemó con `falta` contra `Falta` |
+
+Las dos están sujetas con pruebas en `test/mi_matricula_test.dart`.
+
+### 7.3 · Tres cosas pequeñas que se decidieron al escribirla
+
+1. **Con un solo acudido no se pregunta de quién.** Preguntar cuando solo hay una respuesta
+   es una pantalla de más entre el aviso y el motivo. Con dos o más sí, con el selector de
+   fotos que ya usan «Mis notas» y «Mi disciplina».
+2. **El motivo va desplegado, no detrás de un toque.** Quien abre esto viene de que le
+   dijeran que algo pasó; hacerle buscar dónde es cobrarle dos veces el mismo susto.
+3. **Un paso devuelto SIN motivo escrito no se queda mudo**: dice que no quedó escrito y
+   manda a la secretaría. Un hueco en blanco parece un fallo de la app, y no lo es.
+
+### 7.4 · El id no es opcional, y aquí se separa de sus hermanas
+
+`disciplina/mis-fichas/{alumno_id?}` deja no mandar nada y el backend resuelve del token.
+**`mi-recorrido` no**: declara `{alumno_id}` sin `?` y arranca con `abort(422)` si no es
+numérico. Así que **hasta un alumno mirando lo suyo manda su propio `personaId`** —el de la
+ficha, no el de la cuenta—.
+
+### 7.5 · Su interruptor es el tercero, y no podía colgarse de los otros dos
+
+| interruptor | qué espera |
+|---|---|
+| `estaciones` | las nueve rutas del personal — **ya en `origin/main`** |
+| `recorridoDeMatricula` | `requisitos/recorrido` — **ya en `origin/main`** |
+| `miMatricula` | `requisitos/mi-recorrido` — entró en el merge `74d5028`, **después** |
+
+Colgarla de cualquiera de los otros la encendería contra una ruta que todavía puede dar
+404, y un 404 dentro de la app se lee como «esto está roto».

@@ -207,4 +207,27 @@ class Interruptores {
   /// `por-apellido`, que llevan desplegadas desde mucho antes. Buscar funciona
   /// hoy; abrir el recorrido de lo encontrado es lo que espera.
   static const bool recorridoDeMatricula = false;
+
+  /// «Mi proceso»: lo que ve la FAMILIA, con `GET requisitos/mi-recorrido/{id}`.
+  ///
+  /// **No es el mismo interruptor que [recorridoDeMatricula] y no puede serlo**,
+  /// aunque las dos pantallas enseñen los mismos pasos. Son dos rutas, dos
+  /// guards y dos despliegues distintos: `requisitos/recorrido` está en
+  /// `origin/main` de `8myvc` desde el 20 sep 2026 y `mi-recorrido` entró
+  /// después, en el merge `74d5028`, que el 20 sep **seguía sin empujar**.
+  /// Colgarlas del mismo `bool` encendería una de las dos contra una ruta que
+  /// todavía da 404.
+  ///
+  /// **Lo que abre esta pantalla es el círculo que quedaba sin cerrar.** El
+  /// aviso que le llega al acudiente dice «Laura fue devuelta en Documentos.
+  /// Abre la app para ver por qué» y **no lleva el motivo dentro**, a propósito:
+  /// una notificación se lee en la pantalla bloqueada de un bus. El motivo lo
+  /// escribió un docente para que lo lea la familia, y se lee aquí. Sin esta
+  /// pantalla, el aviso apunta a un sitio que no existe — *y un aviso que
+  /// apunta a un sitio que no existe es peor que no avisar, porque enseña que
+  /// los avisos no sirven*.
+  ///
+  /// **No depende del push**, que Joseth descartó el 20 sep 2026. Sirve igual
+  /// entrando a mano, que es como se va a usar el primer año.
+  static const bool miMatricula = false;
 }

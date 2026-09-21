@@ -100,6 +100,17 @@ class MenuLateral extends StatelessWidget {
             texto: 'Disciplina',
             ruta: '/mi-disciplina',
           ),
+        // «Mi proceso», que es a donde apunta el aviso de matrícula. Interruptor
+        // propio y **no el de las estaciones**: aquéllas son las nueve rutas del
+        // personal y ésta es `requisitos/mi-recorrido`, que entró después en un
+        // merge distinto. Dos despliegues, dos condiciones.
+        if (Interruptores.miMatricula)
+          _opcion(
+            context,
+            icono: Icons.assignment_turned_in_outlined,
+            texto: 'Mi proceso',
+            ruta: '/mi-matricula',
+          ),
         _opcionPrivacidad(context),
       ]);
       return opciones;

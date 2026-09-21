@@ -1096,9 +1096,14 @@ app. `GET requisitos/mi-recorrido/{alumno_id}` es lo que la app abre: los N paso
 interna ni el nombre del docente**, que son entre el personal.
 
 > **Un aviso que apunta a una pantalla que no existe es peor que no avisar**, porque
-> enseña que los avisos no sirven. Esa pantalla del acudiente **todavía no está
-> diseñada en este repo**: las doce de [estaciones.md](estaciones.md) son todas del que
-> atiende. Es lo que falta para cerrar el círculo.
+> enseña que los avisos no sirven. Eso era lo que faltaba para cerrar el círculo, y
+> **ya está escrito**: `MiMatriculaScreen` —«Mi proceso»—, la pantalla trece, que es la
+> primera de la familia. Las doce de [estaciones.md](estaciones.md) §1 son todas del que
+> atiende; ésta va aparte, en [estaciones.md](estaciones.md) §7, y **apagada tras
+> `Interruptores.miMatricula`** hasta que la ruta se despliegue.
+>
+> **No depende del push**, que quedó descartado: sirve igual entrando a mano, que es
+> como se va a usar el primer año.
 
 ### 3 · Y el push sigue sin poder llegar, por DOS motivos y no uno
 

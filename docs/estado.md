@@ -504,6 +504,24 @@ antes que `Interruptores.estaciones`**: espera a una tanda de despliegue, no a
 que se autorice el contrato. Con eso solo ya se contesta *«¿y mi hija en qué
 va?»* un lunes en secretaría, sin nada del día de matrículas montado.
 
+**Y hay una pantalla trece, que no es del que atiende: «Mi proceso».** Escrita el
+20 de septiembre y apagada tras `Interruptores.miMatricula`, es **la primera de la
+familia** y cierra el círculo que faltaba: el aviso dice *«Laura fue devuelta en
+Documentos. Abre la app para ver por qué»* y **no lleva el motivo dentro** a
+propósito, así que hasta ahora apuntaba a un sitio que no existía. Ahora el motivo
+se lee ahí, con lo devuelto arriba y desplegado.
+
+No reutiliza la pantalla del personal, y eso es deliberado: `mi-recorrido` devuelve
+**otra cosa** —sin la observación interna y sin quién cerró— y reutilizarla
+desharía en el cliente la separación que el servidor sostiene a propósito. El
+diseño entero, con las dos trampas del contrato, en
+[estaciones.md](estaciones.md) §7. **No depende del push**, que se descartó: sirve
+entrando a mano, que es como se va a usar el primer año.
+
+**Son tres interruptores y no uno**, porque son tres despliegues: `estaciones` y
+`recorridoDeMatricula` ya están en `origin/main` de `8myvc`; `miMatricula` espera a
+`requisitos/mi-recorrido`, que entró después en el merge `74d5028`.
+
 **En tablet, la lista y el detalle a la vez.** Decidido el 20 de septiembre:
 celular **y** tablet, así que el maestro-detalle dejó de ser mejora y pasó a ser
 requisito ([tablets.md](tablets.md), problema 2). A partir de 900 px, la cola y

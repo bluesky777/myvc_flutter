@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Screens/NotasPerdidasScreen.dart';
 import 'package:myvc_flutter/Screens/NotasScreen.dart';
 import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/MiDisciplinaScreen.dart';
+import 'package:myvc_flutter/Screens/MiMatriculaScreen.dart';
 import 'package:myvc_flutter/Screens/PrivacidadScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/UsuariosScreen.dart';
@@ -73,6 +74,10 @@ class RouteGenerator {
         return MaterialPageRoute(
             settings: settings,
             builder: (context) => const MiDisciplinaScreen());
+      case '/mi-matricula':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const MiMatriculaScreen());
       case '/privacidad':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const PrivacidadScreen());
@@ -107,7 +112,8 @@ class RouteGenerator {
             settings: settings, builder: (context) => EstacionesScreen());
       case '/buscar-matriculas':
         return MaterialPageRoute(
-            settings: settings, builder: (context) => BuscarEnMatriculasScreen());
+            settings: settings,
+            builder: (context) => BuscarEnMatriculasScreen());
       case '/panel':
         return MaterialPageRoute(
             settings: settings, builder: (context) => PanelScreen());
