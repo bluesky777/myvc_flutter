@@ -128,6 +128,43 @@ jobs:
           fi
           echo "Se va a subir: $(du -sh build/web | cut -f1)"
 
+      # ── Romper la caché, porque el servidor no deja hacerlo por cabeceras ─────
+      #
+      # **Medido el 21 sep 2026, con el primer despliegue ya arriba:** el servidor
+      # manda `main.dart.js` y `flutter.js` con `cache-control: max-age=604800,
+      # public` —una semana— y eso **no lo cambia el `.htaccess`**. Se intentó:
+      # `Header always set`, `ExpiresActive Off` y `unset Expires` se subieron y se
+      # aplicaron a `manifest.json` y al favicon, pero los `.js` siguieron igual.
+      # LiteSpeed les pone sus propias cabeceras por extensión, y eso se configura
+      # en el panel del hosting, no aquí.
+      #
+      # Lo que sí está en nuestra mano es **el nombre que se pide**. Flutter no le
+      # pone hash a sus ficheros, así que se lo ponemos nosotros como parámetro:
+      # una URL distinta es una entrada distinta de la caché, y la semana deja de
+      # importar. El fichero del servidor no cambia de nombre — sigue siendo
+      # `main.dart.js` —, así que el FTP sigue subiendo solo lo que cambió.
+      #
+      # La cadena es index.html → flutter_bootstrap.js → main.dart.js, y hay que
+      # romper los dos eslabones: si solo se rompiera el primero, el bootstrap
+      # nuevo seguiría pidiendo el `main.dart.js` viejo de la caché.
+      #
+      # `index.html` lo sirve el servidor con `max-age=3600`, así que lo peor que
+      # puede pasar es que alguien tarde una hora en verlo. Era una semana.
+      - name: Romper la caché de los .js
+        run: |
+          v="${GITHUB_SHA::12}"
+
+          # En el bootstrap, solo la carga del entrypoint. Se ancla a la comilla
+          # para no tocar las otras veces que el nombre aparece dentro del fichero.
+          sed -i "s|\"main\.dart\.js\"|\"main.dart.js?v=$v\"|g" build/web/flutter_bootstrap.js
+
+          # Y en el index, el bootstrap.
+          sed -i "s|src=\"flutter_bootstrap\.js\"|src=\"flutter_bootstrap.js?v=$v\"|" build/web/index.html
+
+          echo "Versión colgada de los nombres: $v"
+          grep -o 'main\.dart\.js?v=[a-f0-9]*' build/web/flutter_bootstrap.js | head -1
+          grep -o 'flutter_bootstrap\.js?v=[a-f0-9]*' build/web/index.html | head -1
+
       # Un archivo de dos líneas para poder abrir app.micolevirtual.com/despliegue.txt
       # y saber qué hay arriba sin adivinar por el aspecto de la pantalla.
       - name: Dejar la firma del despliegue
