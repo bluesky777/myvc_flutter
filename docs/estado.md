@@ -74,7 +74,7 @@ flowchart LR
     D --> D6["fase 6 ✓<br/>encendida 26 ago"]
     N["Notas<br/>docs/notas.md"] --> N4["las 6 fases ✓"]
     C["Configuración<br/>docs/configuracion.md"] --> C0["hecha ✓"]
-    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["backend desplegado ✓<br/>app empezada ◑<br/>⛔ colegio_muro sin prefijo"]
+    P["Notificaciones<br/>docs/notificaciones.md"] --> P0["backend, app y servidor ✓<br/>falta probar en un teléfono<br/>⛔ colegio_muro sin desplegar"]
     A["Analítica<br/>docs/analitica.md"] --> A0["hecha ✓<br/>con su interruptor<br/>para apagarla"]
     U["Usuarios<br/>docs/usuarios.md"] --> U1["fase 1 ✓<br/>+ nombre de usuario<br/>encendido 26 ago"]
     U --> U2["fases 2–4 ⛔<br/>faltan endpoints"]
@@ -82,6 +82,8 @@ flowchart LR
     T["Tablets<br/>docs/tablets.md"] --> T0["las 4 fases ✓<br/>el ancho, y la planilla<br/>al lado de su lista"]
     I["Algo de IA"] --> I0["una idea ○<br/>sin decidir qué,<br/>ni documento propio"]
     K["Competencias<br/>docs/competencias.md"] --> K0["el plan entero ✓<br/>A0, A2, A3, A4, A5<br/>+ orden y frases por grupo<br/>668 pruebas ✓<br/>⛔ sólo el despliegue"]
+    W["Votaciones<br/>docs/votaciones.md"] --> W0["las 6 pantallas ✓<br/>apagadas<br/>⛔ 6 migraciones,<br/>2 destructivas"]
+    W --> W1["las mesas ○<br/>sin decidir si son<br/>del teléfono"]
 
     style D5 fill:#e8f4e8,stroke:#5a8f5a
     style N4 fill:#e8f4e8,stroke:#5a8f5a
@@ -95,6 +97,8 @@ flowchart LR
     style T0 fill:#e8f4e8,stroke:#5a8f5a
     style I0 fill:#f0f0f5,stroke:#8a8aa0
     style K0 fill:#fff0e6,stroke:#c98a4b
+    style W0 fill:#fff0e6,stroke:#c98a4b
+    style W1 fill:#f0f0f5,stroke:#8a8aa0
 ```
 
 ✓ hecho · ○ pendiente y se puede hacer ya · ⛔ bloqueado por algo de fuera
@@ -466,11 +470,33 @@ podría llamarlos.
 
 ### Notificaciones — [notificaciones.md](notificaciones.md)
 
-Solo el plan, y bloqueado en el servidor. **El paso 0 está cerrado**: el
-hosting sale a Google, ejecuta artisan y el cron dispara. Falta escribir el
-endpoint de temas, el comando `notificaciones:enviar` y la línea de cron; el
-lado Flutter —Firebase, permiso y suscripción— no se puede empezar sin el
-endpoint que entrega los temas.
+**Las dos mitades escritas, y ni un push llegado todavía.** El servidor lleva
+desplegado desde el 25 de agosto —endpoint de temas, comando
+`notificaciones:enviar` y su disparo cada quince minutos— y la app se enchufó el
+**22 de septiembre de 2026**, el día siguiente a entrar en Play: era la única
+condición que faltaba, porque `firebase_messaging` mete `POST_NOTIFICATIONS` en
+el manifiesto y un identificador de dispositivo en el formulario de seguridad de
+datos, y eso no se cambia con una app en revisión.
+
+En la app: `Avisos` —permiso, suscripción, pintado en primer plano y abrir la
+pantalla al tocar—, `AvisosGuardados` —el catálogo y los temas anotados, que es
+lo que permite soltarlos al cerrar sesión cuando ya no hay token con el que
+preguntar—, la pantalla `/notificaciones` con sus tres interruptores, y la
+oferta del permiso una sola vez con el muro ya delante.
+
+**Y el servidor quedó listo el 23 de septiembre**: las credenciales de Firebase
+en los diecisiete, y **el cron, que no existía en ninguna de las dos cuentas** —o
+sea que `schedule:run` no había corrido nunca en ningún colegio, y con él tampoco
+`importaciones:marcar-abandonadas` ni `sesion:limpiar`—. De paso se midió lo que
+llevaba abierto desde agosto: **las dieciocho `APP_KEY` son distintas**, así que
+dos colegios no comparten temas de FCM. El detalle, con lo que salió mal y la
+predicción que falló, en [notificaciones.md](notificaciones.md) → «Lo comprobado
+en el servidor el 23 de septiembre».
+
+**Lo que falta:** (1) la prueba de punta a punta en un teléfono real, con el tipo
+Notas; (2) publicar los tres textos —política, seguridad de datos y ficha— el
+mismo día que la versión. Los avisos del muro siguen aparte, esperando a que
+`b369020` entre en una tanda.
 
 ### Estaciones de matrícula — [estaciones.md](estaciones.md)
 
@@ -588,20 +614,26 @@ se puede parar por eso. El push adelanta el aviso; la cola garantiza que nadie s
 quede invisible.
 
 Tres cosas medidas que siguen valiendo aunque el push haya salido de la lista.
-**No tenemos `firebase_messaging`** (solo `firebase_core` y `firebase_analytics`),
-así que hoy la app no recibe ningún push aunque el servidor lo publique. El
+**`firebase_messaging` ya está** —entró el 22 de septiembre de 2026 con el resto
+del frente de notificaciones; hasta ese día la app no recibía ningún push aunque
+el servidor lo publicara, que es lo que decía esta línea—. Lo que sigue sin estar
+comprobado es si llega: eso depende del punto de abajo. El
 disparo de Laravel **va cada quince minutos a propósito**, no por descuido: el
 motivo escrito en `8myvc/app/Console/Kernel.php` es que agrupar hace que un
 docente pasando una columna de treinta notas genere **un** aviso y no treinta, y
 el cron del sistema sí entra cada minuto — el cuarto de hora es una elección, no
 un techo.
 
-Y una tercera **que no se sabe, y que casi escribo aquí como un hecho**: cuántos
-de los diecisiete colegios tienen credenciales de Firebase puestas. Sin ellas el
-envío no hace nada, así que de eso depende que un push llegue siquiera. Hoy
-`8myvc/app/Console/Kernel.php` lo dice tal cual —**«cuántas las tienen HOY no se
-sabe desde aquí»**—, y **comprobarlo es mirar el `.env` de cada instalación, que
-solo puede correr Joseth**.
+Y una tercera que estuvo sin saberse un mes y **se cerró el 23 de septiembre de
+2026**: cuántos de los diecisiete colegios tienen credenciales de Firebase
+puestas. **Los diecisiete.** Sin ellas el envío no hace nada, así que de eso
+dependía que llegara un push siquiera.
+
+`8myvc/app/Console/Kernel.php` sigue diciendo **«cuántas las tienen HOY no se
+sabe desde aquí»**, y eso continúa siendo verdad *desde allí*: comprobarlo es
+mirar el `.env` de cada instalación, que solo puede correr Joseth. Lo corrió, y
+por eso lo que aquí se escribe no es una expectativa sino una medición con
+fecha — que es justo la distinción que esa frase estaba defendiendo.
 
 > **Cómo llegó esa frase a este documento, que es lo que vale de la anécdota.**
 > Hasta el 20 sep 2026 ese comentario decía *«es lo que **va a pasar** en los
@@ -804,9 +836,9 @@ producción **no** es el que probaron los verificadores. Es lo correcto —el `3
 lleva el fallo del horario—, pero conviene tenerlo escrito.
 
 **Lo que queda:** que Google apruebe la versión (horas a 3 días) y decidir cuándo
-se les avisa a los colegios. **Las notificaciones no bloquean nada**: entran como
-`1.1.0` cuando el servidor arregle lo suyo, y le llegan a todo el mundo solas
-([notificaciones.md](notificaciones.md)).
+se les avisa a los colegios. **Las notificaciones son justamente esa `1.1.0`**,
+escrita el 22 de septiembre de 2026 y sin subir todavía: le llegará a todo el
+mundo sola ([notificaciones.md](notificaciones.md)).
 
 [publicacion-play.md](publicacion-play.md) §10 tiene el formulario contestado
 pregunta por pregunta —**App Store pregunta lo mismo**—, por qué «Aplicar» envía
@@ -815,8 +847,11 @@ gris por un borrador a medias, los países que arrancan en 0 y las notas que van
 en `es-419` y no en `es-CO`.
 
 [ficha-play.md](ficha-play.md) y [politica-privacidad.md](politica-privacidad.md)
-tienen los textos. Si algún día entran las notificaciones, los dos hay que
-retocarlos: hay que declarar el identificador de dispositivo de FCM.
+tienen los textos, y los de notificaciones **ya están redactados y marcados
+`⏸ NOTIFICACIONES`**, sin publicar: el bloque de la ficha, el párrafo de FCM en
+la política y la fila del formulario de seguridad de datos donde el identificador
+de dispositivo pasa a servir también a «Funciones de la app». Los tres se
+publican **el mismo día** que la `1.1.0`, ni antes ni después.
 
 ### La web, publicada con un botón — [despliegue-web.md](despliegue-web.md)
 
@@ -917,3 +952,54 @@ el grupo. Ver [competencias.md](competencias.md) §9.
 caducó en su mitad de competencias** y lleva el aviso arriba: describía un modelo
 de dos pisos que se abolió y nombra un interruptor que no existe en el esquema.
 Su mitad de plantilla de notas sigue valiendo entera.
+
+### Votaciones — [votaciones.md](votaciones.md)
+
+**Las seis pantallas, escritas y apagadas el 22 de septiembre de 2026.** Hasta ese
+día esta app **no tenía nada de votaciones**: cero pantallas, cero modelos, cero
+llamadas y cero líneas en `docs/` —los aciertos de `grep candidato` en el repo eran
+todos de disciplina—. Ahora están las seis detrás de `Interruptores.votaciones`:
+la tarjeta de la portada, el aviso que se abre solo, el tarjetón con un cargo por
+pantalla, la confirmación, «ya votaste» y los resultados.
+[TarjetaDeVotacion](../lib/Widgets/TarjetaDeVotacion.dart),
+[HojaHoySeVota](../lib/Widgets/HojaHoySeVota.dart),
+[TarjetonScreen](../lib/Screens/TarjetonScreen.dart),
+[HojaConfirmarVoto](../lib/Widgets/HojaConfirmarVoto.dart),
+[YaVotasteScreen](../lib/Screens/YaVotasteScreen.dart),
+[ResultadosVotacionScreen](../lib/Screens/ResultadosVotacionScreen.dart),
+[VotacionesApi](../lib/Http/VotacionesApi.dart),
+[VotacionModel](../lib/Models/VotacionModel.dart),
+[VotacionPendiente](../lib/Utils/VotacionPendiente.dart) y
+[EstiloVotaciones](../lib/Utils/EstiloVotaciones.dart).
+
+**Lo que hace que el aviso no cueste una petición** es que el dato ya viene en el
+login: `App\Services\VotacionesPendientes` cuelga del contexto del usuario la clave
+`votaciones` **sólo cuando hay una elección abierta que esa persona no ha
+completado**, y la clave no aparece si no hay ninguna —contrato escrito en su
+docblock—. Con eso, la portada y la hoja de «Hoy se vota» se pintan sin preguntar
+nada, que es lo que importa cuando ochocientos teléfonos abren la app en el mismo
+medio minuto. La app lo toma en `LoginController.tomarUsuarioDe`, el único sitio
+por el que pasan las dos formas de entrar.
+
+**Y este interruptor no espera un 404: espera dos migraciones destructivas.** El
+módulo del backend se rehízo entero el 22 sep
+(`8myvc/docs/migracion/11-votaciones.md` §8) y su despliegue son seis migraciones,
+de las que la `400000` tira `vt_participantes` y la `600000` borra filas de
+`vt_votos`. Hasta que corran en un colegio, `en-accion-inscrito` **contesta 500 y
+no 404** —leía una columna tirada—, y `votos/store` **existe en los dos mundos y
+significa dos cosas distintas**: antes devolvía 200 con un `msg` dentro y
+reemplazaba el voto anterior, ahora es 201 o 409/423/403/422. Una app que lea los
+códigos contra un servidor sin desplegar leería un «ya votaste» como si el voto
+hubiera entrado, así que el `false` no es prudencia: es lo único correcto.
+
+**Las pruebas van después de probarlo a mano**, por decisión de Joseth. Las
+lecturas del contrato se dejaron públicas y separadas de la petición
+—`leerLaPapeleta`— justo para que se puedan probar sin encender nada, que es el
+mismo motivo por el que `leerLasEstaciones` está así.
+
+**Lo que no está y es una decisión pendiente: las mesas.** `mesas/{id}/abrir`
+existe para el niño de preescolar que no teclea su contraseña, con su cuenta atrás
+y su doble llave, y el voto guarda **dos personas**. Es una pantalla de *conducir*
+y no de *votar*, y nadie ha dicho todavía si la mesa la lleva un docente con su
+teléfono o con el computador del salón. Cuando se decida, es un módulo aparte con
+su propio interruptor. Ver [votaciones.md](votaciones.md) §6.

@@ -268,6 +268,66 @@ directorio con su `.env` y su base. El detalle, en
 No hace falta añadir el SDK de Google: se firma un JWT con `openssl_sign` y se
 pide el token con Guzzle, que ya está en el `composer.json`.
 
+### 3.bis Los avisos no dicen de qué hijo son — pedido el 23 de septiembre de 2026
+
+**Las tres piezas de arriba están hechas y desplegadas desde el 25 de agosto, y
+el lado de la app se enchufó el 22 de septiembre.** Lo que sigue es lo único que
+se pide ahora, y son cuatro textos.
+
+`EnviarNotificaciones.php` ya decidió la regla buena y **la aplicó en una sola
+fuente**:
+
+| Fuente | Texto de hoy | ¿Dice de quién? |
+|---|---|---|
+| `avisosDeMatricula` | «Laura pasó a Tesorería» | **sí** |
+| `avisosDeNotas` | «Hay 3 notas nuevas en Matemáticas» | no |
+| `avisosDeAsistencia` | «Se registraron 2 novedades de asistencia» | no |
+| `avisosDeDisciplina` | «Se anotó una situación. Ábrela para verla» | no |
+
+La regla está escrita en el docblock de `avisosDeMatricula`, con estas palabras:
+**«EL NOMBRE SÍ, EL MOTIVO NO»**, y razonada — `notificaciones.md` permite
+nombrar al menor y prohíbe el contenido. Las otras tres se escribieron antes y
+se quedaron sin ella.
+
+**Lo que cuesta, que es el motivo de pedirlo.** Un acudiente con dos hijos recibe
+«Hay 3 notas nuevas en Matemáticas» y **no sabe de cuál de los dos**. El aviso le
+obliga a abrir la app para saber **si le importa**, que es distinto de abrirla
+para ver el detalle — y lo segundo es el trato de este diseño, lo primero es un
+aviso que no cumple. Con tres acudidos, dos de cada tres avisos son para otro.
+
+**Lo que se pide**: el primer nombre del alumno delante, igual que en matrícula,
+que ya tiene el helper `primerNombreDe($alumnoId)` escrito y usado.
+
+```
+Notas        «Laura tiene 3 notas nuevas en Matemáticas»
+             «Laura tiene 1 nota nueva en Matemáticas»
+Asistencia   «Se registraron 2 novedades de asistencia de Laura»
+Disciplina   «Se anotó una situación de Laura. Ábrela para verla»
+```
+
+**Lo que NO se pide, y conviene que quede dicho porque es la tentación de al
+lado:** la nota, el motivo de la situación, ni si fue falta o tardanza. Joseth lo
+preguntó el 23 de septiembre —«cuando el anuncio solo es una cosa, ¿sí daría el
+detalle?»— y la respuesta es no, por tres razones que no dependen del gusto:
+
+1. El aviso se ve en la **pantalla bloqueada**, en un bus, y puede no ser el
+   teléfono del acudiente.
+2. El push llegaría **aunque el colegio tenga las notas bloqueadas**
+   (`alumnos_can_see_notas = 0`): la app le negaría la nota a quien la
+   notificación ya se la dijo.
+3. La política de privacidad **ya está redactada y sin publicar**, y dice que el
+   cuerpo del aviso no lleva nada personal. Se publica el mismo día que la
+   versión `1.1.0`. Cambiar el contenido obliga a reescribirla antes de ese día.
+
+El nombre no entra en ninguna de las tres: es lo que ya hace matrícula.
+
+**El coste en consultas, que en un hosting compartido se pregunta siempre.**
+`primerNombreDe` es un `SELECT` por alumno avisado, no por aviso. Las tres
+fuentes agrupan por `alumno_id`, así que son tantas como familias avisadas en esa
+pasada — y el comando corre cada quince minutos, no por petición. Si aun así
+sobra, sale gratis uniendo `alumnos` en las tres consultas, que ya filtran por
+`alumno_id`.
+
 ---
 
 ## 4. La versión mínima — un campo, no una ruta

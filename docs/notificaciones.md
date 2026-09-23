@@ -392,54 +392,93 @@ puede sacar— y por eso no protege nada por sí mismo: lo que protege es que el
 nombre del tema no se pueda adivinar. El JSON de la cuenta de servicio **sí** es
 un secreto, y ese es el que nunca sale del servidor.
 
-### En la app
+### En la app — escrita y enchufada el 22 de septiembre de 2026
 
-**Empezado el 26 de agosto de 2026, por la mitad que no toca el manifiesto.**
-
-Hecho y probado, sin dependencias nuevas:
-
-- [NotificacionesApi](../lib/Http/NotificacionesApi.dart) — el cliente de
-  `GET notificaciones/temas`, sus modelos y `PendientesNotificaciones`.
-- [PreferenciasAvisos](../lib/Utils/PreferenciasAvisos.dart) — qué avisos quiere
-  este teléfono, una clave por tipo, todas encendidas por defecto.
-- [notificaciones_test](../test/notificaciones_test.dart), donde las que
-  importan son tres: que **al cerrar sesión se sueltan todos** los temas y no
-  solo los encendidos, que el campo `colegio` **se lee en sus dos formas**, y que
-  los dos temas de colegio no salen iguales — que era el fondo del fallo.
-
-**Los temas no se derivan en la app, y es deliberado.** Se piden hechos y se usan
-tal cual. Si la app supiera componer `a_` + HMAC habría dos sitios donde
-escribirlo mal, y uno de ellos **no da error**: suscribirse a un tema que no
-existe es válido en FCM, así que el aviso se perdería en silencio — el fallo más
-caro de este diseño, y ya anotado en el propio código del backend.
-
-**Lo que falta necesita una decisión, no más código.** `firebase_messaging` mete
+**El día que la app entró a Play se levantó la única condición que faltaba.** Lo
+que bloqueaba esto no era código: `firebase_messaging` mete
 `POST_NOTIFICATIONS` en el manifiesto y un identificador de dispositivo en lo
-que hay que declarar, y **la app está en revisión de Google ahora mismo** con
-`1.0.0 (3)` en prueba cerrada. Ver «Fuera del código», abajo: eso deja de ser
-papeleo posterior y pasa a ser condición previa.
+que hay que declarar, y la app estaba en revisión. Publicada ya, entra.
 
-Dependencias que hará falta añadir ese día: `firebase_messaging` y
-`flutter_local_notifications` — esta última porque FCM no pinta nada si la app
-está abierta, y ahí hay que mostrarlo uno mismo. `firebase_core` ya está, y
-`Firebase.initializeApp()` ya se llama en `main.dart` para la analítica.
+| Pieza | Dónde |
+|---|---|
+| El cliente de `GET notificaciones/temas` | [NotificacionesApi](../lib/Http/NotificacionesApi.dart) — de agosto, sin tocar salvo un `TemasDeNotificacion.deCuerpo` para poder releer lo guardado |
+| Las preferencias de este teléfono | [PreferenciasAvisos](../lib/Utils/PreferenciasAvisos.dart) — de agosto, sin tocar |
+| Lo que el teléfono recuerda | [AvisosGuardados](../lib/Utils/AvisosGuardados.dart) |
+| El servicio: permiso, suscripción, pintado y tap | [Avisos](../lib/Utils/Avisos.dart) |
+| La oferta del permiso, una vez en la vida | [OfrecerAvisos](../lib/Widgets/OfrecerAvisos.dart) |
+| La pantalla de ajustes | [NotificacionesScreen](../lib/Screens/NotificacionesScreen.dart), ruta `/notificaciones` |
+| La llave del navegador, global | [Navegador](../lib/Utils/Navegador.dart) |
 
-Y lo demás:
+Y lo enganchado: `Avisos.arrancar()` en `main.dart` después de
+`Firebase.initializeApp()`; `Avisos.sincronizar()` al entrar y al recuperar
+sesión; `Avisos.soltarTodo()` en **las dos** puertas de salida —`logout()` y
+`_tirarLaSesion()`, que es por donde se sale con un 401 sin tocar el menú—; y la
+entrada «Notificaciones» en la rama de familias del menú lateral.
 
-- **Android**: `google-services.json`, y el permiso `POST_NOTIFICATIONS`, que
-  desde Android 13 hay que **pedir** en tiempo de ejecución. Se pide después de
-  entrar y con una frase que explique para qué, no a bocajarro al abrir por
-  primera vez: preguntado a secas, mucha gente dice que no y no vuelve a
-  aparecer.
+#### Cuatro decisiones que no estaban en el plan y que hay que conocer
+
+**Los temas a los que está apuntado el teléfono se anotan en disco.** Firebase no
+sabe decir «a qué estoy apuntado», y al cerrar sesión ya no hay token con el que
+preguntarle al colegio de qué hay que desapuntarse. Sin ese apunte, soltarlos
+todos era imposible — y soltarlos todos es lo que impide que el teléfono
+prestado siga recibiendo los avisos del alumno anterior. Se anota **lo que se
+pidió**, no lo que se confirmó: desapuntarse de un tema que no se tenía no hace
+nada, y quedarse apuntado a uno que no se anotó es justo el fallo que esto evita.
+
+**El catálogo también se guarda, y se refresca como mucho una vez por semana.**
+Dos motivos distintos. Uno, que apagar un interruptor no puede costar una
+petición al colegio: con el catálogo en el teléfono, un toque son cero
+peticiones al servidor y una llamada a Google. Dos, que preguntarlo en cada
+arranque serían cientos de peticiones diarias para recibir siempre lo mismo — lo
+que cambia la lista es que un acudido se matricule o que su matrícula termine, y
+eso pasa un par de veces al año. **Pero no preguntarlo nunca tampoco vale**: el
+servidor solo devuelve matrículas vivas, así que un acudido que desaparece del
+catálogo es uno del que hay que desapuntarse, y sin refrescar, el acudiente de
+quien se fue hace tres años seguiría recibiendo sus avisos. La semana es el
+punto medio; entrar y abrir la pantalla de Notificaciones lo refrescan igual sin
+esperarla.
+
+**Solo se mueve la diferencia.** `Avisos.calcularCambio` compara lo querido con
+lo anotado y devuelve qué coger y qué soltar. Nada de soltarlo todo y volver a
+cogerlo en cada arranque: sería una ventana, corta pero real, en la que los
+avisos no llegan. Es la parte probada, porque es la que decide.
+
+**El permiso se ofrece una sola vez, y con el muro ya delante.** Desde Android
+13 el sistema pregunta **una sola vez**: si se dice que no, no vuelve a
+preguntar y hay que ir a los ajustes del teléfono a mano. Así que primero una
+frase que dice qué se va a avisar y solo si dice que sí se gasta la pregunta del
+sistema. Quien diga «ahora no» no ha gastado nada: lo tiene en el menú. Y va
+después de que el muro cargue, no al abrir la app, porque ahí ya se ve de qué
+colegio y de quién va lo que se ofrece.
+
+#### Lo que el manifiesto y Gradle pedían
+
+- `POST_NOTIFICATIONS` en `AndroidManifest.xml`.
+- `com.google.firebase.messaging.default_notification_channel_id` en el
+  manifiesto, apuntando al mismo canal que crea `Avisos.arrancar()`. Hacen falta
+  los dos: cuando el aviso llega con la app cerrada no hay Dart corriendo para
+  elegir canal, y **una notificación sin canal no se muestra** en Android 8 y
+  arriba.
+- `isCoreLibraryDesugaringEnabled` y `desugar_jdk_libs` en
+  `android/app/build.gradle.kts`. Lo exige el AAR de
+  `flutter_local_notifications` aunque no se use la parte que lo necesita de
+  verdad —programar avisos a una hora—; sin eso el build ni empieza.
+
+**Lo que NO cambió, y conviene que siga así:** el manifiesto fusionado sigue sin
+`AD_ID` —el `tools:node="remove"` aguanta— y lo que añade Firebase Messaging son
+`VIBRATE`, `c2dm.RECEIVE` y el receptor dinámico, ninguno de los cuales hay que
+justificarle a Play. Comprobado en el manifiesto fusionado, no supuesto.
+
+#### Lo que sigue sin estar
+
 - **iOS**: una clave de APNs, que requiere cuenta de desarrollador de Apple de
-  pago. Si aún no la hay, esto sale primero en Android y en iOS después.
-- **Al entrar**: pedir los temas al servidor y suscribirse a los que el usuario
-  no haya apagado. **Al cerrar sesión**: desuscribirse de todos, sin falta —si
-  no, el teléfono de un colegio o el que se presta sigue recibiendo avisos del
-  alumno anterior—.
-- **Al tocar el aviso**: abrir la pantalla que toca —notas, asistencia,
-  disciplina, muro—, no solo la app. Es la diferencia entre un aviso útil y uno
-  que obliga a buscar.
+  pago. Ver [publicacion-app-store.md](publicacion-app-store.md). `Avisos` es
+  Android por el mismo motivo que la analítica y lo dice en su docblock.
+- **El `alumno_id` del aviso no se usa.** Viene en `data` para `matricula`, pero
+  las pantallas del acudiente no reciben argumentos: resuelven el acudido por
+  dentro con `pedirAcudido`. El dato ya llega el día que lo reciban.
+- **Los temas del colegio siguen apagados**, que es lo de la sección de arriba:
+  `b369020` está en `main` y sin desplegar.
 
 ### Fuera del código
 
@@ -474,19 +513,159 @@ menciona—.
 
 ```mermaid
 flowchart LR
-    V["0 · Verificar el hosting ✓<br/>salidas HTTPS, artisan<br/>y cron — cerrado"] --> B["1 · Backend<br/>temas + comando<br/>+ cron"]
-    B --> A["2 · App<br/>Firebase + permiso<br/>+ suscripción"]
-    A --> T["3 · Un solo tipo<br/>(Muro)<br/>de punta a punta"]
-    T --> P["4 · Pantalla de<br/>preferencias"]
-    P --> R["5 · Los otros<br/>cuatro tipos"]
-    R --> D["6 · Política y<br/>ficha de Play"]
+    V["0 · Hosting ✓<br/>salidas HTTPS, artisan<br/>y cron"] --> B["1 · Backend ✓<br/>temas + comando<br/>+ cron"]
+    B --> A["2 · App ✓<br/>Firebase + permiso<br/>+ suscripción"]
+    A --> P["4 · Pantalla de<br/>preferencias ✓"]
+    P --> R["5 · Los tres tipos<br/>por alumno ✓"]
+    R --> C["⛔ Credenciales de<br/>Firebase en cada .env<br/>— solo Joseth"]
+    C --> T["3 · De punta a punta<br/>en un teléfono<br/>(Notas)"]
+    T --> D["6 · Política, seguridad<br/>de datos y ficha<br/>— el mismo día"]
 ```
 
-El paso 0 está cerrado, el cron incluido; ver «Lo comprobado en el servidor». El
-paso 3 es a propósito el tipo **más tonto** —una publicación del muro, sin
-datos de nadie— porque el objetivo de esa fase es probar la tubería entera, no
-el contenido. Cuando llegue un aviso de muro a un teléfono real, los otros
-cuatro son la misma cañería con otra consulta.
+**El orden cambió y merece la pena decir por qué.** Los pasos 4 y 5 se
+adelantaron al 3 porque el 3 ya no es lo que era: se escribió pensando que el
+tipo del muro era el más tonto para probar la tubería, y resulta que **es el
+único roto** —`colegio_muro` sin prefijo, sección de arriba—. Con la prueba
+teniendo que hacerse con un tipo por alumno, escribir los tres y la pantalla
+cuesta lo mismo que escribir uno, y la prueba sale mejor: se prueba lo que se va
+a publicar.
+
+### Lo comprobado en el servidor el 23 de septiembre de 2026
+
+Dos cosas que este documento y el del backend llevaban escritas como **desconocidas**,
+y que resultaron una mal y la otra bien.
+
+**No existía ningún cron. En ninguna de las dos cuentas.** `crontab -l` devolvía
+vacío en `micolevi` y solo `MAILTO=""` en `micolev1`. O sea que `schedule:run`
+**nunca había corrido en ningún colegio**: ni `notificaciones:enviar`, ni
+`importaciones:marcar-abandonadas` —las importaciones que se cuelgan en
+`en_proceso` se quedaban así para siempre—, ni `sesion:limpiar`.
+
+Y `8myvc/app/Console/Kernel.php:66` decía, en presente, que «el de `schedule:run`
+**ya está**, uno por colegio, y esa decisión es la que hace que añadir esto sean
+tres líneas aquí en vez de dieciséis visitas a paneles de cPanel». **Era falso.**
+Es exactamente la trampa que ese mismo archivo ya se había cazado a sí mismo un
+par de semanas antes con «lo que *va a pasar* en los dieciséis»: una frase
+escrita en presente sobre algo que nunca llegó a ocurrir, que se lee como un
+hecho medido y que nadie reescribe porque no lleva fecha dentro. Ver
+[estado.md](estado.md) → «Un comentario en futuro describe un día que ya pasó».
+
+Puestos ese día: **dieciséis líneas en `micolev1`** —una por colegio, con su
+ruta, nunca un bucle en una sola línea: dieciséis arranques de Laravel cada
+minuto en un servidor de un núcleo es otra cosa— y **una en `micolevi`** para el
+LAL vivo, que ningún glob alcanza.
+
+**`lal.micolevirtual.com` queda fuera a propósito.** Es el subdominio de pruebas
+del traslado, con una copia de la base del LAL vivo, y el ensayo lleva semanas
+parado ([TRASLADO-LAL.md](../../8myvc/docs/TRASLADO-LAL.md)). Cumple el patrón
+que buscan los bucles —su propio documento lo avisa— así que se coló en el
+primer intento. Con cron habría publicado avisos calculados sobre una base
+congelada.
+
+#### Seis colegios no tenían **ningún** comando propio, y nadie podía saberlo
+
+**Lo que se buscaba era por qué `notificaciones:enviar` no existía en `demo`.
+Lo que había era más grande.** En seis colegios —`coal`, `colbosque`,
+`comad-san-andres`, `demo`, `eal` y `lal`— artisan no conocía **ninguno** de los
+comandos de la aplicación: ni `notificaciones:enviar`, ni `sesion:limpiar`, ni
+`importaciones:marcar-abandonadas`, ni `colegio:parte`, ni `correo:probar`.
+Nunca los había conocido.
+
+**La causa, que costó dos hipótesis equivocadas.** Esos seis tenían `vendor/`
+por symlink a `/home/micolev1/laravel_compartido`, y el `autoload_psr4.php` de
+ahí lleva esta línea:
+
+```php
+$baseDir = dirname($vendorDir).'/maranathaarauca.micolevirtual.com/8myvc';
+```
+
+O sea que los seis **cargaban sus clases `App\` del `app/` de
+maranathaarauca**. Funcionaba porque el código es idéntico en los diecisiete
+—mismo commit— y por eso nadie lo notó nunca. Pero Laravel **no registra los
+comandos por nombre: escanea un directorio** y deriva la clase restándole
+`app_path()`. En esos seis el escaneo caía en el árbol de maranathaarauca y la
+resta se hacía contra su propio `app_path()`, que es otro: la resta no casa,
+sale un nombre de clase imposible, y **el comando se descarta sin un solo
+error**.
+
+Ése es el detalle que lo hizo difícil: `class_exists('App\Console\Commands\EnviarNotificaciones')`
+devolvía **`true`**. Cargar por nombre funcionaba perfectamente; descubrir por
+ruta, no. Las dos hipótesis que se probaron antes —classmap desactualizado,
+caché de `bootstrap/cache/`— eran razonables y **las dos eran falsas**, y lo que
+las descartó fue medir, no releer.
+
+**Lo que lo destapó fue una pregunta de una sola línea:** si el problema es el
+escaneo, no falta *un* comando, faltan **todos**. `php artisan list | grep -E
+'colegio:|sesion:|importaciones:'` en demo no devolvió nada, y ahí se acabó la
+discusión.
+
+**El arreglo**: darles `vendor/` propio, que es lo que ya tenían los once que
+funcionaban. Por colegio, `rm vendor` —era un symlink—, `cp -a` del compartido y
+`composer dump-autoload -o`, que reescribe `$baseDir` apuntando a su propia
+carpeta. Cuesta **9.626 inodos por copia**. Censo final: los diecisiete a `1`.
+
+**Y deja dos cosas para el backend**, que allí son documentación desfasada:
+
+- La lista de los que comparten `vendor/` estaba mal **por los dos lados**:
+  decía `maranathaarauca` (que ya no compartía) y no decía `demo` (que sí). Dos
+  errores que se cancelaban en el total, así que **el número no avisó**.
+- Si ya no queda ningún symlink, **desaparece la trampa número uno del
+  despliegue** —«un `composer install` dentro de uno cambia a los otros cinco»— y
+  esos seis dejan de tener que desplegarse como bloque.
+
+**La lección, que no es «mide»:** las tres hipótesis eran sobre *por qué no
+carga*, y la clase **sí cargaba**. La pregunta que resolvió el caso no fue más
+profunda, fue **más ancha**: en vez de insistir en ese comando, preguntar si
+faltaban los demás. Un fallo que parece de una pieza y es de todas se reconoce
+por eso, y ninguna de las tres primeras preguntas lo habría encontrado.
+
+**Y las `APP_KEY` son todas distintas.** Ésta es la que salió bien. Se comparó el
+hash md5 de cada una —el hash, no la clave: contesta la pregunta sin sacar nada
+del servidor— en las dieciocho instalaciones: las diecisiete de `micolev1`, el
+`lal` de pruebas incluido, más el LAL vivo de la otra cuenta. **Dieciocho hashes,
+dieciocho valores, ninguno vacío.**
+
+Eso cierra el pendiente que el backend tenía abierto en
+`docs/migracion/29-los-env-no-son-uniformes.md` §1, y que era el único capaz de
+convertir este frente en una fuga: si dos colegios compartieran `APP_KEY`
+compartirían los temas de FCM, y un acudiente recibiría los avisos de un menor de
+otro colegio **sin que nada diera error** —publicar en un tema ajeno es válido—.
+La premisa era que `key:generate` había corrido en cada instalación, y nadie la
+había medido porque un colegio nuevo se crea **copiando otro**. Ahora está medida.
+
+Y una predicción que falló, que es lo que la hace digna de anotarse: se esperaba
+que el `lal` de pruebas compartiera clave con el LAL vivo, por ser copia suya.
+**No la comparte.** La copia se hizo sin arrastrar el `.env`.
+
+Las cuentas, ya que estaban: dieciséis líneas de cron en `micolev1` son quince
+colegios más `demo`; con el LAL vivo son **dieciséis colegios y `demo`**, que es
+justo lo que devuelve el bucle de despliegue.
+
+### Lo que falta, en orden
+
+1. ~~**Las credenciales de Firebase en el `.env` de cada colegio.**~~
+   **HECHO el 23 de septiembre de 2026.** El JSON de la cuenta de servicio está
+   en el `storage/app/` de cada uno y `FCM_PROYECTO=micolevirtual-mobile` en cada
+   `.env`. Comprobado corriendo `notificaciones:enviar`: deja de decir «Firebase
+   no está configurado en este colegio» y recorre las cinco fuentes, que es lo
+   que prueba que `estaConfigurado()` dice que sí. La API de Firebase Cloud
+   Messaging (V1) está habilitada en el proyecto `micolevirtual-mobile`, con el
+   id de remitente `276868175794` — el mismo `project_number` del
+   `google-services.json`.
+2. **La prueba de punta a punta en un teléfono real**, con el tipo **Notas**:
+   entrar, conceder el permiso, que un docente publique una nota, esperar al
+   cuarto de hora y ver llegar el aviso — con la app cerrada, en segundo plano y
+   abierta, que son tres caminos distintos en el código. Y tocarlo, que abra
+   «Mis notas».
+3. **Los tres textos, el mismo día que la versión.** Están redactados y marcados
+   `⏸ NOTIFICACIONES`: la política de privacidad, el formulario de seguridad de
+   datos y el bloque de la ficha de Play. Ver «Fuera del código». Ni antes
+   —prometerían un tratamiento que no ocurre— ni después —la app estaría
+   recogiendo un identificador que la política no menciona—.
+
+Y una cosa que **no** bloquea: el despliegue de `b369020`. Mientras no esté,
+`PendientesNotificaciones.temasDelColegio` sigue en `false` y los avisos del
+muro no salen; los tres tipos por alumno funcionan igual.
 
 ## Si el hosting no deja salir
 
