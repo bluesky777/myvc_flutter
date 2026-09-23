@@ -167,6 +167,10 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         return Icons.event_busy_outlined;
       case TipoDeAviso.disciplina:
         return Icons.gavel_outlined;
+      case TipoDeAviso.matricula:
+        return Icons.assignment_turned_in_outlined;
+      case TipoDeAviso.compromiso:
+        return Icons.handshake_outlined;
     }
   }
 

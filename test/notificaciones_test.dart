@@ -185,13 +185,39 @@ void main() {
 
       expect(await PreferenciasAvisos.quiere(TipoDeAviso.disciplina), isFalse);
       expect(await PreferenciasAvisos.quiere(TipoDeAviso.notas), isTrue);
-      expect(
-        await PreferenciasAvisos.encendidos(),
-        [TipoDeAviso.notas, TipoDeAviso.asistencia],
-      );
+      expect(await PreferenciasAvisos.encendidos(), [
+        TipoDeAviso.notas,
+        TipoDeAviso.asistencia,
+        TipoDeAviso.matricula,
+        TipoDeAviso.compromiso,
+      ]);
     });
 
-    test('una clave por tipo, para poder añadir un cuarto sin migrar nada', () {
+    test('los cinco tipos, los mismos que publica el servidor', () {
+      // `TemasDeNotificacion::TIPOS` del backend tiene estos cinco. Durante un
+      // mes aquí hubo tres, y los avisos de matrícula y compromiso se
+      // publicaban sin que nadie estuviera suscrito — que en FCM es válido y no
+      // da error, así que el servidor los daba por mandados. Si el backend
+      // añade un sexto, esto se queda corto otra vez y tampoco fallará nada:
+      // por eso la lista se compara, no se espera a que algo reviente.
+      expect(TipoDeAviso.values.map((t) => t.clave), [
+        'notas',
+        'asistencia',
+        'disciplina',
+        'matricula',
+        'compromiso',
+      ]);
+    });
+
+    test('un tipo que el servidor no mande para ese alumno no se inventa', () async {
+      // El colegio que no tenga estaciones de matrícula no devuelve ese tema.
+      // `temasDe` salta los que faltan en vez de componer un nombre a mano.
+      final temas = await traerTemas(ServidorFingido(conTemas()));
+
+      expect(temas.temasDe(TipoDeAviso.values), hasLength(6));
+    });
+
+    test('una clave por tipo, para poder añadir un sexto sin migrar nada', () {
       expect(PreferenciasAvisos.claveDe(TipoDeAviso.notas), 'avisos_notas');
       expect(
         TipoDeAviso.values.map(PreferenciasAvisos.claveDe).toSet(),

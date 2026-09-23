@@ -163,16 +163,33 @@ class TemasDeUnAlumno {
   }
 }
 
-/// Los tres tipos de aviso que cuelgan de un alumno.
+/// Los cinco tipos de aviso que cuelgan de un alumno.
 ///
 /// La clave es la que usa el servidor y **no se traduce**: viaja dentro del
 /// nombre del tema. El rótulo sí es nuestro, porque es lo que lee una familia.
+///
+/// **Tiene que decir exactamente lo mismo que `TemasDeNotificacion::TIPOS` del
+/// backend, y durante un mes no lo dijo.** Aquí había tres y allí cinco, así
+/// que los avisos de `matricula` y de `compromiso` se publicaban y **no los
+/// recibía nadie** — publicar en un tema sin suscriptores es válido en FCM y no
+/// devuelve error, de modo que el servidor los daba por mandados y el teléfono
+/// nunca supo que existían. Es el fallo más caro de este diseño y el que su
+/// propio docblock avisaba: *«suscribirse a un tema que no existe es válido, así
+/// que el aviso se perdería en silencio»*. Medido el 23 de septiembre de 2026.
+///
+/// Si el backend añade un sexto, esta lista se queda corta otra vez y **tampoco
+/// dará error**. La forma de enterarse es comparar las dos listas, no esperar a
+/// que algo falle.
 enum TipoDeAviso {
   notas('notas', 'Notas', 'Cuando le publican una nota nueva.'),
   asistencia('asistencia', 'Asistencia',
       'Cuando le anotan una falta o una tardanza.'),
   disciplina('disciplina', 'Disciplina',
-      'Cuando le registran una situación de convivencia.');
+      'Cuando le registran una situación de convivencia.'),
+  matricula('matricula', 'Matrícula',
+      'Cuando avanza o se devuelve un paso de su matrícula.'),
+  compromiso('compromiso', 'Compromisos',
+      'Cuando le entregan un compromiso académico o su resultado.');
 
   const TipoDeAviso(this.clave, this.rotulo, this.explicacion);
 
