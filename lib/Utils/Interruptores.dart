@@ -230,4 +230,41 @@ class Interruptores {
   /// **No depende del push**, que Joseth descartó el 20 sep 2026. Sirve igual
   /// entrando a mano, que es como se va a usar el primer año.
   static const bool miMatricula = false;
+
+  /// Votar desde el teléfono: personero, contralor y los demás cargos.
+  ///
+  /// **Lo que espera es un despliegue, y de los grandes.** El módulo de
+  /// votaciones de `8myvc` se rehízo de raíz el 22 de septiembre de 2026
+  /// (`docs/migracion/11-votaciones.md` §8) y su despliegue son **seis
+  /// migraciones, dos de ellas destructivas**: la `400000` tira
+  /// `vt_participantes` y la `600000` borra filas de `vt_votos`. Van colegio por
+  /// colegio, y hasta que corran en uno **la mitad de lo que esta app llama no
+  /// existe ahí**:
+  ///
+  /// - `votaciones/en-accion-inscrito` **llevaba en 500** desde la migración del
+  ///   voto, porque leía una columna tirada. O sea que en un colegio a medio
+  ///   desplegar no da 404: da 500, que es peor de diagnosticar.
+  /// - `resultados/{id}` y `censo/*` son rutas **nuevas**: ahí sí, 404.
+  /// - `votos/store` **existe en los dos mundos y contesta distinto**. Antes
+  ///   devolvía 200 con un `msg` dentro y **reemplazaba el voto anterior**;
+  ///   ahora es 201, o 409/423/403/422. Una app que lea los códigos contra un
+  ///   servidor viejo leería un «ya votaste» como si el voto hubiera entrado.
+  ///
+  /// Ese tercer punto es el que hace que este interruptor no sea prudencia sino
+  /// lo único correcto: no es que falte una pantalla, es que **el mismo endpoint
+  /// significa dos cosas distintas** según si el colegio está desplegado.
+  ///
+  /// **Y como en [estaciones], encenderlo no basta: hacen falta dos puertas.**
+  /// La segunda la contesta el propio servidor —si hay una votación abierta en
+  /// la que esta persona vota—, y sale gratis: viene **dentro de la respuesta
+  /// del login**, en la clave `votaciones` que cuelga
+  /// `App\Services\VotacionesPendientes`. Apagado esto, la tarjeta de la portada
+  /// no se pinta y el aviso no se abre, así que un colegio sin desplegar no ve
+  /// nada nuevo y no se gasta ni una petición.
+  ///
+  /// **Lo que hay escrito detrás de este `false`** son las seis pantallas
+  /// enteras —la tarjeta del muro, el aviso que se abre solo, el tarjetón, la
+  /// confirmación, «ya votaste» y los resultados— con su capa de datos y sus
+  /// modelos. Ver `docs/votaciones.md`.
+  static const bool votaciones = false;
 }
