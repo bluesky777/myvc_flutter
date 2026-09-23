@@ -43,6 +43,39 @@ Map<String, int> mapaDeEnteros(dynamic valor) {
   return resultado;
 }
 
+/// El valor como decimal, con respaldo. Mismo motivo que [enteroO]: un
+/// porcentaje calculado en SQL puede llegar `double`, `int` o `String` según la
+/// conexión, y los tres son el mismo número.
+double decimalO(dynamic valor, [double respaldo = 0]) {
+  if (valor == null) return respaldo;
+  if (valor is num) return valor.toDouble();
+  return double.tryParse(valor.toString().trim().replaceAll(',', '.')) ??
+      respaldo;
+}
+
+/// Un booleano del backend, que casi nunca es un booleano.
+///
+/// Las columnas de interruptor son `tinyint(1)`, así que llegan **0 o 1**; y
+/// según salgan por Eloquent o por `DB::select` pueden llegar como número o
+/// como cadena. Devuelve null cuando **el servidor no lo dijo**, que es distinto
+/// de que dijera que no: esa diferencia es la que deja que una app vieja hable
+/// con un servidor nuevo sin inventarse la respuesta que falta.
+///
+/// **Y hay un caso que motivó tenerlo aquí**: `candidatos/conaspiraciones`
+/// devolvía `votado: []` hasta el 22 de septiembre de 2026, y `[]` en JavaScript
+/// es cierto — el front web llevaba años creyendo que estaba todo votado. Una
+/// lectura que no se cree el tipo es lo que evita repetir eso en Dart.
+bool? siONo(dynamic valor) {
+  if (valor == null) return null;
+  if (valor is bool) return valor;
+  if (valor is num) return valor != 0;
+
+  final crudo = '$valor'.trim().toLowerCase();
+  if (crudo.isEmpty || crudo == 'null') return null;
+
+  return crudo == '1' || crudo == 'true' || crudo == 'si' || crudo == 'sí';
+}
+
 /// El texto, o null si no vino. Nunca la cadena 'null'.
 String? texto(dynamic valor) {
   if (valor == null) return null;

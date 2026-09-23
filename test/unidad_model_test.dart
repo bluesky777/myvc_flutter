@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myvc_flutter/Http/UnidadesApi.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
+// `decimalO` se mudó aquí el 22 sep 2026, desde UnidadModel. Ver la nota que
+// quedó en su sitio.
+import 'package:myvc_flutter/Utils/JsonBackend.dart';
 
 void main() {
   group('una unidad del resumen de /asignaturas/listasignaturas', () {

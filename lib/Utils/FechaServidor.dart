@@ -33,6 +33,63 @@ bool esElMismoDia(DateTime a, DateTime b) =>
 String formatoDia(DateTime? d) =>
     d == null ? '—' : '${_dd(d.day)}/${_dd(d.month)}/${d.year}';
 
+/// Una columna `date` del backend, sin hora y sin zona.
+///
+/// `vt_votaciones.fecha_inicio` y `fecha_fin` son `date`, no `datetime`, y el
+/// backend las compara recortando a `Y-m-d`. Pasarlas por `DateTime.parse` a
+/// secas funciona, pero deja una medianoche que invita a restarle horas a algo
+/// que **no tiene hora**. Esto devuelve el día a secas, en local, que es con lo
+/// que se puede contar cuántos días faltan sin que la zona corra la cuenta.
+DateTime? soloElDia(dynamic crudo) {
+  final texto = crudo?.toString().trim() ?? '';
+  if (texto.isEmpty || texto == 'null') return null;
+
+  final leido = DateTime.tryParse(texto);
+  if (leido == null) return null;
+
+  return DateTime(leido.year, leido.month, leido.day);
+}
+
+/// La hora de un voto, pasada a hora de Bogotá.
+///
+/// **Es la excepción a la regla de [formatoDiaYHora], y es la única.**
+/// `vt_votos.created_at` se sella en **UTC** mientras el resto del sistema
+/// guarda hora de Bogotá; el backend lo dejó escrito a propósito
+/// (`RelojUnicoTest::SELLAN_EN_UTC`) y decidió que **convertir es cosa del
+/// front**, porque ponerle el reloj de Bogotá a esa columna metería dos relojes
+/// en la misma columna
+/// (`8myvc/docs/migracion/11-votaciones.md` §8, punto 2 de lo que queda).
+///
+/// Son cinco horas, y sin restarlas un voto de las 8:15 de la mañana se pinta
+/// **a la 1:15 de la tarde**: una hora perfectamente creíble, que es lo que hace
+/// que el error no se note.
+///
+/// **Se restan cinco a mano y no se llama a `toLocal()`.** La app la usan
+/// dieciséis colegios colombianos, o sea UTC−5 siempre; `toLocal()` daría la
+/// zona del teléfono, y el teléfono de alguien en viaje —o con la zona mal
+/// puesta, que en una tablet compartida pasa— pintaría la hora de otro sitio.
+/// Colombia no tiene horario de verano, así que el desplazamiento es fijo y no
+/// hace falta una tabla de zonas.
+///
+/// Admite las dos formas en las que esa columna llega: `postStore` devuelve el
+/// modelo y la serializa con Z (`2026-09-22T13:15:00.000000Z`), y la constancia
+/// del 409 sale de `DB::select`, o sea el datetime crudo de MySQL
+/// (`2026-09-22 13:15:00`) — sin Z, que Dart leería como local.
+DateTime? horaDeUnVotoEnBogota(dynamic crudo) {
+  final texto = crudo?.toString().trim() ?? '';
+  if (texto.isEmpty || texto == 'null') return null;
+
+  final leido = DateTime.tryParse(texto);
+  if (leido == null) return null;
+
+  // Lo que se guardó es UTC, venga con Z o sin ella: se reconstruye en UTC con
+  // los mismos números y de ahí se pasa a Bogotá.
+  final enUtc = DateTime.utc(leido.year, leido.month, leido.day, leido.hour,
+      leido.minute, leido.second);
+
+  return enUtc.subtract(const Duration(hours: 5));
+}
+
 /// dd/mm/aaaa - h:mm a. m., para cuando la hora también importa.
 ///
 /// Se pintan los números tal cual vienen, sin pasar por toLocal(). El backend

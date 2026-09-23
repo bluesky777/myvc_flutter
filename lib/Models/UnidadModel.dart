@@ -117,13 +117,11 @@ String porcentajeEscrito(double valor) {
       : '${valor.toStringAsFixed(1)}%';
 }
 
-/// El número con el que llega un porcentaje, con cero por respaldo.
-///
-/// Los porcentajes salen de columnas decimales que PDO puede entregar como
-/// cadena —'33.33'— o como número, y una unidad sin porcentaje no es un error:
-/// es una unidad que todavía no vale nada.
-double decimalO(dynamic valor) {
-  if (valor == null) return 0;
-  if (valor is num) return valor.toDouble();
-  return double.tryParse(valor.toString().trim().replaceAll(',', '.')) ?? 0;
-}
+// `decimalO` vivía aquí y se fue a `Utils/JsonBackend.dart` el 22 de septiembre
+// de 2026, sin cambiarle una coma de comportamiento.
+//
+// El motivo es que dejó de ser de las unidades: los porcentajes del escrutinio
+// de una votación llegan igual —columna decimal que PDO puede entregar como
+// cadena o como número— y la segunda copia habría sido la que se separa de ésta
+// el día que se toque una. Está al lado de `entero`, `enteroO` y `texto`, que es
+// donde se buscan estas lecturas.
