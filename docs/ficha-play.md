@@ -122,8 +122,9 @@ AVISOS CUANDO HAY ALGO NUEVO
 Y dentro de «TU COLEGIO, TUS DATOS», después del párrafo de Google Analytics:
 
 ```
-Los avisos se entregan con Firebase Cloud Messaging, de Google. No llevan tu
-nombre, tus notas ni el nombre de tu colegio, y puedes apagarlos desde el menú.
+Los avisos se entregan con Firebase Cloud Messaging, de Google. Dicen el primer
+nombre del alumno y qué hay de nuevo, nunca la nota ni el texto de una
+anotación, y puedes apagarlos desde el menú.
 ```
 
 Con los dos añadidos la descripción larga pasa de **1.851 a 2.393 caracteres**

@@ -100,10 +100,13 @@ entrega Firebase Cloud Messaging, un servicio de Google, y para poder
 entregárselos Google asigna a esa instalación de la aplicación un identificador
 de registro.
 
-**El aviso no lleva información suya.** Dice cuántas novedades hay —«tiene 3
-calificaciones nuevas»— y nunca la calificación, el nombre del alumno ni el
-texto de la anotación. Para verlas hay que abrir la aplicación y entrar con su
-usuario y su contraseña.
+**Qué dice el aviso.** De qué alumno se trata, por su primer nombre, y qué hay
+de nuevo: cuántas calificaciones y en qué asignatura —«Laura tiene 3 notas
+nuevas en Sociales»—, cuántas novedades de asistencia o de disciplina, en qué
+paso va la matrícula o que hay un compromiso académico por leer. **Nunca lleva
+la calificación, el apellido del alumno, el texto de la anotación ni el del
+compromiso.** Para verlos hay que abrir la aplicación y entrar con su usuario y
+su contraseña.
 
 **Su teléfono no le dice a nadie quién es usted.** La aplicación no envía a
 ningún servidor el identificador de su dispositivo. En su lugar, el teléfono se
@@ -162,8 +165,9 @@ permita identificar a un estudiante.
 <!-- ⏸ NOTIFICACIONES -->
 **Los avisos, también con Google.** Firebase Cloud Messaging es quien los
 entrega a su teléfono, por encargo nuestro y sujeto a sus condiciones de
-tratamiento de datos. Recibe el texto del aviso —que no lleva datos de nadie— y
-el identificador de registro del dispositivo; nada más. Ni Google ni el servidor
+tratamiento de datos. Recibe el texto del aviso —el primer nombre del alumno y
+lo descrito en «Qué dice el aviso», nunca una calificación— y el identificador
+de registro del dispositivo; nada más. Ni Google ni el servidor
 de su colegio guardan a quién pertenece ese identificador.
 
 No hay servicios de publicidad ni de redes sociales integrados en la

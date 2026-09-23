@@ -119,8 +119,10 @@ preferencia por tipo de aviso. La app entera sigue funcionando sin nada de eso.
 - **Mensajes.** Play pregunta por los mensajes *del usuario* —SMS, correo,
   mensajería—. Un aviso que sale de tu propio servidor no es un dato recogido de
   nadie.
-- **Nada nuevo en «Actividad en la app»**: el cuerpo del aviso es genérico
-  —«tiene 3 calificaciones nuevas»— y no se mide si se abre o no.
+- **Nada nuevo en «Actividad en la app»**: la app no recoge nada del aviso ni
+  mide si se abre. El texto —«Laura tiene 3 notas nuevas en Sociales»— lo
+  escribe el servidor del colegio y lo entrega Google como proveedor; lleva el
+  primer nombre del alumno y la asignatura, nunca la nota.
 
 Las tres preguntas de cabecera no cambian. Y «compartido» sigue en **no** por el
 mismo motivo de la sección siguiente: Google entrega los avisos como proveedor
