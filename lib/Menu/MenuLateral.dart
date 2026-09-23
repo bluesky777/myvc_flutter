@@ -111,6 +111,7 @@ class MenuLateral extends StatelessWidget {
             texto: 'Mi proceso',
             ruta: '/mi-matricula',
           ),
+        _opcionNotificaciones(context),
         _opcionPrivacidad(context),
       ]);
       return opciones;
@@ -271,6 +272,23 @@ class MenuLateral extends StatelessWidget {
       icono: Icons.privacy_tip_outlined,
       texto: 'Privacidad',
       ruta: '/privacidad',
+    );
+  }
+
+  /// Los avisos, **solo en la rama de las familias**.
+  ///
+  /// No es un olvido que el personal no la vea: los temas de aviso cuelgan de
+  /// un alumno —los propios o los de los acudidos— y a un docente el servidor
+  /// no le devuelve ninguno, así que la pantalla le saldría con tres
+  /// interruptores que no encienden nada. Cuando se enciendan los temas del
+  /// colegio —muro y avisos, hoy apagados— esto pasa a las dos ramas como
+  /// Privacidad. Ver PendientesNotificaciones.temasDelColegio.
+  Widget _opcionNotificaciones(BuildContext context) {
+    return _opcion(
+      context,
+      icono: Icons.notifications_outlined,
+      texto: 'Notificaciones',
+      ruta: '/notificaciones',
     );
   }
 

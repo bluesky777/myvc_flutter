@@ -9,6 +9,8 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/Avisos.dart';
+import 'package:myvc_flutter/Utils/Navegador.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
@@ -24,16 +26,27 @@ void main() async {
   // Firebase falla —sin red al abrir, un google-services.json que no llegó al
   // build— la app tiene que arrancar igual: saber cuánta gente la usa no puede
   // ser el motivo de que no se pueda usar. Ver docs/analitica.md.
-  if (Analitica.disponible) {
+  // La condición es de las dos y no solo de la analítica: los avisos push se
+  // apoyan en el mismo Firebase, y encadenarlos a que la analítica esté
+  // disponible sería dejar que apagar una cosa apague la otra sin decirlo.
+  if (Analitica.disponible || Avisos.disponible) {
     try {
       await Firebase.initializeApp();
-      Analitica.arrancar();
-      // Y respetar lo que este teléfono decidió la última vez. Va después de
-      // arrancar y no antes porque quien lo apaga es el SDK, y para eso tiene
-      // que existir. Ver PrivacidadScreen.
-      await Analitica.aplicarPreferencia();
+
+      if (Analitica.disponible) {
+        Analitica.arrancar();
+        // Y respetar lo que este teléfono decidió la última vez. Va después de
+        // arrancar y no antes porque quien lo apaga es el SDK, y para eso tiene
+        // que existir. Ver PrivacidadScreen.
+        await Analitica.aplicarPreferencia();
+      }
+
+      // El canal de Android y los tres caminos por los que llega un aviso. No
+      // pide permiso ni se suscribe a nada: solo deja montado lo que hace falta
+      // para que un aviso que llegue se vea y se pueda tocar. Ver Avisos.
+      await Avisos.arrancar();
     } catch (_) {
-      // Sin analítica, y sin ruido para quien solo quiere entrar.
+      // Sin analítica y sin avisos, y sin ruido para quien solo quiere entrar.
     }
   }
 
@@ -81,8 +94,10 @@ class MyApp extends StatelessWidget {
   /// Si al arrancar se recuperó una sesión que el servidor da por buena.
   final bool haySesion;
 
-  // Para las rutas
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  // Para las rutas. Global y no un campo de aquí porque tocar una notificación
+  // ocurre fuera de todo widget —a veces con la app cerrada— y desde ahí hace
+  // falta poder navegar. Ver Navegador.dart.
+  final GlobalKey<NavigatorState> navigatorKey = navegadorDeLaApp;
 
   @override
   Widget build(BuildContext context) {

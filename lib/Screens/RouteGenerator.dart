@@ -12,6 +12,7 @@ import 'package:myvc_flutter/Screens/PanelScreen.dart';
 import 'package:myvc_flutter/Screens/MiDisciplinaScreen.dart';
 import 'package:myvc_flutter/Screens/MiMatriculaScreen.dart';
 import 'package:myvc_flutter/Screens/PrivacidadScreen.dart';
+import 'package:myvc_flutter/Screens/NotificacionesScreen.dart';
 import 'package:myvc_flutter/Screens/UnidadesScreen.dart';
 import 'package:myvc_flutter/Screens/UsuariosScreen.dart';
 import 'package:myvc_flutter/Screens/ActualizarScreen.dart';
@@ -81,6 +82,10 @@ class RouteGenerator {
       case '/privacidad':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const PrivacidadScreen());
+      case '/notificaciones':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const NotificacionesScreen());
       case '/notas':
         return MaterialPageRoute(
             settings: settings, builder: (context) => NotasScreen());

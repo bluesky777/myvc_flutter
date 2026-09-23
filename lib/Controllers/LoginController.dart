@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Utils/Avisos.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
@@ -15,6 +16,7 @@ import 'package:myvc_flutter/Utils/VerificacionSesion.dart';
 import 'package:myvc_flutter/Utils/EsquemaServidor.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
+import 'package:myvc_flutter/Utils/VotacionPendiente.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class LoginBaseController {
@@ -103,6 +105,12 @@ class LoginController implements LoginBaseController {
     // logout(), que lo borra—.
     await VerificacionSesion.sellar();
 
+    // Los temas de avisos de quien acaba de entrar. No hace nada si el permiso
+    // no está concedido —el primer día no lo está, y lo ofrece el muro— ni si
+    // el colegio no contesta: enterarse de una nota nueva no puede ser el
+    // motivo de que entrar falle. Ver Avisos.
+    await Avisos.sincronizar(server);
+
     final preferences = await SharedPreferences.getInstance();
 
     if (await PreferenciasSesion.guardarDatos()) {
@@ -176,8 +184,19 @@ class LoginController implements LoginBaseController {
       return false;
     }
 
+    // Las señas del colegio de la última vez —sigla y logo—, antes de comprobar
+    // nada: si el token está sellado no habrá `/years` en este arranque, y la
+    // barra abriría sin ellas.
+    await ContextoAcademico.instancia.recordarSenasDelColegio();
+
     final vale = await _tokenSigueValiendo();
-    if (vale) _contarSesion();
+    if (vale) {
+      _contarSesion();
+      // Repasar las suscripciones en cada arranque, pero **sin forzar** la
+      // petición del catálogo: se trae como mucho una vez por semana. Ver
+      // AvisosGuardados.cadaCuanto.
+      unawaited(Avisos.sincronizar(Server(), forzar: false));
+    }
 
     return vale;
   }
@@ -213,6 +232,13 @@ class LoginController implements LoginBaseController {
         return false;
       }
 
+      // De paso, las señas del colegio: su sigla y su logo. Esta respuesta ya
+      // las trae —`/years` selecciona `y.*` y une `images` por `logo_id`— y
+      // hasta hoy se tiraba entera mirándole solo el código. Son gratis en el
+      // arranque en frío, que es lo único que este proyecto puede permitirse
+      // pagar por un rótulo.
+      ContextoAcademico.instancia.tomarSenasDelColegio(res.body);
+
       // Solo se sella cuando el servidor contestó de verdad. Un fallo de red
       // no prueba nada, y sellarlo sería regalarle seis horas de silencio a
       // una sesión de la que no se sabe nada.
@@ -226,10 +252,18 @@ class LoginController implements LoginBaseController {
   }
 
   Future<void> _tirarLaSesion() async {
+    // También aquí, que es la otra puerta de salida: por aquí se cierra sesión
+    // sin pasar por el menú —un 401, o lo guardado ilegible— y los temas hay
+    // que soltarlos igual.
+    await Avisos.soltarTodo();
     AuthService.limpiar();
     VersionMinima.limpiar();
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
+    // La elección abierta de quien se va, y la marca de que ya se le avisó. Las
+    // dos son de esta sesión: en una tablet compartida, dejarlas puestas le
+    // ofrecería votar a la siguiente persona una elección que no es la suya.
+    VotacionPendiente.instancia.limpiar();
     // El muro guardado lleva los nombres y las fotos de los acudidos de quien
     // se va, y el sello dice que su token estaba bien. Las dos cosas son de la
     // sesión que se está tirando y ninguna puede sobrevivirle. Ver
@@ -269,6 +303,13 @@ class LoginController implements LoginBaseController {
     // entrar —con usuario y contraseña, y recuperando la sesión
     // guardada—, así que ninguna se lo salta. Ver VersionMinima.
     VersionMinima.tomarDe(datos);
+
+    // Y si hoy hay una votación abierta en la que le falta votar. **Viene en
+    // esta misma respuesta**: lo calcula `App\Services\VotacionesPendientes` en
+    // el servidor y lo cuelga en la clave `votaciones`, que sólo aparece cuando
+    // hay alguna. De ahí salen la tarjeta de la portada y el aviso que se abre
+    // solo, sin una petición más. Ver VotacionPendiente.
+    VotacionPendiente.instancia.tomarDelLogin(datos);
   }
 
   /// El cuerpo como mapa, o null si no vino JSON —una página de error de nginx,
@@ -307,6 +348,10 @@ class LoginController implements LoginBaseController {
 
   @override
   Future<String> logout() async {
+    // Antes que nada, y sin excusas: soltar los temas de Firebase. Si no, el
+    // teléfono prestado —o el del colegio— sigue recibiendo los avisos del
+    // alumno anterior. Ver Avisos.soltarTodo.
+    await Avisos.soltarTodo();
     AuthService.limpiar();
     // Y el rol y el colegio de la analítica: en un teléfono prestado o en el
     // del colegio, si no, las pantallas del siguiente se contarían bajo el rol
@@ -325,6 +370,10 @@ class LoginController implements LoginBaseController {
     // Y el muro guardado, por lo mismo y con más motivo: lleva dentro los
     // nombres y las fotos de los acudidos de quien se va.
     MuroEnMemoria.instancia.limpiar();
+    // La elección abierta y la marca de «ya se le avisó» son de esta sesión: sin
+    // borrarlas, a la siguiente persona de una tablet compartida se le ofrecería
+    // votar una elección que no es la suya.
+    VotacionPendiente.instancia.limpiar();
     // El sello de la comprobación también es de esta sesión. Sin borrarlo,
     // quien entre después heredaría seis horas de «ya se comprobó» que no le
     // corresponden. Es la otra mitad del invariante de VerificacionSesion.

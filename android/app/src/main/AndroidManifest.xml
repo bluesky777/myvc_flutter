@@ -2,6 +2,14 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Desde Android 13 mostrar una notificación necesita permiso, y el
+         sistema lo pregunta UNA sola vez: si se dice que no, no vuelve a
+         preguntar y hay que ir a los ajustes del teléfono a mano. Por eso no se
+         pide al abrir la app: se pide con el muro ya delante y con una frase
+         que explica qué se va a avisar. Ver lib/Widgets/OfrecerAvisos.dart y
+         docs/notificaciones.md. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- El SDK de Analytics declara SOLO el permiso del identificador de
          publicidad, aunque esta app no tenga un anuncio. Aquí no se quiere: no
          hay publicidad, no hay perfiles y es una app de menores. Hacen falta
@@ -59,6 +67,15 @@
         <meta-data
             android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
+        <!-- En qué canal caen los avisos cuando llegan con la app cerrada.
+             Ahí no hay Dart corriendo para elegirlo, así que lo elige el
+             sistema con esto; el canal en sí lo crea Avisos.arrancar(). Los dos
+             tienen que decir el mismo identificador, y sin esto una
+             notificación sin canal simplemente no se muestra en Android 8 y
+             arriba. Ver lib/Utils/Avisos.dart -> canalId. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="avisos_colegio" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

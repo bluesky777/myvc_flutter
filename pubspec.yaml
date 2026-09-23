@@ -5,7 +5,7 @@ description: App para MiColeVirtual
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.1+4
+version: 1.1.0+5
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -39,6 +39,8 @@ dependencies:
   # —comprobado con curl contra demo.micolevirtual.com—. O sea que la cabecera
   # estaba puesta y nadie la escuchaba. Ver AvatarPersona.
   cached_network_image: ^3.4.1
+  firebase_messaging: ^16.7.0
+  flutter_local_notifications: ^22.3.1
 
 dev_dependencies:
   flutter_test:

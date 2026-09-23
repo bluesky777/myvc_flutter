@@ -23,23 +23,7 @@ Future<TemasDeNotificacion> traerTemas(Server server) async {
     throw Exception(mensajeDeFallo(res.statusCode, 'ver los avisos'));
   }
 
-  final cuerpo = jsonDecode(res.body);
-  if (cuerpo is! Map) {
-    throw Exception('El servidor no devolvió los temas.');
-  }
-
-  final crudos = cuerpo['alumnos'];
-
-  return TemasDeNotificacion(
-    alumnos: crudos is List
-        ? crudos
-            .whereType<Map>()
-            .map((a) => TemasDeUnAlumno.fromJson(Map<String, dynamic>.from(a)))
-            .where((a) => a.alumnoId != 0)
-            .toList()
-        : const [],
-    delColegio: _temasDelColegio(cuerpo['colegio']),
-  );
+  return TemasDeNotificacion.deCuerpo(res.body);
 }
 
 /// Los temas del colegio, leyendo **las dos formas** que puede tener.
@@ -86,6 +70,32 @@ class TemasDeNotificacion {
     this.alumnos = const [],
     this.delColegio = const {},
   });
+
+  /// Del cuerpo de la respuesta, tal cual llega.
+  ///
+  /// Separado de [traerTemas] porque el mismo texto se guarda en el teléfono y
+  /// se vuelve a leer sin red: apagar un interruptor en la pantalla de avisos
+  /// no puede depender de que el colegio conteste. Ver `AvisosGuardados`.
+  factory TemasDeNotificacion.deCuerpo(String cuerpoCrudo) {
+    final cuerpo = jsonDecode(cuerpoCrudo);
+    if (cuerpo is! Map) {
+      throw Exception('El servidor no devolvió los temas.');
+    }
+
+    final crudos = cuerpo['alumnos'];
+
+    return TemasDeNotificacion(
+      alumnos: crudos is List
+          ? crudos
+              .whereType<Map>()
+              .map(
+                  (a) => TemasDeUnAlumno.fromJson(Map<String, dynamic>.from(a)))
+              .where((a) => a.alumnoId != 0)
+              .toList()
+          : const [],
+      delColegio: _temasDelColegio(cuerpo['colegio']),
+    );
+  }
 
   /// Un bloque por alumno: el propio si quien mira es alumno, o cada acudido
   /// si es acudiente. **Solo con matrícula viva**: el servidor filtra, porque

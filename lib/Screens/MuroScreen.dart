@@ -4,11 +4,17 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
+import 'package:myvc_flutter/Screens/TarjetonScreen.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
+import 'package:myvc_flutter/Utils/VotacionPendiente.dart';
+import 'package:myvc_flutter/Widgets/HojaHoySeVota.dart';
+import 'package:myvc_flutter/Widgets/TarjetaDeVotacion.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
 import 'package:myvc_flutter/constantes.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
+import 'package:myvc_flutter/Widgets/OfrecerAvisos.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 
 /// Lo primero que se ve al entrar: el muro del colegio.
 ///
@@ -33,6 +39,21 @@ class _MuroScreenState extends State<MuroScreen> {
   void initState() {
     super.initState();
     _cargar();
+    // Las siglas del colegio pueden llegar después —`/years` no se pide hasta
+    // que alguien abre el selector de periodo—, y entonces el título tiene que
+    // cambiar solo. Sin esto la barra se quedaría con las iniciales calculadas
+    // hasta la siguiente vez que esta pantalla se reconstruyera por otra cosa.
+    ContextoAcademico.instancia.addListener(_alCambiarElContexto);
+  }
+
+  @override
+  void dispose() {
+    ContextoAcademico.instancia.removeListener(_alCambiarElContexto);
+    super.dispose();
+  }
+
+  void _alCambiarElContexto() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _cargar() async {
@@ -50,10 +71,42 @@ class _MuroScreenState extends State<MuroScreen> {
       final traido = await traerMuro(server, refrescar: true);
       if (!mounted) return;
       setState(() => muro = traido);
+
+      // Y una sola vez en la vida de este teléfono, la oferta de los avisos.
+      // Aquí y no al abrir la app: con el muro ya pintado delante se entiende
+      // de qué colegio y de quién va lo que se está ofreciendo, y Android solo
+      // deja preguntar una vez. Ver OfrecerAvisos.
+      if (mounted) await OfrecerAvisos.siToca(context, server);
+
+      // Y si hoy hay elección abierta y le falta votar, el aviso. Va después de
+      // los avisos y no antes porque los dos son hojas encima del muro y dos a la
+      // vez no se pueden leer; y va aquí, con el muro pintado detrás, por lo
+      // mismo que aquél. El dato no cuesta ninguna petición: viene del login.
+      // Ver HojaHoySeVota y VotacionPendiente.
+      if (mounted) await HojaHoySeVota.siToca(context, server);
     } catch (err) {
       if (!mounted) return;
       setState(() => error = '$err');
     }
+  }
+
+  /// Las siglas del colegio, que es lo que va donde antes decía «Inicio».
+  ///
+  /// «Inicio» no decía nada que la pantalla no dijera ya —es la primera, se
+  /// llega sola— y ahora comparte fila con el periodo, así que ese sitio vale.
+  ///
+  /// **Las siglas son las del colegio o no hay siglas.** Se intentó calcularlas
+  /// del nombre cuando no llegaban, y salió mal: el único nombre que la app
+  /// tiene antes de entrar viene de `listado_colegios.php`, y esa lista no
+  /// guarda nombres de colegio sino sitios —«Libertad Tame», «Arauca»,
+  /// «Fortul»—, así que el Liceo Adventista Libertad salía `LT`. **Una sigla
+  /// equivocada es peor que ninguna**: se lee como un dato y no como un hueco,
+  /// y nadie la reporta porque parece una decisión. Así que mientras no lleguen
+  /// las de verdad, «Inicio», que al menos es cierto.
+  String _siglas() {
+    final abrev = ContextoAcademico.instancia.abrevColegio;
+
+    return abrev.isEmpty ? 'Inicio' : abrev;
   }
 
   @override
@@ -70,7 +123,10 @@ class _MuroScreenState extends State<MuroScreen> {
         // título, así que las tres barras decían lo mismo y ninguna decía dónde
         // estabas. «Inicio» y no «Muro», que es como lo llama el menú.
         body: BarraPlegable(
-          titulo: 'Inicio',
+          titulo: _siglas(),
+          // El logo solo aquí: es la pantalla cuyo título son las siglas del
+          // colegio, y las dos cosas se leen juntas. Ver BarraPlegable.conLogo.
+          conLogo: true,
           alAbrirMenu: () => _drawerController.toggle!(),
           alCambiarContexto: _cargar,
           child: _buildCuerpo(),
@@ -110,25 +166,56 @@ class _MuroScreenState extends State<MuroScreen> {
     }
 
     final publicaciones = muro!.publicaciones;
+
+    // Lo que va por encima de las publicaciones, en orden. La votación primero:
+    // es de un día y el acceso a notas es de todo el año.
+    final laVotacion = TarjetaDeVotacion.siToca(alVotar: _abrirElTarjeton);
     final acceso = _buildAccesoANotas();
+
+    final encabezados = <Widget>[
+      if (laVotacion != null) laVotacion,
+      if (acceso != null) acceso,
+    ];
 
     return RefreshIndicator(
       onRefresh: Analitica.refresco('muro', _cargar),
       child: publicaciones.isEmpty
-          ? _muroVacio(acceso)
+          ? _muroVacio(encabezados)
           : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              // El acceso a notas va dentro de la lista y no flotando encima:
+              // Los encabezados van dentro de la lista y no flotando encima:
               // un botón flotante tapa publicaciones, y en un muro largo eso
               // estorba justo donde se está leyendo.
-              itemCount: publicaciones.length + (acceso == null ? 0 : 1),
+              itemCount: publicaciones.length + encabezados.length,
               itemBuilder: (context, i) {
-                if (acceso != null && i == 0) return acceso;
-                final indice = acceso == null ? i : i - 1;
-                return Publicacion(publicacion: publicaciones[indice]);
+                if (i < encabezados.length) return encabezados[i];
+                return Publicacion(
+                  publicacion: publicaciones[i - encabezados.length],
+                );
               },
             ),
     );
+  }
+
+  /// Entrar a votar desde la tarjeta de la portada.
+  ///
+  /// **Sin la papeleta dentro, al revés que desde el aviso**: quien toca la
+  /// tarjeta puede llevar horas con el muro abierto, así que el tarjetón la pide
+  /// fresca. Desde el aviso sí viaja, porque allí se acaba de traer para poder
+  /// listar los cargos. Ver [TarjetonScreen].
+  Future<void> _abrirElTarjeton() async {
+    final votacion = VotacionPendiente.instancia.laDeHoy;
+    if (votacion == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TarjetonScreen(votacion: votacion),
+      ),
+    );
+
+    // Al volver, la tarjeta puede tener que desaparecer: el tarjetón avisa a
+    // VotacionPendiente cuando la papeleta se acaba.
+    if (mounted) setState(() {});
   }
 
   /// La puerta a las notas, para el docente, encima de las publicaciones.
@@ -188,11 +275,11 @@ class _MuroScreenState extends State<MuroScreen> {
 
   /// Un muro sin nada. Tiene que poder tirarse hacia abajo igual, o el docente
   /// que entra el primer día del año se queda sin forma de recargar.
-  Widget _muroVacio(Widget? acceso) {
+  Widget _muroVacio(List<Widget> encabezados) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        if (acceso != null) acceso,
+        ...encabezados,
         SizedBox(height: 120),
         Icon(Icons.forum_outlined, size: 56, color: Colors.black26),
         SizedBox(height: 12),

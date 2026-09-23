@@ -26,6 +26,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Lo exige flutter_local_notifications, que es quien pinta el aviso
+        // cuando llega con la app abierta —FCM ahí no dibuja nada—. Su AAR lo
+        // pide aunque no se use la parte que lo necesita de verdad, que es
+        // programar avisos a una hora: sin esto el build ni empieza.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -59,6 +64,12 @@ android {
             signingConfig = firmaDeVerdad ?: signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    // La otra mitad de `isCoreLibraryDesugaringEnabled`: la biblioteca con la
+    // que se rellenan las clases de Java 8 que no trae un Android viejo.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }
 
 kotlin {
