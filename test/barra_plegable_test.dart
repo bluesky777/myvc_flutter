@@ -17,62 +17,57 @@ void main() {
   });
 
   Widget conBarra() => MaterialApp(
-        home: Scaffold(
-          body: BarraPlegable(
-            titulo: 'Disciplina',
-            child: ListView.builder(
-              itemCount: 40,
-              itemBuilder: (_, i) => SizedBox(
-                height: 60,
-                child: Text('fila $i'),
-              ),
-            ),
-          ),
+    home: Scaffold(
+      body: BarraPlegable(
+        titulo: 'Disciplina',
+        child: ListView.builder(
+          itemCount: 40,
+          itemBuilder: (_, i) => SizedBox(height: 60, child: Text('fila $i')),
         ),
-      );
+      ),
+    ),
+  );
 
-  testWidgets('desplegada enseña el título y el periodo',
-      (WidgetTester tester) async {
+  testWidgets('el título y el periodo, en una sola fila', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(conBarra());
     await tester.pumpAndSettle();
 
     expect(find.text('Disciplina'), findsOneWidget);
-    expect(find.text('2026 · Periodo 3'), findsOneWidget);
+    expect(find.text('2026 · Per 3'), findsOneWidget);
   });
 
-  testWidgets('al desplazar se queda el título y la franja se esconde',
-      (WidgetTester tester) async {
+  testWidgets('la barra no se pliega, porque ya no hay nada que plegar', (
+    WidgetTester tester,
+  ) async {
+    // Antes eran dos franjas y la de abajo se escondía al desplazar. Ahora es
+    // una, así que la altura tiene que ser la misma arriba del todo y a mitad
+    // de lista: si cambiara, es que alguien devolvió el `expandedHeight`.
     await tester.pumpWidget(conBarra());
     await tester.pumpAndSettle();
 
-    final desplegada = tester.getSize(find.byType(AppBar)).height;
+    final arriba = tester.getSize(find.byType(AppBar)).height;
+    expect(arriba, kToolbarHeight);
 
     await tester.drag(find.text('fila 2'), const Offset(0, -400));
     await tester.pumpAndSettle();
 
-    final plegada = tester.getSize(find.byType(AppBar)).height;
+    expect(tester.getSize(find.byType(AppBar)).height, arriba);
+  });
 
-    expect(plegada, lessThan(desplegada));
-    // Lo que queda es exactamente la altura del título: la franja del periodo
-    // se ha ido entera.
-    expect(plegada, kToolbarHeight);
-    // Y el título sigue ahí, que es de lo que se trata.
+  testWidgets('el periodo sigue ahí después de desplazar', (
+    WidgetTester tester,
+  ) async {
+    // Es el único control de la barra, y el motivo de que valga la pena
+    // tenerla fija: se cambia de periodo sin volver arriba del todo.
+    await tester.pumpWidget(conBarra());
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('fila 2'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+
     expect(find.text('Disciplina'), findsOneWidget);
-  });
-
-  testWidgets('volviendo arriba la franja vuelve',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(conBarra());
-    await tester.pumpAndSettle();
-
-    final desplegada = tester.getSize(find.byType(AppBar)).height;
-
-    await tester.drag(find.text('fila 2'), const Offset(0, -400));
-    await tester.pumpAndSettle();
-    await tester.drag(find.text('fila 8'), const Offset(0, 600));
-    await tester.pumpAndSettle();
-
-    expect(tester.getSize(find.byType(AppBar)).height, desplegada);
-    expect(find.text('2026 · Periodo 3'), findsOneWidget);
+    expect(find.text('2026 · Per 3'), findsOneWidget);
   });
 }

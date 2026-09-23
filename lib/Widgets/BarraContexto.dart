@@ -3,38 +3,38 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 
-/// El año y el periodo en su propia franja, debajo del título de la pantalla.
+/// El año y el periodo, a la derecha de la barra de arriba.
 ///
-/// Se monta en el hueco `bottom:` de la barra, así:
+/// Se monta en `actions:` de la barra, así:
 ///
-///     AppBar(
+///     SliverAppBar(
 ///       title: Text('Disciplina'),
-///       bottom: BarraContexto(alCambiar: _arrancar),
+///       actions: [BarraContexto(alCambiar: _arrancar), ...],
 ///     )
 ///
-/// Nació de intentar lo contrario: meter el nombre de la pantalla y el periodo
-/// en un título de dos líneas dejaba el periodo en letra pequeña, y es el dato
-/// que más se mira y el único que se toca. Aquí va a tamaño de leerse,
-/// ocupando el ancho, y se ve que es un control y no un rótulo.
+/// **Tuvo franja propia y la perdió, y merece la pena saber por qué las dos
+/// veces.** Nació de intentar meter el nombre de la pantalla y el periodo en un
+/// título de dos líneas: el periodo quedaba en letra pequeña, y es el dato que
+/// más se mira y el único que se toca. Así que se le dio una franja debajo, a
+/// tamaño de leerse y ocupando el ancho, para que se viera que es un control y
+/// no un rótulo.
 ///
-/// Centrado, y no pegado a la izquierda como el título de encima: así se lee
-/// como una cosa aparte y no como una segunda línea del título. Es el mismo
-/// control en las tres pantallas del menú y conviene que esté siempre en el
-/// mismo sitio, se llame la pantalla «Inicio» o «Disciplina».
-class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
+/// El precio de aquello era **dos barras**: una con el nombre de la pantalla y
+/// otra con el periodo, apiladas, comiéndose la parte de arriba de cada
+/// pantalla. Se plegaba al desplazar, pero el primer golpe de vista —que es el
+/// que decide si una app se siente ligera— eran siempre dos franjas para dos
+/// datos cortos.
+///
+/// Ahora va **en la misma fila, a la derecha**. Sigue siendo un control y se
+/// sigue viendo que lo es: lleva su icono, su flecha de desplegar y su efecto
+/// al tocarlo. Lo que se perdió es el tamaño, y a cambio se ganó una franja
+/// entera de pantalla. El texto va abreviado —«2026 · Per 4»— porque en una
+/// fila compartida «Periodo» gasta su sitio contra el título; ver
+/// [ContextoAcademico.tituloCorto].
+class BarraContexto extends StatelessWidget {
   const BarraContexto({super.key, this.alCambiar});
 
   final VoidCallback? alCambiar;
-
-  /// Lo que mide de alto.
-  ///
-  /// Constante y no un número suelto porque quien la monta tiene que sumarla:
-  /// va dentro de la parte plegable de la barra, y esa parte necesita saber
-  /// cuánto ocupa para saber cuánto encoger.
-  static const alto = 44.0;
-
-  @override
-  Size get preferredSize => const Size.fromHeight(alto);
 
   @override
   Widget build(BuildContext context) {
@@ -43,34 +43,38 @@ class BarraContexto extends StatelessWidget implements PreferredSizeWidget {
     return ListenableBuilder(
       listenable: contexto,
       builder: (context, _) {
-        return SizedBox(
-          height: preferredSize.height,
-          width: double.infinity,
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Material(
             // Transparente para quedarse con el color de la barra: pintarle un
             // fondo propio la separaría en dos bloques de colores distintos.
             color: Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () =>
                   abrirSelectorDeContexto(context, alCambiar: alCambiar),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(10, 0, 4, 0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.event_note_outlined, size: 19),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.event_note_outlined, size: 18),
+                    const SizedBox(width: 6),
+                    // Encogible: en una pantalla estrecha el que cede es el
+                    // título, pero si aun así no cabe, esto se recorta antes de
+                    // desbordar la fila.
                     Flexible(
                       child: Text(
-                        contexto.titulo,
+                        contexto.tituloCorto,
                         overflow: TextOverflow.ellipsis,
+                        softWrap: false,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 2),
                     const Icon(Icons.expand_more, size: 20),
                   ],
                 ),

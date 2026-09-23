@@ -7,11 +7,29 @@ class YearModel {
   final bool actual;
   final List<PeriodoModel> periodos;
 
+  /// Las siglas del colegio, tal como las escribió él: `CASB`.
+  ///
+  /// Columna `years.abrev_colegio`, y llega porque `GET /years` selecciona
+  /// `y.*`. Estuvo llegando y tirándose desde siempre; la recoge la barra de
+  /// arriba, que necesita un rótulo corto y prefiere el del colegio al que
+  /// pueda calcular la app. Vacía si ese colegio nunca la rellenó — es una
+  /// columna que admite nulo.
+  final String abrevColegio;
+
+  /// El archivo del logo del colegio, relativo a las imágenes del servidor.
+  ///
+  /// Sale del `LEFT JOIN images` que `GET /years` ya hace sobre `y.logo_id`, y
+  /// llega como `i.nombre` — la ruta que entiende `Server.urlFoto`. Vacío en el
+  /// colegio que no le puso logo: la columna admite nulo.
+  final String logo;
+
   YearModel({
     required this.id,
     required this.year,
     required this.actual,
     required this.periodos,
+    this.abrevColegio = '',
+    this.logo = '',
   });
 
   factory YearModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +45,8 @@ class YearModel {
       year: '${json['year']}',
       // El backend manda 1/0, no true/false.
       actual: entero(json['actual']) == 1,
+      abrevColegio: '${json['abrev_colegio'] ?? ''}'.trim(),
+      logo: '${json['logo'] ?? ''}'.trim(),
       periodos: periodos,
     );
   }

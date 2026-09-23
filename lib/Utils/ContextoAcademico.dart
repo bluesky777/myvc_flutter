@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/YearModel.dart';
 import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// El año y el periodo con los que trabaja el usuario ahora mismo.
 ///
@@ -41,14 +42,60 @@ class ContextoAcademico extends ChangeNotifier {
   /// Los años del colegio con sus periodos, para el cuadro de cambio.
   List<YearModel> years = [];
 
+  /// Las siglas del colegio —`LAL`, `CASB`—, que es lo que cabe en la barra.
+  ///
+  /// **Se llena de dos sitios y por eso no es `final`.** De la respuesta de
+  /// `/login`, si la trae, que es lo que la deja puesta desde el primer
+  /// arranque; y de `GET /years`, que seguro la trae —selecciona `y.*`— pero
+  /// solo se pide cuando alguien abre el selector de periodo, porque es la
+  /// consulta cara. Lo segundo no pisa lo primero con vacío: ver [_guardar].
+  ///
+  /// Vacía mientras no llegue de ninguno de los dos, y también en el colegio
+  /// que nunca rellenó esa columna. Quien la use decide el respaldo, y el de la
+  /// barra es no poner siglas: **calcularlas del nombre salía mal**. El nombre
+  /// que la app tiene antes de entrar viene de `listado_colegios.php`, y ahí no
+  /// hay nombres de colegio sino sitios —«Libertad Tame», «Arauca», «Fortul»—,
+  /// así que el Liceo Adventista Libertad salía `LT`. Una sigla equivocada es
+  /// peor que ninguna: se lee como un dato, no como un hueco.
+  String abrevColegio = '';
+
+  /// El archivo del logo del colegio, para la barra de arriba.
+  ///
+  /// Mismo origen y mismas reglas que [abrevColegio]: llega en `GET /years`, se
+  /// guarda en disco y lo vacío nunca pisa a lo lleno. Vacío también es una
+  /// respuesta — hay colegios sin logo, y la barra se pinta igual sin él.
+  String logoColegio = '';
+
+  /// Dónde se recuerda entre arranques.
+  ///
+  /// Se guarda porque la única fuente segura es `GET /years`, y esa consulta no
+  /// se hace en cada arranque a propósito —es el N+1 que `VerificacionSesion`
+  /// existe para espaciar—. Sin recordarla, la barra abriría sin siglas cada
+  /// mañana y las estrenaría a media sesión, cuando algo pidiera los años.
+  static const String claveAbrev = 'colegio_abrev';
+  static const String claveLogo = 'colegio_logo';
+
   bool get hayContexto => yearId != null && periodoId != null;
 
-  /// Lo que se lee en la barra: «2026 · Periodo 3».
+  /// El año y el periodo escritos enteros: «2026 · Periodo 3».
   String get titulo {
     if (year == null && numeroPeriodo == null) return 'Sin periodo';
     if (numeroPeriodo == null) return '$year';
     if (year == null) return 'Periodo $numeroPeriodo';
     return '$year · Periodo $numeroPeriodo';
+  }
+
+  /// Lo mismo abreviado, que es lo que se lee en la barra: «2026 · Per 3».
+  ///
+  /// Existe desde que el año y el periodo dejaron de tener franja propia y
+  /// pasaron a compartir fila con el nombre de la pantalla. Ahí «Periodo»
+  /// gastaba cuatro letras en decir algo que el número de al lado ya dice, y
+  /// las gastaba **contra el título**, que es lo que se recorta primero.
+  String get tituloCorto {
+    if (year == null && numeroPeriodo == null) return 'Sin periodo';
+    if (numeroPeriodo == null) return '$year';
+    if (year == null) return 'Per $numeroPeriodo';
+    return '$year · Per $numeroPeriodo';
   }
 
   /// Los periodos del año en curso, cuando los años ya se trajeron.
@@ -89,7 +136,103 @@ class ContextoAcademico extends ChangeNotifier {
     periodoId = _entero(datos['periodo_id']);
     numeroPeriodo = _entero(datos['numero_periodo']);
     config = ConfiguracionColegio.deLogin(datos);
+    _guardar(claveAbrev, datos['abrev_colegio']);
     notifyListeners();
+  }
+
+  /// Saca las siglas del colegio del cuerpo de `GET /years`, venga de donde venga.
+  ///
+  /// **Público y suelto del resto a propósito.** La app pide `/years` en dos
+  /// sitios y solo uno construye el contexto: el otro es
+  /// `LoginController._tokenSigueValiendo()`, que lo llama para comprobar el
+  /// token y **tira la respuesta mirándole solo el código de estado**. Esa
+  /// respuesta ya trae `abrev_colegio` —el endpoint selecciona `y.*`—, así que
+  /// leerla ahí son las siglas **gratis, sin una petición más**, en el arranque
+  /// en frío, que es justo cuando hacen falta.
+  ///
+  /// Se queda con las del año en curso; si ése no las trae, con las de
+  /// cualquier año que las tenga. Son del colegio y no del año, así que da
+  /// igual de cuál se lean — lo que no da igual es quedarse sin ellas porque el
+  /// año en curso tenga la columna vacía.
+  ///
+  /// Nunca falla: un cuerpo que no se entienda es un `/years` de una versión
+  /// que no conocemos, y eso no puede tumbar ni el arranque ni la comprobación
+  /// del token.
+  void tomarSenasDelColegio(String cuerpo) {
+    try {
+      final crudos = jsonDecode(cuerpo);
+      if (crudos is! List) return;
+
+      final anios = crudos
+          .whereType<Map>()
+          .map((y) => YearModel.fromJson(Map<String, dynamic>.from(y)))
+          .toList();
+
+      // El año en curso primero; si a ése le falta algo, cualquier otro que lo
+      // tenga. Y **las dos señas por separado**: un año puede traer la sigla y
+      // no el logo, y quedarse sin logo por eso sería perderlo por nada.
+      final porOrden = [...anios.where((y) => y.id == yearId), ...anios];
+
+      _guardar(
+        claveAbrev,
+        porOrden.map((y) => y.abrevColegio).firstWhere(
+              (v) => v.isNotEmpty,
+              orElse: () => '',
+            ),
+      );
+      _guardar(
+        claveLogo,
+        porOrden.map((y) => y.logo).firstWhere(
+              (v) => v.isNotEmpty,
+              orElse: () => '',
+            ),
+      );
+      notifyListeners();
+    } catch (_) {
+      // Sin siglas, y sin ruido.
+    }
+  }
+
+  /// Guarda las siglas **solo si traen algo**.
+  ///
+  /// Sin esta comprobación, `/years` llegando después del login con la columna
+  /// vacía borraría las que el login ya había puesto, y la barra pasaría de
+  /// decir `LAL` a decir `Inicio` a mitad de sesión — un rótulo que empeora
+  /// solo, que es de los fallos que nadie reporta porque parece un parpadeo.
+  /// Guarda una seña **solo si trae algo**.
+  ///
+  /// Sin esta comprobación, `/years` llegando después del login con la columna
+  /// vacía borraría lo que el login ya había puesto, y la barra pasaría de
+  /// decir `LAL` a decir `Inicio` a mitad de sesión — un rótulo que empeora
+  /// solo, que es de los fallos que nadie reporta porque parece un parpadeo.
+  void _guardar(String clave, dynamic crudo) {
+    final valor = '${crudo ?? ''}'.trim();
+    if (valor.isEmpty) return;
+
+    if (clave == claveAbrev) {
+      if (valor == abrevColegio) return;
+      abrevColegio = valor;
+    } else {
+      if (valor == logoColegio) return;
+      logoColegio = valor;
+    }
+
+    // Al disco sin esperar: que la próxima apertura ya abra con ellas.
+    SharedPreferences.getInstance()
+        .then((p) => p.setString(clave, valor))
+        .catchError((_) => false);
+  }
+
+  /// Recupera las señas guardadas la última vez. Se llama al arrancar.
+  Future<void> recordarSenasDelColegio() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      _guardar(claveAbrev, preferences.getString(claveAbrev));
+      _guardar(claveLogo, preferences.getString(claveLogo));
+      if (abrevColegio.isNotEmpty || logoColegio.isNotEmpty) notifyListeners();
+    } catch (_) {
+      // Sin señas guardadas, que es como el primer arranque.
+    }
   }
 
   /// Deja el contexto como recién arrancada la app.
@@ -99,6 +242,12 @@ class ContextoAcademico extends ChangeNotifier {
     periodoId = null;
     numeroPeriodo = null;
     years = [];
+    abrevColegio = '';
+    logoColegio = '';
+    SharedPreferences.getInstance().then((p) async {
+      await p.remove(claveAbrev);
+      await p.remove(claveLogo);
+    }).catchError((_) {});
     config = const ConfiguracionColegio.vacia();
     notifyListeners();
   }
@@ -138,6 +287,8 @@ class ContextoAcademico extends ChangeNotifier {
     if (res.statusCode >= 300) {
       throw Exception('El servidor respondió ${res.statusCode}.');
     }
+
+    tomarSenasDelColegio(res.body);
 
     final crudos = jsonDecode(res.body) as List;
     years = crudos
