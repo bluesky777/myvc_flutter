@@ -15,6 +15,7 @@ import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
 import 'package:myvc_flutter/Widgets/TarjetaDeAsignatura.dart';
 import 'package:myvc_flutter/Screens/DetalleAsignaturaScreen.dart';
+import 'package:myvc_flutter/Utils/Avisos.dart';
 
 /// Las notas de un alumno, periodo a periodo.
 ///
@@ -22,7 +23,11 @@ import 'package:myvc_flutter/Screens/DetalleAsignaturaScreen.dart';
 /// acudidos, que elige antes en un cuadro. El año es el del usuario —el de la
 /// barra del muro—: el backend no lo recibe, lo lee de su ficha.
 class MisNotasScreen extends StatefulWidget {
-  const MisNotasScreen({super.key});
+  const MisNotasScreen({super.key, this.aviso});
+
+  /// El aviso que abrió la pantalla, si fue uno: de quién son las notas y,
+  /// si hablaba de una sola materia, cuál abrir.
+  final AvisoDeNotas? aviso;
 
   @override
   State<MisNotasScreen> createState() => _MisNotasScreenState();
@@ -63,9 +68,14 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
   /// El periodo cuyas líneas se están pidiendo ahora mismo, si alguno.
   int? _pidiendoCompetencias;
 
+  /// El aviso, hasta que se usa. Se usa **una vez**: cambiar de acudido
+  /// después no tiene que volver a abrir la materia del aviso.
+  AvisoDeNotas? _aviso;
+
   @override
   void initState() {
     super.initState();
+    _aviso = widget.aviso;
     WidgetsBinding.instance.addPostFrameCallback((_) => _arrancar());
   }
 
@@ -107,6 +117,15 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
       }
 
       setState(() => acudidos = muro.acudidos);
+
+      // Si el aviso dice de quién es, no se pregunta. Solo si es de uno de
+      // los suyos: el aviso no decide a quién se le enseñan notas.
+      final delAviso = _aviso?.alumnoId;
+      if (delAviso != null &&
+          muro.acudidos.any((a) => a.alumnoId == delAviso)) {
+        await _cargar(delAviso, null);
+        return;
+      }
 
       final elegido = await pedirAcudido(
         context,
@@ -176,6 +195,8 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
 
       // Y **después**, sin bloquear nada. Ver [_traerCompetencias].
       _traerCompetencias();
+
+      _abrirLaDelAviso(traido);
     } on NotasBloqueadas catch (parado) {
       if (!mounted) return;
       setState(() {
@@ -437,6 +458,34 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
       lineas: _lineasDe(asignatura.asignaturaId),
       alTocar: () => _abrirDetalle(asignatura),
     );
+  }
+
+  /// Si el aviso hablaba de una materia, se abre su desglose directamente.
+  ///
+  /// Se busca primero en el periodo que se enseña y luego en los demás, del
+  /// último al primero. Si no está en ninguno se queda la lista: es mejor
+  /// que abrir otra.
+  void _abrirLaDelAviso(NotasAlumnoModel traido) {
+    final aviso = _aviso;
+    _aviso = null;
+    if (aviso == null || aviso.asignatura == null) return;
+
+    final orden = [
+      if (periodoMostrado != null) periodoMostrado!,
+      ...traido.periodos.reversed.where((p) => p != periodoMostrado),
+    ];
+
+    for (final periodo in orden) {
+      for (final asignatura in periodo.asignaturas) {
+        if (aviso.esDe(materia: asignatura.materia, alias: asignatura.alias)) {
+          if (periodo != periodoMostrado) {
+            setState(() => periodoMostrado = periodo);
+          }
+          _abrirDetalle(asignatura);
+          return;
+        }
+      }
+    }
   }
 
   /// De qué notas sale esa definitiva.

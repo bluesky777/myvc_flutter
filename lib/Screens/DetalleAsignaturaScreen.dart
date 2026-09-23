@@ -101,7 +101,11 @@ class DetalleAsignaturaScreen extends StatelessWidget {
                 style: const TextStyle(fontSize: 12)),
         trailing: Text(
           asignatura.tieneNota ? asignatura.notaEscrita : '—',
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: _colorDe(asignatura.nota),
+          ),
         ),
       ),
     );
@@ -169,7 +173,11 @@ class DetalleAsignaturaScreen extends StatelessWidget {
       trailing: sub.tieneNota
           ? Text(
               sub.notaEscrita,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: _colorDe(sub.nota),
+              ),
             )
           : const Text(
               'sin calificar',
@@ -177,6 +185,11 @@ class DetalleAsignaturaScreen extends StatelessWidget {
             ),
     );
   }
+
+  /// Rojo si está perdida; si no, el de siempre. Sin calificar no llega aquí:
+  /// [ConfiguracionColegio.esPerdida] da falso con la nota nula.
+  Color? _colorDe(num? nota) =>
+      _config.esPerdida(nota) ? Colors.red[700] : null;
 
   /// Cuando el docente no montó nada ese periodo.
   ///

@@ -111,7 +111,7 @@ class Avisos {
 
       // Tocado con la app viva pero en segundo plano.
       FirebaseMessaging.onMessageOpenedApp.listen((mensaje) {
-        _abrirPantalla(mensaje.data);
+        _abrirPantalla(_datosDe(mensaje));
       });
 
       // Y tocado con la app cerrada: el mensaje que la abrió. Va con un
@@ -119,7 +119,7 @@ class Avisos {
       final inicial = await FirebaseMessaging.instance.getInitialMessage();
       if (inicial != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _abrirPantalla(inicial.data);
+          _abrirPantalla(_datosDe(inicial));
         });
       }
 
@@ -281,13 +281,14 @@ class Avisos {
   static Future<void> _pintarEnPrimerPlano(RemoteMessage mensaje) async {
     final aviso = mensaje.notification;
     if (aviso == null) return;
+    final datos = _datosDe(mensaje);
 
     try {
       await _local.show(
         // El identificador del aviso, que es también su agrupación: con uno
-        // fijo por pantalla, tres notas seguidas reemplazan la anterior en vez
-        // de apilar tres carteles iguales.
-        id: _abridorDe(mensaje.data).hashCode,
+        // fijo por pantalla —y por asignatura—, tres avisos seguidos de lo
+        // mismo reemplazan el anterior en vez de apilar tres carteles iguales.
+        id: Object.hash(_abridorDe(datos), datos['asignatura']),
         title: aviso.title,
         body: aviso.body,
         notificationDetails: const NotificationDetails(
@@ -299,7 +300,7 @@ class Avisos {
             priority: Priority.defaultPriority,
           ),
         ),
-        payload: jsonEncode(mensaje.data),
+        payload: jsonEncode(datos),
       );
     } catch (err) {
       debugPrint('No se pudo pintar el aviso: $err');
@@ -377,7 +378,43 @@ class Avisos {
     // `pushNamedAndRemoveUntil` y no `pushNamed`: el aviso es un punto de
     // entrada, no un paso más. Con `push` a secas, tocar tres avisos seguidos
     // dejaría tres pantallas apiladas y el botón de atrás recorriéndolas.
-    navegador.pushNamedAndRemoveUntil(_abridorDe(datos), (_) => false);
+    navegador.pushNamedAndRemoveUntil(
+      _abridorDe(datos),
+      (_) => false,
+      arguments: _abridorDe(datos) == '/mis-notas'
+          ? AvisoDeNotas.deDatos(datos)
+          : null,
+    );
+  }
+
+  /// Los `data` del mensaje, con la asignatura puesta si el aviso es de una.
+  ///
+  /// El servidor agrupa los avisos de notas **por alumno y asignatura** —uno
+  /// por materia— y dice cuál en el texto («… en Sociales.»), pero no en
+  /// `data`. Mientras no la mande ahí, se saca del texto; si algún día la
+  /// manda, gana la suya. Un texto que no tenga esa forma deja el aviso sin
+  /// asignatura, y entonces abre «Mis notas» entera, que es lo que toca
+  /// cuando el aviso habla de varias.
+  static Map<String, dynamic> _datosDe(RemoteMessage mensaje) {
+    final datos = Map<String, dynamic>.from(mensaje.data);
+    if (datos['pantalla'] == 'notas' &&
+        '${datos['asignatura'] ?? ''}'.trim().isEmpty) {
+      final sacada = asignaturaDelTexto(mensaje.notification?.body);
+      if (sacada != null) datos['asignatura'] = sacada;
+    }
+    return datos;
+  }
+
+  /// La asignatura de un texto como «Laura tiene 2 notas nuevas en Sociales.»
+  ///
+  /// El formato es el de `EnviarNotificaciones::avisosDeNotas`.
+  @visibleForTesting
+  static String? asignaturaDelTexto(String? cuerpo) {
+    if (cuerpo == null) return null;
+    final hallado =
+        RegExp(r'notas? nuevas? en (.+?)\.?\s*$').firstMatch(cuerpo.trim());
+    final nombre = hallado?.group(1)?.trim();
+    return nombre == null || nombre.isEmpty ? null : nombre;
   }
 }
 
@@ -398,4 +435,33 @@ class CambioDeTemas {
   /// A los que queda apuntado el teléfono cuando esto se aplique. Es lo que se
   /// anota, y lo único con lo que se podrán soltar al cerrar sesión.
   final Set<String> quedan;
+}
+
+/// Lo que un aviso de notas le dice a «Mis notas»: de quién y de qué materia.
+///
+/// Cualquiera de los dos puede faltar, y entonces la pantalla hace lo de
+/// siempre con lo que falte: preguntar el acudido, o quedarse en la lista.
+class AvisoDeNotas {
+  const AvisoDeNotas({this.alumnoId, this.asignatura});
+
+  final int? alumnoId;
+  final String? asignatura;
+
+  factory AvisoDeNotas.deDatos(Map<String, dynamic> datos) {
+    final nombre = '${datos['asignatura'] ?? ''}'.trim();
+    return AvisoDeNotas(
+      alumnoId: int.tryParse('${datos['alumno_id'] ?? ''}'),
+      asignatura: nombre.isEmpty ? null : nombre,
+    );
+  }
+
+  /// Si [materia] o [alias] es la asignatura del aviso.
+  ///
+  /// El servidor la nombra por el alias si lo hay, y si no por la materia.
+  bool esDe({required String materia, String? alias}) {
+    final buscada = asignatura?.trim().toLowerCase();
+    if (buscada == null) return false;
+    return materia.trim().toLowerCase() == buscada ||
+        (alias ?? '').trim().toLowerCase() == buscada;
+  }
 }

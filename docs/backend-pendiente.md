@@ -1409,6 +1409,71 @@ la tanda y no por `main`.
 
 ---
 
+## 9. Un aviso de notas por alumno, con la asignatura en `datos` — PEDIDA el 23 sep, sin escribir
+
+Dos cosas del mismo bucle, `EnviarNotificaciones::avisosDeNotas`
+(`EnviarNotificaciones.php:262-275`), que se piden juntas porque tocan las mismas
+diez líneas.
+
+**1. Agrupar por alumno, no por alumno y asignatura.** Hoy, si un docente
+califica Sociales y otro Matemáticas en la misma pasada de quince minutos, la
+familia recibe dos avisos. Joseth decidió el 23 sep que sea **uno por alumno y
+pasada**. La consulta se queda como está: el `GROUP BY alumno, asignatura` sigue
+sirviendo para contar, y lo que cambia es que las filas se juntan por alumno en
+PHP antes de armar el aviso. Entre pasadas distintas siguen llegando avisos
+distintos; eso se aceptó así.
+
+**2. La asignatura en `datos`, solo cuando es una.** Tocar el aviso abre el
+desglose de esa asignatura. Hoy la asignatura solo va en el **texto**, y la app
+la saca de ahí (`Avisos.asignaturaDelTexto`), lo que depende de la frase: si
+alguien la reescribe, el aviso vuelve a abrir «Mis notas» entera sin que nada
+falle.
+
+```php
+$porAlumno = [];
+foreach ($filas as $fila) {
+    $porAlumno[(int) $fila->alumno_id][$fila->asignatura] = (int) $fila->cuantas;
+}
+
+foreach ($porAlumno as $alumnoId => $materias) {
+    $nombre = $this->primerNombreDe($alumnoId);
+    $cuantas = array_sum($materias);
+    $nombres = array_keys($materias);
+
+    $donde = count($nombres) === 1 ? $nombres[0]
+        : (count($nombres) <= 3
+            ? implode(', ', array_slice($nombres, 0, -1)).' y '.end($nombres)
+            : count($nombres).' materias');
+
+    $datos = ['pantalla' => 'notas', 'alumno_id' => (string) $alumnoId];
+    if (count($nombres) === 1) {
+        $datos['asignatura'] = (string) $nombres[0];   // COALESCE(alias, materia)
+    }
+
+    $avisos[] = [
+        'tema' => TemasDeNotificacion::deAlumnoYTipo($alumnoId, 'notas'),
+        'titulo' => 'Notas nuevas',
+        'cuerpo' => $cuantas === 1
+            ? $nombre.' tiene 1 nota nueva en '.$donde.'.'
+            : $nombre.' tiene '.$cuantas.' notas nuevas en '.$donde.'.',
+        'datos' => $datos,
+    ];
+}
+```
+
+**Lo que hace la app con cada servidor, sin tocarla:**
+
+| Servidor | Una materia | Varias |
+|---|---|---|
+| El de hoy | un aviso por materia; abre la suya (la saca del texto) | — |
+| El nuevo | abre la suya (la lee de `datos`) | un aviso; «Sociales y Matemáticas» no es ninguna asignatura, así que abre «Mis notas» |
+
+**Aquí no hay que encender nada.** `Avisos._datosDe` usa `datos['asignatura']`
+cuando viene y solo lee el texto cuando falta. Cuesta ese bucle y una tanda de
+despliegue.
+
+---
+
 ## Cómo arrancar la sesión que hace esto
 
 Se trabaja **desde dentro del backend** —`cd ~/DESARROLLOS/8myvc && claude`—, no

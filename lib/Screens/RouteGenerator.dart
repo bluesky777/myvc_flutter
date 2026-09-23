@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myvc_flutter/Utils/Avisos.dart';
 import 'package:myvc_flutter/Screens/BuscarEnMatriculasScreen.dart';
 import 'package:myvc_flutter/Screens/EstacionesScreen.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
@@ -67,7 +68,11 @@ class RouteGenerator {
             settings: settings, builder: (context) => MuroScreen());
       case '/mis-notas':
         return MaterialPageRoute(
-            settings: settings, builder: (context) => MisNotasScreen());
+            settings: settings,
+            builder: (context) => MisNotasScreen(
+                aviso: settings.arguments is AvisoDeNotas
+                    ? settings.arguments as AvisoDeNotas
+                    : null));
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());

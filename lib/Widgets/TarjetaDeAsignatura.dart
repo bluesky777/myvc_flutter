@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Models/LineaDeBoletinModel.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
+import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/constantes.dart';
 
@@ -132,7 +133,11 @@ class TarjetaDeAsignatura extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: asignatura.tieneNota ? kPrimaryColor : Colors.black26,
+            color: !asignatura.tieneNota
+                ? Colors.black26
+                : ContextoAcademico.instancia.config.esPerdida(asignatura.nota)
+                    ? Colors.red[700]
+                    : kPrimaryColor,
           ),
         ),
         if (conLineas && asignatura.desempenio != null)

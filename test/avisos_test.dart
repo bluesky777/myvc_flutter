@@ -180,6 +180,29 @@ void main() {
       expect(Avisos.abridorDe({'pantalla': 'estaciones'}), '/muro');
       expect(Avisos.abridorDe(const {}), '/muro');
     });
+
+    test('un aviso de notas dice de qué asignatura es', () {
+      // Los dos textos de EnviarNotificaciones::avisosDeNotas.
+      expect(
+          Avisos.asignaturaDelTexto('Laura tiene 1 nota nueva en SOC.'), 'SOC');
+      expect(
+          Avisos.asignaturaDelTexto(
+              'Laura tiene 4 notas nuevas en Ciencias Sociales.'),
+          'Ciencias Sociales');
+      // Otro formato: no se inventa una materia, se abre la lista.
+      expect(Avisos.asignaturaDelTexto('Hay notas nuevas.'), isNull);
+      expect(Avisos.asignaturaDelTexto(null), isNull);
+    });
+
+    test('la asignatura se reconoce por la materia o por su alias', () {
+      final aviso = AvisoDeNotas.deDatos(
+          {'pantalla': 'notas', 'alumno_id': '12', 'asignatura': 'soc '});
+      expect(aviso.alumnoId, 12);
+      expect(aviso.esDe(materia: 'Sociales', alias: 'SOC'), isTrue);
+      expect(aviso.esDe(materia: 'SOC'), isTrue);
+      expect(aviso.esDe(materia: 'Matemáticas', alias: 'MAT'), isFalse);
+      expect(AvisoDeNotas.deDatos(const {}).esDe(materia: 'SOC'), isFalse);
+    });
   });
 
   group('lo que el teléfono recuerda', () {
