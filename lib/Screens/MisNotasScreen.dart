@@ -14,6 +14,7 @@ import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorAcudido.dart';
 import 'package:myvc_flutter/Widgets/TarjetaDeAsignatura.dart';
+import 'package:myvc_flutter/Screens/DetalleAsignaturaScreen.dart';
 
 /// Las notas de un alumno, periodo a periodo.
 ///
@@ -322,9 +323,8 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
   /// Dónde está el alumno: su grupo y quién lo dirige.
   Widget _buildCabeceraGrupo() {
     final alumno = boletin!;
-    final titular = alumno.titularId == null
-        ? null
-        : docentes[alumno.titularId];
+    final titular =
+        alumno.titularId == null ? null : docentes[alumno.titularId];
 
     return Container(
       color: Colors.white,
@@ -435,9 +435,26 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
     return TarjetaDeAsignatura(
       asignatura: asignatura,
       lineas: _lineasDe(asignatura.asignaturaId),
+      alTocar: () => _abrirDetalle(asignatura),
     );
   }
 
+  /// De qué notas sale esa definitiva.
+  ///
+  /// El dato ya está en memoria —vino con el resto en `notas/alumno`— así que
+  /// abrirlo no cuesta ni una petición al colegio, que es lo que permite que
+  /// sea un toque y no una pantalla que carga.
+  void _abrirDetalle(AsignaturaNotaModel asignatura) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => DetalleAsignaturaScreen(
+        args: DetalleAsignaturaArgs(
+          asignatura: asignatura,
+          alumno: boletin?.nombreCompleto ?? '',
+          numeroPeriodo: periodoMostrado?.numero,
+        ),
+      ),
+    ));
+  }
 
   /// Los dos bloqueos, cada uno con lo suyo.
   Widget _buildBloqueo(NotasBloqueadas parado) {
@@ -450,7 +467,9 @@ class _MisNotasScreenState extends State<MisNotasScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              esTesoreria ? Icons.account_balance_wallet_outlined : Icons.lock_outline,
+              esTesoreria
+                  ? Icons.account_balance_wallet_outlined
+                  : Icons.lock_outline,
               size: 52,
               color: Colors.black26,
             ),

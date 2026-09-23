@@ -19,6 +19,7 @@ class TarjetaDeAsignatura extends StatelessWidget {
     super.key,
     required this.asignatura,
     this.lineas = const [],
+    this.alTocar,
   });
 
   final AsignaturaNotaModel asignatura;
@@ -29,9 +30,17 @@ class TarjetaDeAsignatura extends StatelessWidget {
   /// **exactamente** la de siempre.
   final List<LineaDeBoletin> lineas;
 
+  /// Abrir el desglose: de qué notas sale esta definitiva.
+  ///
+  /// Opcional, y sin él la tarjeta es exactamente la de siempre. Lo pasa «Mis
+  /// notas»; las pantallas que enseñan la tarjeta sin poder abrir nada —un
+  /// boletín en sólo lectura— lo dejan en null y no se pinta ni la flecha, que
+  /// sería prometer un toque que no hace nada.
+  final VoidCallback? alTocar;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final tarjeta = Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -85,6 +94,20 @@ class TarjetaDeAsignatura extends StatelessWidget {
           ),
           if (lineas.isNotEmpty) _buildLineas(lineas),
         ],
+      ),
+    );
+
+    if (alTocar == null) return tarjeta;
+
+    // El `InkWell` por fuera y no dentro del Container: así el resalte al
+    // tocar cubre la tarjeta entera, que es la zona que la gente toca, y no
+    // sólo el texto.
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: alTocar,
+        borderRadius: BorderRadius.circular(12),
+        child: tarjeta,
       ),
     );
   }

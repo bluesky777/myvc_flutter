@@ -40,6 +40,18 @@ class AsignaturaNotaModel {
   final int totalAusencias;
   final int totalTardanzas;
 
+  /// El desglose: de qué notas sueltas sale la definitiva.
+  ///
+  /// **Estuvo llegando y tirándose desde el primer día.** `GET
+  /// notas/alumno/{id}/{grupo}` devuelve `unidades` → `subunidades` → `nota`
+  /// dentro de cada asignatura, y este parser leía la definitiva y descartaba
+  /// el resto. Se notó cuando el aviso push empezó a decir «hay 3 notas nuevas
+  /// en Matemáticas» y al tocarlo no había dónde verlas: la app prometía una
+  /// pantalla que no existía con un dato que ya tenía en la mano.
+  ///
+  /// Vacío es una respuesta normal: el docente no montó unidades ese periodo.
+  final List<UnidadNotaModel> unidades;
+
   AsignaturaNotaModel({
     required this.asignaturaId,
     required this.materia,
@@ -55,7 +67,16 @@ class AsignaturaNotaModel {
     this.faltas = const [],
     this.totalAusencias = 0,
     this.totalTardanzas = 0,
+    this.unidades = const [],
   });
+
+  /// Cuántas notas puestas hay en el desglose.
+  int get cuantasNotas => unidades.fold(
+        0,
+        (suma, u) => suma + u.subunidades.where((s) => s.tieneNota).length,
+      );
+
+  bool get hayDesglose => unidades.any((u) => u.subunidades.isNotEmpty);
 
   bool get tieneNota => nota != null;
 
@@ -108,6 +129,122 @@ class AsignaturaNotaModel {
       faltas: _faltas(json['ausencias']),
       totalAusencias: enteroO(json['total_ausencias']),
       totalTardanzas: enteroO(json['total_tardanzas']),
+      unidades: _unidades(json['unidades']),
+    );
+  }
+}
+
+List<UnidadNotaModel> _unidades(dynamic crudo) {
+  if (crudo is! List) return const [];
+
+  return crudo
+      .whereType<Map>()
+      .map((u) => UnidadNotaModel.fromJson(Map<String, dynamic>.from(u)))
+      .toList()
+    ..sort((a, b) => a.orden.compareTo(b.orden));
+}
+
+/// Una unidad de la asignatura: el bloque que agrupa varias notas.
+///
+/// **Cómo la llama el colegio lo decide él**, en `unidad_displayname` —«Logro»,
+/// «Desempeño», «Indicador»—, así que la pantalla no escribe «Unidad» a mano:
+/// lo lee de [ConfiguracionColegio]. Ver `docs/configuracion.md`.
+class UnidadNotaModel {
+  const UnidadNotaModel({
+    required this.id,
+    required this.definicion,
+    this.porcentaje,
+    this.orden = 0,
+    this.subunidades = const [],
+  });
+
+  final int id;
+
+  /// Lo que el docente escribió que se evalúa aquí.
+  final String definicion;
+
+  /// Cuánto pesa dentro de la asignatura, si el colegio reparte por
+  /// porcentaje. Null cuando promedia, que es el otro modelo de evaluación.
+  final double? porcentaje;
+
+  final int orden;
+  final List<SubunidadNotaModel> subunidades;
+
+  factory UnidadNotaModel.fromJson(Map<String, dynamic> json) {
+    final crudas = json['subunidades'];
+
+    return UnidadNotaModel(
+      id: enteroO(json['unidad_id']),
+      definicion: '${json['definicion_unidad'] ?? ''}'.trim(),
+      porcentaje: _decimal(json['porcentaje_unidad']),
+      orden: enteroO(json['orden_unidad']),
+      subunidades: crudas is List
+          ? (crudas
+              .whereType<Map>()
+              .map((s) =>
+                  SubunidadNotaModel.fromJson(Map<String, dynamic>.from(s)))
+              .toList()
+            ..sort((a, b) => a.orden.compareTo(b.orden)))
+          : const [],
+    );
+  }
+}
+
+/// Una subunidad: la casilla donde vive UNA nota.
+///
+/// Es el nivel en el que el docente califica, y por tanto el que el aviso push
+/// cuenta cuando dice «hay 3 notas nuevas».
+class SubunidadNotaModel {
+  const SubunidadNotaModel({
+    required this.id,
+    required this.definicion,
+    this.porcentaje,
+    this.orden = 0,
+    this.nota,
+    this.desempenio,
+    this.fecha,
+  });
+
+  final int id;
+  final String definicion;
+  final double? porcentaje;
+  final int orden;
+
+  /// La nota, o null si todavía no la han puesto.
+  ///
+  /// **Null y cero no son lo mismo y aquí importa**: una casilla sin calificar
+  /// se pinta vacía, y un cero se pinta como un cero. Confundirlos le diría a
+  /// una familia que su hijo sacó cero en algo que nadie ha corregido.
+  final double? nota;
+
+  /// Cómo llama el colegio a esa nota: «Superior», «Bajo»…
+  final String? desempenio;
+
+  /// Cuándo se puso o se cambió por última vez.
+  final DateTime? fecha;
+
+  bool get tieneNota => nota != null;
+
+  /// La nota como se escribe, con la regla de decimales del colegio.
+  String get notaEscrita => notaPintada(nota);
+
+  factory SubunidadNotaModel.fromJson(Map<String, dynamic> json) {
+    // La nota viene anidada, y **puede llegar como objeto o no llegar**: la
+    // consulta hace un LEFT JOIN contra `notas`, así que la casilla sin
+    // calificar trae `nota: null` y no una nota con valor cero.
+    final cruda = json['nota'];
+    final nota = cruda is Map ? Map<String, dynamic>.from(cruda) : null;
+
+    return SubunidadNotaModel(
+      id: enteroO(json['subunidad_id']),
+      definicion: '${json['definicion_subunidad'] ?? ''}'.trim(),
+      porcentaje: _decimal(json['porcentaje_subunidad']),
+      orden: enteroO(json['orden_subunidad']),
+      nota: nota == null ? null : _decimal(nota['nota']),
+      desempenio: nota == null ? null : texto(nota['desempenio']),
+      fecha: nota == null
+          ? null
+          : DateTime.tryParse('${nota['updated_at'] ?? ''}'),
     );
   }
 }
@@ -218,7 +355,8 @@ class NotasAlumnoModel {
     final periodos = crudos is List
         ? (crudos
             .whereType<Map>()
-            .map((p) => PeriodoNotasModel.fromJson(Map<String, dynamic>.from(p)))
+            .map(
+                (p) => PeriodoNotasModel.fromJson(Map<String, dynamic>.from(p)))
             .toList()
           ..sort((a, b) => a.numero.compareTo(b.numero)))
         : <PeriodoNotasModel>[];
