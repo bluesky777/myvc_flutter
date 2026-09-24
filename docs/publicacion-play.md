@@ -752,7 +752,7 @@ verificación del instalador apagada (§8), Play Integrity en 0 de 7 (§8) y las
 por defecto en las exportaciones del catálogo de Play, que son metadatos
 públicos: nombre, ícono, descripción. Nada de usuarios.
 
-### Subir una actualización: los clics, como están el 23 sep 2026
+### Subir una actualización: los clics, como están el 23 sep 2026 (recorridos)
 
 La consola cambia de menú sin avisar. Esto es lo que se vio en pantalla ese día
 y no lo que dice la ayuda de Google; si algo no coincide, se corrige aquí.
@@ -764,11 +764,16 @@ y no lo que dice la ayuda de Google; si algo no coincide, se corrige aquí.
    tarjetas de abajo: *Prueba abierta*, *Prueba interna* y *Prueba cerrada ·
    alpha* son otros canales.
 3. En *Producción*: **Crear versión nueva**. Si está gris, hay un borrador: se
-   retoma en la pestaña *Versiones* → *Editar*.
+   retoma en la pestaña *Versiones* → *Administrar versión*. Para **tirar** un
+   borrador: *Versiones* → *Administrar versión* → **Descartar versión** (arriba
+   a la derecha). Desde *Descripción general* no se puede: su menú ⋮ solo tiene
+   *View change*. Un borrador descartado **gasta su `versionCode`** igual.
 4. **App bundles** → subir `build/app/outputs/bundle/release/app-release.aab`.
    Tiene que aparecer como `N (x.y.z)` con el `N` de `pubspec.yaml`.
 5. **Notas de la versión** en `es-419`, y debajo *«disponibles en 1 idioma»*.
-6. **Siguiente** → revisar avisos → **Guardar**.
+6. **Siguiente** → revisar avisos → **Guardar** → en el diálogo «¿Ir a
+   Descripción general…?», **Ahora no** si falta cambiar la ficha o el
+   formulario. La versión anterior sale en *No incluidos*: se deja así.
 7. **Nada llega a Google todavía.** Se envía desde **Descripción general de la
    publicación**, que ahora dirá que hay cambios sin publicar, junto con lo que
    se haya cambiado en la ficha o en *Contenido de la app*: todo sale en un
@@ -777,11 +782,16 @@ y no lo que dice la ayuda de Google; si algo no coincide, se corrige aquí.
 **Solo para `1.1.0 (5)`, la que estrena los avisos**, antes del paso 7 y en el
 mismo envío:
 
-- **Contenido de la app → Seguridad de los datos**: la fila *ID del
-  dispositivo* pasa a «Estadísticas y Funciones de la app», sigue opcional
-  (`seguridad-datos-play.md:98`).
-- **Ficha principal de la tienda**: el bloque *AVISOS CUANDO HAY ALGO NUEVO* y
-  el párrafo de Firebase Cloud Messaging (`ficha-play.md:104-130`).
+- **Seguridad de los datos**: *Supervisa y mejora* → *Política y programas* →
+  *Contenido de la app* → pestaña **Completadas** → *Seguridad de los datos* →
+  *Administrar*. Pasos 2 y 3 sin tocar; en el 4, *Dispositivo u otros IDs* →
+  *Mostrar* → *editar* → marcar **Funciones de la app** además de Estadísticas.
+  El botón **Guardar** está al final de la *Vista previa*, bajando la página:
+  la barra de abajo solo enseña *Descartar* (`seguridad-datos-play.md:98`).
+- **Ficha**: *Aumenta la cantidad de usuarios* → *Presencia en Play Store* →
+  *Fichas de Play Store* → **Editar ficha predeterminada** → *Descripción
+  completa*. Se pega entera, sin cortes de línea dentro de los párrafos: los de
+  `ficha-play.md` son de este documento, no del texto (`ficha-play.md:104-130`).
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 

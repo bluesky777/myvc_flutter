@@ -112,8 +112,8 @@ Va **antes** de «TU COLEGIO, TUS DATOS»:
 ```
 AVISOS CUANDO HAY ALGO NUEVO
 
-• Entérate el mismo día: notas publicadas, una ausencia registrada, una
-  anotación de disciplina o una publicación del colegio.
+• Entérate el mismo día: notas publicadas, una ausencia registrada o una
+  anotación de disciplina.
 • El aviso solo te dice que hay algo nuevo. Para verlo entras con tu usuario,
   así que nadie que tome tu teléfono lee tus notas desde la pantalla de bloqueo.
 • Tú eliges qué avisos quieres recibir, y puedes apagarlos todos.
