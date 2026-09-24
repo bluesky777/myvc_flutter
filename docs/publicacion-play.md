@@ -429,8 +429,9 @@ consola después de subir.
 
 **El `versionCode` sube en cada subida, siempre.** Es el `+N` de `version:` en
 `pubspec.yaml`. Play rechaza un bundle con un `versionCode` que ya vio, aunque
-lo hayas borrado. Hoy va en `1.0.0+1`; la siguiente subida es `1.0.0+2` (o
-`1.0.1+2` si además cambia lo que ve el usuario).
+lo hayas borrado. El número vigente es el de `pubspec.yaml`, no el de este
+documento; la última subida a producción fue `1.0.1 (4)`. Súbelo en uno siempre,
+y sube también la parte `x.y.z` si cambia lo que ve el usuario.
 
 ### Una sola clave, a propósito
 
@@ -750,6 +751,39 @@ verificación del instalador apagada (§8), Play Integrity en 0 de 7 (§8) y las
 **preferencias de acceso al catálogo** sin tocar —si no decides, la ficha entra
 por defecto en las exportaciones del catálogo de Play, que son metadatos
 públicos: nombre, ícono, descripción. Nada de usuarios.
+
+### Subir una actualización: los clics, como están el 23 sep 2026
+
+La consola cambia de menú sin avisar. Esto es lo que se vio en pantalla ese día
+y no lo que dice la ayuda de Google; si algo no coincide, se corrige aquí.
+
+1. **Inicio de la app** (la que tiene *Descripción general de la publicación*
+   arriba) → la flecha de la tarjeta **Prueba y lanza**.
+2. En *Prueba y lanza*, la flecha de la fila **Versión de producción más
+   reciente** (muestra la versión vigente, p. ej. `4 (1.0.1)`). **No** son las
+   tarjetas de abajo: *Prueba abierta*, *Prueba interna* y *Prueba cerrada ·
+   alpha* son otros canales.
+3. En *Producción*: **Crear versión nueva**. Si está gris, hay un borrador: se
+   retoma en la pestaña *Versiones* → *Editar*.
+4. **App bundles** → subir `build/app/outputs/bundle/release/app-release.aab`.
+   Tiene que aparecer como `N (x.y.z)` con el `N` de `pubspec.yaml`.
+5. **Notas de la versión** en `es-419`, y debajo *«disponibles en 1 idioma»*.
+6. **Siguiente** → revisar avisos → **Guardar**.
+7. **Nada llega a Google todavía.** Se envía desde **Descripción general de la
+   publicación**, que ahora dirá que hay cambios sin publicar, junto con lo que
+   se haya cambiado en la ficha o en *Contenido de la app*: todo sale en un
+   solo envío.
+
+**Solo para `1.1.0 (5)`, la que estrena los avisos**, antes del paso 7 y en el
+mismo envío:
+
+- **Contenido de la app → Seguridad de los datos**: la fila *ID del
+  dispositivo* pasa a «Estadísticas y Funciones de la app», sigue opcional
+  (`seguridad-datos-play.md:98`).
+- **Ficha principal de la tienda**: el bloque *AVISOS CUANDO HAY ALGO NUEVO* y
+  el párrafo de Firebase Cloud Messaging (`ficha-play.md:104-130`).
+- **Fuera de Play, el mismo día**: `docs/privacidad.html` a
+  `https://micolevirtual.com/privacidad.html`, a mano.
 
 ### El tamaño real de la descarga
 
