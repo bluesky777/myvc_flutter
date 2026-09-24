@@ -291,6 +291,7 @@ class LoginController implements LoginBaseController {
     AuthService.user.username = '${datos['username'] ?? usernameDeRespaldo ?? ''}';
     AuthService.user.nombres = nombre.isEmpty ? null : nombre;
     AuthService.user.sexo = '${datos['sexo'] ?? 'M'}';
+    AuthService.user.imagenNombre = texto(datos['imagen_nombre']);
     AuthService.user.isSuperuser = entero(datos['is_superuser']) == 1;
     AuthService.user.roles = _rolesDe(datos['roles']);
     AuthService.user.perms = _permsDe(datos['perms']);

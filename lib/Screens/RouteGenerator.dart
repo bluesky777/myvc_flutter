@@ -22,6 +22,7 @@ import 'package:myvc_flutter/Screens/AsistenciaClaseScreen.dart';
 import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
+import 'package:myvc_flutter/Screens/MiPerfilScreen.dart';
 
 import 'AlumTardanzaColeScreen.dart';
 
@@ -84,6 +85,9 @@ class RouteGenerator {
         return MaterialPageRoute(
             settings: settings,
             builder: (context) => const MiMatriculaScreen());
+      case '/mi-perfil':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const MiPerfilScreen());
       case '/privacidad':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const PrivacidadScreen());

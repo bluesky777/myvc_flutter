@@ -52,6 +52,11 @@ class UserAutenticado {
   /// El id de la ficha —profesor, alumno, acudiente—, que no es el del usuario.
   int? personaId;
 
+  /// Su imagen de perfil —`imagen_nombre` del login—, la que se cambia en «Mi
+  /// perfil». Sin foto propia el servidor manda `default_male.png` o
+  /// `default_female.png`, que también se pintan.
+  String? imagenNombre;
+
   UserAutenticado({
     this.token,
     this.id,
@@ -64,6 +69,7 @@ class UserAutenticado {
     Set<String>? perms,
     this.isSuperuser = false,
     this.personaId,
+    this.imagenNombre,
   })  : roles = roles ?? {},
         perms = perms ?? {};
 

@@ -33,6 +33,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Para elegir tu foto de perfil o la imagen de tu firma en «Mi perfil».</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Para tomarte la foto de perfil desde «Mi perfil».</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Para conectarse a un servidor del colegio que esté en esta misma red, cuando se escribe su dirección a mano en la opción «Otro».</string>
 	<key>UIApplicationSceneManifest</key>

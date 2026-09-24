@@ -285,4 +285,16 @@ class Interruptores {
   /// confirmación, «ya votaste» y los resultados— con su capa de datos y sus
   /// modelos. Ver `docs/votaciones.md`.
   static const bool votaciones = false;
+
+  /// La firma del titular dentro de «Mi perfil», con `firmas-del-titular/*`.
+  ///
+  /// **Espera un despliegue.** Las rutas entraron en `8myvc` con `4f44e06`
+  /// —«la firma del titular se pide y la aprueba otro»— y un colegio que no lo
+  /// tenga contesta 404 a `mia`. La foto y la contraseña de la misma pantalla
+  /// **no llevan interruptor**: usan rutas de siempre.
+  ///
+  /// Se enciende cuando esté en todos los colegios, medido con la tanda de
+  /// despliegue y no con `main`. Para probarlo antes:
+  /// `--dart-define=MI_FIRMA=true` (ver [estaciones]).
+  static const bool miFirma = bool.fromEnvironment('MI_FIRMA');
 }

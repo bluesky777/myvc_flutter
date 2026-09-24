@@ -59,6 +59,14 @@ class Server {
     '/estaciones',
     '/requisitos/recorrido/',
     '/requisitos/mi-recorrido/',
+    // «Mi perfil», que entraron con su pantalla el 24 sep 2026 y nunca
+    // tuvieron un cliente viejo que dependiera del HTML. La contraseña corta con `abort(400, 'Contraseña antigua es incorrecta')` y la firma
+    // con un 403 que dice quién puede pedirla: sin la cabecera, las dos
+    // frases llegaban como HTML.
+    '/perfiles/cambiarpassword/',
+    '/firmas-del-titular/',
+    '/myimages/store',
+    '/images-users/cambiar-imagen-perfil/',
   ];
 
   static bool pideJson(String direccion) =>
@@ -142,6 +150,25 @@ class Server {
         }),
         body: jsonEncode(params));
     return response;
+  }
+
+  /// Sube un archivo como `multipart/form-data`, en el campo `file`.
+  ///
+  /// Es el nombre que leen todas las subidas del servidor
+  /// —`SafeUpload::archivoRecibido('file')`—. Recibe bytes y no una ruta
+  /// porque en la web no hay ruta: el selector de imágenes solo da el
+  /// contenido.
+  ///
+  /// Devuelve un `http.Response` como los demás, ya leído entero, para que
+  /// quien llama lo trate igual que un `post`.
+  Future<http.Response> subir(
+      String direccion, List<int> bytes, String nombreArchivo) async {
+    final peticion = http.MultipartRequest('POST', _uri(direccion))
+      ..headers.addAll(_conAccept(direccion, _encabezado()))
+      ..files.add(http.MultipartFile.fromBytes('file', bytes,
+          filename: nombreArchivo));
+
+    return http.Response.fromStream(await peticion.send());
   }
 
   Future delete(String direccion) {

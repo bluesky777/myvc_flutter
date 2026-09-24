@@ -112,6 +112,7 @@ class MenuLateral extends StatelessWidget {
             ruta: '/mi-matricula',
           ),
         _opcionNotificaciones(context),
+        _opcionMiPerfil(context),
         _opcionPrivacidad(context),
       ]);
       return opciones;
@@ -255,6 +256,7 @@ class MenuLateral extends StatelessWidget {
       ruta: '/configuracion',
     ));
 
+    opciones.add(_opcionMiPerfil(context));
     opciones.add(_opcionPrivacidad(context));
 
     return opciones;
@@ -264,14 +266,25 @@ class MenuLateral extends StatelessWidget {
   ///
   /// Va aparte en vez de al lado de «Configuración» porque esa es del colegio y
   /// solo la ve el personal, y esto lo tiene que poder apagar quien sea dueño
-  /// del teléfono: un acudiente igual que un coordinador. Es la única opción
-  /// que aparece en las dos ramas de este menú, y por eso se escribe una vez.
+  /// del teléfono: un acudiente igual que un coordinador. Aparece en las dos
+  /// ramas de este menú —como «Mi perfil»—, y por eso se escribe una vez.
   Widget _opcionPrivacidad(BuildContext context) {
     return _opcion(
       context,
       icono: Icons.privacy_tip_outlined,
       texto: 'Privacidad',
       ruta: '/privacidad',
+    );
+  }
+
+  /// La cuenta propia: foto, contraseña y, si es titular, la firma. En las dos
+  /// ramas, como [_opcionPrivacidad]: la contraseña la cambia cualquiera.
+  Widget _opcionMiPerfil(BuildContext context) {
+    return _opcion(
+      context,
+      icono: Icons.account_circle_outlined,
+      texto: 'Mi perfil',
+      ruta: '/mi-perfil',
     );
   }
 
