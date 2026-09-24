@@ -670,8 +670,11 @@ Lo que quedó:
   */15 * * * * for d in /home/micolev1/amiguitosdejesus.micolevirtual.com/8myvc … ; do cd $d && /usr/local/bin/php artisan notificaciones:enviar >> /home/micolev1/notificaciones.log 2>&1; done
   ```
 
-- **En `micolevi` (el LAL de verdad) todavía no.** Tiene su propia línea de
-  `schedule:run` y probablemente le pasa lo mismo.
+- En `micolevi` (el LAL de verdad), la misma noche: una cuarta línea en su
+  crontab, `*/15 * * * * cd /home/micolevi/public_html/8myvc && /usr/local/bin/php
+  artisan notificaciones:enviar >> /home/micolevi/notificaciones.log 2>&1`.
+  Comprobado antes: tenía marca (no era primera pasada), nada pendiente, y las
+  credenciales de Firebase legibles (`micolevirtual-mobile`).
 
 **Y cómo se edita ese crontab sin romperlo.** `crontab -l | sed … | crontab -`
 **lo dejó vacío** en esta cuenta: 0 líneas, los 16 colegios, unos minutos. Se
