@@ -9,6 +9,10 @@ las estaciones **en `app2`, o sea en la web**. Esto contesta la pregunta que que
 **Maqueta navegable de las doce pantallas:**
 https://claude.ai/artifact/3fixY3xaQsjGT2V4LAWPbE
 
+> **ESTADO AL 24 SEP 2026: escritas, CONECTADAS a las rutas reales y apagadas para publicar.**
+> Las diez rutas están en `main` de `8myvc` (y `mi-recorrido` también: lo de «en una rama»
+> de `385aedb` caducó). Lo que se hizo, cómo se prueba y qué queda fuera: **§8**.
+
 ---
 
 ## 0. Por qué la estación tiene que ser la app y no la web
@@ -565,3 +569,75 @@ ficha, no el de la cuenta—.
 
 Colgarla de cualquiera de los otros la encendería contra una ruta que todavía puede dar
 404, y un 404 dentro de la app se lee como «esto está roto».
+
+---
+
+## 8. Conectadas a las rutas reales — 24 sep 2026
+
+**Commits:** `8myvc` `43df438` y `d3dcd48`; `myvc_flutter` `bf5e62d`.
+
+### 8.1 · Lo medido
+
+Las diez rutas de `routes/api/estaciones.php` más `requisitos/recorrido` y
+`requisitos/mi-recorrido` **contestan desde el controlador en el docker** (curl; los 404
+son frases del dominio, «esa estación no existe en el recorrido de este año», no «the route
+could not be found»). Todas en `main`. El vocabulario de `requisitos_alumno.estado` ya
+estaba cerrado (`App\Support\EstadosDelPaso`, `b076683`): `marcar` acepta
+`cumple|observado|devuelto` y `requisitos/alumno` rechaza con 422 lo que no sea de los seis.
+No hizo falta ninguna migración.
+
+Después se volcaron **las respuestas reales** de las diez contra una base de tests propia
+(`simonbolivar_testing_eapp`) y se leyeron con los lectores de la app:
+`test/fixtures/estaciones/*.json` y `test/estaciones_contrato_real_test.dart`.
+
+### 8.2 · Lo que no cuadraba, y dónde se arregló
+
+| | dónde |
+|---|---|
+| La ficha se pedía sin `?estacion=`: sin él no hay `si_no` y **la 08 no saltaba nunca** | app |
+| La huella con estaciones 0..n-1 salía como **lista** y la app no recargaba la cola | los dos |
+| «Devuélvase a la estación 0» se perdía (`!= 0`) | app |
+| La ficha firmaba en blanco a quien no tiene ficha de profesor (secretaría); `marcar` sí firmaba | servidor |
+| `requisitos/recorrido` daba por **cumplido** un paso devuelto, y no mandaba el motivo | los dos |
+| Resolver una nota se auditaba sin alumno | servidor |
+| `observado` contaba como requisito que falta | app |
+| Los motivos del servidor (403, 409, 422) llegaban en **HTML** y se perdían | app: `Server.rutasQueContestanJson` |
+
+El `Accept: application/json` va **sólo** para `estaciones/*` y los dos recorridos: en el
+resto de rutas cambiaría un 302 de validación por un 422 en pantallas que no se han mirado.
+
+### 8.3 · Los interruptores
+
+Los tres del módulo siguen **`false` en lo que se publica**; la tanda de la Play Store la
+decide Joseth. Para probar en un teléfono, sin tocar código:
+
+    flutter run --dart-define=SERVIDOR=http://<ip-del-mac> \
+      --dart-define=ESTACIONES=true \
+      --dart-define=RECORRIDO_MATRICULA=true \
+      --dart-define=MI_MATRICULA=true
+
+Para verlo con datos, el colegio del docker necesita pasos con `orden` en
+`requisitos_matricula` del año actual (se arman en la web, `requisitos/store`): sin ellos
+`GET estaciones` contesta la campaña cerrada y la pantalla lo dice.
+
+Los pendientes de `PendientesEstaciones` que ya tienen pantalla y ruta —marcar, devolver,
+mandar al salteado, buscar por código, resolver nota— **nacen encendidos**: debajo sólo
+queda el despliegue. Encender para la tienda sigue siendo lo del docblock de
+`Interruptores`: el commit ancestro del hash desplegado en todos los colegios, **y** los
+de `d3dcd48`, porque sin él la huella de un colegio numerado desde 0 llega como lista (la
+app ya la lee) y el recorrido del personal enseña la observación en vez del motivo.
+
+### 8.4 · Lo que quedó fuera
+
+- **«Atenderlo de todas formas»** (08): el servidor no tiene dónde guardar quién autoriza
+  el salto. Hace falta una columna en `envios_estacion` o en `requisitos_alumno`, y quién
+  puede autorizarlo es decisión de Joseth.
+- **El escáner y el push**: decididos fuera el 20 sep.
+- **El tablero** (`estaciones/tablero`): es la pantalla 15, del rector y de la web.
+- **`faltan` de «Mi proceso» cuenta requisitos, no estaciones**: con dos papeles en una
+  estación dice «faltan 2 pasos». Igual en la web; se cambia en el servidor si se quiere.
+- **La nota se cuelga siempre del primer requisito de la estación** (la app no manda
+  `requisito_id`). Sin efecto mientras cada estación tenga un solo papel.
+- **No se condujo en un teléfono**: la base del docker (`micolev1_la_hermosa` hoy) no tiene
+  recorrido armado y armarlo es escribir en la base compartida.
+
