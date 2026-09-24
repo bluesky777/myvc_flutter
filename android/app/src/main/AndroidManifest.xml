@@ -67,6 +67,15 @@
         <meta-data
             android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
+        <!-- Sin esto, Firebase crea el identificador de avisos y lo registra
+             con Google en cuanto la app lo toca al arrancar, aunque la persona
+             no haya dado permiso. Apagado, solo se crea al suscribirse a un
+             tema, y eso Avisos lo hace después del permiso. La ficha de
+             seguridad de datos declara ese identificador «opcional», y lo es
+             por esta línea. Ver docs/seguridad-datos-play.md. -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
         <!-- En qué canal caen los avisos cuando llegan con la app cerrada.
              Ahí no hay Dart corriendo para elegirlo, así que lo elige el
              sistema con esto; el canal en sí lo crea Avisos.arrancar(). Los dos
