@@ -39,7 +39,11 @@ class PendientesEstaciones {
   /// confirmar, el deshacer de ocho segundos y el motivo obligatorio son la
   /// mitad de esa decisión, y un botón que cierre sin ellas sería peor que no
   /// tener botón.
-  static bool marcarElPaso = false;
+  ///
+  /// **Encendido el 24 sep 2026**: la pantalla está escrita y su ruta está en
+  /// `main` de `8myvc`, cotejada con la respuesta real. Lo que queda por
+  /// debajo es sólo [Interruptores.estaciones], que es el despliegue.
+  static bool marcarElPaso = true;
 
   /// Devolver con motivo (pantalla 06).
   ///
@@ -47,7 +51,11 @@ class PendientesEstaciones {
   /// botón **no se enciende sin texto escrito**, y lo que se escriba **lo lee la
   /// familia**. Sin esa pantalla, devolver sería mandar a alguien a su casa sin
   /// decirle por qué.
-  static bool devolverConMotivo = false;
+  ///
+  /// **Encendido el 24 sep 2026**: la pantalla está escrita y su ruta está en
+  /// `main` de `8myvc`, cotejada con la respuesta real. Lo que queda por
+  /// debajo es sólo [Interruptores.estaciones], que es el despliegue.
+  static bool devolverConMotivo = true;
 
   /// Mandar a otra estación al que llega salteado (pantalla 08).
   ///
@@ -63,7 +71,11 @@ class PendientesEstaciones {
   /// 08— y dice justo eso: **ni un chulo verde ni un aviso de que se guardó
   /// algo del recorrido**, porque no se guardó. Lo que queda por debajo de este
   /// `false` es el despliegue de las nueve rutas, como en todo el módulo.
-  static bool mandarAlQueLlegaSalteado = false;
+  ///
+  /// **Encendido el 24 sep 2026**: la pantalla está escrita y su ruta está en
+  /// `main` de `8myvc`, cotejada con la respuesta real. Lo que queda por
+  /// debajo es sólo [Interruptores.estaciones], que es el despliegue.
+  static bool mandarAlQueLlegaSalteado = true;
 
   /// **«Atenderlo de todas formas»** (pantalla 08).
   ///
@@ -102,7 +114,11 @@ class PendientesEstaciones {
   /// que se enseña como lo que hay que hacer y no como un error; y el
   /// `codigo_anterior`, que entra en la búsqueda **porque el papel viejo está en
   /// casa de una familia** y quien lo teclee tiene que llegar a su orden.
-  static bool buscarPorElCodigo = false;
+  ///
+  /// **Encendido el 24 sep 2026**: la pantalla está escrita y su ruta está en
+  /// `main` de `8myvc`, cotejada con la respuesta real. Lo que queda por
+  /// debajo es sólo [Interruptores.estaciones], que es el despliegue.
+  static bool buscarPorElCodigo = true;
 
   /// Leer el QR de la hoja de ruta (pantalla 03).
   ///
@@ -196,21 +212,25 @@ class PendientesEstaciones {
   ///
   /// Lo que queda apagado ya no es la ruta: es la **pantalla 12** —las notas
   /// entre estaciones—, que todavía no está escrita, y el despliegue.
-  static bool resolverUnaNota = false;
+  ///
+  /// **Encendido el 24 sep 2026**: la pantalla está escrita y su ruta está en
+  /// `main` de `8myvc`, cotejada con la respuesta real. Lo que queda por
+  /// debajo es sólo [Interruptores.estaciones], que es el despliegue.
+  static bool resolverUnaNota = true;
 
   /// Deja los interruptores como vienen de fábrica. Para las pruebas.
   ///
   /// «De fábrica» es lo que hay escrito arriba, no «todo apagado»: si esto se
   /// desincroniza, las pruebas dejan de comprobar la app que se publica.
   static void comoDeFabrica() {
-    marcarElPaso = false;
-    devolverConMotivo = false;
-    mandarAlQueLlegaSalteado = false;
+    marcarElPaso = true;
+    devolverConMotivo = true;
+    mandarAlQueLlegaSalteado = true;
     atenderloDeTodasFormas = false;
-    buscarPorElCodigo = false;
+    buscarPorElCodigo = true;
     escanearElCodigo = false;
     pushInmediato = false;
-    resolverUnaNota = false;
+    resolverUnaNota = true;
   }
 }
 
@@ -490,7 +510,13 @@ Future<Map<int, String>> traerLaHuella(Server server) async {
 Map<int, String> leerLaHuella(dynamic cuerpo) {
   final crudo = _comoMapa(cuerpo);
   if (crudo == null) return const {};
-  final porEstacion = crudo['por_estacion'];
+  var porEstacion = crudo['por_estacion'];
+  // **Una LISTA también vale, y el índice es el número de la estación.** Un
+  // servidor sin el arreglo del 24 sep 2026 contesta con estaciones 0..n-1
+  // seguidas `{"por_estacion":[{…},{…}]}`: PHP guarda la clave `"0"` como
+  // entero y `json_encode` lo saca como lista. Rechazarla dejaba la cola sin
+  // recargar nunca en el colegio que numera desde el cero.
+  if (porEstacion is List) porEstacion = porEstacion.asMap();
   if (porEstacion is! Map) return const {};
 
   final huella = <int, String>{};
@@ -520,11 +546,22 @@ Map<int, String> leerLaHuella(dynamic cuerpo) {
 }
 
 /// La ficha de una persona, con sus N pasos.
-Future<FichaDeEstacion?> traerLaFicha(Server server, int personaId) async {
+Future<FichaDeEstacion?> traerLaFicha(
+  Server server,
+  int personaId, {
+  int? desdeLaEstacion,
+}) async {
   if (!Interruptores.estaciones) return null;
 
+  // **`?estacion=` no es un adorno: sin él el servidor no calcula `si_no` ni
+  // `puede_atenderlo`**, y la pantalla del salteado (08) no podía saltar nunca
+  // —medido contra las respuestas reales el 24 sep 2026—. Se manda siempre que
+  // se abra la ficha desde una estación.
+  final consulta =
+      desdeLaEstacion == null ? '' : '?estacion=$desdeLaEstacion';
+
   final crudo = _cuerpo(
-    await server.get('/estaciones/alumno/$personaId'),
+    await server.get('/estaciones/alumno/$personaId$consulta'),
     'la ficha de esa persona',
   );
 
@@ -728,9 +765,11 @@ typedef PasoMarcado = ({
 /// en silencio. [observacion] va a `requisitos_alumno.descripcion`, que es la
 /// casilla de siempre de la pantalla vieja de requisitos.
 ///
-/// Y **`observacion` se manda sólo si no es null**, porque el controlador
-/// pregunta por `Request::has`: mandar cadena vacía **borra** la observación
-/// que hubiera. Null es «no la toques».
+/// Y **`observacion` se manda sólo si no es null**. Null es «no la toques».
+/// Mandar cadena vacía **no la borra**, contra lo que decía aquí: el
+/// `ConvertEmptyStringsToNull` de Laravel la vuelve null y el controlador se
+/// salta las null. O sea que una observación **no se puede borrar por esta
+/// ruta** (leído en `EstacionesController` el 24 sep 2026).
 ///
 /// ## Devolver NO cierra, y la pantalla tiene que contarlo así
 ///
@@ -1054,18 +1093,28 @@ PasoMarcado _sinCerrarElPaso(String fallo) => (
 
 /// Lecturas: lanzan con el motivo ya escrito en español, para enseñarlo tal cual.
 dynamic _cuerpo(dynamic res, String que) {
-  if (res.statusCode == 401 || res.statusCode == 403) {
-    throw Exception('No tienes permiso para ver $que.');
+  final codigo = res.statusCode as int;
+  // Lo que escribió el servidor, si lo escribió. Llega desde el 24 sep 2026,
+  // cuando `Server` empezó a pedir JSON para estas rutas.
+  final dijo = codigo >= 300 && codigo < 500 ? loQueDijoElServidor(res.body) : null;
+
+  if (codigo == 401 || codigo == 403) {
+    throw Exception(dijo ?? 'No tienes permiso para ver $que.');
   }
-  if (res.statusCode == 404) {
-    // Se dice qué falta y no «no disponible»: quien lo lee es quien puede
-    // pedirlo. Ver `docs/backend-pendiente.md` §8.
+  if (codigo == 404) {
+    // **Dos 404 que no son el mismo.** El de Laravel cuando la RUTA no existe
+    // —el colegio no está desplegado— dice «The route … could not be found»; el
+    // del controlador dice qué no existe: «esa estación no existe en el
+    // recorrido de este año», «ese alumno no existe». El segundo se enseña tal
+    // cual; el primero, con lo que falta, que quien lo lee puede pedirlo. Ver
+    // `docs/backend-pendiente.md` §8.
+    if (dijo != null && !dijo.startsWith('The route')) throw Exception(dijo);
     throw Exception(
       'Tu colegio todavía no tiene las estaciones del día de matrículas.',
     );
   }
-  if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+  if (codigo >= 300) {
+    throw Exception(dijo ?? 'El servidor respondió $codigo.');
   }
   final cuerpo = res.body;
   if (cuerpo is! String || cuerpo.trim().isEmpty) return null;
@@ -1153,8 +1202,10 @@ Future<String?> _mandar(
 /// superusuarios, el 20 sep 2026—.
 ///
 /// Los mensajes de aquí son el respaldo para cuando el servidor no se explica o
-/// contesta su página de error en HTML en vez de JSON, que pasa siempre que la
-/// petición no manda `Accept: application/json` — o sea, en esta app, siempre.
+/// contesta su página de error en HTML en vez de JSON. **Hasta el 24 sep 2026
+/// eso pasaba siempre**, porque la app no mandaba `Accept: application/json`;
+/// desde entonces `Server.rutasQueContestanJson` la manda para estas rutas y
+/// el motivo del servidor llega.
 ///
 /// ## Lo que NO se enseña, y es la mitad de [loQueDijoElServidor]
 ///

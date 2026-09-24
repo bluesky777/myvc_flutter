@@ -187,7 +187,20 @@ class Interruptores {
   /// Se deja escrito en vez de borrado porque la corrección **vino de medir el
   /// modo de fallo, no de leer el código**: una pantalla que miente en silencio
   /// no la encuentra nadie leyendo.
-  static const bool estaciones = false;
+  ///
+  /// ## Para probarlo sin publicar nada (24 sep 2026)
+  ///
+  /// Sigue `false` en la app que se publica. Para encenderlo en un teléfono de
+  /// pruebas, sin tocar este archivo:
+  ///
+  ///     flutter run --dart-define=ESTACIONES=true \
+  ///       --dart-define=RECORRIDO_MATRICULA=true --dart-define=MI_MATRICULA=true
+  ///
+  /// (más el `--dart-define=SERVIDOR=…` de siempre). Es `const` igual: un
+  /// `--dart-define` se resuelve al compilar, así que un APK de la tienda
+  /// construido sin él lleva el `false`.
+  /// Receta entera en `docs/estaciones.md` §8.
+  static const bool estaciones = bool.fromEnvironment('ESTACIONES');
 
   /// El recorrido de matrícula de una persona, con `GET requisitos/recorrido/{id}`.
   ///
@@ -206,7 +219,10 @@ class Interruptores {
   /// búsqueda por nombre y por apellido usa `PUT buscar/por-nombre` y
   /// `por-apellido`, que llevan desplegadas desde mucho antes. Buscar funciona
   /// hoy; abrir el recorrido de lo encontrado es lo que espera.
-  static const bool recorridoDeMatricula = false;
+  ///
+  /// Para probarlo: `--dart-define=RECORRIDO_MATRICULA=true` (ver [estaciones]).
+  static const bool recorridoDeMatricula =
+      bool.fromEnvironment('RECORRIDO_MATRICULA');
 
   /// «Mi proceso»: lo que ve la FAMILIA, con `GET requisitos/mi-recorrido/{id}`.
   ///
@@ -229,7 +245,9 @@ class Interruptores {
   ///
   /// **No depende del push**, que Joseth descartó el 20 sep 2026. Sirve igual
   /// entrando a mano, que es como se va a usar el primer año.
-  static const bool miMatricula = false;
+  ///
+  /// Para probarlo: `--dart-define=MI_MATRICULA=true` (ver [estaciones]).
+  static const bool miMatricula = bool.fromEnvironment('MI_MATRICULA');
 
   /// Votar desde el teléfono: personero, contralor y los demás cargos.
   ///

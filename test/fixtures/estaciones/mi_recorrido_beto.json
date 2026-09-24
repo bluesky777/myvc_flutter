@@ -1,0 +1,45 @@
+{
+ "status": 200,
+ "body": {
+  "alumno": {
+   "id": 634,
+   "nombres": "Clara",
+   "apellidos": "Leon Cano"
+  },
+  "year_id": 8,
+  "pasos": [
+   {
+    "estacion": 1,
+    "requisito": "Recepción",
+    "descripcion": null,
+    "bloquea": true,
+    "cumplido": false,
+    "devuelto": true,
+    "motivo_devolucion": "Falta el registro civil",
+    "cerrado_at": null
+   },
+   {
+    "estacion": 2,
+    "requisito": "Documentos",
+    "descripcion": null,
+    "bloquea": true,
+    "cumplido": false,
+    "devuelto": false,
+    "motivo_devolucion": null,
+    "cerrado_at": null
+   },
+   {
+    "estacion": 3,
+    "requisito": "Tesorería",
+    "descripcion": null,
+    "bloquea": true,
+    "cumplido": false,
+    "devuelto": false,
+    "motivo_devolucion": null,
+    "cerrado_at": null
+   }
+  ],
+  "faltan": 3,
+  "completo": false
+ }
+}

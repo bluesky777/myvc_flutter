@@ -1,0 +1,10 @@
+{
+ "status": 200,
+ "body": {
+  "registrado": true,
+  "desde": 3,
+  "hacia": 1,
+  "donde": "Recepción",
+  "paso_escrito": false
+ }
+}

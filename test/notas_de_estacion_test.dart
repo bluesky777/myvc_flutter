@@ -290,6 +290,9 @@ void main() {
   group('resolver una nota: el permiso lo calcula el servidor, no la app', () {
     testWidgets('sin la ruta desplegada, el botón está apagado con su motivo',
         (tester) async {
+      // Encendido de fábrica desde el 24 sep 2026; el camino apagado sigue
+      // existiendo y se prueba apagándolo a mano.
+      PendientesEstaciones.resolverUnaNota = false;
       await tester.pumpWidget(laPantallaDeNotas(
         servidor: ServidorQueApunta(),
         notas: {

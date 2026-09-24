@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:myvc_flutter/Http/FaltasApi.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/MiRecorridoModel.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
@@ -52,7 +53,14 @@ Future<MiRecorrido?> traerMiRecorrido(Server server, int alumnoId) async {
   final res = await server.get('/requisitos/mi-recorrido/$alumnoId');
 
   if (res.statusCode >= 300) {
-    throw Exception(mensajeDeFallo(res.statusCode, 'ver el proceso'));
+    // Gana lo que escribió el servidor —«No es acudiente de este alumno»,
+    // «Ese alumno no existe»— y `mensajeDeFallo` es el respaldo. Aquél habla
+    // de «en este periodo», que aquí no tiene sentido: el proceso no es de un
+    // periodo.
+    throw Exception(
+      (res.statusCode < 500 ? loQueDijoElServidor(res.body) : null) ??
+          mensajeDeFallo(res.statusCode, 'ver el proceso'),
+    );
   }
 
   final cuerpo = jsonDecode(res.body);

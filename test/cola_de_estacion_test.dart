@@ -470,12 +470,13 @@ void main() {
   });
 
   group('los interruptores de la 08', () {
-    test('los dos nacen apagados y esperan a cosas distintas', () {
-      // `mandarAlQueLlegaSalteado` ya no espera a la pantalla —está escrita—
-      // sino al despliegue de las nueve rutas; `atenderloDeTodasFormas` espera
-      // a algo que no es un despliegue: una columna donde guardar el nombre de
-      // quien autoriza el salto, que hoy no existe en el servidor.
-      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isFalse);
+    test('mandar está encendido y atender de todas formas sigue apagado', () {
+      // `mandarAlQueLlegaSalteado` ya no espera a nada propio —pantalla escrita,
+      // ruta en `main`, cotejada el 24 sep 2026—: sólo al despliegue, que es
+      // `Interruptores.estaciones`. `atenderloDeTodasFormas` espera a algo que
+      // no es un despliegue: una columna donde guardar el nombre de quien
+      // autoriza el salto, que hoy no existe en el servidor.
+      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isTrue);
       expect(PendientesEstaciones.atenderloDeTodasFormas, isFalse);
     });
 

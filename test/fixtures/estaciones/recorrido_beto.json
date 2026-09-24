@@ -1,0 +1,87 @@
+{
+ "status": 200,
+ "body": {
+  "alumno": {
+   "id": 634,
+   "nombres": "Clara",
+   "apellidos": "Leon Cano",
+   "documento": "1000000634"
+  },
+  "year_id": 8,
+  "pasos": [
+   {
+    "id": 236,
+    "estacion": 1,
+    "requisito": "Recepción",
+    "descripcion": null,
+    "bloquea": true,
+    "marca_id": 57,
+    "estado": "Devuelto",
+    "observacion": null,
+    "cerrado_por": null,
+    "cerrado_at": null,
+    "motivo_devolucion": "Falta el registro civil",
+    "cerrado_por_nombres": null,
+    "cerrado_por_apellidos": null,
+    "cerrado_por_usuario": null,
+    "cumplido": false
+   },
+   {
+    "id": 237,
+    "estacion": 2,
+    "requisito": "Documentos",
+    "descripcion": null,
+    "bloquea": true,
+    "marca_id": null,
+    "estado": null,
+    "observacion": null,
+    "cerrado_por": null,
+    "cerrado_at": null,
+    "motivo_devolucion": null,
+    "cerrado_por_nombres": null,
+    "cerrado_por_apellidos": null,
+    "cerrado_por_usuario": null,
+    "cumplido": false
+   },
+   {
+    "id": 238,
+    "estacion": 3,
+    "requisito": "Tesorería",
+    "descripcion": null,
+    "bloquea": true,
+    "marca_id": null,
+    "estado": null,
+    "observacion": null,
+    "cerrado_por": null,
+    "cerrado_at": null,
+    "motivo_devolucion": null,
+    "cerrado_por_nombres": null,
+    "cerrado_por_apellidos": null,
+    "cerrado_por_usuario": null,
+    "cumplido": false
+   }
+  ],
+  "pendientes": [
+   {
+    "estacion": 1,
+    "requisito": "Recepción",
+    "bloquea": true
+   },
+   {
+    "estacion": 2,
+    "requisito": "Documentos",
+    "bloquea": true
+   },
+   {
+    "estacion": 3,
+    "requisito": "Tesorería",
+    "bloquea": true
+   }
+  ],
+  "puede_continuar": false,
+  "devolver_a": {
+   "estacion": 1,
+   "requisito": "Recepción"
+  }
+ }
+}

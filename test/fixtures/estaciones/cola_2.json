@@ -1,0 +1,23 @@
+{
+ "status": 200,
+ "body": {
+  "nro": 2,
+  "nombre": "Documentos",
+  "al_dia_at": "2026-09-24 08:54:43",
+  "atendidos_hoy": 0,
+  "cola": [
+   {
+    "alumno_id": 460,
+    "nombres": "Irene",
+    "apellidos": "Cordero Mora",
+    "documento": "1000000460",
+    "grupo": "4",
+    "llego_at": "2026-09-24 08:54:43",
+    "devuelto_antes": false,
+    "avisos": [],
+    "notas_total": 2,
+    "notas_pendientes": 2
+   }
+  ]
+ }
+}

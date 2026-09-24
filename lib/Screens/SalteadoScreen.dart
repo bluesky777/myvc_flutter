@@ -118,7 +118,11 @@ class _SalteadoScreenState extends State<SalteadoScreen> {
     });
 
     try {
-      final traida = await traerLaFicha(server, widget.persona.id);
+      final traida = await traerLaFicha(
+        server,
+        widget.persona.id,
+        desdeLaEstacion: widget.estacion.nro,
+      );
       setState(() {
         ficha = traida;
         cargando = false;

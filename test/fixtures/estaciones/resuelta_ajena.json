@@ -1,0 +1,6 @@
+{
+ "status": 403,
+ "body": {
+  "message": "Esta nota puede darla por resuelta quien la escribió, o Secretaría, Rectoría o un administrador."
+ }
+}

@@ -1,0 +1,116 @@
+{
+ "status": 200,
+ "body": {
+  "guardado": true,
+  "estacion": 1,
+  "resultado": "Devuelto",
+  "cerrado_por": "users_684",
+  "cerrado_at": null,
+  "siguiente": {
+   "nro": 2,
+   "donde": "Documentos"
+  },
+  "recorrido": {
+   "persona": {
+    "id": 634,
+    "nombres": "Clara",
+    "apellidos": "Leon Cano",
+    "documento": "1000000634"
+   },
+   "acudiente": {
+    "id": 531,
+    "nombres": "Jorge",
+    "apellidos": "Vargas Nieto",
+    "celular": "3000000531",
+    "telefono": null
+   },
+   "codigo": null,
+   "estacion": 1,
+   "pasos": [
+    {
+     "nro": 1,
+     "nombre": "Recepción",
+     "estado": "Devuelto",
+     "cerrada": false,
+     "cerrado_por": null,
+     "cerrado_at": null,
+     "motivo": "Falta el registro civil",
+     "bloquea": true,
+     "mio": true,
+     "requisitos": [
+      {
+       "id": 236,
+       "requisito": "Recepción",
+       "bloquea": true,
+       "estado": "Devuelto",
+       "cerrado_at": null,
+       "observacion": null
+      }
+     ],
+     "notas": {
+      "total": 0,
+      "pendientes": 0,
+      "reservadas": 0
+     },
+     "notas_detalle": []
+    },
+    {
+     "nro": 2,
+     "nombre": "Documentos",
+     "estado": "Falta",
+     "cerrada": false,
+     "cerrado_por": null,
+     "cerrado_at": null,
+     "motivo": null,
+     "bloquea": true,
+     "mio": false,
+     "requisitos": [
+      {
+       "id": 237,
+       "requisito": "Documentos",
+       "bloquea": true,
+       "estado": null,
+       "cerrado_at": null,
+       "observacion": null
+      }
+     ],
+     "notas": {
+      "total": 0,
+      "pendientes": 0,
+      "reservadas": 0
+     },
+     "notas_detalle": []
+    },
+    {
+     "nro": 3,
+     "nombre": "Tesorería",
+     "estado": "Falta",
+     "cerrada": false,
+     "cerrado_por": null,
+     "cerrado_at": null,
+     "motivo": null,
+     "bloquea": true,
+     "mio": false,
+     "requisitos": [
+      {
+       "id": 238,
+       "requisito": "Tesorería",
+       "bloquea": true,
+       "estado": null,
+       "cerrado_at": null,
+       "observacion": null
+      }
+     ],
+     "notas": {
+      "total": 0,
+      "pendientes": 0,
+      "reservadas": 0
+     },
+     "notas_detalle": []
+    }
+   ],
+   "puede_atenderlo": true,
+   "si_no": null
+  }
+ }
+}

@@ -1,0 +1,127 @@
+{
+ "status": 200,
+ "body": {
+  "persona": {
+   "id": 460,
+   "nombres": "Irene",
+   "apellidos": "Cordero Mora",
+   "documento": "1000000460"
+  },
+  "acudiente": {
+   "id": 11,
+   "nombres": "Hugo",
+   "apellidos": "Prieto Melo",
+   "celular": "3000000011",
+   "telefono": null
+  },
+  "codigo": "2027-ABCDE",
+  "estacion": null,
+  "pasos": [
+   {
+    "nro": 1,
+    "nombre": "Recepción",
+    "estado": "Cumple",
+    "cerrada": true,
+    "cerrado_por": "users_684",
+    "cerrado_at": "2026-09-24 08:54:43",
+    "motivo": null,
+    "bloquea": true,
+    "mio": false,
+    "requisitos": [
+     {
+      "id": 236,
+      "requisito": "Recepción",
+      "bloquea": true,
+      "estado": "Cumple",
+      "cerrado_at": "2026-09-24 08:54:43",
+      "observacion": null
+     }
+    ],
+    "notas": {
+     "total": 0,
+     "pendientes": 0,
+     "reservadas": 0
+    },
+    "notas_detalle": []
+   },
+   {
+    "nro": 2,
+    "nombre": "Documentos",
+    "estado": "Falta",
+    "cerrada": false,
+    "cerrado_por": null,
+    "cerrado_at": null,
+    "motivo": null,
+    "bloquea": true,
+    "mio": false,
+    "requisitos": [
+     {
+      "id": 237,
+      "requisito": "Documentos",
+      "bloquea": true,
+      "estado": null,
+      "cerrado_at": null,
+      "observacion": null
+     }
+    ],
+    "notas": {
+     "total": 1,
+     "pendientes": 0,
+     "reservadas": 0
+    },
+    "notas_detalle": [
+     {
+      "id": 25,
+      "texto": "Trae la EPS nueva",
+      "reservada": false,
+      "pendiente": true,
+      "resuelta": true,
+      "de": "users_1",
+      "cuando": "2026-09-24 08:54:43",
+      "puedo_resolverla": false
+     }
+    ]
+   },
+   {
+    "nro": 3,
+    "nombre": "Tesorería",
+    "estado": "Falta",
+    "cerrada": false,
+    "cerrado_por": null,
+    "cerrado_at": null,
+    "motivo": null,
+    "bloquea": true,
+    "mio": false,
+    "requisitos": [
+     {
+      "id": 238,
+      "requisito": "Tesorería",
+      "bloquea": true,
+      "estado": null,
+      "cerrado_at": null,
+      "observacion": null
+     }
+    ],
+    "notas": {
+     "total": 1,
+     "pendientes": 1,
+     "reservadas": 1
+    },
+    "notas_detalle": [
+     {
+      "id": 26,
+      "texto": null,
+      "reservada": true,
+      "pendiente": true,
+      "resuelta": false,
+      "de": "users_1",
+      "cuando": "2026-09-24 08:54:43",
+      "puedo_resolverla": false
+     }
+    ]
+   }
+  ],
+  "puede_atenderlo": true,
+  "si_no": null
+ }
+}

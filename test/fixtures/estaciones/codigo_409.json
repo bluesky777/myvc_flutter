@@ -1,0 +1,6 @@
+{
+ "status": 409,
+ "body": {
+  "message": "Ese formulario todavía no está atado a ningún alumno. Hay que asignárselo antes de empezar el recorrido."
+ }
+}

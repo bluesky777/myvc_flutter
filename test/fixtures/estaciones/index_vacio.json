@@ -1,0 +1,12 @@
+{
+ "status": 200,
+ "body": {
+  "campana": {
+   "year_id": 8,
+   "year": 2025,
+   "abierta": false
+  },
+  "estaciones": [],
+  "mi_estacion": null
+ }
+}

@@ -1,0 +1,6 @@
+{
+ "status": 422,
+ "body": {
+  "message": "Una nota sin texto no es una nota."
+ }
+}

@@ -143,13 +143,15 @@ void main() {
   });
 
   group('los interruptores que faltaban', () {
-    test('los dos nuevos nacen apagados y esperan a cosas distintas', () {
+    test('los dos nuevos, encendidos: sólo esperan al despliegue', () {
       // `mandarAlQueLlegaSalteado` espera a la pantalla 08; `buscarPorElCodigo`
       // espera a que se despliegue `GET estaciones/codigo/{codigo}`, que NO es
       // lo mismo que el escáner: aquél es una decisión sobre los permisos de
       // las tiendas y está contestada.
-      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isFalse);
-      expect(PendientesEstaciones.buscarPorElCodigo, isFalse);
+      // Encendidos el 24 sep 2026: pantalla escrita y ruta en `main`. Lo que
+      // queda debajo es el despliegue, o sea `Interruptores.estaciones`.
+      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isTrue);
+      expect(PendientesEstaciones.buscarPorElCodigo, isTrue);
     });
 
     test('volver a fábrica alcanza también a los nuevos', () {
@@ -157,16 +159,16 @@ void main() {
       // pruebas dejan de comprobar la app que se publica. Es la misma prueba
       // que `estaciones_test.dart` hace con los cinco de antes, estirada a los
       // dos que entran ahora.
-      PendientesEstaciones.mandarAlQueLlegaSalteado = true;
-      PendientesEstaciones.buscarPorElCodigo = true;
+      PendientesEstaciones.mandarAlQueLlegaSalteado = false;
+      PendientesEstaciones.buscarPorElCodigo = false;
 
       PendientesEstaciones.comoDeFabrica();
 
-      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isFalse);
-      expect(PendientesEstaciones.buscarPorElCodigo, isFalse);
+      expect(PendientesEstaciones.mandarAlQueLlegaSalteado, isTrue);
+      expect(PendientesEstaciones.buscarPorElCodigo, isTrue);
       // Y los de antes siguen donde estaban.
-      expect(PendientesEstaciones.marcarElPaso, isFalse);
-      expect(PendientesEstaciones.resolverUnaNota, isFalse);
+      expect(PendientesEstaciones.marcarElPaso, isTrue);
+      expect(PendientesEstaciones.resolverUnaNota, isTrue);
     });
   });
 

@@ -404,8 +404,14 @@ class PasoDelRecorrido {
   ///
   /// Es lo que decide si el botón de cerrar se enciende. **Los opcionales nunca
   /// lo apagan**, que es la mitad de para qué existe el interruptor.
+  /// **`observado` cierra, igual que `cumplido`**: el servidor le escribe
+  /// `cerrado_at` y la cola lo da por pasado. Contarlo aquí como que falta
+  /// decía «le falta 1» de un papel que ya está recibido con su observación.
   int get obligatoriosQueFaltan => requisitos
-      .where((r) => r.obligatorio && r.estado != EstadoDelPaso.cumplido)
+      .where((r) =>
+          r.obligatorio &&
+          r.estado != EstadoDelPaso.cumplido &&
+          r.estado != EstadoDelPaso.observado)
       .length;
 
   factory PasoDelRecorrido.fromJson(Map<String, dynamic> json) {
@@ -541,8 +547,12 @@ class FichaDeEstacion {
   ) {
     // Si el servidor ya lo dijo, mandan sus palabras: sabe qué estación bloquea
     // y esta app no tiene por qué deducirlo.
+    //
+    // **La estación 0 es una estación** (`EstacionesController`: un colegio que
+    // no numeró sus pasos los tiene todos en la 0). Esto exigía `!= 0` y un
+    // «devuélvase a la 0» se perdía: se mira que el número VENGA, no su valor.
     final dicho = json['si_no'];
-    if (dicho is Map && enteroO(dicho['devolver_a_nro']) != 0) {
+    if (dicho is Map && dicho['devolver_a_nro'] != null) {
       return PasoDelRecorrido(
         nro: enteroO(dicho['devolver_a_nro']),
         // **Aquí `donde` SÍ existe, y es el único sitio donde existe**
@@ -755,9 +765,17 @@ class RecorridoDeMatricula {
       nombres: alumno is Map ? texto(alumno['nombres']) : null,
       apellidos: alumno is Map ? texto(alumno['apellidos']) : null,
       documento: alumno is Map ? texto(alumno['documento']) : null,
-      devolverALaEstacion: json is Map ? entero(json['devolver_a']) : null,
+      // `devolver_a` es un OBJETO `{estacion, requisito}`, no un número: con
+      // `entero()` sobre el mapa esto era siempre null. Se aceptan las dos.
+      devolverALaEstacion: json is Map ? _estacionDeDevolverA(json['devolver_a']) : null,
     );
   }
+}
+
+int? _estacionDeDevolverA(dynamic crudo) {
+  if (crudo == null) return null;
+  if (crudo is Map) return crudo['estacion'] == null ? null : enteroO(crudo['estacion']);
+  return entero(crudo);
 }
 
 /// Un paso tal como lo manda `getRecorrido`, que usa otros nombres de clave.
@@ -777,10 +795,18 @@ PasoDelRecorrido _pasoDelRecorridoViejo(Map<String, dynamic> json) {
   //
   // Se trata como **ausente** a propósito. Enseñar algo en su lugar espera a que
   // Joseth decida qué —`users` solo tiene `username`, no hay columna de nombre—.
-  final quien = [
+  //
+  // **Desde el 24 sep 2026 viaja `cerrado_por_usuario`**, y es el respaldo: la
+  // misma regla que ya seguía `marcar` en el servidor (el `username` cuando no
+  // hay ficha de profesor), y que la ficha de la estación sigue desde ese día.
+  // Así secretaría firma igual en las tres pantallas.
+  final nombre = [
     texto(json['cerrado_por_nombres']) ?? '',
     texto(json['cerrado_por_apellidos']) ?? '',
   ].join(' ').trim();
+  final quien = nombre.isNotEmpty
+      ? nombre
+      : (texto(json['cerrado_por_usuario'])?.trim() ?? '');
 
   return PasoDelRecorrido(
     nro: enteroO(json['estacion']),
@@ -794,7 +820,12 @@ PasoDelRecorrido _pasoDelRecorridoViejo(Map<String, dynamic> json) {
     // se veía el fallo a simple vista —el recorrido enseñaba «Cerrado por Nancy
     // Ariza · 2026-09-20 14:32:00»—.
     cerradoAt: texto(json['cerrado_at']),
-    motivo: texto(json['observacion']),
+    // **El motivo de la devolución, y la observación sólo de respaldo.** Hasta el
+    // 24 sep 2026 la ruta no mandaba `motivo_devolucion` y aquí se enseñaba la
+    // `observacion` —la nota interna del personal— en la caja del motivo. Un
+    // servidor sin desplegar sigue sin mandarlo, y entonces la observación es
+    // lo único que hay que leerle a la familia.
+    motivo: texto(json['motivo_devolucion']) ?? texto(json['observacion']),
     obligatorio: _verdad(json['bloquea'], siFalta: true),
   );
 }

@@ -39,6 +39,34 @@ class Server {
 
   Uri _uri(String direction) => Uri.parse('${Server.urlApi}$direction');
 
+  /// Las rutas a las que se les pide `Accept: application/json`.
+  ///
+  /// Sin esa cabecera, un `abort(403, '…')` de Laravel vuelve como página HTML
+  /// y **el motivo que escribió el servidor se pierde**: «esta nota puede darla
+  /// por resuelta quien la escribió…», «ese formulario todavía no está atado a
+  /// ningún alumno», «para devolver hace falta escribir el motivo». Medido el
+  /// 24 sep 2026 contra las diez rutas de las estaciones.
+  ///
+  /// **No va para todas las rutas, a propósito**: la cabecera también cambia la
+  /// validación —sin ella un 422 de Laravel es una redirección 302— y las
+  /// pantallas viejas no se han mirado con el 422 delante. Se ensancha ruta a
+  /// ruta, con la pantalla probada.
+  ///
+  /// Se decide aquí, por el prefijo, y no con un parámetro nuevo en [get]/[put]/
+  /// [post]: esos tres los sobrescriben los servidores de mentira de las
+  /// pruebas, y un parámetro nuevo los rompería todos.
+  static const List<String> rutasQueContestanJson = [
+    '/estaciones',
+    '/requisitos/recorrido/',
+    '/requisitos/mi-recorrido/',
+  ];
+
+  static bool pideJson(String direccion) =>
+      rutasQueContestanJson.any(direccion.startsWith);
+
+  Map<String, String> _conAccept(String direccion, Map<String, String> h) =>
+      pideJson(direccion) ? {...h, 'Accept': 'application/json'} : h;
+
   Map<String, String> _encabezado () => {
     'Authorization': 'Bearer ${AuthService.user.token}',
   };
@@ -88,19 +116,19 @@ class Server {
 
   Future get(String direccion) {
     var url = _uri(direccion);
-    var response = http.get(url, headers: {
+    var response = http.get(url, headers: _conAccept(direccion, {
       'Authorization': 'Bearer ${AuthService.user.token}',
-    });
+    }));
     return response;
   }
 
   Future put(String direccion, params) {
     var url = _uri(direccion);
     var response = http.put(url,
-        headers: {
+        headers: _conAccept(direccion, {
           'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
-        },
+        }),
         body: jsonEncode(params));
     return response;
   }
@@ -108,10 +136,10 @@ class Server {
   Future post(String direccion, params) {
     var url = _uri(direccion);
     var response = http.post(url,
-        headers: {
+        headers: _conAccept(direccion, {
           'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
-        },
+        }),
         body: jsonEncode(params));
     return response;
   }

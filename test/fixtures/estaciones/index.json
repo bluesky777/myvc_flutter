@@ -1,0 +1,61 @@
+{
+ "status": 200,
+ "body": {
+  "campana": {
+   "year_id": 8,
+   "year": 2025,
+   "abierta": true
+  },
+  "estaciones": [
+   {
+    "nro": 1,
+    "nombre": "Recepción",
+    "descripcion": null,
+    "bloquea": true,
+    "requisitos": [
+     {
+      "id": 236,
+      "requisito": "Recepción",
+      "descripcion": null,
+      "bloquea": true
+     }
+    ],
+    "esperando": 0,
+    "puedo_atender": true
+   },
+   {
+    "nro": 2,
+    "nombre": "Documentos",
+    "descripcion": null,
+    "bloquea": true,
+    "requisitos": [
+     {
+      "id": 237,
+      "requisito": "Documentos",
+      "descripcion": null,
+      "bloquea": true
+     }
+    ],
+    "esperando": 0,
+    "puedo_atender": true
+   },
+   {
+    "nro": 3,
+    "nombre": "Tesorería",
+    "descripcion": null,
+    "bloquea": true,
+    "requisitos": [
+     {
+      "id": 238,
+      "requisito": "Tesorería",
+      "descripcion": null,
+      "bloquea": true
+     }
+    ],
+    "esperando": 0,
+    "puedo_atender": true
+   }
+  ],
+  "mi_estacion": null
+ }
+}

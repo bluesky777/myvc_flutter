@@ -598,23 +598,28 @@ void main() {
   });
 
   group('los pendientes de estas pantallas', () {
-    test('todos apagados hoy, y cada uno espera a algo distinto', () {
-      expect(PendientesEstaciones.marcarElPaso, isFalse);
-      expect(PendientesEstaciones.devolverConMotivo, isFalse);
+    test('encendidos los que tienen pantalla y ruta; apagados los decididos',
+        () {
+      // Desde el 24 sep 2026 lo que queda debajo de estos tres es sólo el
+      // despliegue (`Interruptores.estaciones`).
+      expect(PendientesEstaciones.marcarElPaso, isTrue);
+      expect(PendientesEstaciones.devolverConMotivo, isTrue);
+      expect(PendientesEstaciones.resolverUnaNota, isTrue);
+      // Y estos dos los apagó Joseth el 20 sep 2026: el escáner, por los
+      // permisos de las tiendas; el push, porque la cola sondeada basta.
       expect(PendientesEstaciones.escanearElCodigo, isFalse);
       expect(PendientesEstaciones.pushInmediato, isFalse);
-      expect(PendientesEstaciones.resolverUnaNota, isFalse);
     });
 
     test('volver a fábrica mueve los dos sentidos', () {
       // Si `comoDeFabrica` se desincroniza de los valores escritos, las pruebas
       // dejan de comprobar la app que se publica.
-      PendientesEstaciones.marcarElPaso = true;
+      PendientesEstaciones.marcarElPaso = false;
       PendientesEstaciones.pushInmediato = true;
 
       PendientesEstaciones.comoDeFabrica();
 
-      expect(PendientesEstaciones.marcarElPaso, isFalse);
+      expect(PendientesEstaciones.marcarElPaso, isTrue);
       expect(PendientesEstaciones.pushInmediato, isFalse);
     });
   });

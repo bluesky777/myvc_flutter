@@ -1,0 +1,6 @@
+{
+ "status": 404,
+ "body": {
+  "message": "Esa estación no existe en el recorrido de este año."
+ }
+}

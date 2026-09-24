@@ -416,6 +416,9 @@ void main() {
 
     testWidgets('apagado dice POR QUÉ, y ya no dice que falten pantallas',
         (tester) async {
+      // Encendido de fábrica desde el 24 sep 2026; el camino apagado sigue
+      // existiendo y se prueba apagándolo a mano.
+      PendientesEstaciones.marcarElPaso = false;
       await montar(
         tester,
         MarcarPasoScreen(
@@ -554,6 +557,9 @@ void main() {
 
     testWidgets('apagado por el pendiente, sigue apagado y dice por qué',
         (tester) async {
+      // Encendido de fábrica desde el 24 sep 2026; el camino apagado sigue
+      // existiendo y se prueba apagándolo a mano.
+      PendientesEstaciones.devolverConMotivo = false;
       await montar(
         tester,
         DevolverConMotivoScreen(

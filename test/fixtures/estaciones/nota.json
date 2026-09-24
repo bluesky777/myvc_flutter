@@ -1,0 +1,9 @@
+{
+ "status": 200,
+ "body": {
+  "guardada": true,
+  "id": 25,
+  "estacion": 2,
+  "requisito_id": 237
+ }
+}
