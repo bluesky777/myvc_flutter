@@ -641,6 +641,50 @@ Las cuentas, ya que estaban: dieciséis líneas de cron en `micolev1` son quince
 colegios más `demo`; con el LAL vivo son **dieciséis colegios y `demo`**, que es
 justo lo que devuelve el bucle de despliegue.
 
+#### Esa misma noche: `schedule:run` corría el comando y el aviso no salía
+
+Con el cron ya puesto, los avisos seguían sin llegar solos. Medido en `demo` entre
+las 22:30 y las 23:40 (hora de Colombia), con la salida del cron desviada a un log:
+
+| Qué lo lanzaba | Resultado |
+|---|---|
+| `schedule:run` desde el cron | «Running notificaciones:enviar … 198 ms DONE», y `--seco` **seguía listando el aviso** |
+| `schedule:test` desde la terminal | salió |
+| el comando a mano, también con `env -i` (el entorno del cron) | salió |
+| **una línea propia del cron** que lo llama directamente | **salió** (04:35:01 UTC, «Mandados 1 avisos») |
+
+Se descartó, midiendo cada cosa: el candado de `withoutOverlapping` (no había), el
+PHP que usa el cron (8.4.25, mismos 66 módulos con y sin el envoltorio de
+CloudLinux), las credenciales (legibles con `env -i`) y la caché (`file`, la misma
+marca desde los dos entornos). **Por qué falla desde el scheduler sigue sin
+saberse.**
+
+Lo que quedó:
+
+- `8myvc` `4967741` saca `notificaciones:enviar` del `Kernel`. **Hay que
+  desplegarlo**: sin el candado, dos pasadas a la vez duplicarían el aviso.
+- En `micolev1`, una línea más en el crontab (18 en total) que recorre los 16
+  colegios **por las rutas que ya estaban en el crontab**, así que `lal` queda fuera:
+
+  ```
+  */15 * * * * for d in /home/micolev1/amiguitosdejesus.micolevirtual.com/8myvc … ; do cd $d && /usr/local/bin/php artisan notificaciones:enviar >> /home/micolev1/notificaciones.log 2>&1; done
+  ```
+
+- **En `micolevi` (el LAL de verdad) todavía no.** Tiene su propia línea de
+  `schedule:run` y probablemente le pasa lo mismo.
+
+**Y cómo se edita ese crontab sin romperlo.** `crontab -l | sed … | crontab -`
+**lo dejó vacío** en esta cuenta: 0 líneas, los 16 colegios, unos minutos. Se
+restauró de un respaldo. Lo que sí funciona es por archivos, y comprobando antes
+de instalar:
+
+```
+crontab -l > ~/cron-actual.txt
+# … preparar ~/cron-nuevo.txt a partir de cron-actual.txt …
+wc -l ~/cron-nuevo.txt           # el número que tiene que salir
+crontab ~/cron-nuevo.txt && crontab -l | wc -l
+```
+
 ### Lo que falta, en orden
 
 1. ~~**Las credenciales de Firebase en el `.env` de cada colegio.**~~
