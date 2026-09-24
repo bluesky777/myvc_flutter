@@ -550,11 +550,14 @@ class _ImagenDeFirma extends StatelessWidget {
   }
 }
 
-/// El diálogo de la contraseña propia: la actual, la nueva y la nueva otra vez.
+/// El diálogo de la contraseña propia: la actual y la nueva.
 ///
-/// Las mismas comprobaciones que la página de perfil de la web: que las dos
-/// nuevas coincidan y que tenga al menos 4 caracteres. El servidor solo exige
-/// que no venga vacía; el mínimo es del cliente, igual que allí.
+/// **La nueva se repite solo si va tapada.** Repetirla existe para cazar una
+/// tecla que no se ve; con el ojo abierto ya se está viendo, y pedirla dos
+/// veces es trabajo sin motivo (Joseth, 24 sep 2026). Cada campo tiene su ojo.
+///
+/// El mínimo de 4 caracteres es el de la página de perfil de la web. El
+/// servidor solo exige que no venga vacía.
 class _DialogoMiContrasena extends StatefulWidget {
   const _DialogoMiContrasena();
 
@@ -566,7 +569,8 @@ class _DialogoMiContrasenaState extends State<_DialogoMiContrasena> {
   final _actual = TextEditingController();
   final _nueva = TextEditingController();
   final _repetida = TextEditingController();
-  bool _tapadas = true;
+  bool _actualTapada = true;
+  bool _nuevaTapada = true;
 
   @override
   void dispose() {
@@ -576,28 +580,34 @@ class _DialogoMiContrasenaState extends State<_DialogoMiContrasena> {
     super.dispose();
   }
 
-  String? get _problema {
-    if (_nueva.text.isEmpty) return null;
-    if (_nueva.text.length < 4) return 'Al menos 4 caracteres.';
-    if (_repetida.text.isNotEmpty && _repetida.text != _nueva.text) {
-      return 'Las dos no coinciden.';
-    }
-    return null;
-  }
+  String? get _cortaLaNueva => _nueva.text.isNotEmpty && _nueva.text.length < 4
+      ? 'Al menos 4 caracteres.'
+      : null;
+
+  String? get _noCoinciden =>
+      _repetida.text.isNotEmpty && _repetida.text != _nueva.text
+          ? 'Las dos no coinciden.'
+          : null;
 
   bool get _lista =>
       _actual.text.isNotEmpty &&
       _nueva.text.length >= 4 &&
-      _nueva.text == _repetida.text;
+      (!_nuevaTapada || _nueva.text == _repetida.text);
 
-  Widget _campo(TextEditingController c, String etiqueta,
-      {bool autofocus = false, String? error}) {
+  Widget _campo(
+    TextEditingController c,
+    String etiqueta, {
+    required bool tapada,
+    VoidCallback? alternar,
+    bool autofocus = false,
+    String? error,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: c,
         autofocus: autofocus,
-        obscureText: _tapadas,
+        obscureText: tapada,
         autocorrect: false,
         enableSuggestions: false,
         onChanged: (_) => setState(() {}),
@@ -605,6 +615,13 @@ class _DialogoMiContrasenaState extends State<_DialogoMiContrasena> {
           labelText: etiqueta,
           errorText: error,
           border: const OutlineInputBorder(),
+          suffixIcon: alternar == null
+              ? null
+              : IconButton(
+                  icon: Icon(tapada ? Icons.visibility : Icons.visibility_off),
+                  tooltip: tapada ? 'Mostrarla' : 'Taparla',
+                  onPressed: alternar,
+                ),
         ),
       ),
     );
@@ -618,19 +635,29 @@ class _DialogoMiContrasenaState extends State<_DialogoMiContrasena> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _campo(_actual, 'Contraseña actual', autofocus: true),
-            _campo(_nueva, 'Contraseña nueva'),
-            _campo(_repetida, 'Repite la nueva', error: _problema),
-            const Text('Sin espacios ni Ñ ni tildes.',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _tapadas = !_tapadas),
-                icon: Icon(_tapadas ? Icons.visibility : Icons.visibility_off,
-                    size: 18),
-                label: Text(_tapadas ? 'Mostrarlas' : 'Taparlas'),
-              ),
+            _campo(
+              _actual,
+              'Contraseña actual',
+              autofocus: true,
+              tapada: _actualTapada,
+              alternar: () => setState(() => _actualTapada = !_actualTapada),
+            ),
+            _campo(
+              _nueva,
+              'Contraseña nueva',
+              tapada: _nuevaTapada,
+              error: _cortaLaNueva,
+              alternar: () => setState(() => _nuevaTapada = !_nuevaTapada),
+            ),
+            if (_nuevaTapada)
+              _campo(_repetida, 'Repite la nueva',
+                  tapada: true, error: _noCoinciden),
+            Text(
+              _nuevaTapada
+                  ? 'Sin espacios ni Ñ ni tildes. Con el ojo abierto no hace '
+                      'falta repetirla.'
+                  : 'Sin espacios ni Ñ ni tildes.',
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
           ],
         ),
