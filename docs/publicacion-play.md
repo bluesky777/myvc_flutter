@@ -795,6 +795,20 @@ mismo envío:
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 
+### `1.1.0 (6)`, enviada el 23 sep 2026
+
+Tres cambios en un solo envío: la versión, la ficha (la descripción con los
+avisos, sin el del muro) y Seguridad de los datos (*ID del dispositivo*: Funciones
+de la app + Estadísticas, opcional). La política con los avisos se subió a
+`micolevirtual.com/privacidad.html` antes de enviar, porque la publicación
+administrada está **desactivada**: sale sola en cuanto Google la aprueba.
+
+**El `5` se gastó sin salir.** Estaba guardado como borrador cuando se vio que la
+app creaba el identificador de avisos sin permiso —lo que hacía falso el
+«opcional» del formulario—; se descartó y se subió el `6` con
+`firebase_messaging_auto_init_enabled=false`. Probado antes de enviar en un
+teléfono con la app instalada de cero: permiso, suscripción y aviso.
+
 ### El tamaño real de la descarga
 
 | | |
