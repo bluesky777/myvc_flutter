@@ -94,8 +94,20 @@ Future<String?> _pedir(
     // que aquí ese código no significa «petición mal hecha» sino «no te dejan».
     // El 403 lo dan los dos controladores por su cuenta cuando quien llama no
     // es profesor ni superusuario.
-    if (res.statusCode == 400 || res.statusCode == 403) {
+    if (res.statusCode == 400) {
       return 'No tienes permiso para nivelar en este periodo.';
+    }
+    // El 403 sí trae una frase que vale la pena enseñar. Desde el 24 sep 2026
+    // (fase 3 del cierre de periodo) el colegio puede dejar nivelar SIN dejar
+    // cambiar la definitiva a mano, y entonces el backend contesta 403 con
+    // «El colegio no deja cambiar las definitivas a mano…». Con la frase fija
+    // de arriba el docente leería «no puedes nivelar» con la nivelación
+    // abierta, y buscaría el fallo en el periodo.
+    if (res.statusCode == 403) {
+      return motivoDeRechazo(
+        res.body,
+        respaldo: 'No tienes permiso para nivelar en este periodo.',
+      );
     }
     // 422 es la escala, y el motivo viene en el cuerpo. Aquí duele más que en
     // la planilla: nivelar se hace con el periodo cerrándose encima, y quedarse
