@@ -77,6 +77,16 @@ class MenuLateral extends StatelessWidget {
 
     if (usuario.esAlumno || usuario.esAcudiente) {
       opciones.addAll([
+        // Justo después de «Inicio», como en la web (contrato §4.1): es lo que
+        // un alumno abre a diario. Detrás del interruptor: ver
+        // Interruptores.actividades.
+        if (Interruptores.actividades)
+          _opcion(
+            context,
+            icono: Icons.assignment_outlined,
+            texto: 'Actividades',
+            ruta: '/actividades',
+          ),
         _opcion(
           context,
           icono: Icons.school_outlined,

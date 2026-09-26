@@ -297,4 +297,17 @@ class Interruptores {
   /// despliegue y no con `main`. Para probarlo antes:
   /// `--dart-define=MI_FIRMA=true` (ver [estaciones]).
   static const bool miFirma = bool.fromEnvironment('MI_FIRMA');
+
+  /// Las actividades nuevas —tareas, cuestionarios y encuestas— del alumno y
+  /// del acudiente, con `act/*`. Ver `docs/actividades.md`.
+  ///
+  /// **Espera más que un despliegue**: las rutas viven en la rama
+  /// `feat/actividades` de `8myvc` (tandas 1 a 3, 26 sep 2026), sin fundir a
+  /// `main`, y llevan **migraciones** —las tablas `ws_*` nuevas—. Un colegio
+  /// sin ellas contesta 404 a `act/bandeja`, y uno con el código pero sin la
+  /// migración corrida tumba la API entera. Apagado, la entrada del menú no
+  /// sale y el aviso de actividad cae al muro.
+  ///
+  /// Para probarlo: `--dart-define=ACTIVIDADES=true` (ver [estaciones]).
+  static const bool actividades = bool.fromEnvironment('ACTIVIDADES');
 }

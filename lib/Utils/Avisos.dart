@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:myvc_flutter/Http/NotificacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/AvisosGuardados.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/Navegador.dart';
 import 'package:myvc_flutter/Utils/PreferenciasAvisos.dart';
 
@@ -330,6 +331,15 @@ class Avisos {
         return '/mi-disciplina';
       case 'matricula':
         return '/mi-matricula';
+      // Las actividades nuevas (tanda 5 del contrato, **todavía sin hacer** en
+      // el backend): el aviso irá con `pantalla: 'actividad'` y el
+      // `actividad_id`, más el `alumno_id` cuando es del hijo de un
+      // acudiente. Se acepta también el plural por si el backend lo nombra
+      // como la fuente (`actividades`). Mientras el módulo esté apagado en la
+      // app, cae al muro como cualquier aviso que no se sabe abrir.
+      case 'actividad':
+      case 'actividades':
+        return Interruptores.actividades ? '/actividades' : '/muro';
       default:
         return '/muro';
     }
@@ -381,9 +391,11 @@ class Avisos {
     navegador.pushNamedAndRemoveUntil(
       _abridorDe(datos),
       (_) => false,
-      arguments: _abridorDe(datos) == '/mis-notas'
-          ? AvisoDeNotas.deDatos(datos)
-          : null,
+      arguments: switch (_abridorDe(datos)) {
+        '/mis-notas' => AvisoDeNotas.deDatos(datos),
+        '/actividades' => AvisoDeActividad.deDatos(datos),
+        _ => null,
+      },
     );
   }
 
@@ -463,5 +475,26 @@ class AvisoDeNotas {
     if (buscada == null) return false;
     return materia.trim().toLowerCase() == buscada ||
         (alias ?? '').trim().toLowerCase() == buscada;
+  }
+}
+
+/// Lo que un aviso de actividades le dice a «Actividades»: cuál abrir y, si es
+/// la de un hijo, de cuál.
+///
+/// Sin `actividad_id` —un aviso que hable de varias— es null en [actividadId]
+/// y la pantalla se queda en la lista.
+class AvisoDeActividad {
+  const AvisoDeActividad({required this.actividadId, this.alumnoId});
+
+  final int actividadId;
+  final int? alumnoId;
+
+  static AvisoDeActividad? deDatos(Map<String, dynamic> datos) {
+    final id = int.tryParse('${datos['actividad_id'] ?? ''}');
+    if (id == null) return null;
+    return AvisoDeActividad(
+      actividadId: id,
+      alumnoId: int.tryParse('${datos['alumno_id'] ?? ''}'),
+    );
   }
 }
