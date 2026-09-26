@@ -721,3 +721,73 @@ class MisRespuestasAct {
             : ResultadosCompartidos.fromJson(_mapa(j['compartidos'])!),
       );
 }
+
+/// Una línea de la campana de actividades (`GET act/avisos`, tanda 5).
+///
+/// Salen de `ws_avisos`, las mismas filas que manda el push, juntas por
+/// actividad, clase y alumno: doce recordatorios de la misma tarea son una
+/// línea con `cuantas = 12`.
+class AvisoAct {
+  final int id;
+
+  /// `publicada`, `recordatorio`, `por_cerrar`, `calificada`,
+  /// `nota_cambiada`, `resultados`… (`ws_avisos.clase`).
+  final String clase;
+  final int actividadId;
+  final String modo;
+  final String tituloActividad;
+  final String titulo;
+  final String texto;
+  final int? alumnoId;
+  final String? alumnoNombre;
+  final DateTime? creadoAt;
+  final bool leido;
+
+  const AvisoAct({
+    required this.id,
+    required this.clase,
+    required this.actividadId,
+    required this.modo,
+    required this.tituloActividad,
+    required this.titulo,
+    required this.texto,
+    this.alumnoId,
+    this.alumnoNombre,
+    this.creadoAt,
+    this.leido = true,
+  });
+
+  factory AvisoAct.fromJson(Map<String, dynamic> j) {
+    final act = _mapa(j['actividad']) ?? const {};
+    final alumno = _mapa(j['alumno']);
+    return AvisoAct(
+      id: enteroO(j['id']),
+      clase: '${j['clase'] ?? ''}',
+      actividadId: enteroO(act['id']),
+      modo: '${act['modo'] ?? ''}',
+      tituloActividad: '${act['titulo'] ?? ''}',
+      titulo: '${j['titulo'] ?? ''}',
+      texto: '${j['texto'] ?? ''}',
+      alumnoId: alumno == null ? null : entero(alumno['alumno_id']),
+      alumnoNombre: alumno == null ? null : _txt(alumno['nombre']),
+      creadoAt: horaDeActividad(j['creado_at']),
+      leido: siONo(j['leido']) ?? true,
+    );
+  }
+}
+
+/// `GET act/avisos`: la campana entera.
+class AvisosAct {
+  final int noLeidos;
+  final int hastaId;
+  final List<AvisoAct> avisos;
+
+  const AvisosAct(
+      {this.noLeidos = 0, this.hastaId = 0, this.avisos = const []});
+
+  factory AvisosAct.fromJson(Map<String, dynamic> j) => AvisosAct(
+        noLeidos: enteroO(j['no_leidos']),
+        hastaId: enteroO(j['hasta_id']),
+        avisos: _lista(j['avisos']).map(AvisoAct.fromJson).toList(),
+      );
+}

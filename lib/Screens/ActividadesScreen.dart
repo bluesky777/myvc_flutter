@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Models/ActividadModel.dart';
+import 'package:myvc_flutter/Screens/AvisosDeActividadesScreen.dart';
 import 'package:myvc_flutter/Screens/EntregarTareaScreen.dart';
 import 'package:myvc_flutter/Screens/MisRespuestasActividadScreen.dart';
 import 'package:myvc_flutter/Screens/ResponderActividadScreen.dart';
@@ -52,6 +53,7 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
   int? _hijo;
   bool _verHechas = false;
   AvisoDeActividad? _avisoPendiente;
+  AvisosAct? _avisos;
 
   @override
   void initState() {
@@ -79,6 +81,7 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
         }
       });
       _abrirElDelAviso();
+      _traerAvisos();
     } catch (err) {
       if (!mounted) return;
       setState(() {
@@ -86,6 +89,15 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
         _error = '$err';
       });
     }
+  }
+
+  /// La campana. Si el colegio todavía no tiene la tanda 5 contesta 404, y la
+  /// campana simplemente no sale: nada que avisar.
+  Future<void> _traerAvisos() async {
+    try {
+      final avisos = await traerAvisosDeActividades(_server);
+      if (mounted) setState(() => _avisos = avisos);
+    } catch (_) {}
   }
 
   /// Los hijos por los que hay filas, en el orden en que llegaron.
@@ -106,7 +118,19 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
     final aviso = _avisoPendiente;
     if (aviso == null) return;
     _avisoPendiente = null;
+    _abrirAviso(aviso);
+  }
 
+  /// Lleva a donde apunta un aviso —del push o de la campana—.
+  ///
+  /// Casi siempre la actividad está en la bandeja, y entonces se abre como si
+  /// se hubiera tocado su fila: la fila sabe si toca responder, entregar o ver
+  /// lo hecho. **El caso que no** es el acudiente con un aviso del tema de su
+  /// hijo sobre algo que responde el hijo (una tarea, un cuestionario): no le
+  /// sale en su lista porque no es para él. Si es la nota o los resultados,
+  /// se los enseña «mis respuestas» con el `alumno_id`; si es algo por
+  /// responder, se le dice que lo hace el hijo desde su cuenta.
+  void _abrirAviso(AvisoDeActividad aviso) {
     ActEnBandeja? fila;
     for (final f in _filas) {
       if (f.id != aviso.actividadId) continue;
@@ -119,16 +143,71 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
       break;
     }
 
-    if (fila == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Esa actividad ya no está en tu lista.')));
+    if (fila != null) {
+      final encontrada = fila;
+      setState(() {
+        _hijo = encontrada.porAlumno?.alumnoId ?? _hijo;
+        _verHechas = !encontrada.pendiente;
+      });
+      _abrir(encontrada);
       return;
     }
-    setState(() {
-      _hijo = fila!.porAlumno?.alumnoId ?? _hijo;
-      _verHechas = !fila.pendiente;
-    });
-    _abrir(fila);
+
+    final acudiente = AuthService.user.esAcudiente;
+    final alumnoId = aviso.alumnoId;
+    if (acudiente && alumnoId != null && aviso.esDeLoHecho) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MisRespuestasActividadScreen.porId(
+            actividadId: aviso.actividadId,
+            alumnoId: alumnoId,
+            paraQuien: aviso.nombreAlumno ?? _nombreDeHijo(alumnoId),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final nombre = alumnoId == null
+        ? null
+        : (aviso.nombreAlumno ?? _nombreDeHijo(alumnoId));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(acudiente && alumnoId != null
+            ? '${nombre ?? 'Tu acudido'} la responde desde su propia cuenta.'
+            : 'Esa actividad ya no está en tu lista.')));
+  }
+
+  String? _nombreDeHijo(int alumnoId) {
+    for (final h in _hijos) {
+      if (h.alumnoId == alumnoId) return h.primerNombre;
+    }
+    return null;
+  }
+
+  Future<void> _abrirCampana() async {
+    final elegido = await Navigator.push<AvisoAct>(
+      context,
+      MaterialPageRoute(
+          builder: (_) => AvisosDeActividadesScreen(yaTraidos: _avisos)),
+    );
+    if (!mounted) return;
+    // Abrirla los marcó leídos: el número se va sin esperar al servidor.
+    final antes = _avisos;
+    if (antes != null) {
+      setState(() => _avisos =
+          AvisosAct(noLeidos: 0, hastaId: antes.hastaId, avisos: antes.avisos));
+    }
+    if (elegido != null) {
+      _abrirAviso(AvisoDeActividad(
+        actividadId: elegido.actividadId,
+        alumnoId: elegido.alumnoId,
+        clase: elegido.clase,
+        nombreAlumno: elegido.alumnoNombre == null
+            ? null
+            : PersonaCorta(nombre: elegido.alumnoNombre!).primerNombre,
+      ));
+    }
   }
 
   Future<void> _abrir(ActEnBandeja fila) async {
@@ -167,6 +246,18 @@ class _ActividadesScreenState extends State<ActividadesScreen> {
             onPressed: () => _drawerController.toggle?.call(),
           ),
           title: const TituloPantalla(titulo: 'Actividades'),
+          actions: [
+            if (_avisos != null)
+              IconButton(
+                tooltip: 'Avisos',
+                onPressed: _abrirCampana,
+                icon: Badge(
+                  isLabelVisible: _avisos!.noLeidos > 0,
+                  label: Text('${_avisos!.noLeidos}'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+              ),
+          ],
         ),
         body: _cuerpo(),
       ),

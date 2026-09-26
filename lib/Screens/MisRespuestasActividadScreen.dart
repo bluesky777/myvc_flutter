@@ -25,9 +25,29 @@ import 'package:url_launcher/url_launcher.dart';
 ///   del grupo con la marca «tú» en lo que elegí. Sin responder, sólo se
 ///   llega aquí si se compartieron «con todos».
 class MisRespuestasActividadScreen extends StatefulWidget {
-  const MisRespuestasActividadScreen({super.key, required this.fila});
+  /// Desde una fila de la bandeja.
+  MisRespuestasActividadScreen({super.key, required ActEnBandeja this.fila})
+      : actividadId = fila.id,
+        alumnoId = fila.porAlumno?.alumnoId,
+        paraQuien = fila.porAlumno?.primerNombre;
 
-  final ActEnBandeja fila;
+  /// Sin fila: desde un aviso de algo que no está en la bandeja de quien lo
+  /// abre. Es el acudiente con la nota de una tarea de su hijo: la tarea es
+  /// del alumno y no le sale en su lista, pero «mis respuestas» se la enseña
+  /// con el `alumno_id` del hijo.
+  const MisRespuestasActividadScreen.porId({
+    super.key,
+    required this.actividadId,
+    this.alumnoId,
+    this.paraQuien,
+  }) : fila = null;
+
+  final ActEnBandeja? fila;
+  final int actividadId;
+  final int? alumnoId;
+
+  /// El primer nombre del hijo, cuando quien mira es su acudiente.
+  final String? paraQuien;
 
   @override
   State<MisRespuestasActividadScreen> createState() =>
@@ -47,8 +67,7 @@ class _MisRespuestasActividadScreenState
   Uint8List? _fotoBytes;
 
   /// El `alumno_id` sólo lo manda el acudiente: el servidor lo lee así.
-  int? get _alumnoId =>
-      AuthService.user.esAcudiente ? widget.fila.porAlumno?.alumnoId : null;
+  int? get _alumnoId => AuthService.user.esAcudiente ? widget.alumnoId : null;
 
   @override
   void initState() {
@@ -58,7 +77,7 @@ class _MisRespuestasActividadScreenState
 
   Future<void> _cargar() async {
     try {
-      final datos = await traerMisRespuestas(_server, widget.fila.id,
+      final datos = await traerMisRespuestas(_server, widget.actividadId,
           alumnoId: _alumnoId);
       if (!mounted) return;
       setState(() {
@@ -76,7 +95,7 @@ class _MisRespuestasActividadScreenState
       setState(() {
         _cargando = false;
         _error = m.status == 409
-            ? (widget.fila.abierta
+            ? ((widget.fila?.abierta ?? true)
                 ? 'Todavía no has respondido esta actividad.'
                 : 'Esta actividad cerró sin que la respondieras.')
             : m.mensaje;
@@ -92,15 +111,12 @@ class _MisRespuestasActividadScreenState
 
   @override
   Widget build(BuildContext context) {
-    final f = widget.fila;
+    final quien = AuthService.user.esAcudiente ? widget.paraQuien : null;
     return Scaffold(
       backgroundColor: EstiloActividades.fondo,
       appBar: AppBar(
         backgroundColor: EstiloActividades.fondo,
-        title: Text(
-            f.porAlumno == null
-                ? 'Mis respuestas'
-                : 'Respuestas · ${f.porAlumno!.primerNombre}',
+        title: Text(quien == null ? 'Mis respuestas' : 'Respuestas · $quien',
             style: const TextStyle(fontSize: 17)),
       ),
       body: _cuerpo(),
@@ -128,7 +144,7 @@ class _MisRespuestasActividadScreenState
       );
     }
 
-    final hijos = switch (widget.fila.modo) {
+    final hijos = switch (d.actividad.modo) {
       'cuestionario' => _cuestionario(d),
       'tarea' => _tarea(d),
       _ => _encuesta(d),
@@ -141,7 +157,7 @@ class _MisRespuestasActividadScreenState
   }
 
   Widget _cabecera(MisRespuestasAct d) {
-    final f = widget.fila;
+    final f = d.actividad;
     final nota = d.nota ?? d.entrega?.nota;
     final cuando = d.enviadaAt;
 
@@ -287,14 +303,15 @@ class _MisRespuestasActividadScreenState
           ),
         ),
       for (var i = 0; i < filas.length; i++) _preguntaCalificada(filas[i]),
-      if (widget.fila.abierta)
+      if (d.actividad.abierta)
         Padding(
           padding: const EdgeInsets.only(top: 8),
           child: OutlinedButton(
             onPressed: () => Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (_) => ResponderActividadScreen(fila: widget.fila)),
+                  builder: (_) => ResponderActividadScreen(
+                      fila: widget.fila ?? d.actividad)),
             ),
             child: const Text('Intentarlo otra vez'),
           ),
@@ -548,7 +565,7 @@ class _MisRespuestasActividadScreenState
       if (compartidos != null && (_verGrupo || !hayMias))
         ..._resultadosDelGrupo(compartidos)
       else ...[
-        if (widget.fila.anonima)
+        if (d.actividad.anonima)
           _nota('Sólo tú ves esta página. Quien creó la encuesta recibió '
               'estas respuestas sin tu nombre.'),
         ..._misRespuestasEnLista(d),

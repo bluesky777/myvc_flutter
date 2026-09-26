@@ -47,15 +47,28 @@ donde difieren.
   segundo elegido. Incrustarlo pide un `webview` nativo más.
 - La escala lleva `texto_abajo` bajo el 1 y `texto_arriba` bajo el 5.
 
-## El aviso push (tanda 5, sin hacer en el backend)
+## Avisos: push y campana (tanda 5, 8myvc `311d07b`)
 
-`Avisos` ya abre `/actividades` con `pantalla: 'actividad'` (o `'actividades'`)
-y `actividad_id` (+ `alumno_id` si es de un hijo): la lista carga y abre esa
-actividad en la pantalla que toque. **No se añadió ningún tema ni ningún
-interruptor de «Notificaciones»**: el tipo `actividad` de
-`TemasDeNotificacion::deAlumnoYTipo` lo define la tanda 5, y cuando exista hará
-falta su `TipoDeAviso` para que el teléfono se apunte. Con el interruptor
-apagado, el aviso cae al muro.
+- **Temas.** `GET notificaciones/temas` trae `temas.actividad` por alumno y
+  `usuario: {actividad}` (`u_…_actividad`, el de la persona: la encuesta que
+  se le pide al acudiente no va al tema del hijo). `TipoDeAviso.actividad`
+  —sexto tipo, con su interruptor en «Notificaciones»— apunta el teléfono a los
+  dos; al cerrar sesión se sueltan con los demás, porque se anotan igual.
+  Con `Interruptores.actividades` apagado el tipo no está `disponible`: ni sale
+  su interruptor ni el teléfono se apunta.
+- **El push** trae `pantalla: 'actividad'`, `actividad_id`, `clase` y, si es de
+  un alumno, `alumno_id`. `Avisos` abre `/actividades` con un
+  `AvisoDeActividad` y la lista abre esa actividad como si se tocara su fila
+  (responder, entregar o mis respuestas, según su estado).
+- **El acudiente con un aviso del tema de su hijo** sobre algo que responde el
+  hijo no lo tiene en su bandeja: si es la nota o los resultados
+  (`calificada`, `nota_cambiada`, `resultados`) se abre «mis respuestas» con
+  el `alumno_id`; si es algo por responder, se le dice que lo hace el hijo
+  desde su cuenta.
+- **La campana** (`GET act/avisos`) va en la barra de «Actividades», con el
+  número de no leídos. Abrirla los marca leídos (`POST act/avisos/leidos` con
+  el `hasta_id` recibido) y tocar uno lleva a la actividad por el mismo camino
+  que el push. Un colegio sin la tanda 5 contesta 404 y la campana no sale.
 
 ## Lo que se probó (26 sep 2026)
 
@@ -71,6 +84,11 @@ apagado, el aviso cae al muro.
   Nicole (465)**, y sus respuestas desde el servidor.
 - `flutter build apk --debug` compila con `file_picker`.
 
+- Campana: el número del alumno (8 sin leer; **no se abrió**, para no marcar
+  leídos los avisos de prueba de la sesión del backend) y la del acudiente
+  abierta, con el aviso llevando a la encuesta 11 por Nicole.
+
 **No probado**: subir una foto o un archivo desde la app (la única tarea que
 los pide en el docker ya estaba entregada, y subir otra foto reemplaza la
-entregada), un Android real, y el aviso push (no hay tanda 5).
+entregada), un Android real, y un push de verdad (FCM sólo está en Android: la
+apertura se probó por la campana, que usa el mismo camino).

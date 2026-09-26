@@ -331,12 +331,12 @@ class Avisos {
         return '/mi-disciplina';
       case 'matricula':
         return '/mi-matricula';
-      // Las actividades nuevas (tanda 5 del contrato, **todavía sin hacer** en
-      // el backend): el aviso irá con `pantalla: 'actividad'` y el
-      // `actividad_id`, más el `alumno_id` cuando es del hijo de un
-      // acudiente. Se acepta también el plural por si el backend lo nombra
-      // como la fuente (`actividades`). Mientras el módulo esté apagado en la
-      // app, cae al muro como cualquier aviso que no se sabe abrir.
+      // Las actividades nuevas (tanda 5, 8myvc 311d07b): `pantalla:
+      // 'actividad'` con `actividad_id`, `clase` y, si es de un alumno,
+      // `alumno_id`. Se acepta también el plural, que es como se llama la
+      // fuente. Mientras el módulo esté apagado en la app, cae al muro como
+      // cualquier aviso que no se sabe abrir (y el teléfono ni se apunta a
+      // su tema: ver TipoDeAviso.disponible).
       case 'actividad':
       case 'actividades':
         return Interruptores.actividades ? '/actividades' : '/muro';
@@ -483,18 +483,43 @@ class AvisoDeNotas {
 ///
 /// Sin `actividad_id` —un aviso que hable de varias— es null en [actividadId]
 /// y la pantalla se queda en la lista.
+///
+/// Es lo que manda `EnviarNotificaciones::avisosDeActividades` (8myvc
+/// 311d07b): `pantalla: 'actividad'`, `actividad_id`, `clase` y, si es de un
+/// alumno, `alumno_id`. La campana (`GET act/avisos`) arma el mismo objeto.
 class AvisoDeActividad {
-  const AvisoDeActividad({required this.actividadId, this.alumnoId});
+  const AvisoDeActividad({
+    required this.actividadId,
+    this.alumnoId,
+    this.clase,
+    this.nombreAlumno,
+  });
 
   final int actividadId;
   final int? alumnoId;
 
+  /// `publicada`, `recordatorio`, `por_cerrar`, `calificada`,
+  /// `nota_cambiada`, `resultados`…
+  final String? clase;
+
+  /// Sólo desde la campana, que lo trae; el push no.
+  final String? nombreAlumno;
+
+  /// Si el aviso es de algo ya hecho —la nota, los resultados— y no de algo
+  /// por responder.
+  bool get esDeLoHecho =>
+      clase == 'calificada' ||
+      clase == 'nota_cambiada' ||
+      clase == 'resultados';
+
   static AvisoDeActividad? deDatos(Map<String, dynamic> datos) {
     final id = int.tryParse('${datos['actividad_id'] ?? ''}');
     if (id == null) return null;
+    final clase = '${datos['clase'] ?? ''}'.trim();
     return AvisoDeActividad(
       actividadId: id,
       alumnoId: int.tryParse('${datos['alumno_id'] ?? ''}'),
+      clase: clase.isEmpty ? null : clase,
     );
   }
 }

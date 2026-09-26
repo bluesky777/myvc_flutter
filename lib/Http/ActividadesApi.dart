@@ -196,3 +196,17 @@ Future<Uint8List> traerArchivoDeActividad(Server server, int archivoId) async {
   if (res.statusCode >= 300) throw _motivo(res, 'abrir el archivo');
   return res.bodyBytes as Uint8List;
 }
+
+/// `GET act/avisos?limite=` (tanda 5): la campana de actividades.
+Future<AvisosAct> traerAvisosDeActividades(Server server,
+    {int limite = 30}) async {
+  final res = await server.get('/act/avisos?limite=$limite');
+  return AvisosAct.fromJson(_mapaDe(res, 'traer los avisos'));
+}
+
+/// `POST act/avisos/leidos {hasta_id}`: todo hasta ese aviso queda leído. La
+/// marca sólo avanza, en el servidor.
+Future<void> marcarAvisosLeidos(Server server, int hastaId) async {
+  final res = await server.post('/act/avisos/leidos', {'hasta_id': hastaId});
+  _json(res, 'marcar los avisos');
+}
