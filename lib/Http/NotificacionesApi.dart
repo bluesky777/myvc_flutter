@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/FaltasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 
 /// A qué temas de Firebase tiene derecho quien pregunta.
 ///
@@ -69,6 +70,7 @@ class TemasDeNotificacion {
   const TemasDeNotificacion({
     this.alumnos = const [],
     this.delColegio = const {},
+    this.delUsuario = const {},
   });
 
   /// Del cuerpo de la respuesta, tal cual llega.
@@ -94,6 +96,7 @@ class TemasDeNotificacion {
               .toList()
           : const [],
       delColegio: _temasDelColegio(cuerpo['colegio']),
+      delUsuario: _temasDelColegio(cuerpo['usuario']),
     );
   }
 
@@ -113,6 +116,15 @@ class TemasDeNotificacion {
   /// [PendientesNotificaciones.temasDelColegio].
   final Map<String, String> delColegio;
 
+  /// Los de la persona que entró, por tipo: hoy sólo `actividad`
+  /// (`u_…_actividad`, 8myvc 311d07b, 26 sep 2026).
+  ///
+  /// Existen porque hay avisos que no son de ningún alumno: la encuesta que
+  /// se le pide **al acudiente** iría al tema del hijo, y la vería el hijo,
+  /// que comparte ese tema. El servidor lo deriva del token; un servidor sin
+  /// la tanda 5 no manda la clave y esto queda vacío.
+  final Map<String, String> delUsuario;
+
   bool get hayAlgo => alumnos.isNotEmpty;
 
   /// Todos los temas por alumno, de los tipos que se le pasen.
@@ -120,10 +132,19 @@ class TemasDeNotificacion {
   /// Sirve para la suscripción y para lo contrario: al cerrar sesión hay que
   /// desapuntarse de **todos**, encendidos o no, porque el interruptor de la
   /// próxima persona que entre en ese teléfono no dice nada de esta.
+  ///
+  /// Incluye los de la persona ([delUsuario]) de esos mismos tipos, y salta
+  /// los tipos que esta versión de la app todavía no enseña
+  /// ([TipoDeAviso.disponible]): apuntarse a avisos que no se pueden abrir es
+  /// peor que no recibirlos.
   List<String> temasDe(Iterable<TipoDeAviso> tipos) => [
         for (final alumno in alumnos)
           for (final tipo in tipos)
-            if (alumno.temas[tipo.clave] != null) alumno.temas[tipo.clave]!,
+            if (tipo.disponible && alumno.temas[tipo.clave] != null)
+              alumno.temas[tipo.clave]!,
+        for (final tipo in tipos)
+          if (tipo.disponible && delUsuario[tipo.clave] != null)
+            delUsuario[tipo.clave]!,
       ];
 }
 
@@ -177,7 +198,9 @@ class TemasDeUnAlumno {
 /// propio docblock avisaba: *«suscribirse a un tema que no existe es válido, así
 /// que el aviso se perdería en silencio»*. Medido el 23 de septiembre de 2026.
 ///
-/// Si el backend añade un sexto, esta lista se queda corta otra vez y **tampoco
+/// El sexto, `actividad`, entró el 26 sep 2026 con la tanda 5 de actividades.
+///
+/// Si el backend añade un séptimo, esta lista se queda corta otra vez y **tampoco
 /// dará error**. La forma de enterarse es comparar las dos listas, no esperar a
 /// que algo falle.
 enum TipoDeAviso {
@@ -189,13 +212,24 @@ enum TipoDeAviso {
   matricula('matricula', 'Matrícula',
       'Cuando avanza o se devuelve un paso de su matrícula.'),
   compromiso('compromiso', 'Compromisos',
-      'Cuando le entregan un compromiso académico o su resultado.');
+      'Cuando le entregan un compromiso académico o su resultado.'),
+
+  /// Tareas, cuestionarios y encuestas (tanda 5 de actividades). Llega por el
+  /// tema del alumno y por el de la persona ([TemasDeNotificacion.delUsuario]).
+  actividad('actividad', 'Actividades',
+      'Tareas, cuestionarios y encuestas: cuando llega una, cuando está por '
+          'cerrar, y su nota o sus resultados.');
 
   const TipoDeAviso(this.clave, this.rotulo, this.explicacion);
 
   final String clave;
   final String rotulo;
   final String explicacion;
+
+  /// Si esta versión de la app lo enseña: las actividades sólo con
+  /// [Interruptores.actividades]. Apagado, no sale su interruptor en
+  /// «Notificaciones» y el teléfono no se apunta a su tema.
+  bool get disponible => this != actividad || Interruptores.actividades;
 }
 
 /// Lo que está escrito pero todavía no se puede encender.

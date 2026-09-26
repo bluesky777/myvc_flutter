@@ -139,18 +139,19 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                 children: [
                   if (!_permiso) _pedirElPermiso(),
                   for (final tipo in TipoDeAviso.values)
-                    _tarjeta(
-                      child: SwitchListTile(
-                        value: _permiso && (_quiere[tipo] ?? true),
-                        onChanged: _permiso ? (v) => _cambiar(tipo, v) : null,
-                        title: Text(tipo.rotulo),
-                        subtitle: Text(
-                          tipo.explicacion,
-                          style: const TextStyle(fontSize: 12),
+                    if (tipo.disponible)
+                      _tarjeta(
+                        child: SwitchListTile(
+                          value: _permiso && (_quiere[tipo] ?? true),
+                          onChanged: _permiso ? (v) => _cambiar(tipo, v) : null,
+                          title: Text(tipo.rotulo),
+                          subtitle: Text(
+                            tipo.explicacion,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          secondary: Icon(_iconoDe(tipo)),
                         ),
-                        secondary: Icon(_iconoDe(tipo)),
                       ),
-                    ),
                   if (_alumnos.isNotEmpty) _aQuienCubren(),
                   _explicacion(),
                 ],
@@ -171,6 +172,8 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         return Icons.assignment_turned_in_outlined;
       case TipoDeAviso.compromiso:
         return Icons.handshake_outlined;
+      case TipoDeAviso.actividad:
+        return Icons.assignment_outlined;
     }
   }
 

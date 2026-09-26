@@ -190,10 +190,11 @@ void main() {
         TipoDeAviso.asistencia,
         TipoDeAviso.matricula,
         TipoDeAviso.compromiso,
+        TipoDeAviso.actividad,
       ]);
     });
 
-    test('los cinco tipos, los mismos que publica el servidor', () {
+    test('los seis tipos, los mismos que publica el servidor', () {
       // `TemasDeNotificacion::TIPOS` del backend tiene estos cinco. Durante un
       // mes aquí hubo tres, y los avisos de matrícula y compromiso se
       // publicaban sin que nadie estuviera suscrito — que en FCM es válido y no
@@ -206,6 +207,8 @@ void main() {
         'disciplina',
         'matricula',
         'compromiso',
+        // El sexto, con la tanda 5 de actividades (8myvc 311d07b).
+        'actividad',
       ]);
     });
 
