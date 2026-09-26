@@ -67,6 +67,11 @@ class Server {
     '/firmas-del-titular/',
     '/myimages/store',
     '/images-users/cambiar-imagen-perfil/',
+    // Las actividades nuevas (`routes/api/act.php`), que nacieron con esta
+    // cabecera en la web: sus 422 traen `{mensaje, faltan}` o
+    // `{mensaje, hijos}`, y la pantalla de responder salta a la pregunta que
+    // falta con eso. Sin la cabecera, un `abort(409, …)` volvería como HTML.
+    '/act/',
   ];
 
   static bool pideJson(String direccion) =>
@@ -165,6 +170,24 @@ class Server {
       String direccion, List<int> bytes, String nombreArchivo) async {
     final peticion = http.MultipartRequest('POST', _uri(direccion))
       ..headers.addAll(_conAccept(direccion, _encabezado()))
+      ..files.add(http.MultipartFile.fromBytes('file', bytes,
+          filename: nombreArchivo));
+
+    return http.Response.fromStream(await peticion.send());
+  }
+
+  /// Como [subir], con campos de texto al lado del archivo.
+  ///
+  /// Aparte y no un parámetro nuevo de [subir] por lo mismo que
+  /// [rutasQueContestanJson]: los servidores de mentira de las pruebas
+  /// sobrescriben estos métodos, y cambiarle la firma a uno los rompe todos.
+  /// Lo usa `act/{id}/archivo`, que necesita `clase` y, a veces, `alumno_id`
+  /// y `pregunta_id`.
+  Future<http.Response> subirConCampos(String direccion, List<int> bytes,
+      String nombreArchivo, Map<String, String> campos) async {
+    final peticion = http.MultipartRequest('POST', _uri(direccion))
+      ..headers.addAll(_conAccept(direccion, _encabezado()))
+      ..fields.addAll(campos)
       ..files.add(http.MultipartFile.fromBytes('file', bytes,
           filename: nombreArchivo));
 
