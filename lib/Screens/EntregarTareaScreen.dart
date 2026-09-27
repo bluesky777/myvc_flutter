@@ -182,28 +182,10 @@ class _EntregarTareaScreenState extends State<EntregarTareaScreen> {
   }
 
   Future<void> _pedirEnlace() async {
-    final control = TextEditingController(text: _enlace ?? '');
     final escrito = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Pega el enlace'),
-        content: TextField(
-          controller: control,
-          autofocus: true,
-          keyboardType: TextInputType.url,
-          decoration: const InputDecoration(hintText: 'https://…'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar')),
-          FilledButton(
-              onPressed: () => Navigator.pop(context, control.text.trim()),
-              child: const Text('Poner')),
-        ],
-      ),
+      builder: (context) => _DialogoDeEnlace(inicial: _enlace ?? ''),
     );
-    control.dispose();
     if (escrito == null || !mounted) return;
     if (escrito.isEmpty) {
       setState(() {
@@ -789,6 +771,52 @@ class _EntregarTareaScreenState extends State<EntregarTareaScreen> {
               color: _cambios
                   ? EstiloActividades.ramaTinta
                   : const Color(0xFF2B5B10))),
+    );
+  }
+}
+
+/// El diálogo de pegar el enlace, dueño de su controlador.
+///
+/// Aparte porque el controlador tiene que vivir lo que vive el diálogo: si lo
+/// libera quien lo abre al volver de `showDialog`, la animación de cierre
+/// todavía pinta el `TextField` y usa un controlador liberado (en depuración,
+/// una pantalla de error al pulsar «Poner»).
+class _DialogoDeEnlace extends StatefulWidget {
+  const _DialogoDeEnlace({required this.inicial});
+
+  final String inicial;
+
+  @override
+  State<_DialogoDeEnlace> createState() => _DialogoDeEnlaceState();
+}
+
+class _DialogoDeEnlaceState extends State<_DialogoDeEnlace> {
+  late final _control = TextEditingController(text: widget.inicial);
+
+  @override
+  void dispose() {
+    _control.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Pega el enlace'),
+      content: TextField(
+        controller: _control,
+        autofocus: true,
+        keyboardType: TextInputType.url,
+        decoration: const InputDecoration(hintText: 'https://…'),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar')),
+        FilledButton(
+            onPressed: () => Navigator.pop(context, _control.text.trim()),
+            child: const Text('Poner')),
+      ],
     );
   }
 }
