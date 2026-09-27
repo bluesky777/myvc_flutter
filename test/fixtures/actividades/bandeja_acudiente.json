@@ -1,0 +1,122 @@
+[
+ {
+  "id": 12,
+  "modo": "encuesta",
+  "titulo": "T3 coord",
+  "estado": "abierta",
+  "donde": "Décimo",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 1990,
+   "alumno_id": null,
+   "nombre": "ELENA INÉS MORA VIDAL",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 13,
+  "respondieron_n": null,
+  "por_alumno": {
+   "user_id": null,
+   "alumno_id": 465,
+   "nombre": "LUCÍA MARTA PÉREZ ORTIZ",
+   "foto_url": null
+  },
+  "mi_estado": "enviada",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ {
+  "id": 11,
+  "modo": "encuesta",
+  "titulo": "T3 acudientes de Décimo",
+  "estado": "abierta",
+  "donde": "Décimo",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 615,
+   "alumno_id": null,
+   "nombre": "CARMEN ROSA DÍAZ LUNA",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 13,
+  "respondieron_n": null,
+  "por_alumno": {
+   "user_id": null,
+   "alumno_id": 465,
+   "nombre": "LUCÍA MARTA PÉREZ ORTIZ",
+   "foto_url": null
+  },
+  "mi_estado": "pendiente",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ {
+  "id": 9,
+  "modo": "encuesta",
+  "titulo": "Integración: horario de reunión de padres",
+  "estado": "abierta",
+  "donde": "Séptimo, Décimo",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 1,
+   "alumno_id": null,
+   "nombre": "Admin",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 15,
+  "respondieron_n": null,
+  "por_alumno": {
+   "user_id": null,
+   "alumno_id": 465,
+   "nombre": "LUCÍA MARTA PÉREZ ORTIZ",
+   "foto_url": null
+  },
+  "mi_estado": "enviada",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ {
+  "id": 9,
+  "modo": "encuesta",
+  "titulo": "Integración: horario de reunión de padres",
+  "estado": "abierta",
+  "donde": "Séptimo, Décimo",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 1,
+   "alumno_id": null,
+   "nombre": "Admin",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 15,
+  "respondieron_n": null,
+  "por_alumno": {
+   "user_id": null,
+   "alumno_id": 590,
+   "nombre": "ANA SOFÍA PÉREZ ORTIZ",
+   "foto_url": null
+  },
+  "mi_estado": "enviada",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ }
+]

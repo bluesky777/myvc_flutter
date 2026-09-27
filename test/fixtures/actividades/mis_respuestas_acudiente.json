@@ -1,0 +1,99 @@
+{
+ "actividad": {
+  "id": 9,
+  "modo": "encuesta",
+  "titulo": "Integración: horario de reunión de padres",
+  "estado": "abierta",
+  "donde": "Séptimo, Décimo",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 1,
+   "alumno_id": null,
+   "nombre": "Admin",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 15,
+  "respondieron_n": null,
+  "por_alumno": {
+   "user_id": null,
+   "alumno_id": 590,
+   "nombre": "ANA SOFÍA PÉREZ ORTIZ",
+   "foto_url": null
+  },
+  "mi_estado": "enviada",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ "enviada_at": "2026-09-26 17:59:30",
+ "nota": null,
+ "puntaje": null,
+ "puntaje_max": null,
+ "nota_maxima": null,
+ "nota_planilla": null,
+ "correctas": null,
+ "tiempo_segundos": 1,
+ "intentos": 1,
+ "promedio_grupo": null,
+ "respuestas": [
+  {
+   "pregunta": {
+    "id": 8,
+    "orden": 1,
+    "seccion": 1,
+    "tipo": "unica",
+    "enunciado": "¿Qué horario prefieres para la reunión?",
+    "ayuda": null,
+    "obligatoria": false,
+    "puntos": 0,
+    "imagen_id": null,
+    "imagen_url": null,
+    "youtube_id": null,
+    "youtube_inicio": null,
+    "youtube_fin": null,
+    "enlace_url": null,
+    "escala_estilo": null,
+    "texto_arriba": null,
+    "texto_abajo": null,
+    "opcion_otra": false,
+    "aleatorias": false,
+    "compartir": true,
+    "puntaje_parcial": false,
+    "opciones": [
+     {
+      "id": 13,
+      "definicion": "Mañana (7:00 a. m.)",
+      "orden": 1,
+      "image_id": null,
+      "imagen_url": null
+     },
+     {
+      "id": 14,
+      "definicion": "Tarde (5:00 p. m.)",
+      "orden": 2,
+      "image_id": null,
+      "imagen_url": null
+     }
+    ],
+    "condiciones": []
+   },
+   "mia": {
+    "pregunta_id": 8,
+    "opcion_ids": [
+     14
+    ],
+    "texto": null,
+    "valor": null,
+    "fecha": null,
+    "archivo_id": null
+   },
+   "acerto": null
+  }
+ ],
+ "entrega": null,
+ "compartidos": null
+}

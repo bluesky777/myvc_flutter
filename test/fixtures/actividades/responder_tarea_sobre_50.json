@@ -1,0 +1,25 @@
+{
+ "id": 14,
+ "modo": "tarea",
+ "titulo": "T3 tarea sobre 50",
+ "instrucciones": null,
+ "estado": "abierta",
+ "cierra_at": null,
+ "anonimato": "nombre",
+ "previa": false,
+ "por_alumno": null,
+ "entrega": {
+  "texto": true,
+  "foto": false,
+  "archivo": false,
+  "enlace": false
+ },
+ "nota_maxima": 50,
+ "intentos": {
+  "usados": 0,
+  "maximo": 1
+ },
+ "preguntas": [],
+ "borrador": [],
+ "mi_entrega": null
+}

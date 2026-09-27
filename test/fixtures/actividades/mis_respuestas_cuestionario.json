@@ -1,0 +1,108 @@
+{
+ "actividad": {
+  "id": 24,
+  "modo": "cuestionario",
+  "titulo": "Prueba T5 error tipico",
+  "estado": "abierta",
+  "donde": "DIMENSION COMUNICATIVA · Transición",
+  "publica_at": null,
+  "cierra_at": "2026-09-30 14:00:00",
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 615,
+   "alumno_id": null,
+   "nombre": "CARMEN ROSA DÍAZ LUNA",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 5,
+  "respondieron_n": null,
+  "por_alumno": null,
+  "mi_estado": "enviada",
+  "mi_nota": 100,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ "enviada_at": "2026-09-26 18:33:23",
+ "nota": 100,
+ "puntaje": 1,
+ "puntaje_max": 1,
+ "nota_maxima": 100,
+ "nota_planilla": null,
+ "correctas": 1,
+ "tiempo_segundos": 0,
+ "intentos": 1,
+ "promedio_grupo": null,
+ "respuestas": [
+  {
+   "pregunta": {
+    "id": 31,
+    "orden": 1,
+    "seccion": 1,
+    "tipo": "unica",
+    "enunciado": "2+2",
+    "ayuda": null,
+    "obligatoria": true,
+    "puntos": 1,
+    "imagen_id": null,
+    "imagen_url": null,
+    "youtube_id": null,
+    "youtube_inicio": null,
+    "youtube_fin": null,
+    "enlace_url": null,
+    "escala_estilo": null,
+    "texto_arriba": null,
+    "texto_abajo": null,
+    "opcion_otra": false,
+    "aleatorias": false,
+    "compartir": false,
+    "explicacion": null,
+    "puntaje_parcial": false,
+    "opciones": [
+     {
+      "id": 47,
+      "definicion": "4",
+      "orden": 1,
+      "image_id": null,
+      "imagen_url": null,
+      "is_correct": false,
+      "error_tipico": null
+     },
+     {
+      "id": 48,
+      "definicion": "22",
+      "orden": 2,
+      "image_id": null,
+      "imagen_url": null,
+      "is_correct": true,
+      "error_tipico": null
+     },
+     {
+      "id": 49,
+      "definicion": "5",
+      "orden": 3,
+      "image_id": null,
+      "imagen_url": null,
+      "is_correct": false,
+      "error_tipico": null
+     }
+    ],
+    "condiciones": []
+   },
+   "mia": {
+    "pregunta_id": 31,
+    "opcion_ids": [
+     48
+    ],
+    "texto": null,
+    "valor": null,
+    "fecha": null,
+    "archivo_id": null
+   },
+   "acerto": true
+  }
+ ],
+ "entrega": null,
+ "compartidos": null
+}

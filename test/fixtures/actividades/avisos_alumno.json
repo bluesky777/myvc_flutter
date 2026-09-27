@@ -1,0 +1,206 @@
+{
+ "no_leidos": 10,
+ "hasta_id": 95,
+ "avisos": [
+  {
+   "id": 95,
+   "clase": "nota_cambiada",
+   "actividad": {
+    "id": 22,
+    "modo": "tarea",
+    "titulo": "T23 tarea planilla"
+   },
+   "titulo": "Nota cambiada",
+   "texto": "Cambió la nota de «T23 tarea planilla».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 21:51:53",
+   "leido": false,
+   "enlace": "/act/22/mis-respuestas"
+  },
+  {
+   "id": 90,
+   "clase": "publicada",
+   "actividad": {
+    "id": 28,
+    "modo": "tarea",
+    "titulo": "Reentrega con preguntas"
+   },
+   "titulo": "Tarea nueva",
+   "texto": "Tienes una tarea nueva: «Reentrega con preguntas».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 20:55:06",
+   "leido": false,
+   "enlace": "/act/28/responder"
+  },
+  {
+   "id": 75,
+   "clase": "nota_cambiada",
+   "actividad": {
+    "id": 24,
+    "modo": "cuestionario",
+    "titulo": "Prueba T5 error tipico"
+   },
+   "titulo": "Nota cambiada",
+   "texto": "Cambió la nota de «Prueba T5 error tipico».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:33:41",
+   "leido": false,
+   "enlace": "/act/24/mis-respuestas"
+  },
+  {
+   "id": 72,
+   "clase": "publicada",
+   "actividad": {
+    "id": 24,
+    "modo": "cuestionario",
+    "titulo": "Prueba T5 error tipico"
+   },
+   "titulo": "Cuestionario nuevo",
+   "texto": "Tienes un cuestionario nuevo: «Prueba T5 error tipico».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:33:23",
+   "leido": false,
+   "enlace": "/act/24/responder"
+  },
+  {
+   "id": 69,
+   "clase": "resultados",
+   "actividad": {
+    "id": 4,
+    "modo": "encuesta",
+    "titulo": "Integración: salida pedagógica"
+   },
+   "titulo": "Resultados",
+   "texto": "Ya puedes ver los resultados de «Integración: salida pedagógica».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:32:31",
+   "leido": false,
+   "enlace": "/act/4/mis-respuestas"
+  },
+  {
+   "id": 65,
+   "clase": "recordatorio",
+   "actividad": {
+    "id": 23,
+    "modo": "encuesta",
+    "titulo": "Prueba T5 avisos"
+   },
+   "titulo": "Recordatorio",
+   "texto": "Te falta responder «Prueba T5 avisos».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:32:27",
+   "leido": false,
+   "enlace": "/act/23/responder"
+  },
+  {
+   "id": 59,
+   "clase": "por_cerrar",
+   "actividad": {
+    "id": 23,
+    "modo": "encuesta",
+    "titulo": "Prueba T5 avisos"
+   },
+   "titulo": "Cierra pronto",
+   "texto": "«Prueba T5 avisos» cierra mañana a las 14:00. Te falta responderla.",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:32:16",
+   "leido": false,
+   "enlace": "/act/23/responder"
+  },
+  {
+   "id": 53,
+   "clase": "publicada",
+   "actividad": {
+    "id": 23,
+    "modo": "encuesta",
+    "titulo": "Prueba T5 avisos"
+   },
+   "titulo": "Encuesta nueva",
+   "texto": "Tienes una encuesta nueva: «Prueba T5 avisos».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:31:21",
+   "leido": false,
+   "enlace": "/act/23/responder"
+  },
+  {
+   "id": 7,
+   "clase": "calificada",
+   "actividad": {
+    "id": 22,
+    "modo": "tarea",
+    "titulo": "T23 tarea planilla"
+   },
+   "titulo": "Tarea calificada",
+   "texto": "Calificaron tu tarea «T23 tarea planilla».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:29:44",
+   "leido": false,
+   "enlace": "/act/22/mis-respuestas"
+  },
+  {
+   "id": 3,
+   "clase": "publicada",
+   "actividad": {
+    "id": 22,
+    "modo": "tarea",
+    "titulo": "T23 tarea planilla"
+   },
+   "titulo": "Tarea nueva",
+   "texto": "Tienes una tarea nueva: «T23 tarea planilla».",
+   "alumno": {
+    "alumno_id": 1130,
+    "nombre": "TOMÁS"
+   },
+   "cuantas": 1,
+   "nuevas": 1,
+   "creado_at": "2026-09-26 18:28:46",
+   "leido": false,
+   "enlace": "/act/22/responder"
+  }
+ ]
+}

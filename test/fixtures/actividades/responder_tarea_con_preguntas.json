@@ -1,0 +1,79 @@
+{
+ "id": 28,
+ "modo": "tarea",
+ "titulo": "Reentrega con preguntas",
+ "instrucciones": null,
+ "estado": "abierta",
+ "cierra_at": null,
+ "anonimato": "nombre",
+ "previa": false,
+ "por_alumno": null,
+ "entrega": {
+  "texto": true,
+  "foto": false,
+  "archivo": false,
+  "enlace": false
+ },
+ "nota_maxima": 100,
+ "intentos": {
+  "usados": 1,
+  "maximo": 1
+ },
+ "preguntas": [
+  {
+   "id": 42,
+   "orden": 1,
+   "seccion": 1,
+   "tipo": "corta",
+   "enunciado": "¿Cuál es la capital de Colombia?",
+   "ayuda": null,
+   "obligatoria": false,
+   "puntos": 1,
+   "imagen_id": null,
+   "imagen_url": null,
+   "youtube_id": null,
+   "youtube_inicio": null,
+   "youtube_fin": null,
+   "enlace_url": null,
+   "escala_estilo": null,
+   "texto_arriba": null,
+   "texto_abajo": null,
+   "opcion_otra": false,
+   "aleatorias": false,
+   "compartir": false,
+   "puntaje_parcial": false,
+   "opciones": [
+    {
+     "id": 76,
+     "definicion": "Bogotá",
+     "orden": 1,
+     "image_id": null,
+     "imagen_url": null
+    }
+   ],
+   "condiciones": []
+  }
+ ],
+ "borrador": [
+  {
+   "pregunta_id": 42,
+   "opcion_ids": [],
+   "texto": "dos respuesta 1",
+   "valor": null,
+   "fecha": null,
+   "archivo_id": null
+  }
+ ],
+ "mi_entrega": {
+  "alumno_id": 1130,
+  "texto": "dos respuesta 0",
+  "enlace": null,
+  "foto": null,
+  "archivo": null,
+  "entregada_at": "2026-09-26 21:18:55",
+  "tarde": false,
+  "nota": null,
+  "comentario": null,
+  "calificada_at": null
+ }
+}

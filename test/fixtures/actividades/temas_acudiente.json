@@ -1,0 +1,35 @@
+{
+ "alumnos": [
+  {
+   "alumno_id": 465,
+   "nombre": "LUCÍA MARTA PÉREZ ORTIZ",
+   "temas": {
+    "notas": "a_1111aaaa_notas",
+    "asistencia": "a_1111aaaa_asistencia",
+    "disciplina": "a_1111aaaa_disciplina",
+    "matricula": "a_1111aaaa_matricula",
+    "compromiso": "a_1111aaaa_compromiso",
+    "actividad": "a_1111aaaa_actividad"
+   }
+  },
+  {
+   "alumno_id": 590,
+   "nombre": "ANA SOFÍA PÉREZ ORTIZ",
+   "temas": {
+    "notas": "a_2222bbbb_notas",
+    "asistencia": "a_2222bbbb_asistencia",
+    "disciplina": "a_2222bbbb_disciplina",
+    "matricula": "a_2222bbbb_matricula",
+    "compromiso": "a_2222bbbb_compromiso",
+    "actividad": "a_2222bbbb_actividad"
+   }
+  }
+ ],
+ "colegio": {
+  "colegio_muro": "c_3333cccc",
+  "colegio_avisos": "c_4444dddd"
+ },
+ "usuario": {
+  "actividad": "u_5555eeee_actividad"
+ }
+}

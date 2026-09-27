@@ -1,0 +1,66 @@
+{
+ "id": 11,
+ "modo": "encuesta",
+ "titulo": "T3 acudientes de Décimo",
+ "instrucciones": null,
+ "estado": "abierta",
+ "cierra_at": null,
+ "anonimato": "nombre",
+ "previa": false,
+ "por_alumno": {
+  "user_id": null,
+  "alumno_id": 465,
+  "nombre": "LUCÍA MARTA PÉREZ ORTIZ",
+  "foto_url": null
+ },
+ "entrega": null,
+ "nota_maxima": null,
+ "intentos": {
+  "usados": 0,
+  "maximo": 1
+ },
+ "preguntas": [
+  {
+   "id": 9,
+   "orden": 1,
+   "seccion": 1,
+   "tipo": "sino",
+   "enunciado": "¿Viene?",
+   "ayuda": null,
+   "obligatoria": false,
+   "puntos": 0,
+   "imagen_id": null,
+   "imagen_url": null,
+   "youtube_id": null,
+   "youtube_inicio": null,
+   "youtube_fin": null,
+   "enlace_url": null,
+   "escala_estilo": null,
+   "texto_arriba": null,
+   "texto_abajo": null,
+   "opcion_otra": false,
+   "aleatorias": false,
+   "compartir": true,
+   "puntaje_parcial": false,
+   "opciones": [
+    {
+     "id": 15,
+     "definicion": "Sí",
+     "orden": 1,
+     "image_id": null,
+     "imagen_url": null
+    },
+    {
+     "id": 16,
+     "definicion": "No",
+     "orden": 2,
+     "image_id": null,
+     "imagen_url": null
+    }
+   ],
+   "condiciones": []
+  }
+ ],
+ "borrador": [],
+ "mi_entrega": null
+}

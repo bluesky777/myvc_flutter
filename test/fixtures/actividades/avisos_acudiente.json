@@ -1,0 +1,26 @@
+{
+ "no_leidos": 0,
+ "hasta_id": 69,
+ "avisos": [
+  {
+   "id": 41,
+   "clase": "publicada",
+   "actividad": {
+    "id": 11,
+    "modo": "encuesta",
+    "titulo": "T3 acudientes de Décimo"
+   },
+   "titulo": "Encuesta nueva",
+   "texto": "Tienes una encuesta nueva: «T3 acudientes de Décimo» (por Lucía).",
+   "alumno": {
+    "alumno_id": 465,
+    "nombre": "LUCÍA"
+   },
+   "cuantas": 1,
+   "nuevas": 0,
+   "creado_at": "2026-09-26 18:31:18",
+   "leido": true,
+   "enlace": "/act/11/responder?alumno=465"
+  }
+ ]
+}

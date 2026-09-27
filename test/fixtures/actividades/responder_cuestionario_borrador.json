@@ -1,0 +1,122 @@
+{
+ "id": 13,
+ "modo": "cuestionario",
+ "titulo": "T3 escala 50",
+ "instrucciones": null,
+ "estado": "abierta",
+ "cierra_at": null,
+ "anonimato": "nombre",
+ "previa": false,
+ "por_alumno": null,
+ "entrega": null,
+ "nota_maxima": 50,
+ "intentos": {
+  "usados": 0,
+  "maximo": 1
+ },
+ "preguntas": [
+  {
+   "id": 11,
+   "orden": 1,
+   "seccion": 1,
+   "tipo": "unica",
+   "enunciado": "2+2",
+   "ayuda": null,
+   "obligatoria": false,
+   "puntos": 5,
+   "imagen_id": null,
+   "imagen_url": null,
+   "youtube_id": null,
+   "youtube_inicio": null,
+   "youtube_fin": null,
+   "enlace_url": null,
+   "escala_estilo": null,
+   "texto_arriba": null,
+   "texto_abajo": null,
+   "opcion_otra": false,
+   "aleatorias": false,
+   "compartir": true,
+   "puntaje_parcial": false,
+   "opciones": [
+    {
+     "id": 19,
+     "definicion": "4",
+     "orden": 1,
+     "image_id": null,
+     "imagen_url": null
+    },
+    {
+     "id": 20,
+     "definicion": "5",
+     "orden": 2,
+     "image_id": null,
+     "imagen_url": null
+    }
+   ],
+   "condiciones": []
+  },
+  {
+   "id": 12,
+   "orden": 2,
+   "seccion": 1,
+   "tipo": "unica",
+   "enunciado": "3+3",
+   "ayuda": null,
+   "obligatoria": false,
+   "puntos": 5,
+   "imagen_id": null,
+   "imagen_url": null,
+   "youtube_id": null,
+   "youtube_inicio": null,
+   "youtube_fin": null,
+   "enlace_url": null,
+   "escala_estilo": null,
+   "texto_arriba": null,
+   "texto_abajo": null,
+   "opcion_otra": false,
+   "aleatorias": false,
+   "compartir": true,
+   "puntaje_parcial": false,
+   "opciones": [
+    {
+     "id": 21,
+     "definicion": "6",
+     "orden": 1,
+     "image_id": null,
+     "imagen_url": null
+    },
+    {
+     "id": 22,
+     "definicion": "7",
+     "orden": 2,
+     "image_id": null,
+     "imagen_url": null
+    }
+   ],
+   "condiciones": []
+  }
+ ],
+ "borrador": [
+  {
+   "pregunta_id": 11,
+   "opcion_ids": [
+    19
+   ],
+   "texto": null,
+   "valor": null,
+   "fecha": null,
+   "archivo_id": null
+  },
+  {
+   "pregunta_id": 12,
+   "opcion_ids": [
+    21
+   ],
+   "texto": null,
+   "valor": null,
+   "fecha": null,
+   "archivo_id": null
+  }
+ ],
+ "mi_entrega": null
+}

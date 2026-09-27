@@ -1,0 +1,51 @@
+{
+ "actividad": {
+  "id": 22,
+  "modo": "tarea",
+  "titulo": "T23 tarea planilla",
+  "estado": "abierta",
+  "donde": "DIMENSION COMUNICATIVA · Transición",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": true,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 615,
+   "alumno_id": null,
+   "nombre": "CARMEN ROSA DÍAZ LUNA",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 5,
+  "respondieron_n": null,
+  "por_alumno": null,
+  "mi_estado": "calificada",
+  "mi_nota": 42,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ "enviada_at": "2026-09-26 18:28:49",
+ "nota": null,
+ "puntaje": null,
+ "puntaje_max": null,
+ "nota_maxima": 50,
+ "nota_planilla": 84,
+ "correctas": null,
+ "tiempo_segundos": null,
+ "intentos": 0,
+ "promedio_grupo": null,
+ "respuestas": [],
+ "entrega": {
+  "alumno_id": 1130,
+  "texto": "Dibujé una vaca, un perro y un gato.",
+  "enlace": null,
+  "foto": null,
+  "archivo": null,
+  "entregada_at": "2026-09-26 18:28:49",
+  "tarde": false,
+  "nota": 42,
+  "comentario": "Muy bien los tres animales.",
+  "calificada_at": "2026-09-26 18:29:44"
+ },
+ "compartidos": null
+}

@@ -1,0 +1,213 @@
+{
+ "actividad": {
+  "id": 4,
+  "modo": "encuesta",
+  "titulo": "Integración: salida pedagógica",
+  "estado": "cerrada",
+  "donde": "Transición",
+  "publica_at": null,
+  "cierra_at": null,
+  "anonimato": "nombre",
+  "califica": false,
+  "soy_dueno": false,
+  "creador": {
+   "user_id": 615,
+   "alumno_id": null,
+   "nombre": "CARMEN ROSA DÍAZ LUNA",
+   "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+  },
+  "destinatarios_n": 5,
+  "respondieron_n": null,
+  "por_alumno": null,
+  "mi_estado": "enviada",
+  "mi_nota": null,
+  "rechazo_motivo": null,
+  "year_id": 12
+ },
+ "enviada_at": "2026-09-26 17:46:53",
+ "nota": null,
+ "puntaje": null,
+ "puntaje_max": null,
+ "nota_maxima": null,
+ "nota_planilla": null,
+ "correctas": null,
+ "tiempo_segundos": 6,
+ "intentos": 1,
+ "promedio_grupo": null,
+ "respuestas": [
+  {
+   "pregunta": {
+    "id": 1,
+    "orden": 1,
+    "seccion": 1,
+    "tipo": "sino",
+    "enunciado": "¿Te gustó la salida pedagógica?",
+    "ayuda": null,
+    "obligatoria": false,
+    "puntos": 0,
+    "imagen_id": null,
+    "imagen_url": null,
+    "youtube_id": null,
+    "youtube_inicio": null,
+    "youtube_fin": null,
+    "enlace_url": null,
+    "escala_estilo": null,
+    "texto_arriba": null,
+    "texto_abajo": null,
+    "opcion_otra": false,
+    "aleatorias": false,
+    "compartir": true,
+    "puntaje_parcial": false,
+    "opciones": [
+     {
+      "id": 1,
+      "definicion": "Sí",
+      "orden": 1,
+      "image_id": null,
+      "imagen_url": null
+     },
+     {
+      "id": 2,
+      "definicion": "No",
+      "orden": 2,
+      "image_id": null,
+      "imagen_url": null
+     }
+    ],
+    "condiciones": []
+   },
+   "mia": {
+    "pregunta_id": 1,
+    "opcion_ids": [
+     1
+    ],
+    "texto": null,
+    "valor": null,
+    "fecha": null,
+    "archivo_id": null
+   },
+   "acerto": null
+  },
+  {
+   "pregunta": {
+    "id": 2,
+    "orden": 2,
+    "seccion": 1,
+    "tipo": "parrafo",
+    "enunciado": "¿Qué fue lo que más te gustó?",
+    "ayuda": null,
+    "obligatoria": false,
+    "puntos": 0,
+    "imagen_id": null,
+    "imagen_url": null,
+    "youtube_id": null,
+    "youtube_inicio": null,
+    "youtube_fin": null,
+    "enlace_url": null,
+    "escala_estilo": null,
+    "texto_arriba": null,
+    "texto_abajo": null,
+    "opcion_otra": false,
+    "aleatorias": false,
+    "compartir": false,
+    "puntaje_parcial": false,
+    "opciones": [],
+    "condiciones": [
+     [
+      {
+       "depende_de_id": 1,
+       "operador": "es",
+       "opcion_id": 1,
+       "valor": null
+      }
+     ]
+    ]
+   },
+   "mia": {
+    "pregunta_id": 2,
+    "opcion_ids": [],
+    "texto": "Ver los animales de la granja.",
+    "valor": null,
+    "fecha": null,
+    "archivo_id": null
+   },
+   "acerto": null
+  }
+ ],
+ "entrega": null,
+ "compartidos": {
+  "actividad": {
+   "id": 4,
+   "modo": "encuesta",
+   "titulo": "Integración: salida pedagógica",
+   "estado": "cerrada",
+   "donde": "Transición",
+   "publica_at": null,
+   "cierra_at": null,
+   "anonimato": "nombre",
+   "califica": false,
+   "soy_dueno": false,
+   "creador": {
+    "user_id": 615,
+    "alumno_id": null,
+    "nombre": "CARMEN ROSA DÍAZ LUNA",
+    "foto_url": "http://localhost:8092/images/perfil/user_9/foto.jpg"
+   },
+   "destinatarios_n": 5,
+   "respondieron_n": null,
+   "por_alumno": null,
+   "mi_estado": "enviada",
+   "mi_nota": null,
+   "rechazo_motivo": null,
+   "year_id": 12
+  },
+  "participacion": {
+   "destinatarios": 5,
+   "respondieron": 1,
+   "porcentaje": 20
+  },
+  "por_grupo": [
+   {
+    "clave": "161",
+    "nombre": "Transición",
+    "destinatarios": 5,
+    "respondieron": null,
+    "oculto": true
+   }
+  ],
+  "por_grado": [
+   {
+    "clave": "5",
+    "nombre": "Transición",
+    "destinatarios": 5,
+    "respondieron": null,
+    "oculto": true
+   }
+  ],
+  "por_publico": [
+   {
+    "clave": "alumno",
+    "nombre": "Alumnos",
+    "destinatarios": 5,
+    "respondieron": null,
+    "oculto": true
+   }
+  ],
+  "preguntas": [
+   {
+    "pregunta_id": 1,
+    "tipo": "sino",
+    "enunciado": "¿Te gustó la salida pedagógica?",
+    "mostrada_a": 0,
+    "respondida_por": 0,
+    "oculto": true,
+    "opciones": [],
+    "escala": null,
+    "promedio": null,
+    "textos": null,
+    "aciertos": null
+   }
+  ],
+  "notas": null
+ }
+}
