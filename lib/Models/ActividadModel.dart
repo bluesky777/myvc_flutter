@@ -675,6 +675,13 @@ class MisRespuestasAct {
   final ActEnBandeja actividad;
   final DateTime? enviadaAt;
   final int? nota;
+
+  /// Sobre cuánto va la nota («38 de 50»). `null` en las encuestas.
+  final int? notaMaxima;
+
+  /// La nota llevada a la escala del año («= 76 en la planilla»). `null` si
+  /// no califica o si la nota todavía no se enseña.
+  final int? notaPlanilla;
   final double? puntaje;
   final double? puntajeMax;
   final int? correctas;
@@ -689,6 +696,8 @@ class MisRespuestasAct {
     required this.actividad,
     this.enviadaAt,
     this.nota,
+    this.notaMaxima,
+    this.notaPlanilla,
     this.puntaje,
     this.puntajeMax,
     this.correctas,
@@ -704,6 +713,8 @@ class MisRespuestasAct {
         actividad: ActEnBandeja.fromJson(_mapa(j['actividad']) ?? const {}),
         enviadaAt: horaDeActividad(j['enviada_at']),
         nota: entero(j['nota']),
+        notaMaxima: entero(j['nota_maxima']),
+        notaPlanilla: entero(j['nota_planilla']),
         puntaje: j['puntaje'] == null ? null : decimalO(j['puntaje']),
         puntajeMax:
             j['puntaje_max'] == null ? null : decimalO(j['puntaje_max']),

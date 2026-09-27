@@ -176,6 +176,15 @@ class _MisRespuestasActividadScreenState
               children: [
                 Text(f.titulo,
                     style: const TextStyle(fontSize: 20, height: 1.2)),
+                if (nota != null && d.notaMaxima != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tu nota: $nota de ${d.notaMaxima}'
+                    '${d.notaPlanilla != null && d.notaPlanilla != nota ? ' · = ${d.notaPlanilla} en la planilla' : ''}',
+                    style: const TextStyle(
+                        fontSize: 13, color: EstiloActividades.tintaSuave),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
@@ -234,9 +243,18 @@ class _MisRespuestasActividadScreenState
             color: const Color(0xFF1BAF7A),
           ),
           Center(
-            child: Text('$nota',
-                style:
-                    const TextStyle(fontSize: 26, fontWeight: FontWeight.w500)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('$nota',
+                    style: const TextStyle(
+                        fontSize: 26, fontWeight: FontWeight.w500, height: 1)),
+                if (d.notaMaxima != null)
+                  Text('de ${d.notaMaxima}',
+                      style: const TextStyle(
+                          fontSize: 11, color: EstiloActividades.tintaSuave)),
+              ],
+            ),
           ),
         ],
       ),
