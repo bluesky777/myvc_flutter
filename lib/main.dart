@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
+import 'package:myvc_flutter/Http/ClienteApp.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/Avisos.dart';
@@ -60,6 +61,10 @@ void main() async {
   // lo que lee la versión mínima que exige el colegio y las dos se comparan.
   // Si falla, `nuestra` se queda en null y no se bloquea a nadie.
   await VersionMinima.arrancar();
+
+  // Las cabeceras que identifican a la app, antes de la primera petición, que
+  // puede ser la de restaurar la sesión. Ver ClienteApp.
+  await ClienteApp.arrancar();
 
   // Las versiones hasta la 1.0.0+2 guardaban la contraseña en claro en
   // shared_preferences. Se borra al arrancar y no al entrar, porque quien ya

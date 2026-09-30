@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Http/ClienteApp.dart';
 
 class Server {
   /// El servidor del colegio. Lo fija el login, que es quien sabe cuál es.
@@ -80,6 +81,11 @@ class Server {
   Map<String, String> _conAccept(String direccion, Map<String, String> h) =>
       pideJson(direccion) ? {...h, 'Accept': 'application/json'} : h;
 
+  /// Las cabeceras de [ClienteApp] delante de las de cada petición. Todas las
+  /// peticiones de aquí pasan por esto, el login incluido.
+  Map<String, String> _deLaApp(Map<String, String> h) =>
+      {...ClienteApp.cabeceras, ...h};
+
   Map<String, String> _encabezado () => {
     'Authorization': 'Bearer ${AuthService.user.token}',
   };
@@ -115,33 +121,35 @@ class Server {
 
     var url = _uri('/login/credentials');
     var response =
-        http.post(url, body: {'username': username, 'password': password});
+        http.post(url,
+        headers: _deLaApp({}),
+        body: {'username': username, 'password': password});
     return response;
   }
 
   Future login() {
     var url = _uri('/login');
-    var response = http.post(url, headers: {
+    var response = http.post(url, headers: _deLaApp({
       'Authorization': 'Bearer ${AuthService.user.token}',
-    });
+    }));
     return response;
   }
 
   Future get(String direccion) {
     var url = _uri(direccion);
-    var response = http.get(url, headers: _conAccept(direccion, {
+    var response = http.get(url, headers: _deLaApp(_conAccept(direccion, {
       'Authorization': 'Bearer ${AuthService.user.token}',
-    }));
+    })));
     return response;
   }
 
   Future put(String direccion, params) {
     var url = _uri(direccion);
     var response = http.put(url,
-        headers: _conAccept(direccion, {
+        headers: _deLaApp(_conAccept(direccion, {
           'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
-        }),
+        })),
         body: jsonEncode(params));
     return response;
   }
@@ -149,10 +157,10 @@ class Server {
   Future post(String direccion, params) {
     var url = _uri(direccion);
     var response = http.post(url,
-        headers: _conAccept(direccion, {
+        headers: _deLaApp(_conAccept(direccion, {
           'Authorization': 'Bearer ${AuthService.user.token}',
           'Content-Type': 'application/json; charset=UTF-8',
-        }),
+        })),
         body: jsonEncode(params));
     return response;
   }
@@ -169,7 +177,7 @@ class Server {
   Future<http.Response> subir(
       String direccion, List<int> bytes, String nombreArchivo) async {
     final peticion = http.MultipartRequest('POST', _uri(direccion))
-      ..headers.addAll(_conAccept(direccion, _encabezado()))
+      ..headers.addAll(_deLaApp(_conAccept(direccion, _encabezado())))
       ..files.add(http.MultipartFile.fromBytes('file', bytes,
           filename: nombreArchivo));
 
@@ -186,7 +194,7 @@ class Server {
   Future<http.Response> subirConCampos(String direccion, List<int> bytes,
       String nombreArchivo, Map<String, String> campos) async {
     final peticion = http.MultipartRequest('POST', _uri(direccion))
-      ..headers.addAll(_conAccept(direccion, _encabezado()))
+      ..headers.addAll(_deLaApp(_conAccept(direccion, _encabezado())))
       ..fields.addAll(campos)
       ..files.add(http.MultipartFile.fromBytes('file', bytes,
           filename: nombreArchivo));
@@ -197,7 +205,7 @@ class Server {
   Future delete(String direccion) {
     var url = _uri(direccion);
     var response = http.delete(url,
-        headers: _encabezado(),);
+        headers: _deLaApp(_encabezado()),);
     return response;
   }
 }
