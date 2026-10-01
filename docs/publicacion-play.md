@@ -430,7 +430,7 @@ consola después de subir.
 **El `versionCode` sube en cada subida, siempre.** Es el `+N` de `version:` en
 `pubspec.yaml`. Play rechaza un bundle con un `versionCode` que ya vio, aunque
 lo hayas borrado. El número vigente es el de `pubspec.yaml`, no el de este
-documento; la última subida a producción fue `1.0.1 (4)`. Súbelo en uno siempre,
+documento; la última subida a producción fue `1.2.0 (7)`. Súbelo en uno siempre,
 y sube también la parte `x.y.z` si cambia lo que ve el usuario.
 
 ### Una sola clave, a propósito
@@ -794,6 +794,20 @@ mismo envío:
   `ficha-play.md` son de este documento, no del texto (`ficha-play.md:104-130`).
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
+
+### `1.2.0 (7)`, enviada el 1 oct 2026
+
+Solo la versión: ni la ficha ni Seguridad de los datos cambian. Trae «Mi
+perfil» (foto y contraseña; la firma sigue apagada) y las cabeceras
+`User-Agent: MyVC-App/…` y `X-MyVC-Cliente: app/…`, que el backend ya lee para
+anotar el ingreso con `entorno = 'App'`. La política con el registro de accesos
+se subió a `micolevirtual.com/privacidad.html` antes de enviar. Notas en
+`es-419`: «Nuevo: «Mi perfil», para cambiar tu foto y tu contraseña. Mensajes
+más claros cuando el colegio no permite una acción.»
+
+El aviso de Play «pantalla de borde a borde» (Android 15, SDK 35) se ignora: Flutter
+ya dibuja de borde a borde y reparte los márgenes del sistema; venía igual desde
+la 1.1.0.
 
 ### `1.1.0 (6)`, enviada el 23 sep 2026
 
