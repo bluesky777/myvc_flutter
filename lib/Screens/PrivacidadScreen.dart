@@ -122,7 +122,7 @@ class _PrivacidadScreenState extends State<PrivacidadScreen> {
           const SizedBox(height: 6),
           const Text(
             'Qué pantallas se abren y cuándo, cuántas veces se usa cada cosa, y'
-            ' datos del teléfono como el modelo y la versión de Android. Junto'
+            ' datos del teléfono como el modelo y la versión del sistema. Junto'
             ' a eso solo se guardan dos rasgos: si es alumno, acudiente,'
             ' docente o administrador, y de qué colegio.',
             style: TextStyle(fontSize: 12, color: Colors.black87),

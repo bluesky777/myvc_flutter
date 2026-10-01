@@ -62,13 +62,21 @@ el que trabaja.
 docentes— permite registrar: calificaciones, asistencia a clase, tardanzas y
 ausencias a la institución, anotaciones de disciplina y porte del uniforme.
 
+**Registro de accesos.** Cada vez que usted entra, el servidor de su colegio
+anota la fecha y la hora, la dirección IP desde la que se conectó y con qué
+entró: si fue con la aplicación o con un navegador, la versión de la aplicación,
+el sistema operativo y su versión, y el modelo del teléfono. Queda anotado junto
+a su usuario, porque sirve para proteger su cuenta y para saber por qué medio se
+hizo un cambio; por ejemplo, si una calificación se modificó desde la aplicación
+o desde la página web.
+
 **Datos de uso de la aplicación.** Para saber qué partes de la aplicación se
 usan de verdad y cuáles no, y poder mejorarla, recogemos estadísticas de uso con
 Google Analytics para Firebase, un servicio de Google. Se registra qué pantallas
 se abren y cuándo, acciones contadas —por ejemplo, que se guardaron veintiocho
 calificaciones de una vez, o que se abrió la planilla de un indicador— y los
 datos técnicos que Google recoge por su cuenta: el modelo del dispositivo, la
-versión de Android, el idioma, el país y un identificador aleatorio que Google
+versión de Android o de iOS, el idioma, el país y un identificador aleatorio que Google
 asigna a esa instalación de la aplicación.
 
 **Estas estadísticas no dicen quién es usted.** No se envía su nombre, su
@@ -114,7 +122,7 @@ apunta a unos canales cuyo nombre es un código: no contiene su nombre, ni su
 documento, ni el de su colegio, y de él no se puede volver atrás para averiguar
 a quién pertenece.
 
-**Puede apagarlos cuando quiera.** Android le pedirá permiso la primera vez y
+**Puede apagarlos cuando quiera.** El teléfono le pedirá permiso la primera vez y
 usted puede decir que no: el resto de la aplicación funciona igual. Dentro de la
 aplicación puede además elegir qué avisos quiere recibir y cuáles no, y **al
 cerrar sesión el teléfono deja de recibirlos todos**.
@@ -137,6 +145,11 @@ académico**: mostrarle la información que le corresponde según su rol y permi
 a los docentes registrar la que la institución les pide llevar. No se usan para
 ningún otro fin.
 
+**El registro de accesos, únicamente para la seguridad de las cuentas y para
+poder revisar los cambios**: detectar un ingreso que no reconoce y saber por qué
+medio se registró o se modificó una información. No se usa para localizar a
+nadie ni con fines publicitarios.
+
 **Las estadísticas de uso, únicamente para mejorar la aplicación**: saber qué
 pantallas se usan, cuáles sobran y dónde la gente se atasca, para decidir qué
 corregir y qué construir después. No se usan para evaluar ni supervisar a
@@ -151,7 +164,8 @@ los abre o no.
 ### Con quién los compartimos
 
 **La información académica, con nadie fuera de su colegio.** Sus calificaciones,
-su asistencia, sus anotaciones de disciplina y sus datos de perfil viajan
+su asistencia, sus anotaciones de disciplina, sus datos de perfil y el registro
+de sus accesos viajan
 exclusivamente entre la aplicación y el servidor de la institución educativa a
 la que usted pertenece. No los vendemos, no los alquilamos y no los cedemos a
 terceros.
@@ -188,7 +202,7 @@ La contraseña nunca se almacena en el teléfono.
 
 ### Cuánto tiempo los conservamos
 
-Los datos académicos los conserva el colegio según sus propias políticas y las
+Los datos académicos y el registro de accesos los conserva el colegio según sus propias políticas y las
 obligaciones legales de archivo que le apliquen. La credencial de sesión
 guardada en el teléfono se borra al cerrar sesión o al desinstalar la
 aplicación.
