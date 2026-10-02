@@ -365,6 +365,7 @@ class _MisRespuestasActividadScreenState
       'escala' => r.valor == null ? 'Sin responder' : '${r.valor} de 5',
       'fecha' => r.fecha ?? 'Sin responder',
       'archivo' => r.archivoId == null ? 'Sin responder' : 'Archivo subido',
+      'interactiva' => r.estado == null ? 'Sin responder' : 'Reto jugado',
       _ => (r.texto ?? '').isEmpty ? 'Sin responder' : r.texto!,
     };
   }

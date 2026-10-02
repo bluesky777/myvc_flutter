@@ -1,0 +1,87 @@
+<!doctype html>
+<!--
+  PÁGINA DE UN RETO INTERACTIVO DENTRO DE LA APP.  ** assets/retos/reto.html SE GENERA DE AQUÍ **
+  con `node tools/retos/generar.mjs`, que mete donde dicen los marcadores el CSS y el motor de
+  myvc_front (app2/src/app/comunes/act/retos/). Esto es sólo la costura con Dart:
+
+    Dart → JS   pintarReto({reto, cfg, estado, soloLectura})
+    JS → Dart   Listo  ''                         la página cargó y ya se puede pintar
+                Reto   {estado, hecho}            cada jugada (una copia del estado)
+                Alto   '<px>'                     la altura del reto, para medir la WebView
+                Voz    {texto, rate} | 'callar'   la voz, donde la WebView no la trae
+    Dart → JS   __vozTermino()                    terminó de hablar (el `onend` del motor)
+
+  Es lo mismo que hace <myvc-reto> (reto-host.ts) en la web.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
+  /* app2 no carga Grandstander ni Lexend; aquí tampoco hay red asegurada. */
+  :root { --f-display: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; --f-body: system-ui, -apple-system, Roboto, sans-serif; }
+  #marco { container: app / inline-size; }
+  #caja { padding: 14px clamp(10px, 2.5cqi, 22px) 18px; border-radius: 18px; }
+</style>
+<style>/*CSS*/</style>
+<script>
+/* La voz: WKWebView trae speechSynthesis; la WebView de Android no. Donde falta, se le presta la
+ * de Dart (flutter_tts) con la misma forma que usa el motor: speak, cancel, getVoices, onend. */
+(() => {
+  if ('speechSynthesis' in window) return;
+  let enCurso = null;
+  window.SpeechSynthesisUtterance = function (texto) { this.text = texto; this.rate = 1; this.lang = 'en-US'; };
+  window.speechSynthesis = {
+    getVoices: () => [],
+    cancel() { enCurso = null; if (window.Voz) Voz.postMessage('callar'); },
+    speak(u) {
+      enCurso = u;
+      if (window.Voz) Voz.postMessage(JSON.stringify({ texto: u.text, rate: u.rate }));
+      else setTimeout(() => window.__vozTermino(), 0);
+    },
+  };
+  window.__vozTermino = () => { const u = enCurso; enCurso = null; if (u && u.onend) u.onend(); };
+})();
+</script>
+<script>/*MOTOR*/</script>
+</head>
+<body>
+<div id="marco"><div id="caja" class="reto"></div></div>
+<script>
+(() => {
+  const { T, esc, speak, SAY_ICON } = motor;
+  const caja = document.getElementById('caja');
+  const mandar = (canal, dato) => { if (window[canal]) window[canal].postMessage(typeof dato === 'string' ? dato : JSON.stringify(dato)); };
+
+  window.pintarReto = (d) => {
+    caja.replaceChildren();
+    const t = T[d.reto];
+    if (!t) {
+      caja.innerHTML = '<p class="hint">Este reto (' + esc(d.reto) + ') no viene en esta versión de la app. Actualízala o responde la pregunta en la web.</p>';
+      return;
+    }
+    caja.innerHTML = '<div class="qtitle"><h2>' + esc(t.title) + '</h2><button type="button" class="say" aria-label="Escuchar la instrucción">' + SAY_ICON + '</button></div>'
+      + '<p class="qes">' + esc(t.es) + '</p><div class="qbody"></div>';
+    caja.querySelector('.qtitle .say').onclick = () => speak(t.title, 0.85);
+    const cuerpo = caja.querySelector('.qbody');
+    if (d.soloLectura) caja.setAttribute('inert', ''); else caja.removeAttribute('inert');
+    try {
+      const s = d.estado ? JSON.parse(JSON.stringify(d.estado)) : t.init(d.cfg);
+      t.render(cuerpo, d.cfg, s, d.soloLectura ? () => {} : () => {
+        let hecho = false;
+        try { hecho = !!t.done(d.cfg, s); } catch (e) {}
+        mandar('Reto', { estado: s, hecho });
+      });
+    } catch (e) {
+      cuerpo.innerHTML = '<p class="hint">Faltan datos para mostrar este reto.</p>';
+    }
+  };
+
+  // Se mide la caja y no el body: el body crece con la WebView y nunca encogería.
+  new ResizeObserver(() => mandar('Alto', String(Math.ceil(caja.getBoundingClientRect().height)))).observe(caja);
+  mandar('Listo', '');
+})();
+</script>
+</body>
+</html>

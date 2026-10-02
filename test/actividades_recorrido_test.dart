@@ -317,6 +317,23 @@ void main() {
       expect(respuestaDada('escala', const RespuestaAct(preguntaId: 1, valor: 1)),
           isTrue);
     });
+
+    test('la interactiva, con estado y el reto terminado', () {
+      const sin = RespuestaAct(preguntaId: 1);
+      const aMedias = RespuestaAct(
+          preguntaId: 1, estado: {'pick': []}, hecho: false);
+      const terminada =
+          RespuestaAct(preguntaId: 1, estado: {'pick': [0]}, hecho: true);
+      // Del servidor, sin jugarse aquí: no se sabe, y decide `enviar`.
+      final delServidor = RespuestaAct.fromJson({
+        'pregunta_id': 1,
+        'estado': {'pick': [0]},
+      });
+      expect(respuestaDada('interactiva', sin), isFalse);
+      expect(respuestaDada('interactiva', aMedias), isFalse);
+      expect(respuestaDada('interactiva', terminada), isTrue);
+      expect(respuestaDada('interactiva', delServidor), isTrue);
+    });
   });
 
   test('normalizar: recortar, minúsculas, sin tildes y espacios a uno', () {

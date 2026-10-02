@@ -1,9 +1,11 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Models/ActividadModel.dart';
 import 'package:myvc_flutter/Utils/EstiloActividades.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
+import 'package:myvc_flutter/Widgets/RetoInteractivo.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Lo que se ve de una pregunta al responderla: el enunciado con su imagen,
@@ -250,10 +252,31 @@ class _CampoDePreguntaState extends State<CampoDePregunta> {
         return _fecha();
       case 'archivo':
         return _archivo();
+      case 'interactiva':
+        return _interactiva();
       default:
         return const Text('Esta pregunta no se puede responder desde el '
             'teléfono. Ábrela en la web.');
     }
+  }
+
+  /// Un reto de inglés: lo pinta el motor de la web en una WebView. En la
+  /// versión web de la app no hay WebView, y se manda a la plataforma.
+  Widget _interactiva() {
+    final reto = p.config?['reto'];
+    final cfg = p.config?['cfg'];
+    if (kIsWeb || reto is! String || cfg is! Map) {
+      return const Text('Este reto no se puede jugar aquí. Ábrelo en la '
+          'plataforma web.');
+    }
+    return RetoInteractivo(
+      reto: reto,
+      cfg: Map<String, dynamic>.from(cfg),
+      estado: r?.estado,
+      soloLectura: widget.soloLectura,
+      alCambiar: (estado, hecho) => widget.alCambiar(
+          RespuestaAct(preguntaId: p.id, estado: estado, hecho: hecho)),
+    );
   }
 
   Widget _opcion({

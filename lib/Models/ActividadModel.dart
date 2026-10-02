@@ -226,7 +226,7 @@ class PreguntaAct {
   final int orden;
 
   /// `unica`, `multiple`, `corta`, `parrafo`, `escala`, `sino`,
-  /// `imagen_opciones`, `video`, `archivo` o `fecha`.
+  /// `imagen_opciones`, `video`, `archivo`, `fecha` o `interactiva`.
   final String tipo;
   final String enunciado;
   final String? ayuda;
@@ -249,6 +249,10 @@ class PreguntaAct {
   final bool aleatorias;
   final String? explicacion;
   final List<OpcionAct> opciones;
+
+  /// Sólo en `interactiva`: `{reto, cfg}`, el reto del motor de inglés que se
+  /// juega en [RetoInteractivo]. A quien responde no le llega la `respuesta`.
+  final Map<String, dynamic>? config;
 
   /// O de Y: visible si **algún** grupo tiene **todas** sus condiciones.
   final List<List<CondicionAct>> condiciones;
@@ -273,6 +277,7 @@ class PreguntaAct {
     this.explicacion,
     required this.opciones,
     required this.condiciones,
+    this.config,
   });
 
   factory PreguntaAct.fromJson(Map<String, dynamic> j) => PreguntaAct(
@@ -294,6 +299,7 @@ class PreguntaAct {
         aleatorias: siONo(j['aleatorias']) ?? false,
         explicacion: _txt(j['explicacion']),
         opciones: _lista(j['opciones']).map(OpcionAct.fromJson).toList(),
+        config: _mapa(j['config']),
         condiciones: (j['condiciones'] is List ? j['condiciones'] as List : [])
             .map((g) => _lista(g).map(CondicionAct.fromJson).toList())
             .toList(),
@@ -328,8 +334,16 @@ class RespuestaAct {
   final String? fecha;
   final int? archivoId;
 
+  /// Sólo en `interactiva`: el estado del reto tal como lo deja el motor. La
+  /// nota la pone el servidor con él; la app nunca manda puntaje.
+  final Map<String, dynamic>? estado;
+
   /// Sólo para pintar: el nombre del archivo subido en esta sesión.
   final String? archivoNombre;
+
+  /// Sólo en la app: si el motor dijo que el reto está terminado (`done`).
+  /// Null si el estado vino del servidor y aún no se ha jugado aquí.
+  final bool? hecho;
 
   const RespuestaAct({
     required this.preguntaId,
@@ -338,7 +352,9 @@ class RespuestaAct {
     this.valor,
     this.fecha,
     this.archivoId,
+    this.estado,
     this.archivoNombre,
+    this.hecho,
   });
 
   factory RespuestaAct.fromJson(Map<String, dynamic> j) => RespuestaAct(
@@ -351,6 +367,7 @@ class RespuestaAct {
         valor: entero(j['valor']),
         fecha: _txt(j['fecha']),
         archivoId: entero(j['archivo_id']),
+        estado: _mapa(j['estado']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -360,6 +377,7 @@ class RespuestaAct {
         'valor': valor,
         'fecha': fecha,
         'archivo_id': archivoId,
+        if (estado != null) 'estado': estado,
       };
 }
 

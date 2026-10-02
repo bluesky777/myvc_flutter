@@ -300,4 +300,24 @@ void main() {
       expect(a('raro.').extension, 'ARCH');
     });
   });
+
+  test('interactiva: el config de la pregunta y el estado de la respuesta', () {
+    final p = PreguntaAct.fromJson({
+      'id': 9,
+      'tipo': 'interactiva',
+      'enunciado': 'Fish the fruits',
+      'config': {
+        'reto': 'pesca',
+        'cfg': {'words': 'apple, pear'},
+      },
+      'opciones': [],
+    });
+    expect(p.config?['reto'], 'pesca');
+    expect(p.esDeOpciones, isFalse);
+
+    const r = RespuestaAct(preguntaId: 9, estado: {'got': [1]}, hecho: true);
+    expect(r.toJson()['estado'], {'got': [1]});
+    expect(const RespuestaAct(preguntaId: 9).toJson().containsKey('estado'),
+        isFalse);
+  });
 }

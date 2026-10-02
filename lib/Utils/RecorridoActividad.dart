@@ -77,6 +77,11 @@ bool respuestaDada(String tipo, RespuestaAct? r) {
       return (r.fecha ?? '').isNotEmpty;
     case 'archivo':
       return r.archivoId != null;
+    case 'interactiva':
+      // Recorrido.php: hay estado y el reto está terminado. Lo que vino del
+      // servidor sin jugarse aquí se da por bueno; si no lo está, `enviar`
+      // devuelve 422 con la pregunta en `faltan`.
+      return r.estado != null && (r.hecho ?? true);
     default:
       return false;
   }
