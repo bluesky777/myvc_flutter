@@ -19,7 +19,10 @@ es de la app.
 menú no le ofrece nada más que Portería, Mi perfil y Privacidad. El servidor tampoco la deja salir
 de `porteria/*` (`CuentaDePorteria`).
 
-Todo va detrás de `Interruptores.porteria`. Para probarlo: `--dart-define=PORTERIA=true`.
+Las pantallas van detrás de `Interruptores.porteria`. Para probarlo: `--dart-define=PORTERIA=true`.
+**El interruptor esconde las pantallas, no el permiso**: `CAMERA` viaja en el APK desde `a9aa91d`
+aunque el interruptor esté apagado, y por eso lo de abajo vale para la primera versión que publique
+este código.
 
 ## La cámara, y la decisión del 20 sep que se revirtió
 
@@ -43,7 +46,8 @@ portería.** Lo que cuesta, y cómo se cubre:
 
 ## Antes de publicar la app: la política de privacidad
 
-Lo cazó la sesión de cartera el 9 oct 2026. `docs/politica-privacidad.md` y `docs/privacidad.html`
+Lo cazó la sesión de cartera el 9 oct 2026, y lo corrigió el mismo día en sus bloques ⏸ PORTERÍA de
+los tres documentos, que se publican con esa versión. `docs/politica-privacidad.md` y `docs/privacidad.html`
 dicen «La aplicación no accede a su cámara» y «El único permiso que la aplicación le pedirá es el
 de mostrarle avisos». Con la portería, las dos frases dejan de ser ciertas. **La versión que lleve
 este código no se publica sin corregirlas**, ni sin revisar la ficha de seguridad de datos de Play
