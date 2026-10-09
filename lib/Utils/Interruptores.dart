@@ -331,4 +331,11 @@ class Interruptores {
   ///
   /// Para probarlo: `--dart-define=PQRS=true` (ver [estaciones]).
   static const bool pqrs = bool.fromEnvironment('PQRS');
+
+  /// El aviso «pasó por la enfermería» (9 oct 2026). Hoy ningún colegio usa
+  /// enfermería: apagado, su interruptor no sale en «Notificaciones» y el
+  /// teléfono no se apunta a su tema. Se enciende cuando un colegio la use.
+  ///
+  /// Para probarlo: `--dart-define=ENFERMERIA=true` (ver [estaciones]).
+  static const bool enfermeria = bool.fromEnvironment('ENFERMERIA');
 }

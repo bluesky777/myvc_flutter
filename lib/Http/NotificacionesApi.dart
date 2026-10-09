@@ -250,10 +250,12 @@ enum TipoDeAviso {
   /// «Notificaciones» y el teléfono no se apunta a su tema.
   ///
   /// Las PQRS, con [Interruptores.pqrs] y sólo al acudiente, que es quien las
-  /// radica: el servidor manda `usuario.pqrs` a todo el mundo.
+  /// radica: el servidor manda `usuario.pqrs` a todo el mundo. Enfermería, con
+  /// [Interruptores.enfermeria].
   bool get disponible => switch (this) {
         actividad => Interruptores.actividades,
         pqrs => Interruptores.pqrs && AuthService.user.esAcudiente,
+        enfermeria => Interruptores.enfermeria,
         _ => true,
       };
 }
