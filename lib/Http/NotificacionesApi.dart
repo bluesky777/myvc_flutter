@@ -201,6 +201,10 @@ class TemasDeUnAlumno {
 ///
 /// El sexto, `actividad`, entró el 26 sep 2026 con la tanda 5 de actividades.
 ///
+/// El séptimo de `TIPOS`, `enfermeria`, entró en 8myvc el 9 oct 2026 y aquí el
+/// mismo día, en los remates: hasta entonces el servidor lo publicaba y la app
+/// no se apuntaba, que es justo el fallo de arriba.
+///
 /// Si el backend añade un séptimo, esta lista se queda corta otra vez y **tampoco
 /// dará error**. La forma de enterarse es comparar las dos listas, no esperar a
 /// que algo falle.
@@ -220,6 +224,14 @@ enum TipoDeAviso {
   actividad('actividad', 'Actividades',
       'Tareas, cuestionarios y encuestas: cuando llega una, cuando está por '
           'cerrar, y su nota o sus resultados.'),
+
+  /// Enfermería (9 oct 2026): «A las 10:46 a. m., Irene pasó por la enfermería
+  /// del colegio». Por el tema del alumno, como notas o asistencia: le llega al
+  /// alumno y a sus acudientes. Sólo sale si el colegio encendió el aviso y la
+  /// enfermera lo dejó marcado; un servidor sin enfermería no manda el tema y
+  /// [TemasDeNotificacion.temasDe] no se apunta a nada.
+  enfermeria('enfermeria', 'Enfermería',
+      'Cuando pasa por la enfermería del colegio.'),
 
   /// PQRS (9 oct 2026): «el colegio respondió su queja». Sólo por el tema de
   /// la persona (`TIPOS_DE_USUARIO` en 8myvc): la PQRS es de quien la radicó,

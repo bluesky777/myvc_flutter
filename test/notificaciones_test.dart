@@ -191,6 +191,7 @@ void main() {
         TipoDeAviso.matricula,
         TipoDeAviso.compromiso,
         TipoDeAviso.actividad,
+        TipoDeAviso.enfermeria,
         TipoDeAviso.pqrs,
       ]);
     });
@@ -210,6 +211,8 @@ void main() {
         'compromiso',
         // El sexto, con la tanda 5 de actividades (8myvc 311d07b).
         'actividad',
+        // El séptimo de `TIPOS`, con enfermería (9 oct 2026).
+        'enfermeria',
         // PQRS (9 oct 2026): de `TIPOS_DE_USUARIO`, como `actividad` para el acudiente.
         'pqrs',
       ]);

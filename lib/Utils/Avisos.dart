@@ -343,6 +343,13 @@ class Avisos {
       // PQRS (9 oct 2026): `pantalla: 'pqrs'` con `pqrs_id`, al responder.
       case 'pqrs':
         return Interruptores.pqrs ? '/mis-pqrs' : '/muro';
+      // Enfermería (9 oct 2026): `pantalla: 'enfermeria'` con `alumno_id` y
+      // `atencion_id`. **El acudiente no tiene pantalla de enfermería** —ver
+      // sus atenciones es un pendiente de myvc_front/docs/funciones/
+      // ENFERMERIA.md—, y el aviso ya lo dice todo. Abre «Notificaciones», la
+      // lista de avisos, donde está su interruptor por si no lo quiere.
+      case 'enfermeria':
+        return '/notificaciones';
       default:
         return '/muro';
     }

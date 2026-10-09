@@ -29,6 +29,14 @@ Cinco tipos. Cada uno se puede apagar por separado, que es lo que se pidió.
 | **Muro** | una publicación nueva del colegio | «Nueva publicación: Salida pedagógica» |
 | **Colegio** | cierre de periodo, boletines listos, materias en riesgo | «El periodo cierra el viernes» |
 
+**Enfermería** (9 oct 2026, `TipoDeAviso.enfermeria`): «A las 10:46 a. m., Irene pasó por la
+enfermería del colegio. Si tiene preguntas, comuníquese con el colegio.» Va por el tema del alumno
+(`a_…_enfermeria`), sale sólo si el colegio encendió el aviso en *Enfermería › Aviso al acudiente* y
+lo manda `EnviarNotificaciones::avisosDeEnfermeria` con `pantalla: 'enfermeria'`. **El acudiente no
+tiene pantalla de enfermería en la app**, así que tocarlo abre «Notificaciones» (`/notificaciones`),
+donde está su interruptor. Cuando el acudiente pueda ver las atenciones de su hijo, el abridor
+cambia a esa pantalla.
+
 **Ninguna notificación lleva la nota dentro.** «Laura tiene 4 notas nuevas en
 Matemáticas», nunca «Laura sacó 45 en Matemáticas». Una notificación se ve en la
 pantalla bloqueada, en el bus, con gente al lado; y una nota de un menor no es
