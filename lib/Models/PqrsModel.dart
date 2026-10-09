@@ -29,6 +29,25 @@ class PlazoPqrs {
       );
 }
 
+/// La prórroga del parágrafo del art. 14 de la Ley 1755 (remates, 9 oct
+/// 2026): el colegio pide más tiempo una vez, antes de que venza, con los
+/// motivos y una fecha nueva que no pasa del doble del plazo. Al acudiente le
+/// llega entera: la ley manda decirle los motivos.
+class ProrrogaPqrs {
+  const ProrrogaPqrs({required this.hasta, required this.motivo, this.at});
+
+  final DateTime hasta;
+  final String motivo;
+  final DateTime? at;
+
+  static ProrrogaPqrs? deJson(dynamic crudo) {
+    if (crudo is! Map) return null;
+    final hasta = _fecha(crudo['hasta']);
+    if (hasta == null) return null;
+    return ProrrogaPqrs(hasta: hasta, motivo: '${crudo['motivo'] ?? ''}', at: _fecha(crudo['at']));
+  }
+}
+
 class AlumnoPqrs {
   const AlumnoPqrs({
     required this.alumnoId,
@@ -71,8 +90,10 @@ class FilaPqrs {
     required this.plazo,
     this.radicadaAt,
     this.fechaLimite,
+    this.fechaLimiteInicial,
     this.diasHabiles,
     this.alumno,
+    this.prorroga,
   });
 
   final int id;
@@ -87,9 +108,15 @@ class FilaPqrs {
   final String estadoTexto;
   final PlazoPqrs plazo;
   final DateTime? radicadaAt;
+
+  /// La que vale: la prorrogada, si el colegio pidió más tiempo.
   final DateTime? fechaLimite;
+
+  /// La del día que se radicó. Un servidor sin prórrogas no la manda.
+  final DateTime? fechaLimiteInicial;
   final int? diasHabiles;
   final AlumnoPqrs? alumno;
+  final ProrrogaPqrs? prorroga;
 
   bool get abierta => estado == 'radicada' || estado == 'en_tramite';
 
@@ -106,15 +133,17 @@ class FilaPqrs {
         plazo: PlazoPqrs.fromJson(Map<String, dynamic>.from(j['plazo'] as Map? ?? const {})),
         radicadaAt: _fecha(j['radicada_at']),
         fechaLimite: _fecha(j['fecha_limite']),
+        fechaLimiteInicial: _fecha(j['fecha_limite_inicial']),
         diasHabiles: _entero(j['dias_habiles']),
         alumno: j['alumno'] is Map
             ? AlumnoPqrs.fromJson(Map<String, dynamic>.from(j['alumno'] as Map))
             : null,
+        prorroga: ProrrogaPqrs.deJson(j['prorroga']),
       );
 }
 
 /// Un paso del hilo que el acudiente puede ver: radicada, en trámite,
-/// respondida, encuesta o cerrada. Lo interno del colegio no llega.
+/// prorrogada, respondida, encuesta o cerrada. Lo interno del colegio no llega.
 class EventoPqrs {
   const EventoPqrs({required this.tipo, this.texto, this.at});
 
@@ -125,6 +154,7 @@ class EventoPqrs {
   String get frase => switch (tipo) {
         'radicada' => 'Radicada',
         'en_tramite' => 'El colegio la está atendiendo',
+        'prorrogada' => 'El colegio pidió más tiempo',
         'respondida' => 'El colegio respondió',
         'encuesta' => 'Contestó la encuesta',
         'cerrada' => 'Cerrada',

@@ -231,6 +231,7 @@ class _MisPqrsScreenState extends State<MisPqrsScreen> {
                           EstiloPqrs.estado(f.estado, f.estadoTexto),
                           if (f.abierta || f.plazo.clave == 'respondida')
                             EstiloPqrs.plazo(f.plazo.texto, f.plazo.tono),
+                          if (f.abierta && f.prorroga != null) EstiloPqrs.prorrogada(),
                         ],
                       ),
                     ],

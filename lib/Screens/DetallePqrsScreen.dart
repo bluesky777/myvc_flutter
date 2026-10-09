@@ -126,6 +126,7 @@ class _DetallePqrsScreenState extends State<DetallePqrsScreen> {
           if (widget.recien != null && f.estado == 'radicada') ...[_recien(f), const SizedBox(height: 14)],
           _cabeza(f),
           const SizedBox(height: 14),
+          if (f.prorroga != null && p.respuesta == null) ...[_prorroga(f), const SizedBox(height: 14)],
           if (p.respuesta != null) ...[
             _respuesta(p, deRespuesta),
             const SizedBox(height: 14),
@@ -195,6 +196,7 @@ class _DetallePqrsScreenState extends State<DetallePqrsScreen> {
       Wrap(spacing: 6, runSpacing: 6, children: [
         EstiloPqrs.estado(f.estado, f.estadoTexto),
         if (f.abierta || f.plazo.clave == 'respondida') EstiloPqrs.plazo(f.plazo.texto, f.plazo.tono),
+        if (f.abierta && f.prorroga != null) EstiloPqrs.prorrogada(),
       ]),
       const SizedBox(height: 10),
       Text(
@@ -205,6 +207,31 @@ class _DetallePqrsScreenState extends State<DetallePqrsScreen> {
         style: const TextStyle(fontSize: 12.5, color: EstiloPqrs.tintaSuave),
       ),
     ]);
+  }
+
+  /// La prórroga, mientras no haya respuesta: la fecha nueva, la de antes y
+  /// los motivos, que es lo que la ley manda decirle (Ley 1755, art. 14,
+  /// parágrafo). Respondida, queda en «Lo que ha pasado».
+  Widget _prorroga(FilaPqrs f) {
+    final pr = f.prorroga!;
+    return _bloque([
+      EstiloPqrs.rotulo('El colegio pidió más tiempo'),
+      Text.rich(
+        TextSpan(
+          style: const TextStyle(fontSize: 14, height: 1.45, color: EstiloPqrs.tinta),
+          children: [
+            const TextSpan(text: 'Te responde a más tardar el '),
+            TextSpan(text: diaDePqrs(pr.hasta), style: const TextStyle(fontWeight: FontWeight.w800)),
+            if (f.fechaLimiteInicial != null) TextSpan(text: ', en vez del ${diaDePqrs(f.fechaLimiteInicial!)}'),
+            const TextSpan(text: '.'),
+          ],
+        ),
+      ),
+      if (pr.motivo.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Text(pr.motivo, style: const TextStyle(fontSize: 13.5, height: 1.45, color: EstiloPqrs.tintaSuave)),
+      ],
+    ], borde: PaletaEstaciones.ambar.withValues(alpha: .45));
   }
 
   Widget _respuesta(DetallePqrs p, List<AdjuntoPqrs> adjuntos) => _bloque([

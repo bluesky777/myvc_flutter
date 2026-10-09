@@ -31,6 +31,11 @@ class EstiloPqrs {
     return EstiloActividades.pildora(texto, f, t);
   }
 
+  /// Que el colegio pidió más tiempo (la prórroga de la Ley 1755). Ámbar, como
+  /// el semáforo «por vencer»: no es malo, pero hay que fijarse en la fecha.
+  static Widget prorrogada() =>
+      EstiloActividades.pildora('Prorrogada', PaletaEstaciones.ambarFondo, PaletaEstaciones.ambar);
+
   static Widget estado(String estado, String texto) => switch (estado) {
         'respondida' => EstiloActividades.pildora(
             texto, EstiloActividades.hechaFondo, EstiloActividades.hechaTinta),

@@ -19,6 +19,22 @@ rutas y cómo probarla— está en `myvc_front/docs/funciones/PQRS.md`. Aquí s�
 - Lo interno del colegio (notas, a quién se asignó) no llega a la app. Del colegio sólo se ve quién
   firmó la respuesta.
 
+## La prórroga (remates, 9 oct 2026)
+
+El colegio puede pedir más tiempo una vez, antes de que venza (Ley 1755 de 2015, art. 14, parágrafo).
+El servidor ya manda `fecha_limite` con la fecha prorrogada, así que una app vieja enseña la fecha
+buena aunque no sepa de prórrogas. Esta versión además:
+
+- lee `prorroga` (`hasta`, `motivo`, `at`) y `fecha_limite_inicial` en `FilaPqrs`;
+- pinta la píldora «Prorrogada» junto al semáforo, en la lista y en el detalle, mientras siga abierta;
+- en el detalle, si todavía no hay respuesta, un bloque «El colegio pidió más tiempo» con la fecha
+  nueva, la de antes y los motivos;
+- en «Lo que ha pasado», el paso `prorrogada` se lee «El colegio pidió más tiempo», con los motivos.
+
+Al prorrogar le llega un aviso, por el mismo tema `u_…_pqrs` y con los mismos `datos`: «El colegio
+necesita más tiempo para su queja · Radicado 2026-0007. Le responderá a más tardar el miércoles 25
+de noviembre. Ábrala para ver el motivo.»
+
 ## El aviso
 
 Cuando el colegio responde, `EnviarNotificaciones::avisosDePqrs` publica en el tema de la persona
