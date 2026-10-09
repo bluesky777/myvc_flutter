@@ -40,3 +40,20 @@ portería.** Lo que cuesta, y cómo se cubre:
     `uses-implied-feature` de cámara**.
 - **iOS** ya tenía `NSCameraUsageDescription`, por la foto de perfil. Se amplió el texto para
   mencionar los carnés.
+
+## Antes de publicar la app: la política de privacidad
+
+Lo cazó la sesión de cartera el 9 oct 2026. `docs/politica-privacidad.md` y `docs/privacidad.html`
+dicen «La aplicación no accede a su cámara» y «El único permiso que la aplicación le pedirá es el
+de mostrarle avisos». Con la portería, las dos frases dejan de ser ciertas. **La versión que lleve
+este código no se publica sin corregirlas**, ni sin revisar la ficha de seguridad de datos de Play
+(`seguridad-datos-play.md`).
+
+Los hechos que hay que contar:
+
+- La cámara sólo la usa Portería, que es del personal.
+- Sale del teléfono el texto del código leído, no la imagen.
+- En Android, ML Kit (dentro de mobile_scanner) manda métricas de uso a Google: dispositivo, app,
+  un identificador por instalación y rendimiento. Va por HTTPS y sin terceros. Fuente:
+  developers.google.com/ml-kit/android-data-disclosure.
+- «Fotos» no se declara.
