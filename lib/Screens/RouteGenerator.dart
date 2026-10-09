@@ -24,6 +24,10 @@ import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:myvc_flutter/Screens/MiPerfilScreen.dart';
+import 'package:myvc_flutter/Screens/PorteriaScreen.dart';
+import 'package:myvc_flutter/Screens/MiCarneScreen.dart';
+import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
 
 import 'AlumTardanzaColeScreen.dart';
 
@@ -65,9 +69,21 @@ class RouteGenerator {
       case '/login':
         return MaterialPageRoute(
             settings: settings, builder: (context) => LoginAnimScreen());
+      // La cuenta que sólo es de portería no tiene muro: el servidor no la deja
+      // salir de `porteria/*`. Todo lo que lleva a «Inicio» —el login, la
+      // sesión recuperada, el menú— la deja en la portería.
       case '/muro':
         return MaterialPageRoute(
-            settings: settings, builder: (context) => MuroScreen());
+            settings: settings,
+            builder: (context) => AuthService.user.esSoloPorteria
+                ? const PorteriaScreen()
+                : MuroScreen());
+      case '/porteria':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const PorteriaScreen());
+      case '/mi-carne':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const MiCarneScreen());
       case '/mis-notas':
         return MaterialPageRoute(
             settings: settings,

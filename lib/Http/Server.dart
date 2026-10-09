@@ -58,6 +58,10 @@ class Server {
   /// pruebas, y un parámetro nuevo los rompería todos.
   static const List<String> rutasQueContestanJson = [
     '/estaciones',
+    // La portería (9 oct 2026): sus 404, 409, 410 y 422 traen la frase que se
+    // enseña —«Ese carné ya es de…»— y el 404 de un carné sin dueño trae
+    // `{desconocido: true}`, que es lo que abre «¿De quién es?».
+    '/porteria/',
     '/requisitos/recorrido/',
     '/requisitos/mi-recorrido/',
     // «Mi perfil», que entraron con su pantalla el 24 sep 2026 y nunca

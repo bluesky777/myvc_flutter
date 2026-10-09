@@ -3,6 +3,7 @@ import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
+import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
 
 /// El menú lateral, uno solo para toda la app.
 ///
@@ -62,6 +63,21 @@ class MenuLateral extends StatelessWidget {
   List<Widget> _opciones(BuildContext context) {
     final usuario = AuthService.user;
 
+    // La cuenta del celador: el servidor no la deja salir de la portería, así
+    // que el menú no le ofrece nada que contestaría 403.
+    if (usuario.esSoloPorteria) {
+      return [
+        _opcion(
+          context,
+          icono: Icons.qr_code_scanner,
+          texto: 'Portería',
+          ruta: '/porteria',
+        ),
+        _opcionMiPerfil(context),
+        _opcionPrivacidad(context),
+      ];
+    }
+
     final opciones = <Widget>[
       // «Inicio» y no «Publicaciones»: es la primera opción y la pantalla a la
       // que vuelve todo el mundo, y lo que se dice en un menú es a dónde
@@ -99,6 +115,15 @@ class MenuLateral extends StatelessWidget {
           texto: 'Asistencia',
           ruta: '/mi-asistencia',
         ),
+        // El QR que se enseña en portería. «Carnés» para el acudiente, que
+        // tiene uno por hijo.
+        if (Interruptores.porteria)
+          _opcion(
+            context,
+            icono: Icons.badge_outlined,
+            texto: usuario.esAcudiente ? 'Carnés' : 'Mi carné',
+            ruta: '/mi-carne',
+          ),
         // La misma palabra que ve el personal, y otra ruta detrás: aquélla es
         // la de editar y lleva `auth.personal`, que aquí contestaría 403.
         // Sigue detrás del interruptor porque la condición es el despliegue y
@@ -135,6 +160,17 @@ class MenuLateral extends StatelessWidget {
       texto: 'Asistencias',
       ruta: '/panel',
     ));
+
+    // Escanear el carné del que llega tarde. Cualquier docente, coordinación y
+    // quien tenga el rol Portería: ver PermisosPorteria.
+    if (Interruptores.porteria && usuario.puedeUsarPorteria) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.qr_code_scanner,
+        texto: 'Portería',
+        ruta: '/porteria',
+      ));
+    }
 
     // Notas antes que Unidades porque es lo que se hace a diario: las unidades
     // se montan al empezar el periodo y las notas se pasan todas las semanas.

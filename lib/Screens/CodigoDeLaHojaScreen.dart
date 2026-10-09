@@ -17,6 +17,9 @@ import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 ///
 /// ## Aquí no hay cámara, y es una decisión con precio medido
 ///
+/// *(Revertido el 9 oct 2026 para la portería: la app ya pide la cámara, y
+/// esta pantalla podría usar el mismo lector. Ver docs/porteria.md.)*
+///
 /// **Decidido por Joseth el 20 sep 2026: el escáner no entra por ahora, para no
 /// tocar los permisos de las dos tiendas.** Teclear `2027-4K7M2` no cuesta
 /// nada; la cámara cuesta esto (`docs/seguridad-datos-play.md`):

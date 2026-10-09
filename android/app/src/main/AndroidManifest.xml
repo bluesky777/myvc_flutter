@@ -10,6 +10,17 @@
          docs/notificaciones.md. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- La cámara, para leer carnés en portería (Joseth, 9 oct 2026). El permiso
+         lo trae mobile_scanner y se pide al abrir la portería, nunca antes.
+         Las dos uses-feature van con required="false" A PROPÓSITO: pedir CAMERA
+         hace que Play suponga cámara trasera Y autoenfoque obligatorios, y deja
+         de ofrecer la app a las tablets que no los tienen, sin avisar a nadie.
+         mobile_scanner ya declara la primera así; el autoenfoque no lo declara
+         nadie, y por eso va aquí. Se comprueba en el APK: docs/porteria.md. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"
+        tools:replace="android:required" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- El SDK de Analytics declara SOLO el permiso del identificador de
          publicidad, aunque esta app no tenga un anuncio. Aquí no se quiere: no
          hay publicidad, no hay perfiles y es una app de menores. Hacen falta

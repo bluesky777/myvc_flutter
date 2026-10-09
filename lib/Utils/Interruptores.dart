@@ -310,4 +310,14 @@ class Interruptores {
   ///
   /// Para probarlo: `--dart-define=ACTIVIDADES=true` (ver [estaciones]).
   static const bool actividades = bool.fromEnvironment('ACTIVIDADES');
+
+  /// La portería —escanear el carné del que llega tarde— y «Mi carné» del
+  /// alumno y del acudiente (Joseth, 9 oct 2026). Ver `docs/porteria.md`.
+  ///
+  /// Espera al despliegue de `8myvc`: `routes/api/tardanzas.php` con
+  /// `PorteriaController` y la migración `2026_10_09_100000_porteria_rol_y_codigos_de_carnet`
+  /// corrida —sin ella `porteria/*` revienta con la tabla que falta—.
+  ///
+  /// Para probarlo: `--dart-define=PORTERIA=true` (ver [estaciones]).
+  static const bool porteria = bool.fromEnvironment('PORTERIA');
 }

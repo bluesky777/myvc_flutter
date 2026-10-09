@@ -50,6 +50,13 @@ dependencies:
   device_info_plus: ^13.2.0
   webview_flutter: ^4.14.1
   flutter_tts: ^4.2.5
+  # Portería (9 oct 2026): leer el carné con la cámara. Joseth revirtió ese día la decisión del
+  # 20 sep de no meter escáner: el precio es que «Cámara» sale en la ficha de Play. El paquete ya
+  # declara la cámara como NO obligatoria, y el AndroidManifest lo repite con el autoenfoque, para
+  # que Play siga ofreciendo la app a las tablets sin cámara. Ver docs/porteria.md.
+  mobile_scanner: ^7.4.2
+  # El QR del carné en la app del alumno y del acudiente. Sólo dibuja: no pide ningún permiso.
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
