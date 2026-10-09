@@ -77,6 +77,10 @@ class Server {
     // `{mensaje, hijos}`, y la pantalla de responder salta a la pregunta que
     // falta con eso. Sin la cabecera, un `abort(409, …)` volvería como HTML.
     '/act/',
+    // PQRS del acudiente (9 oct 2026): sus 404, 409 y 422 traen la frase que
+    // se enseña («Ya contestaste la encuesta»). Sin barra al final: también
+    // es `GET /mis-pqrs` a secas.
+    '/mis-pqrs',
   ];
 
   static bool pideJson(String direccion) =>

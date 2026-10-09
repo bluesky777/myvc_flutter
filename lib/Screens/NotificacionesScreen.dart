@@ -174,6 +174,8 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         return Icons.handshake_outlined;
       case TipoDeAviso.actividad:
         return Icons.assignment_outlined;
+      case TipoDeAviso.pqrs:
+        return Icons.mark_email_unread_outlined;
     }
   }
 

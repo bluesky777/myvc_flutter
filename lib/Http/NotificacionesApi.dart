@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/FaltasApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
@@ -218,7 +219,13 @@ enum TipoDeAviso {
   /// tema del alumno y por el de la persona ([TemasDeNotificacion.delUsuario]).
   actividad('actividad', 'Actividades',
       'Tareas, cuestionarios y encuestas: cuando llega una, cuando está por '
-          'cerrar, y su nota o sus resultados.');
+          'cerrar, y su nota o sus resultados.'),
+
+  /// PQRS (9 oct 2026): «el colegio respondió su queja». Sólo por el tema de
+  /// la persona (`TIPOS_DE_USUARIO` en 8myvc): la PQRS es de quien la radicó,
+  /// no del alumno ni del otro acudiente.
+  pqrs('pqrs', 'PQRS',
+      'Cuando el colegio responde una petición, queja, reclamo o sugerencia tuya.');
 
   const TipoDeAviso(this.clave, this.rotulo, this.explicacion);
 
@@ -229,7 +236,14 @@ enum TipoDeAviso {
   /// Si esta versión de la app lo enseña: las actividades sólo con
   /// [Interruptores.actividades]. Apagado, no sale su interruptor en
   /// «Notificaciones» y el teléfono no se apunta a su tema.
-  bool get disponible => this != actividad || Interruptores.actividades;
+  ///
+  /// Las PQRS, con [Interruptores.pqrs] y sólo al acudiente, que es quien las
+  /// radica: el servidor manda `usuario.pqrs` a todo el mundo.
+  bool get disponible => switch (this) {
+        actividad => Interruptores.actividades,
+        pqrs => Interruptores.pqrs && AuthService.user.esAcudiente,
+        _ => true,
+      };
 }
 
 /// Lo que está escrito pero todavía no se puede encender.

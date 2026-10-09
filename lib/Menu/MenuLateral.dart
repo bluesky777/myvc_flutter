@@ -146,6 +146,14 @@ class MenuLateral extends StatelessWidget {
             texto: 'Mi proceso',
             ruta: '/mi-matricula',
           ),
+        // PQRS (9 oct 2026): sólo el acudiente radica. Ver Interruptores.pqrs.
+        if (Interruptores.pqrs && usuario.esAcudiente)
+          _opcion(
+            context,
+            icono: Icons.mark_email_unread_outlined,
+            texto: 'PQRS',
+            ruta: '/mis-pqrs',
+          ),
         _opcionNotificaciones(context),
         _opcionMiPerfil(context),
         _opcionPrivacidad(context),

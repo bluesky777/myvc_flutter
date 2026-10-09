@@ -26,6 +26,7 @@ import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:myvc_flutter/Screens/MiPerfilScreen.dart';
 import 'package:myvc_flutter/Screens/PorteriaScreen.dart';
 import 'package:myvc_flutter/Screens/MiCarneScreen.dart';
+import 'package:myvc_flutter/Screens/MisPqrsScreen.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
 
@@ -84,6 +85,15 @@ class RouteGenerator {
       case '/mi-carne':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const MiCarneScreen());
+      // PQRS del acudiente (9 oct 2026). El detalle y «Radicar» se abren con
+      // push desde ésta; el aviso de respuesta llega con su `pqrs_id`.
+      case '/mis-pqrs':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => MisPqrsScreen(
+                aviso: settings.arguments is AvisoDePqrs
+                    ? settings.arguments as AvisoDePqrs
+                    : null));
       case '/mis-notas':
         return MaterialPageRoute(
             settings: settings,

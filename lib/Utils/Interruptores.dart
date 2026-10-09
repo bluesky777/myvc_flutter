@@ -320,4 +320,15 @@ class Interruptores {
   ///
   /// Para probarlo: `--dart-define=PORTERIA=true` (ver [estaciones]).
   static const bool porteria = bool.fromEnvironment('PORTERIA');
+
+  /// Las PQRS del acudiente —radicar, seguir el plazo, leer la respuesta y
+  /// contestar la encuesta— y su aviso (Joseth, 9 oct 2026). Ver `docs/pqrs.md`.
+  ///
+  /// Espera al despliegue de `8myvc`: `routes/api/pqrs.php` con
+  /// `MisPqrsController` y la migración `2026_10_09_520000_pqrs` corrida —sin
+  /// ella `mis-pqrs` revienta con la tabla que falta—. Apagado, no sale en el
+  /// menú, el teléfono no se apunta a su tema y su aviso cae al muro.
+  ///
+  /// Para probarlo: `--dart-define=PQRS=true` (ver [estaciones]).
+  static const bool pqrs = bool.fromEnvironment('PQRS');
 }

@@ -340,6 +340,9 @@ class Avisos {
       case 'actividad':
       case 'actividades':
         return Interruptores.actividades ? '/actividades' : '/muro';
+      // PQRS (9 oct 2026): `pantalla: 'pqrs'` con `pqrs_id`, al responder.
+      case 'pqrs':
+        return Interruptores.pqrs ? '/mis-pqrs' : '/muro';
       default:
         return '/muro';
     }
@@ -394,6 +397,7 @@ class Avisos {
       arguments: switch (_abridorDe(datos)) {
         '/mis-notas' => AvisoDeNotas.deDatos(datos),
         '/actividades' => AvisoDeActividad.deDatos(datos),
+        '/mis-pqrs' => AvisoDePqrs.deDatos(datos),
         _ => null,
       },
     );
@@ -521,5 +525,19 @@ class AvisoDeActividad {
       alumnoId: int.tryParse('${datos['alumno_id'] ?? ''}'),
       clase: clase.isEmpty ? null : clase,
     );
+  }
+}
+
+/// Lo que el aviso «el colegio respondió su PQRS» le dice a «PQRS»: cuál
+/// abrir. Es lo que manda `EnviarNotificaciones::avisosDePqrs` (8myvc, 9 oct
+/// 2026): `pantalla: 'pqrs'` y `pqrs_id`.
+class AvisoDePqrs {
+  const AvisoDePqrs({required this.pqrsId});
+
+  final int pqrsId;
+
+  static AvisoDePqrs? deDatos(Map<String, dynamic> datos) {
+    final id = int.tryParse('${datos['pqrs_id'] ?? ''}');
+    return id == null ? null : AvisoDePqrs(pqrsId: id);
   }
 }
