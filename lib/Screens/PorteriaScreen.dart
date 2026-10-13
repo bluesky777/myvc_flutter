@@ -465,9 +465,11 @@ class _PorteriaScreenState extends State<PorteriaScreen> {
                   ),
                 ),
                 if (l.puedeDeshacer)
-                  TextButton(
+                  _BotonDeshacer(
+                    // Una tardanza nueva es otro botón: la cuenta vuelve a empezar.
+                    key: ObjectKey(l.tardanza),
+                    duracion: _ventanaDeshacer,
                     onPressed: () => _quitar(l.tardanza!, preguntar: false),
-                    child: const Text('Deshacer'),
                   ),
               ],
             ),
@@ -625,6 +627,56 @@ class _Letrero {
 
   _Letrero sinDeshacer() => _Letrero._(
       alumno: alumno, tardanza: tardanza, yaTenia: yaTenia, error: error);
+}
+
+/// «Deshacer» con lo que le queda (Joseth, 13 oct 2026): un anillo que se
+/// vacía y los segundos. Sin la cuenta, el portero no sabía cuánto tiempo tenía
+/// para corregir, y el botón desaparecía de golpe. La ventana la sigue cerrando
+/// `_temporizadorDeshacer`; esto sólo la enseña.
+class _BotonDeshacer extends StatefulWidget {
+  const _BotonDeshacer({super.key, required this.duracion, required this.onPressed});
+
+  final Duration duracion;
+  final VoidCallback onPressed;
+
+  @override
+  State<_BotonDeshacer> createState() => _BotonDeshacerState();
+}
+
+class _BotonDeshacerState extends State<_BotonDeshacer> with SingleTickerProviderStateMixin {
+  late final AnimationController _queda =
+      AnimationController(vsync: this, duration: widget.duracion, value: 1)..reverse();
+
+  @override
+  void dispose() {
+    _queda.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _queda,
+      builder: (context, _) {
+        final segundos = (_queda.value * widget.duracion.inSeconds).ceil();
+        return TextButton(
+          onPressed: widget.onPressed,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(value: _queda.value, strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 8),
+              Text('Deshacer · $segundos s'),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// El recuadro que dice dónde poner el carné.
