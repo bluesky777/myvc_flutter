@@ -630,7 +630,7 @@ class _Letrero {
 }
 
 /// «Deshacer» con lo que le queda (Joseth, 13 oct 2026): un anillo que se
-/// vacía y los segundos. Sin la cuenta, el portero no sabía cuánto tiempo tenía
+/// vacía con los segundos dentro. Sin la cuenta, el portero no sabía cuánto tiempo tenía
 /// para corregir, y el botón desaparecía de golpe. La ventana la sigue cerrando
 /// `_temporizadorDeshacer`; esto sólo la enseña.
 class _BotonDeshacer extends StatefulWidget {
@@ -664,13 +664,21 @@ class _BotonDeshacerState extends State<_BotonDeshacer> with SingleTickerProvide
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // El número dentro del anillo: «Deshacer · 8 s» al lado le quitaba sitio al
+              // nombre, que es lo que el portero coteja con la cara.
               SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(value: _queda.value, strokeWidth: 2.5),
+                width: 24,
+                height: 24,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned.fill(child: CircularProgressIndicator(value: _queda.value, strokeWidth: 2.5)),
+                    Text('$segundos', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              Text('Deshacer · $segundos s'),
+              const SizedBox(width: 6),
+              const Text('Deshacer'),
             ],
           ),
         );
