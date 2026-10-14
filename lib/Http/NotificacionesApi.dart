@@ -117,8 +117,9 @@ class TemasDeNotificacion {
   /// [PendientesNotificaciones.temasDelColegio].
   final Map<String, String> delColegio;
 
-  /// Los de la persona que entró, por tipo: hoy sólo `actividad`
-  /// (`u_…_actividad`, 8myvc 311d07b, 26 sep 2026).
+  /// Los de la persona que entró, por tipo: `actividad` (`u_…_actividad`,
+  /// 8myvc 311d07b, 26 sep 2026) y `cartera` (`u_…_cartera`, el recordatorio
+  /// de tesorería, que sólo le llega a quien responde por el pago).
   ///
   /// Existen porque hay avisos que no son de ningún alumno: la encuesta que
   /// se le pide **al acudiente** iría al tema del hijo, y la vería el hijo,
@@ -199,14 +200,18 @@ class TemasDeUnAlumno {
 /// propio docblock avisaba: *«suscribirse a un tema que no existe es válido, así
 /// que el aviso se perdería en silencio»*. Medido el 23 de septiembre de 2026.
 ///
-/// El sexto, `actividad`, entró el 26 sep 2026 con la tanda 5 de actividades.
+/// El sexto, `actividad`, entró el 26 sep 2026 con la tanda 5 de actividades, y
+/// está en las dos listas del backend: `TIPOS` (el tema del alumno) y
+/// `TIPOS_DE_USUARIO` (el de la persona). `cartera` y `pqrs` **sólo** están en
+/// `TIPOS_DE_USUARIO`: cuelgan de quien paga o de quien radicó, no del alumno.
+/// Este enum es la unión de las dos listas.
 ///
-/// El séptimo de `TIPOS`, `enfermeria`, entró en 8myvc el 9 oct 2026 y aquí el
+/// `enfermeria`, de `TIPOS`, entró en 8myvc el 9 oct 2026 y aquí el
 /// mismo día, en los remates: hasta entonces el servidor lo publicaba y la app
 /// no se apuntaba, que es justo el fallo de arriba.
 ///
-/// Si el backend añade un séptimo, esta lista se queda corta otra vez y **tampoco
-/// dará error**. La forma de enterarse es comparar las dos listas, no esperar a
+/// Si el backend añade otro, esta lista se queda corta otra vez y **tampoco
+/// dará error**. La forma de enterarse es comparar las listas, no esperar a
 /// que algo falle.
 enum TipoDeAviso {
   notas('notas', 'Notas', 'Cuando le publican una nota nueva.'),
@@ -237,7 +242,14 @@ enum TipoDeAviso {
   /// la persona (`TIPOS_DE_USUARIO` en 8myvc): la PQRS es de quien la radicó,
   /// no del alumno ni del otro acudiente.
   pqrs('pqrs', 'PQRS',
-      'Cuando el colegio responde una petición, queja, reclamo o sugerencia tuya.');
+      'Cuando el colegio responde una petición, queja, reclamo o sugerencia tuya.'),
+
+  /// El recordatorio de tesorería (`Recordatorios::porApp`). Sólo por el tema
+  /// de la persona, nunca por el del alumno: lo recibe quien responde por el
+  /// pago, no el hijo ni el otro acudiente. Dice «Tiene un mensaje sobre su
+  /// cuenta» y nada más; el texto y los valores están en «Mi cuenta».
+  cartera('cartera', 'Tesorería',
+      'Cuando la tesorería del colegio le escribe sobre su cuenta.');
 
   const TipoDeAviso(this.clave, this.rotulo, this.explicacion);
 
@@ -246,14 +258,22 @@ enum TipoDeAviso {
   final String explicacion;
 
   /// Si esta versión de la app lo enseña: las actividades sólo con
-  /// [Interruptores.actividades]. Apagado, no sale su interruptor en
-  /// «Notificaciones» y el teléfono no se apunta a su tema.
+  /// [Interruptores.actividades], y la tesorería sólo a quien ve «Mi cuenta»
+  /// ([UserAutenticado.veSuCuenta]: familia, en un colegio con el módulo).
+  /// Si no, no sale su interruptor en «Notificaciones» y el teléfono no se
+  /// apunta a su tema.
+  ///
+  /// La tesorería se mira aquí y no en el servidor porque el servidor manda
+  /// `usuario.cartera` **a todo el mundo**, docentes y colegios sin el módulo
+  /// incluidos: un tema así nunca recibe nada, pero el interruptor en
+  /// «Notificaciones» prometería algo que no llega.
   ///
   /// Las PQRS, con [Interruptores.pqrs] y sólo al acudiente, que es quien las
   /// radica: el servidor manda `usuario.pqrs` a todo el mundo. Enfermería, con
   /// [Interruptores.enfermeria].
   bool get disponible => switch (this) {
         actividad => Interruptores.actividades,
+        cartera => AuthService.user.veSuCuenta,
         pqrs => Interruptores.pqrs && AuthService.user.esAcudiente,
         enfermeria => Interruptores.enfermeria,
         _ => true,

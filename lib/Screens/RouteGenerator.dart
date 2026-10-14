@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Screens/BuscarEnMatriculasScreen.dart';
 import 'package:myvc_flutter/Screens/EstacionesScreen.dart';
 import 'package:myvc_flutter/Screens/Login/LoginAnimScreen.dart';
 import 'package:myvc_flutter/Screens/MiAsistenciaScreen.dart';
+import 'package:myvc_flutter/Screens/MiCuentaScreen.dart';
 import 'package:myvc_flutter/Screens/MisCompetenciasScreen.dart';
 import 'package:myvc_flutter/Screens/MisNotasScreen.dart';
 import 'package:myvc_flutter/Screens/MuroScreen.dart';
@@ -114,6 +115,14 @@ class RouteGenerator {
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());
+      // El estado de cuenta, a donde lleva el recordatorio de tesorería.
+      case '/mi-cuenta':
+        return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => MiCuentaScreen(
+                aviso: settings.arguments is AvisoDeCartera
+                    ? settings.arguments as AvisoDeCartera
+                    : null));
       case '/mi-disciplina':
         return MaterialPageRoute(
             settings: settings,

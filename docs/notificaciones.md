@@ -28,6 +28,11 @@ Cinco tipos. Cada uno se puede apagar por separado, que es lo que se pidió.
 | **Disciplina** | una situación anotada | «Se anotó una situación de Juan. Ábrela para verla» |
 | **Muro** | una publicación nueva del colegio | «Nueva publicación: Salida pedagógica» |
 | **Colegio** | cierre de periodo, boletines listos, materias en riesgo | «El periodo cierra el viernes» |
+| **Tesorería** | un recordatorio que manda tesorería (`Recordatorios::porApp`) | «Tiene un mensaje sobre su cuenta. Tóquelo para verlo.» |
+
+La de tesorería va al tema **de la persona** (`u_…_cartera`), no al del alumno:
+sólo le llega a quien responde por el pago. Abre «Mi cuenta»; ver
+[cartera.md](cartera.md).
 
 **Enfermería** (9 oct 2026, `TipoDeAviso.enfermeria`): «A las 10:46 a. m., Irene pasó por la
 enfermería del colegio. Si tiene preguntas, comuníquese con el colegio.» Va por el tema del alumno

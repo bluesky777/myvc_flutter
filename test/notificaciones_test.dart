@@ -193,10 +193,11 @@ void main() {
         TipoDeAviso.actividad,
         TipoDeAviso.enfermeria,
         TipoDeAviso.pqrs,
+        TipoDeAviso.cartera,
       ]);
     });
 
-    test('los seis tipos, los mismos que publica el servidor', () {
+    test('los nueve tipos, los mismos que publica el servidor', () {
       // `TemasDeNotificacion::TIPOS` del backend tiene estos cinco. Durante un
       // mes aquí hubo tres, y los avisos de matrícula y compromiso se
       // publicaban sin que nadie estuviera suscrito — que en FCM es válido y no
@@ -211,10 +212,13 @@ void main() {
         'compromiso',
         // El sexto, con la tanda 5 de actividades (8myvc 311d07b).
         'actividad',
-        // El séptimo de `TIPOS`, con enfermería (9 oct 2026).
+        // `enfermeria`, de `TIPOS` (9 oct 2026).
         'enfermeria',
         // PQRS (9 oct 2026): de `TIPOS_DE_USUARIO`, como `actividad` para el acudiente.
         'pqrs',
+        // El recordatorio de tesorería: como `pqrs`, sólo de
+        // `TIPOS_DE_USUARIO`.
+        'cartera',
       ]);
     });
 

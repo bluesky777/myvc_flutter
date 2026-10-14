@@ -178,6 +178,8 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         return Icons.medical_services_outlined;
       case TipoDeAviso.pqrs:
         return Icons.mark_email_unread_outlined;
+      case TipoDeAviso.cartera:
+        return Icons.account_balance_wallet_outlined;
     }
   }
 

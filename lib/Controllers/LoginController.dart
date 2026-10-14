@@ -295,6 +295,8 @@ class LoginController implements LoginBaseController {
     AuthService.user.isSuperuser = entero(datos['is_superuser']) == 1;
     AuthService.user.roles = _rolesDe(datos['roles']);
     AuthService.user.perms = _permsDe(datos['perms']);
+    // Los módulos que el colegio pagó: ver UserAutenticado.modulos.
+    AuthService.user.modulos = _modulosDe(datos['modulos']);
 
     // El año y el periodo con los que entra. De aquí cuelga todo lo demás.
     ContextoAcademico.instancia.tomarDelLogin(datos);
@@ -456,4 +458,21 @@ Set<String> _permsDe(dynamic crudos) {
     if (limpio.isNotEmpty) nombres.add(limpio);
   }
   return nombres;
+}
+
+/// `usuario.modulos` del login —`{"cartera": true}`— como el conjunto de los
+/// encendidos, en minúsculas. Lo que no sea un mapa, vacío.
+///
+/// **No hace falta refrescarlo aparte**, aunque la sesión guardada sea una
+/// copia del login y no se renueve: el token que da `login/credentials` dura
+/// 24 h fijas (`sesion.legado_ttl`, y nunca más de `sesion.maximo` desde el
+/// login), y la app no lo refresca. O sea que nadie pasa más de un día sin
+/// volver a entrar, y cada entrada trae los módulos de ese momento.
+Set<String> _modulosDe(dynamic crudos) {
+  if (crudos is! Map) return {};
+
+  return {
+    for (final entrada in crudos.entries)
+      if (siONo(entrada.value) == true) '${entrada.key}'.trim().toLowerCase(),
+  };
 }

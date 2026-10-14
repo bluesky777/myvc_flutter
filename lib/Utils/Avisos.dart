@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/NotificacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/AvisosGuardados.dart';
@@ -350,6 +351,12 @@ class Avisos {
       // lista de avisos, donde está su interruptor por si no lo quiere.
       case 'enfermeria':
         return '/notificaciones';
+      // El recordatorio de tesorería (`Recordatorios::porApp`): sólo trae
+      // `pantalla`, sin alumno ni recibo, porque es de la cuenta entera. Quien
+      // no ve «Mi cuenta» cae al muro: el colegio apagó el módulo después de
+      // mandarlo, o el teléfono es de otra persona desde entonces.
+      case 'cartera':
+        return AuthService.user.veSuCuenta ? '/mi-cuenta' : '/muro';
       default:
         return '/muro';
     }
@@ -405,6 +412,7 @@ class Avisos {
         '/mis-notas' => AvisoDeNotas.deDatos(datos),
         '/actividades' => AvisoDeActividad.deDatos(datos),
         '/mis-pqrs' => AvisoDePqrs.deDatos(datos),
+        '/mi-cuenta' => const AvisoDeCartera(),
         _ => null,
       },
     );
@@ -547,4 +555,13 @@ class AvisoDePqrs {
     final id = int.tryParse('${datos['pqrs_id'] ?? ''}');
     return id == null ? null : AvisoDePqrs(pqrsId: id);
   }
+}
+
+/// Que «Mi cuenta» se abrió desde el recordatorio de tesorería.
+///
+/// No lleva datos porque el aviso no los trae: es de la cuenta entera. Lo que
+/// cambia es el orden, y ahí está el motivo de existir: el aviso dice «tiene un
+/// mensaje», así que los mensajes van arriba en vez de al final.
+class AvisoDeCartera {
+  const AvisoDeCartera();
 }

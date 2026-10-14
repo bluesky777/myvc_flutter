@@ -668,6 +668,18 @@ las respuestas salen de ahí. Dos diferencias que sí importan:
 Si entra la analítica de §2.1, se añaden «identificadores de dispositivo» y
 «datos de uso», no vinculados y sin seguimiento.
 
+Con «Mi cuenta» ([cartera.md](cartera.md)) se añaden **Financial Info ▸ Other
+Financial Info** (saldo, vencido, acuerdo de pago) y **Purchases ▸ Purchase
+History** (los recibos), vinculados a la identidad, sin seguimiento y para *App
+Functionality*. Las mismas dos filas que Play, por las mismas razones
+([seguridad-datos-play.md](seguridad-datos-play.md), «Cuando entre «Mi
+cuenta»»). *Payment Info* no: la app no paga.
+
+La portería (`a9aa91d`) **no cambia las etiquetas**: en iOS el carné lo lee Apple
+Vision en el dispositivo, y al servidor sólo va el texto del código.
+`NSCameraUsageDescription` ya estaba por la foto de «Mi perfil» y ahora nombra
+las dos cosas.
+
 La política de privacidad ya vive en `micolevirtual.com/privacidad.html` y sirve
 igual. Si algún día entran las notificaciones, hay que retocarla en los dos
 sitios —lo mismo que ya advierte [estado.md](estado.md)—.

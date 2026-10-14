@@ -154,6 +154,16 @@ class MenuLateral extends StatelessWidget {
             texto: 'PQRS',
             ruta: '/mis-pqrs',
           ),
+        // El estado de cuenta con la tesorería. No es un interruptor de la app
+        // sino del colegio —lo dice el servidor en la sesión—, y sólo para la
+        // familia: ver UserAutenticado.veSuCuenta.
+        if (AuthService.user.veSuCuenta)
+          _opcion(
+            context,
+            icono: Icons.account_balance_wallet_outlined,
+            texto: 'Mi cuenta',
+            ruta: '/mi-cuenta',
+          ),
         _opcionNotificaciones(context),
         _opcionMiPerfil(context),
         _opcionPrivacidad(context),

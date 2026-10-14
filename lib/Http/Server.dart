@@ -81,6 +81,10 @@ class Server {
     // se enseña («Ya contestaste la encuesta»). Sin barra al final: también
     // es `GET /mis-pqrs` a secas.
     '/mis-pqrs',
+    // El estado de cuenta de la familia (`routes/api/cartera.php`). En un
+    // colegio sin el módulo `ExigirModulo` responde 404, y el 403 de quien no
+    // es acudiente trae su frase: las dos se leen mejor en JSON.
+    '/mi-cuenta',
   ];
 
   static bool pideJson(String direccion) =>

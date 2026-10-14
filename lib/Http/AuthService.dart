@@ -57,6 +57,19 @@ class UserAutenticado {
   /// `default_female.png`, que también se pintan.
   String? imagenNombre;
 
+  /// Los módulos de pago que este colegio tiene encendidos —hoy sólo
+  /// `cartera`—, de `usuario.modulos` del login.
+  ///
+  /// **No es un interruptor de la app, y por eso no vive en `Interruptores`.**
+  /// Aquéllos dicen si un endpoint está desplegado en todos los colegios; éste
+  /// dice si **este** colegio pagó el módulo —`MODULO_CARTERA` en su `.env`—,
+  /// y una sola app sirve a todos. La web mira lo mismo
+  /// (`tieneElModuloDeCartera`, en `app2/.../menu/visibilidad.ts`).
+  ///
+  /// Un servidor que no manda la clave deja esto vacío, y vacío es «no lo
+  /// tiene»: el lado seguro, porque lo que cuelga de aquí es enseñar algo.
+  Set<String> modulos;
+
   UserAutenticado({
     this.token,
     this.id,
@@ -70,8 +83,10 @@ class UserAutenticado {
     this.isSuperuser = false,
     this.personaId,
     this.imagenNombre,
+    Set<String>? modulos,
   })  : roles = roles ?? {},
-        perms = perms ?? {};
+        perms = perms ?? {},
+        modulos = modulos ?? {};
 
   bool tieneRol(String nombre) => roles.contains(nombre.toLowerCase());
 
@@ -104,6 +119,15 @@ class UserAutenticado {
   /// No sustituye a lo que comprueba el backend: allí la puerta es
   /// `auth.personal`, que solo deja fuera a alumnos y acudientes. Esto es
   /// alcance, no permiso.
+  /// Quien ve «Mi cuenta», el estado de cuenta con la tesorería.
+  ///
+  /// El mismo criterio que el servidor, que es el que cierra la puerta: la ruta
+  /// lleva `modulo:cartera` —404 en un colegio sin el módulo— y el controlador
+  /// pide `tipo === 'Acudiente'` —403 a cualquier otro—. Por eso aquí se mira
+  /// el **tipo** y no el rol, a diferencia de [esAcudiente]: un docente con el
+  /// rol de acudiente vería el menú y se encontraría un 403.
+  bool get veSuCuenta => tipo == 'Acudiente' && modulos.contains('cartera');
+
   bool get esEspecial =>
       esAdmin || roles.any((rol) => rol.startsWith('coord'));
 

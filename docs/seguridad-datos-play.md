@@ -69,8 +69,10 @@ formulario.
 ### Lo que NO se marca
 
 Contraseñas, ubicación, contactos, fotos y archivos, calendario, mensajes,
-salud, información financiera, historial de navegación, historial de búsqueda,
-**y toda la sección de rendimiento de la app**.
+salud, información financiera (**hasta que salga «Mi cuenta»**: ver la sección
+de abajo), historial de navegación, historial de búsqueda,
+**y toda la sección de rendimiento de la app** (salvo «Diagnósticos» desde la
+portería: ver «Entró el escáner» abajo).
 
 Lo del rendimiento merece su renglón porque es fácil marcarlo por inercia al ver
 que hay analítica: **no hay Crashlytics ni registro de errores**. `Analitica`
@@ -128,6 +130,36 @@ Las tres preguntas de cabecera no cambian. Y «compartido» sigue en **no** por 
 mismo motivo de la sección siguiente: Google entrega los avisos como proveedor
 de servicio, por encargo, igual que procesa las estadísticas.
 
+### Cuando entre «Mi cuenta» — decidido por adelantado
+
+«Mi cuenta» ([cartera.md](cartera.md)) le enseña a la familia su estado de cuenta
+con la tesorería: `GET mi-cuenta` trae saldo, vencido, cobros pendientes,
+acuerdo de pago, recibos y mensajes de tesorería. Con el mismo criterio que el
+celular de arriba —lo ve poca gente, pero se transmite igual—, **se declara**, y
+en la misma tanda que la versión que la estrene y los bloques `⏸ CARTERA` de la
+política.
+
+**Se añaden dos filas:**
+
+| Categoría | Tipo | Recopilado | Compartido | Obligatorio | Para qué |
+|---|---|---|---|---|---|
+| Información financiera | Otra información financiera | ✔ | ✘ | Obligatorio | Funciones de la app |
+| Información financiera | Historial de compras | ✔ | ✘ | Obligatorio | Funciones de la app |
+
+- **Otra información financiera** — lo que debe, lo vencido y el acuerdo de
+  pago: Play pone las deudas en este tipo, literalmente.
+- **Historial de compras** — los recibos de lo que pagó. Es discutible —son
+  pagos al colegio, no compras en la app—, pero Play lo define como
+  *transacciones que hizo el usuario*, y quedarse corto es lo que se castiga.
+- **«Obligatorio» y no «opcional»**, por el mismo criterio que corrigió la
+  sección de notificaciones: no hay forma de usar la pantalla sin que se
+  traiga, y no hay preferencia que lo apague. Es lo mismo que el celular.
+
+**Lo que sigue sin marcarse:** *Información de pago del usuario*. La app no pide
+ni ve números de tarjeta ni de cuenta: no paga, sólo enseña. **Si algún día
+entra «Pagar en línea»** desde la app, esta sección se revisa: la app le pasaría
+el valor y la referencia a Wompi, y hay que mirar si eso es «compartido».
+
 ## La única decisión discutible: ¿«compartido» con Google?
 
 En todas las filas puse **compartido: no**, y conviene saber por qué, porque la
@@ -174,19 +206,39 @@ llaman las unidades—. Esos no son datos personales y no se declaran.
   ejemplo— no cambia nada aquí: sigue siendo el servidor del colegio.
 - **Si se vuelve a guardar la contraseña** en el dispositivo, hay que marcar
   *Contraseñas* y corregir la política.
-- **Si entra el escáner de QR** de la pantalla 03 de
-  [estaciones.md](estaciones.md): **decidido el 20 sep 2026 que NO entra por
-  ahora**, justamente para no tocar esto. El día que se retome, lo que cambia:
-  entra `android.permission.CAMERA` —visible en la ficha— y
-  `NSCameraUsageDescription` en iOS, que sin él **tira la app** al abrir la
-  cámara.
+- **Entró el escáner** (`a9aa91d`, 9 oct 2026): Portería lee el carné con
+  `mobile_scanner` 7.4.2. El 20 sep se había decidido que no entraba, justamente
+  para no tocar esto; Joseth lo decidió el 9 oct. **Va en la primera versión que
+  lleve ese commit aunque `Interruptores.porteria` esté apagado**: el permiso lo
+  declara el paquete y viaja en el APK igual. Lo que cambia, comprobado:
 
-  **La trampa que no avisa** es el `<uses-feature android:name="android.hardware.camera">`
-  que los paquetes de escáner añaden solos: sin `required="false"` explícito,
-  **Play deja de ofrecer la app a los aparatos sin cámara** y no lo notifica
-  nadie. Justo las tablets, que es donde esto se usa.
+  - **`android.permission.CAMERA`, visible en la ficha.** No es un tipo de dato:
+    no se marca nada por él solo. La trampa del `<uses-feature>` está resuelta en
+    el manifiesto (`required="false"` en cámara **y** autoenfoque; ver
+    [porteria.md](porteria.md)).
+  - **«Fotos», no.** Se lee el fotograma en memoria y al servidor sólo va el
+    texto del código (`POST porteria/tardanza {codigo}`); la imagen ni se guarda
+    ni se envía.
+  - **ML Kit, sí, y es lo nuevo.** En Android, `mobile_scanner` usa el modelo
+    *bundled* (`com.google.mlkit:barcode-scanning`, porque
+    `dev.steenbakker.mobile_scanner.useUnbundled` no está puesto). ML Kit le
+    manda a Google, «for diagnostics and usage analytics», modelo y sistema del
+    teléfono, paquete y versión de la app, un identificador por instalación,
+    latencias, configuración, tipos de evento y códigos de error; por HTTPS y
+    sin cederlo a terceros
+    ([ML Kit data disclosure](https://developers.google.com/ml-kit/android-data-disclosure),
+    leído el 9 oct 2026). Sin imagen ni código. Se añade una fila:
 
-  Aquí, en esta ficha, **probablemente no haya que marcar «Fotos»**: el escáner
-  lee un código y manda el código, no la imagen. Pero hay que mirarlo con el
-  paquete elegido delante, porque quien decide es lo que la librería hace, no lo
-  que la pantalla enseña.
+    | Categoría | Tipo | Recopilado | Compartido | Obligatorio | Para qué |
+    |---|---|---|---|---|---|
+    | Información y rendimiento de la app | Diagnósticos | ✔ | ✘ | **Opcional** | Estadísticas |
+
+    El identificador por instalación cae en **ID del dispositivo**, que ya está
+    declarado con «Estadísticas»: no cambia. **«Opcional»** por el criterio de
+    las notificaciones: sólo ocurre si alguien del personal abre Portería y
+    concede la cámara, y Portería sirve igual con el buscador por nombre.
+    **«Compartido», no**: Google actúa como proveedor, igual que con Analytics.
+  - **En iOS, nada nuevo**: lo lee Apple Vision en el dispositivo.
+    `NSCameraUsageDescription` ya existía por la foto de «Mi perfil».
+  - **La política cambia** (bloques `⏸ PORTERÍA`): decía «no accede a su cámara»
+    y «el único permiso … es el de mostrarle avisos».

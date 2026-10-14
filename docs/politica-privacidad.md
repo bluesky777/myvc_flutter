@@ -20,6 +20,13 @@ código.
 > texto promete dos meses; por defecto Google trae ese valor, pero conviene
 > confirmarlo y no fiarse.
 >
+> **Lo de la cuenta con el colegio, igual: escrito y NO publicado.** Los bloques
+> `⏸ CARTERA` describen «Mi cuenta», el estado de cuenta de la familia con la
+> tesorería (ver [cartera.md](cartera.md)). Se publican con la versión que la
+> estrene, por lo mismo que las notificaciones, y en la misma tanda que el
+> formulario de Play y las etiquetas de App Store, que también cambian: hasta
+> hoy decían que la app **no** maneja información financiera.
+>
 > **Lo de las notificaciones ya está escrito, pero NO publicado.** Los bloques
 > marcados con `⏸ NOTIFICACIONES` describen algo que la app todavía no hace:
 > `firebase_messaging` no está ni en `pubspec.yaml`. Se publican **el día que
@@ -61,6 +68,21 @@ el que trabaja.
 **Datos académicos.** Según su rol, la aplicación muestra y —en el caso de los
 docentes— permite registrar: calificaciones, asistencia a clase, tardanzas y
 ausencias a la institución, anotaciones de disciplina y porte del uniforme.
+
+<!-- ⏸ CARTERA — no publicar hasta la versión que la estrene. Ver la cabecera. -->
+
+**Datos de su cuenta con el colegio.** Si su colegio lleva la tesorería en la
+plataforma y usted es quien responde por el pago, la aplicación le muestra su
+estado de cuenta: lo que debe, lo vencido, los cobros pendientes con el primer
+nombre del alumno al que corresponden, el acuerdo de pago si lo hay, los recibos
+de lo que ha pagado, su referencia para consignar y los mensajes que le ha
+escrito la tesorería. Si usted es acudiente pero no responde por el pago, solo
+ve si cada alumno está al día o no, sin valores. **La aplicación solo muestra
+esta información: no recibe pagos ni datos de tarjetas o cuentas bancarias**, y
+no la guarda en el teléfono; se consulta al servidor del colegio cada vez que
+se abre.
+
+<!-- ⏸ fin del bloque de cartera -->
 
 **Registro de accesos.** Cada vez que usted entra, el servidor de su colegio
 anota la fecha y la hora, la dirección IP desde la que se conectó y con qué
@@ -116,6 +138,10 @@ la calificación, el apellido del alumno, el texto de la anotación ni el del
 compromiso.** Para verlos hay que abrir la aplicación y entrar con su usuario y
 su contraseña.
 
+<!-- ⏸ CARTERA --> El aviso de la tesorería dice solamente «Tiene un mensaje
+sobre su cuenta», **sin valores ni nombres**, y le llega solo a quien responde
+por el pago: no al alumno ni a los demás acudientes.
+
 **Su teléfono no le dice a nadie quién es usted.** La aplicación no envía a
 ningún servidor el identificador de su dispositivo. En su lugar, el teléfono se
 apunta a unos canales cuyo nombre es un código: no contiene su nombre, ni su
@@ -129,14 +155,24 @@ cerrar sesión el teléfono deja de recibirlos todos**.
 
 <!-- ⏸ fin del bloque de notificaciones -->
 
-**Lo que NO recogemos.** La aplicación no accede a su cámara, micrófono,
-contactos, ubicación, archivos ni agenda, y no le pedirá permiso para ninguna de
-esas cosas: los demás permisos que declara son técnicos —comprobar si hay
-conexión, por ejemplo— y ninguno da acceso a información personal guardada en su
-dispositivo. <!-- ⏸ NOTIFICACIONES --> El único permiso que la aplicación le
-pedirá es el de mostrarle avisos, y puede negarlo. **No hay publicidad, no se lee el identificador de publicidad y no
+<!-- ⏸ PORTERÍA — este párrafo sustituye al publicado, que decía «no accede a su
+cámara» y «el único permiso … es el de mostrarle avisos». Publicar con la PRIMERA
+versión que lleve a9aa91d (9 oct 2026), aunque Portería siga apagada: el permiso de
+cámara lo declara mobile_scanner y viaja en el APK igual. Lo de «Mi perfil» ya
+pedía la cámara en iOS antes de eso, así que el texto viejo ya era inexacto. -->
+**Lo que NO recogemos.** La aplicación no accede a su micrófono, contactos,
+ubicación ni agenda, y no le pedirá permiso para ninguna de esas cosas. **La
+cámara la usa solo cuando usted lo pide**, y en dos sitios: para tomarse la foto
+de perfil en «Mi perfil» y —solo el personal del colegio— para leer el código del
+carné de un alumno en Portería. De ese código, al servidor del colegio solo viaja
+el texto leído: **la imagen no se guarda ni se envía a nadie**. Los demás
+permisos que declara son técnicos —comprobar si hay conexión, por ejemplo— y
+ninguno da acceso a información personal guardada en su dispositivo. Los únicos
+permisos que la aplicación le puede pedir son el de mostrarle avisos y, cuando
+use una de esas dos funciones, el de la cámara; puede negar los dos y el resto
+de la aplicación funciona igual. **No hay publicidad, no se lee el identificador de publicidad y no
 se crean perfiles publicitarios.** Tampoco vendemos ni cedemos a nadie la
-información académica.
+información académica <!-- ⏸ CARTERA -->ni la de su cuenta con el colegio.
 
 ### Para qué los usamos
 
@@ -164,8 +200,8 @@ los abre o no.
 ### Con quién los compartimos
 
 **La información académica, con nadie fuera de su colegio.** Sus calificaciones,
-su asistencia, sus anotaciones de disciplina, sus datos de perfil y el registro
-de sus accesos viajan
+su asistencia, sus anotaciones de disciplina, <!-- ⏸ CARTERA -->su estado de
+cuenta, sus datos de perfil y el registro de sus accesos viajan
 exclusivamente entre la aplicación y el servidor de la institución educativa a
 la que usted pertenece. No los vendemos, no los alquilamos y no los cedemos a
 terceros.
@@ -175,6 +211,15 @@ solo para eso: recibe lo descrito en «Datos de uso de la aplicación» y las
 procesa por encargo nuestro, sujeto a sus propias condiciones de tratamiento de
 datos. Google no recibe ninguna calificación, ningún nombre y ningún dato que
 permita identificar a un estudiante.
+
+<!-- ⏸ PORTERÍA — con la misma versión que el párrafo de la cámara. -->
+**La lectura del carné, en el propio teléfono.** En Android la hace ML Kit, una
+biblioteca de Google que funciona dentro del teléfono. Para su propio
+diagnóstico, ML Kit le envía a Google datos técnicos —el modelo y el sistema del
+teléfono, la versión de la aplicación, un identificador de la instalación,
+tiempos de respuesta y códigos de error—, **nunca la imagen ni el código leído**,
+y Google no los cede a terceros. En iPhone y iPad la lectura la hace el propio
+sistema del dispositivo.
 
 <!-- ⏸ NOTIFICACIONES -->
 **Los avisos, también con Google.** Firebase Cloud Messaging es quien los
