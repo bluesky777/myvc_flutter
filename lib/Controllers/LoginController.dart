@@ -353,6 +353,17 @@ class LoginController implements LoginBaseController {
     // teléfono prestado —o el del colegio— sigue recibiendo los avisos del
     // alumno anterior. Ver Avisos.soltarTodo.
     await Avisos.soltarTodo();
+    // Y el token en el servidor (8 oct 2026): sin esto seguía valiendo hasta 24 h
+    // después de salir, en el teléfono y en cualquier sitio donde se hubiera
+    // copiado. `putLogout` lo lee de la cabecera y borra el par entero. Sin
+    // esperar mucho: si no hay red, se sale igual.
+    if (AuthService.user.token != null) {
+      try {
+        await Server()
+            .put('/login/logout', {})
+            .timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
     AuthService.limpiar();
     // Y el rol y el colegio de la analítica: en un teléfono prestado o en el
     // del colegio, si no, las pantallas del siguiente se contarían bajo el rol
