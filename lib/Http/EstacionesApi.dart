@@ -274,11 +274,18 @@ typedef LasEstacionesDelColegio = ({
   List<Estacion> estaciones,
   int? miEstacion,
   int? anio,
+  int? yearId,
 });
 
 /// Lo que se contesta sin preguntar: ni lista, ni respuesta sobre la campaña.
 const LasEstacionesDelColegio _sinRecorrido =
-    (abierta: null, estaciones: <Estacion>[], miEstacion: null, anio: null);
+    (
+  abierta: null,
+  estaciones: <Estacion>[],
+  miEstacion: null,
+  anio: null,
+  yearId: null,
+);
 
 /// El recorrido que armó este colegio, con la campaña.
 ///
@@ -322,6 +329,7 @@ LasEstacionesDelColegio leerLasEstaciones(dynamic cuerpo) {
     estaciones: _listaDe(crudo['estaciones'], Estacion.fromJson),
     miEstacion: entero(crudo['mi_estacion']),
     anio: campana is Map ? entero(campana['year']) : null,
+    yearId: campana is Map ? entero(campana['year_id']) : null,
   );
 }
 
@@ -864,6 +872,84 @@ Future<String?> guardarLasNotasDelPaso(
     }),
     accion: 'guardar las notas',
   );
+}
+
+/// Dónde está matriculado alguien en el año de la campaña.
+typedef MatriculaEnLaCampana = ({int grupoId, String grupo, String estado});
+
+/// `GET estaciones/alumnos`: el grupo y el estado de cada alumno en el año de
+/// la campaña (PREM, PREA, MATR o ASIS). Lo usa la última estación, donde se
+/// decide la matrícula.
+Future<Map<int, MatriculaEnLaCampana>> traerLasMatriculasDeLaCampana(
+  Server server,
+) async {
+  if (!Interruptores.estaciones) return const {};
+
+  return leerLasMatriculasDeLaCampana(
+    _cuerpo(await server.get('/estaciones/alumnos'), 'los alumnos del año'),
+  );
+}
+
+Map<int, MatriculaEnLaCampana> leerLasMatriculasDeLaCampana(dynamic cuerpo) {
+  final crudo = _comoMapa(cuerpo);
+  if (crudo == null) return const {};
+
+  final nombres = <int, String>{
+    for (final g in (crudo['grupos'] is List ? crudo['grupos'] as List : []))
+      if (g is Map && entero(g['id']) != null)
+        entero(g['id'])!: texto(g['abrev']) ?? texto(g['nombre']) ?? '',
+  };
+
+  return {
+    for (final a in (crudo['alumnos'] is List ? crudo['alumnos'] as List : []))
+      if (a is Map && entero(a['alumno_id']) != null && entero(a['grupo_id']) != null)
+        entero(a['alumno_id'])!: (
+          grupoId: entero(a['grupo_id'])!,
+          grupo: nombres[entero(a['grupo_id'])] ?? '',
+          estado: texto(a['estado']) ?? '',
+        ),
+  };
+}
+
+/// «Matricular»: la matrícula de la campaña pasa a MATR en su grupo, con
+/// `POST matriculas/matricularuno`. Devuelve null si entró, o el motivo.
+///
+/// El servidor sólo deja a un superusuario, o a un «Profesor» con el permiso
+/// de editar alumnos del colegio; el rol «Rector» por sí solo no basta.
+Future<String?> matricularEnLaCampana(
+  Server server, {
+  required int personaId,
+  required int grupoId,
+  required int yearId,
+}) =>
+    _mandar(
+      server.post('/matriculas/matricularuno', {
+        'alumno_id': personaId,
+        'grupo_id': grupoId,
+        'year_id': yearId,
+      }),
+      accion: 'matricular',
+    );
+
+/// «Poner como asistente»: el mismo `prematricular` con `ASIS` que usa la web.
+/// El 404 es «se guardó, pero no la encontré al releerla»: entró.
+Future<String?> asistenteEnLaCampana(
+  Server server, {
+  required int personaId,
+  required int grupoId,
+}) async {
+  final dynamic res;
+  try {
+    res = await server.put('/matriculas/prematricular', {
+      'alumno_id': personaId,
+      'grupo_id': grupoId,
+      'estado': 'ASIS',
+    });
+  } catch (err) {
+    return 'No se pudo poner como asistente: $err';
+  }
+  if (res.statusCode == 404) return null;
+  return motivoDeUnaEscritura(res, accion: 'poner como asistente');
 }
 
 /// Alguien que ya pasó hoy por una estación.

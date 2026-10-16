@@ -10,6 +10,7 @@ import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/ColumnaDeFicha.dart';
+import 'package:myvc_flutter/Widgets/DecisionDeMatricula.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 
 /// La ficha en la estación — pantalla 04 de `docs/estaciones.md`.
@@ -239,6 +240,12 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
         const SizedBox(height: 10),
         _LosRequisitos(paso: _miPaso, nombreEstacion: widget.estacion.nombre),
         _LasNotasDelRecorrido(pasos: actual.pasos),
+        DecisionDeMatricula(
+          key: ValueKey('decision-${widget.persona.id}'),
+          estacion: widget.estacion,
+          persona: widget.persona,
+          servidor: widget.servidor,
+        ),
       ],
     );
   }

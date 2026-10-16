@@ -88,6 +88,9 @@ class Server {
     // La prematrícula de la familia (16 oct 2026): su 409 es «primero
     // tesorería tiene que registrar el pago», y en HTML se perdía.
     '/matriculas/prematricular',
+    // Matricular desde la última estación: su «No tiene permisos para editar»
+    // es un abort(400) que en HTML se perdía.
+    '/matriculas/matricularuno',
   ];
 
   static bool pideJson(String direccion) =>

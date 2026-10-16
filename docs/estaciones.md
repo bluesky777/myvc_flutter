@@ -669,5 +669,16 @@ Los tres interruptores (`estaciones`, `recorridoDeMatricula`, `miMatricula`) nac
 **encendidos** desde este día. `--dart-define=ESTACIONES=false` los apaga para probar. Las
 pruebas del estado apagado se saltan mientras estén encendidos.
 
-Lo que no se trajo: matricular o poner como asistente desde la última estación, y asignar el
-docente. Las dos cosas siguen en la web.
+**La última estación decide la matrícula** (`DecisionDeMatricula`, en la ficha). Con el grupo que
+el alumno ya tiene en la campaña (`GET estaciones/alumnos`), «Matricular en 8A - 2027» manda
+`POST matriculas/matricularuno` con el `year_id` de la campaña, y «Poner como asistente» manda
+`PUT matriculas/prematricular` con `ASIS` (el 404 significa que entró). Sin grupo en la campaña,
+la ficha manda a Prematrículas en la web.
+
+**El permiso lo pone el servidor, y no es el rol «Rector».** `postMatricularuno` sólo deja pasar a
+un superusuario, o a un «Profesor» con `profes_can_edit_alumnos` encendido. Un rector que no sea
+superusuario recibe «No tiene permisos para editar», en la app igual que en la web. La app enseña
+esa frase.
+
+Lo que no se trajo: cambiar de grupo y asignar el docente a cada estación. Las dos cosas siguen
+en la web.
