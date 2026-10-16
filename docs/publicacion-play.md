@@ -795,6 +795,23 @@ mismo envío:
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 
+### `1.3.0 (8)`, compilada el 16 oct 2026
+
+Solo la versión: ni la ficha ni Seguridad de los datos cambian. La app no recoge nada nuevo. Las
+WebView de juegos y de inglés cargan páginas del colegio, y Destello carga
+`destello.pages.dev`, sin pedir micrófono. Trae:
+- las estaciones de matrícula encendidas, con «Cumple / No cumple», las dos notas y la matrícula
+  desde la última estación;
+- la tarjeta de prematrícula de la familia;
+- los juegos;
+- English Quest.
+
+El `.aab` pesa **75 MB**. Lo que crece son `BUNDLE-METADATA` (`proguard.map`, unos 41 MB, y los
+`.sym` de depuración), que Play no descarga en los teléfonos. Firmado con `61:44:AF:9F…`. Notas
+en `es-419`: «Estaciones de matrícula: «Cumple / No cumple», notas para el personal y para la
+familia, y matrícula desde la última estación. Prematrícula desde la portada para las familias.
+Nuevos juegos educativos y English Quest para practicar inglés.»
+
 ### `1.2.0 (7)`, enviada el 1 oct 2026
 
 Solo la versión: ni la ficha ni Seguridad de los datos cambian. Trae «Mi
