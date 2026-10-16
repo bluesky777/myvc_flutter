@@ -242,3 +242,22 @@ llaman las unidades—. Esos no son datos personales y no se declaran.
     `NSCameraUsageDescription` ya existía por la foto de «Mi perfil».
   - **La política cambia** (bloques `⏸ PORTERÍA`): decía «no accede a su cámara»
     y «el único permiso … es el de mostrarle avisos».
+
+## 1.3.0 (8), 16 oct 2026: lo que se cambia en el formulario
+
+Es la primera versión con «Mi cuenta» (`d34da02`) y con el escáner (`a9aa91d`), así que entran
+las dos decisiones tomadas por adelantado en este documento, en el mismo envío que la versión:
+
+1. **Información financiera**: *Otra información financiera* e *Historial de compras*, las dos
+   recopiladas, no compartidas, obligatorias y para Funciones de la app (§ «Cuando entre «Mi
+   cuenta»»).
+2. **Información y rendimiento de la app**: *Diagnósticos*, recopilado, no compartido, opcional y
+   para Estadísticas (ML Kit, § «Entró el escáner»).
+
+**Lo de esa misma versión que NO añade filas:**
+- Las notas de las estaciones, la prematrícula y el progreso de los juegos y de English Quest
+  son información del alumno en el servidor del colegio. Ya están cubiertos por
+  *Información personal ▸ Otra información* (Funciones de la app).
+- Destello es una página externa que se abre sin ningún dato del usuario.
+- Las WebView no piden micrófono.
+

@@ -20,6 +20,10 @@ código.
 > texto promete dos meses; por defecto Google trae ese valor, pero conviene
 > confirmarlo y no fiarse.
 >
+> **Publicado el 16 oct 2026 con la versión 1.3.0 (8):** los bloques `⏸ CARTERA`
+> y `⏸ PORTERÍA` entraron en `privacidad.html`, junto con el párrafo nuevo de juegos
+> y English Quest. Lo que sigue explica por qué esperaban.
+>
 > **Lo de la cuenta con el colegio, igual: escrito y NO publicado.** Los bloques
 > `⏸ CARTERA` describen «Mi cuenta», el estado de cuenta de la familia con la
 > tesorería (ver [cartera.md](cartera.md)). Se publican con la versión que la
@@ -83,6 +87,14 @@ no la guarda en el teléfono; se consulta al servidor del colegio cada vez que
 se abre.
 
 <!-- ⏸ fin del bloque de cartera -->
+
+**Juegos y práctica de inglés.** Los juegos educativos y English Quest se abren
+dentro de la aplicación desde el servidor de su colegio. Lo que se guarda es el
+progreso —niveles, puntos y días de práctica—, en el teléfono o en el servidor
+del colegio junto a su usuario, para que usted continúe donde iba y el docente
+vea el avance de su curso. Uno de los juegos, Destello, todavía en pruebas, es
+una página externa (destello.pages.dev): la aplicación la abre sin enviarle su
+nombre, su usuario ni ningún otro dato suyo.
 
 **Registro de accesos.** Cada vez que usted entra, el servidor de su colegio
 anota la fecha y la hora, la dirección IP desde la que se conectó y con qué
