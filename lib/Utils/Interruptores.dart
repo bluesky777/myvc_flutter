@@ -350,4 +350,10 @@ class Interruptores {
   /// `docs/juegos.md`.
   static const bool juegos =
       bool.fromEnvironment('JUEGOS', defaultValue: true);
+
+  /// English Quest: la racha para jugar y la del curso para el personal (16
+  /// oct 2026). Las rutas `ingles/*` de 8myvc están en `4f0ffa51`. Ver
+  /// `docs/ingles.md`, fase 2.
+  static const bool ingles =
+      bool.fromEnvironment('INGLES', defaultValue: true);
 }

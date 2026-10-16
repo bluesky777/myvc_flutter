@@ -164,6 +164,13 @@ class MenuLateral extends StatelessWidget {
             texto: 'Mi cuenta',
             ruta: '/mi-cuenta',
           ),
+        if (Interruptores.ingles)
+          _opcion(
+            context,
+            icono: Icons.translate,
+            texto: 'English Quest',
+            ruta: '/ingles',
+          ),
         if (Interruptores.juegos)
           _opcion(
             context,
@@ -317,6 +324,14 @@ class MenuLateral extends StatelessWidget {
       ));
     }
 
+    if (Interruptores.ingles) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.translate,
+        texto: 'English Quest',
+        ruta: '/ingles',
+      ));
+    }
     if (Interruptores.juegos) {
       opciones.add(_opcion(
         context,

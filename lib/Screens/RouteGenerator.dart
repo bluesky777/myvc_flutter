@@ -32,6 +32,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
 
 import 'AlumTardanzaColeScreen.dart';
+import 'InglesScreen.dart';
 import 'JuegosScreen.dart';
 
 class RouteGenerator {
@@ -116,6 +117,9 @@ class RouteGenerator {
       case '/juegos':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const JuegosScreen());
+      case '/ingles':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const InglesScreen());
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());

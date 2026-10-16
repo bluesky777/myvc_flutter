@@ -70,31 +70,25 @@ responde en la web».
 
 Probado en Chrome headless: los 33 retos se pintan, y con `solve` todos quedan `done`.
 
-## Fase 2: los tres juegos (pendiente)
+## Fase 2: la racha (16 oct 2026)
 
-```mermaid
-flowchart LR
-  M[MenuLateral: Inglés] --> I[InglesScreen: portada]
-  I --> R[WebView /up2/ingles/racha]
-  I --> L[WebView /up2/ingles/islas]
-  I --> S[WebView /up2/ingles/resortera]
-  R & L & S -->|PUT api/ingles/progreso/juego| B[(8myvc: una fila por juego)]
-```
+«English Quest» en el menú (`InglesScreen`, `Interruptores.ingles`) abre **la Racha** para todos
+y **la Racha de mi curso** (`/ingles/racha/curso`, la racha semanal con la nota sugerida) para el
+personal. Las dos son las páginas de app2 en una WebView con la sesión de la app
+(`WebConSesionScreen`). El progreso va a `PUT ingles/progreso/racha` desde app2, y es la misma
+fila que en el navegador.
 
-Lo que falta, y de quién es:
+**Cómo entra la sesión, sin tocar el front.** Una página mínima con `baseUrl` en `<colegio>/up2/`
+escribe en `localStorage` el token de la app (`xtoken`) y `xtoken_expira` a siete días, borra
+`xrefresco` y salta a la ruta. El token de `POST login` es de Sanctum, igual que el de app2. app2
+renueva a la mitad de lo que queda, así que en una visita nunca intenta renovar. Si lo
+intentara, cerraría su sesión por `refresco-invalido`, que no llama a `auth/logout` ni mata el
+token de la app. Sólo la inactividad, doce horas en una misma página, llama al servidor.
 
-1. **Backend**: fundir y desplegar la rama `ingles-progreso` de 8myvc (commit e12e0bf4). Sin
-   ella app2 guarda sólo en localStorage, y en la WebView eso se pierde.
-2. **myvc_front, modo incrustado**: hoy app2 no tiene manera de recibir una sesión desde
-   fuera. Sólo lee `xtoken`, `xrefresco` y `xtoken_expira` de su localStorage. Además, la app
-   usa un token sin refresco, y si app2 intenta refrescarlo, acaba en el login. Hace falta que
-   app2:
-   - acepte la sesión inyectada sin `xrefresco` y no intente refrescarla;
-   - esconda su menú y su barra cuando va dentro de la app, y que «volver» cierre la WebView;
-   - no exija Google Fonts ni otra red aparte de la del colegio.
-3. **App**: la entrada «Inglés» en `MenuLateral` (alumno y acudiente, detrás de un
-   `Interruptores.ingles`), la ruta `/ingles` y la pantalla WebView. La pantalla inyecta la
-   sesión con `runJavaScript` antes de cargar la ruta.
+Lo que queda pendiente:
 
-Lo que se arrastra en los juegos ya tiene alternativa de tocar en la web, y los finales nunca
-humillan: lo trae app2, la app no lo toca.
+- **El menú y la barra de app2 se ven dentro.** Esconderlos pide un «modo incrustado» en el front.
+  Mientras no exista, el «atrás» de Android navega dentro de la página y la X la cierra.
+- **Islas y Resortera** entran igual, con una línea cada una en `InglesScreen`. No se pidieron.
+- **No se probó en un teléfono.**
+
