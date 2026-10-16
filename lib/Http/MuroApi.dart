@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:myvc_flutter/Http/PrematriculaApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Http/UnidadesApi.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
@@ -25,10 +26,14 @@ class MuroCargado {
   /// acudientes por el middleware ExigirPersonal.
   final List<AsistenciaPeriodoModel> asistenciaPropia;
 
+  /// La prematrícula del año que viene, o null si el colegio no la abrió.
+  final PrematriculaDeLaFamilia? prematricula;
+
   MuroCargado({
     required this.publicaciones,
     required this.acudidos,
     this.asistenciaPropia = const [],
+    this.prematricula,
   });
 }
 
@@ -162,6 +167,7 @@ Future<MuroCargado> traerMuro(Server server, {bool refrescar = false}) async {
     // backend llaman a `Ausencia::deAlumnoYear`, o sea que es exactamente la
     // misma forma leída en dos sitios.
     asistenciaPropia: asistenciaPorPeriodo(cuerpo['ausencias_periodo']),
+    prematricula: leerPrematricula(cuerpo),
   );
 
   // Solo se guarda lo que costó una petición. La respuesta que no se entiende

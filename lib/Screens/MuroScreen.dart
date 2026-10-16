@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/MuroApi.dart';
+import 'package:myvc_flutter/Http/PrematriculaApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
 import 'package:myvc_flutter/Screens/TarjetonScreen.dart';
 import 'package:myvc_flutter/Utils/HorarioDeHoy.dart';
 import 'package:myvc_flutter/Utils/VotacionPendiente.dart';
 import 'package:myvc_flutter/Widgets/HojaHoySeVota.dart';
+import 'package:myvc_flutter/Widgets/TarjetaDePrematricula.dart';
 import 'package:myvc_flutter/Widgets/TarjetaDeVotacion.dart';
 import 'package:myvc_flutter/Widgets/Publicacion.dart';
 import 'package:myvc_flutter/Widgets/BarraPlegable.dart';
@@ -171,9 +173,11 @@ class _MuroScreenState extends State<MuroScreen> {
     // es de un día y el acceso a notas es de todo el año.
     final laVotacion = TarjetaDeVotacion.siToca(alVotar: _abrirElTarjeton);
     final acceso = _buildAccesoANotas();
+    final prematricula = _buildPrematricula();
 
     final encabezados = <Widget>[
       if (laVotacion != null) laVotacion,
+      if (prematricula != null) prematricula,
       if (acceso != null) acceso,
     ];
 
@@ -216,6 +220,22 @@ class _MuroScreenState extends State<MuroScreen> {
     // Al volver, la tarjeta puede tener que desaparecer: el tarjetón avisa a
     // VotacionPendiente cuando la papeleta se acaba.
     if (mounted) setState(() {});
+  }
+
+  /// La prematrícula del año que viene, sólo para el acudiente y sólo cuando
+  /// el colegio la abrió (ver [leerPrematricula]).
+  Widget? _buildPrematricula() {
+    final pre = muro?.prematricula;
+    if (pre == null || !AuthService.user.esAcudiente) return null;
+
+    final anio = int.tryParse(ContextoAcademico.instancia.year ?? '');
+
+    return TarjetaDePrematricula(
+      prematricula: pre,
+      anio: anio == null ? null : anio + 1,
+      alCambiar: _cargar,
+      servidor: server,
+    );
   }
 
   /// La puerta a las notas, para el docente, encima de las publicaciones.

@@ -85,6 +85,9 @@ class Server {
     // colegio sin el módulo `ExigirModulo` responde 404, y el 403 de quien no
     // es acudiente trae su frase: las dos se leen mejor en JSON.
     '/mi-cuenta',
+    // La prematrícula de la familia (16 oct 2026): su 409 es «primero
+    // tesorería tiene que registrar el pago», y en HTML se perdía.
+    '/matriculas/prematricular',
   ];
 
   static bool pideJson(String direccion) =>
