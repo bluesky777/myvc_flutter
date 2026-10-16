@@ -807,7 +807,13 @@ WebView de juegos y de inglés cargan páginas del colegio, y Destello carga
 - English Quest.
 
 El `.aab` pesa **75 MB**. Lo que crece son `BUNDLE-METADATA` (`proguard.map`, unos 41 MB, y los
-`.sym` de depuración), que Play no descarga en los teléfonos. Firmado con `61:44:AF:9F…`. Notas
+`.sym` de depuración), que Play no descarga en los teléfonos. Firmado con `61:44:AF:9F…`.
+
+Play avisa de que «aumenta considerablemente el tamaño». La instalación nueva pasa a **15,4 MB**
+(+3,89 MB) y la actualización a 7,3 MB. **No es de esta versión**: es `mobile_scanner` (ML Kit,
+`libbarhopper_v3.so` y su modelo, unos 5 MB por ABI), que entró con la portería en `a9aa91d` y
+viaja aunque `Interruptores.porteria` esté apagado. Las «funciones necesarias» pasan de 1 a 3
+(lo del lector de cámara), pero en la tabla de dispositivos no se pierde ninguno. Notas
 en `es-419`: «Estaciones de matrícula: «Cumple / No cumple», notas para el personal y para la
 familia, y matrícula desde la última estación. Prematrícula desde la portada para las familias.
 Nuevos juegos educativos y English Quest para practicar inglés.»
