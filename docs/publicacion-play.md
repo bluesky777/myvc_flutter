@@ -795,9 +795,14 @@ mismo envío:
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 
-### `1.3.0 (8)`, compilada el 16 oct 2026
+### `1.3.0 (8)`, enviada el 16 oct 2026
 
-Solo la versión: ni la ficha ni Seguridad de los datos cambian. La app no recoge nada nuevo. Las
+Se envió junto con **Seguridad de los datos**, en el mismo envío: Información financiera (las dos
+de «Mi cuenta») y Diagnóstico (ML Kit). La política con «Mi cuenta», la cámara de portería, ML
+Kit y los juegos se subió a `micolevirtual.com/privacidad.html` antes de enviar; ver
+`seguridad-datos-play.md` al final. La ficha no cambia. Al principio se creyó que tampoco
+cambiaba el formulario: no era así, porque es la primera versión con `d34da02` (cartera) y
+`a9aa91d` (escáner). Las
 WebView de juegos y de inglés cargan páginas del colegio, y Destello carga
 `destello.pages.dev`, sin pedir micrófono. Trae:
 - las estaciones de matrícula encendidas, con «Cumple / No cumple», las dos notas y la matrícula
