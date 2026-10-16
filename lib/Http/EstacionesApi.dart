@@ -263,11 +263,22 @@ class PendientesEstaciones {
 ///   Entonces, y sólo entonces, se vuelve a la deducción de siempre. Convertir
 ///   esto en `false` diría «no armaste el recorrido» a un colegio que sí lo
 ///   armó, y con un servidor viejo lo diría **siempre**.
-typedef LasEstacionesDelColegio = ({bool? abierta, List<Estacion> estaciones});
+///
+/// [miEstacion] es la estación que secretaría le asignó a este docente
+/// (`requisitos/atiende`, 14 oct 2026), o null. **Es sólo dónde abre**: ninguna
+/// ruta de escritura mira a quién se le asignó, y cualquiera del personal
+/// puede cerrar cualquier estación. [anio] es el año de la campaña, que desde
+/// esa fecha puede ser el siguiente al de la sesión (`AnioDeLaCampana`).
+typedef LasEstacionesDelColegio = ({
+  bool? abierta,
+  List<Estacion> estaciones,
+  int? miEstacion,
+  int? anio,
+});
 
 /// Lo que se contesta sin preguntar: ni lista, ni respuesta sobre la campaña.
 const LasEstacionesDelColegio _sinRecorrido =
-    (abierta: null, estaciones: <Estacion>[]);
+    (abierta: null, estaciones: <Estacion>[], miEstacion: null, anio: null);
 
 /// El recorrido que armó este colegio, con la campaña.
 ///
@@ -309,6 +320,8 @@ LasEstacionesDelColegio leerLasEstaciones(dynamic cuerpo) {
   return (
     abierta: campana is Map ? _siONo(campana['abierta']) : null,
     estaciones: _listaDe(crudo['estaciones'], Estacion.fromJson),
+    miEstacion: entero(crudo['mi_estacion']),
+    anio: campana is Map ? entero(campana['year']) : null,
   );
 }
 
@@ -827,6 +840,76 @@ Future<PasoMarcado> marcarElPaso(
   if (fallo != null) return _sinCerrarElPaso(fallo);
 
   return leerElPasoMarcado(res.body);
+}
+
+/// Sobrescribe las dos notas de una estación: la interna y la de la familia.
+///
+/// `PUT estaciones/{nro}/notas` escribe **las dos siempre**, y una en blanco
+/// borra la que hubiera; por eso se mandan juntas, tal como quedaron en la
+/// pantalla. No toca el estado del paso. Devuelve null si entró, o el motivo.
+Future<String?> guardarLasNotasDelPaso(
+  Server server, {
+  required int nroEstacion,
+  required int personaId,
+  required String interna,
+  required String familia,
+}) async {
+  if (!Interruptores.estaciones) return _todaviaNo;
+
+  return _mandar(
+    server.put('/estaciones/$nroEstacion/notas', {
+      'alumno_id': personaId,
+      'interna': interna.trim(),
+      'familia': familia.trim(),
+    }),
+    accion: 'guardar las notas',
+  );
+}
+
+/// Alguien que ya pasó hoy por una estación.
+typedef AtendidoHoy = ({
+  int personaId,
+  String nombres,
+  String apellidos,
+  bool cumple,
+  String? cuando,
+  String? por,
+});
+
+/// Quiénes pasaron hoy por esta estación, el último primero.
+Future<List<AtendidoHoy>> traerLosAtendidosDeHoy(
+  Server server,
+  int nroEstacion,
+) async {
+  if (!Interruptores.estaciones) return const [];
+
+  return leerLosAtendidos(
+    _cuerpo(
+      await server.get('/estaciones/$nroEstacion/atendidos'),
+      'los atendidos de hoy',
+    ),
+  );
+}
+
+/// Lee `GET estaciones/{nro}/atendidos`. Pública por lo mismo que
+/// [leerLasEstaciones]: detrás del interruptor no la alcanza ninguna prueba.
+List<AtendidoHoy> leerLosAtendidos(dynamic cuerpo) {
+  final crudo = _comoMapa(cuerpo);
+  final lista = crudo?['atendidos'];
+  if (lista is! List) return const [];
+
+  return [
+    for (final uno in lista)
+      if (uno is Map)
+        (
+          personaId: enteroO(uno['alumno_id']),
+          nombres: texto(uno['nombres']) ?? '',
+          apellidos: texto(uno['apellidos']) ?? '',
+          cumple: texto(uno['resultado']) == 'cumple',
+          cuando: texto(uno['cuando']),
+          por: texto(uno['por']),
+        ),
+  ];
 }
 
 /// Lo que le falta a un cierre para poder mandarse, o null si puede irse ya.

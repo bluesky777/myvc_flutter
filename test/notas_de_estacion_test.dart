@@ -8,6 +8,7 @@ import 'package:myvc_flutter/Models/EstacionModel.dart';
 import 'package:myvc_flutter/Models/NotaDeEstacionModel.dart';
 import 'package:myvc_flutter/Screens/CodigoDeLaHojaScreen.dart';
 import 'package:myvc_flutter/Screens/NotasDeEstacionScreen.dart';
+import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -196,7 +197,7 @@ void main() {
       expect(find.widgetWithText(FilledButton, 'Dejar la nota'), findsNothing);
       expect(find.textContaining('Está escrita y probada'), findsOneWidget);
     });
-  });
+  }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
   group('lo que la familia no ve, y la nota que no se lee', () {
     testWidgets('se dice antes de leer nada que esto es entre el personal',
@@ -250,7 +251,7 @@ void main() {
       // existe.
       expect(find.textContaining('Orientación'), findsWidgets);
       expect(find.textContaining('2 notas'), findsWidgets);
-    });
+    }, skip: Interruptores.estaciones);
 
     testWidgets('cada estado lleva icono Y palabra, nunca solo el color',
         (tester) async {
@@ -414,7 +415,7 @@ void main() {
       // Y ni con el botón encendido se llama al servidor mientras el módulo
       // esté apagado.
       expect(servidor.pedidos, isEmpty);
-    });
+    }, skip: Interruptores.estaciones);
   });
 
   group('el código de la hoja, tecleado y sin cámara (pantalla 03)', () {
@@ -441,7 +442,7 @@ void main() {
         tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
         isNull,
       );
-    });
+    }, skip: Interruptores.estaciones);
 
     testWidgets('y se dice que la cámara falta a propósito', (tester) async {
       await tester.pumpWidget(
@@ -454,7 +455,7 @@ void main() {
       // app fuera de las tablets sin cámara, que son las del patio.
       expect(find.textContaining('no hay escáner a propósito'), findsOneWidget);
       expect(find.textContaining('tablets sin cámara'), findsOneWidget);
-    });
+    }, skip: Interruptores.estaciones);
 
     testWidgets(
         'se ofrece el código del papel viejo, que el servidor contempla',

@@ -480,6 +480,8 @@ void main() {
       await montar(tester);
 
       expect(find.text('Usuarios'), findsNothing);
+      await tester.scrollUntilVisible(find.text('Configuración'), 200,
+          scrollable: find.byType(Scrollable).first);
       expect(find.text('Configuración'), findsOneWidget,
           reason: 'esa sí la ve, en gris por dentro');
     });

@@ -250,6 +250,7 @@ class PasoCerradoScreen extends StatefulWidget {
     this.escrito = '',
     this.requisitos = const [],
     this.recorridoDelColegio = const [],
+    this.notas,
     this.servidor,
   });
 
@@ -270,6 +271,11 @@ class PasoCerradoScreen extends StatefulWidget {
   /// siguiente. Vacío es «no se sabe», y entonces ese renglón no se pinta: un
   /// número inventado ahí es peor que ninguno.
   final List<Estacion> recorridoDelColegio;
+
+  /// Las dos notas de la estación cuando se cambiaron, para guardarlas
+  /// después de la marca con `PUT estaciones/{nro}/notas`. Null es «no se
+  /// tocaron».
+  final ({String interna, String familia})? notas;
 
   /// Con qué servidor hablar. Null es el de verdad, que es lo normal.
   final Server? servidor;
@@ -339,10 +345,10 @@ class _PasoCerradoScreenState extends State<PasoCerradoScreen> {
 
   /// La escritura pelada, sin tocar la pantalla. La usa [dispose], donde ya no
   /// hay pantalla que tocar.
-  Future<PasoMarcado> _escribirlo() {
+  Future<PasoMarcado> _escribirlo() async {
     final reparto = repartirElTexto(widget.resultado, widget.escrito);
 
-    return marcarElPaso(
+    final marca = await marcarElPaso(
       server,
       nroEstacion: widget.estacion.nro,
       personaId: widget.ficha.persona.id,
@@ -350,6 +356,31 @@ class _PasoCerradoScreenState extends State<PasoCerradoScreen> {
       motivo: reparto.motivo,
       observacion: reparto.observacion,
       requisitos: widget.requisitos,
+    );
+
+    // Las notas van después de la marca, como en la web: `putNotas` escribe
+    // las dos columnas y no toca el estado. Si falla, la marca ya entró y se
+    // dice así, para que reintentar no parezca que el paso sigue abierto.
+    final notas = widget.notas;
+    if (marca.fallo != null || notas == null) return marca;
+
+    final fallo = await guardarLasNotasDelPaso(
+      server,
+      nroEstacion: widget.estacion.nro,
+      personaId: widget.ficha.persona.id,
+      interna: notas.interna,
+      familia: notas.familia,
+    );
+    if (fallo == null) return marca;
+
+    return (
+      fallo: 'El paso quedó marcado, pero las notas no se guardaron: $fallo',
+      resultado: marca.resultado,
+      cerradoPor: marca.cerradoPor,
+      cerradoAt: marca.cerradoAt,
+      siguienteNro: marca.siguienteNro,
+      siguienteDonde: marca.siguienteDonde,
+      recorrido: marca.recorrido,
     );
   }
 

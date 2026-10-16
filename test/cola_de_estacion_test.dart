@@ -177,6 +177,46 @@ void main() {
     });
   });
 
+  group('la estación del docente y el año de la campaña (14 oct 2026)', () {
+    test('mi_estacion 0 es una estación, y null es «no tiene»', () {
+      final con = leerLasEstaciones(jsonEncode({
+        'campana': {'year_id': 9, 'year': 2027, 'abierta': true},
+        'estaciones': [],
+        'mi_estacion': 0,
+      }));
+      expect(con.miEstacion, 0);
+      expect(con.anio, 2027);
+
+      final sin = leerLasEstaciones(jsonEncode({
+        'campana': {'abierta': true},
+        'mi_estacion': null,
+      }));
+      expect(sin.miEstacion, isNull);
+      expect(sin.anio, isNull);
+    });
+
+    test('los atendidos de hoy: «no_cumple» no es cumple', () {
+      final lista = leerLosAtendidos(jsonEncode({
+        'estacion': 2,
+        'atendidos': [
+          {
+            'alumno_id': 31,
+            'nombres': 'Laura',
+            'apellidos': 'Mejía',
+            'resultado': 'no_cumple',
+            'cuando': '2026-10-16 08:15:00',
+            'por': 'Ana Ruiz',
+          },
+          {'alumno_id': '32', 'nombres': 'Beto', 'resultado': 'cumple'},
+        ],
+      }));
+      expect(lista.map((a) => a.personaId), [31, 32]);
+      expect(lista.map((a) => a.cumple), [false, true]);
+      expect(lista.first.por, 'Ana Ruiz');
+      expect(leerLosAtendidos(jsonEncode({'atendidos': null})), isEmpty);
+    });
+  });
+
   group('«abierta» lo dice el servidor; la app lo deducía', () {
     test('las tres respuestas son tres, y no dos', () {
       // `true`, `false` y **«no lo dijo»**. Convertir el tercero en `false`
@@ -301,7 +341,7 @@ void main() {
     test('el interruptor sigue apagado, y así tiene que seguir', () {
       expect(Interruptores.estaciones, isFalse);
     });
-  });
+  }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
   group('los chips de una fila', () {
     EnLaCola conAvisos(List<AvisoDeLaCola> avisos, {bool devuelto = false}) => (

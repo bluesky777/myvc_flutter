@@ -72,6 +72,9 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
   /// y las versiones viejas viven meses.
   bool? campanaAbierta;
 
+  /// El año que se está matriculando, que puede no ser el de la sesión.
+  int? anioDeLaCampana;
+
   bool cargando = true;
   String? error;
 
@@ -103,6 +106,10 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
       setState(() {
         estaciones = traidas.estaciones;
         campanaAbierta = traidas.abierta;
+        anioDeLaCampana = traidas.anio;
+        // La que le asignó secretaría manda sobre la última que eligió aquí,
+        // igual que en la web: es dónde lo esperan hoy.
+        miEstacion = traidas.miEstacion ?? miEstacion;
         cargando = false;
       });
     } catch (err) {
@@ -161,9 +168,12 @@ class _EstacionesScreenState extends State<EstacionesScreen> {
   String? _subtitulo() {
     if (cargando || error != null) return null;
     if (estaciones.isEmpty) return null;
-    return estaciones.length == 1
+    final cuantas = estaciones.length == 1
         ? 'Una estación'
         : '${estaciones.length} estaciones';
+    return anioDeLaCampana == null
+        ? cuantas
+        : 'Matrícula $anioDeLaCampana · $cuantas';
   }
 
   Widget _cuerpo() {

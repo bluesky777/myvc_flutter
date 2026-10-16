@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Http/EstacionesApi.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/EstacionModel.dart';
-import 'package:myvc_flutter/Screens/DevolverConMotivoScreen.dart';
 import 'package:myvc_flutter/Screens/PasoCerradoScreen.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
@@ -60,7 +59,13 @@ class MarcarPasoScreen extends StatefulWidget {
 class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
   late final Server server = widget.servidor ?? Server();
 
-  final TextEditingController observacion = TextEditingController();
+  /// Las dos notas de la estación, con lo que ya estaba guardado.
+  late final TextEditingController interna =
+      TextEditingController(text: _miPaso?.notaInterna ?? '');
+  late final TextEditingController familia =
+      TextEditingController(text: _miPaso?.notaFamilia ?? '');
+
+  bool guardandoNotas = false;
 
   /// Cuál de las tres. Null es «todavía no ha elegido», y entonces el botón no
   /// se enciende: **ninguna de las tres puede ser la de por defecto**, porque
@@ -79,7 +84,8 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
 
   @override
   void dispose() {
-    observacion.dispose();
+    interna.dispose();
+    familia.dispose();
     super.dispose();
   }
 
@@ -137,8 +143,6 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
     final salida = elegida;
     if (salida == null) return;
 
-    if (salida == ResultadoDelPaso.devuelto) return _irADevolver();
-
     final resultado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -147,7 +151,14 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
           estacion: widget.estacion,
           ficha: widget.ficha,
           resultado: salida,
-          escrito: observacion.text,
+          // «No cumple» devuelve con la nota de la familia como motivo; «Cumple»
+          // lleva la interna como observación.
+          escrito: salida == ResultadoDelPaso.devuelto
+              ? familia.text
+              : interna.text,
+          notas: _lasNotasCambiaron
+              ? (interna: interna.text, familia: familia.text)
+              : null,
           recorridoDelColegio: recorridoDelColegio,
           servidor: widget.servidor,
         ),
@@ -159,28 +170,27 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
     Navigator.pop(context, resultado);
   }
 
-  /// Devolver no se confirma aquí: se confirma **con el motivo escrito**.
-  ///
-  /// §2.4. Esta pantalla ya enseñó lo que la familia va a recibir; lo que falta
-  /// es lo único que esa familia va a poder leer para saber qué traer, y eso no
-  /// cabe en un botón.
-  Future<void> _irADevolver() async {
-    final resultado = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        settings: const RouteSettings(name: 'devolver-con-motivo'),
-        builder: (_) => DevolverConMotivoScreen(
-          estacion: widget.estacion,
-          ficha: widget.ficha,
-          recorridoDelColegio: recorridoDelColegio,
-          servidor: widget.servidor,
-        ),
-      ),
+  bool get _lasNotasCambiaron =>
+      interna.text.trim() != (_miPaso?.notaInterna ?? '').trim() ||
+      familia.text.trim() != (_miPaso?.notaFamilia ?? '').trim();
+
+  /// Guarda las dos notas sin tocar el paso: el «Guardar» de la web.
+  Future<void> _guardarSoloLasNotas() async {
+    setState(() => guardandoNotas = true);
+    final fallo = await guardarLasNotasDelPaso(
+      server,
+      nroEstacion: widget.estacion.nro,
+      personaId: widget.ficha.persona.id,
+      interna: interna.text,
+      familia: familia.text,
     );
+    if (!mounted) return;
+    setState(() => guardandoNotas = false);
 
-    if (resultado == null || !mounted) return;
-
-    Navigator.pop(context, resultado);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(fallo ?? 'Notas guardadas.')),
+    );
+    if (fallo == null) Navigator.pop(context, true);
   }
 
   @override
@@ -222,31 +232,39 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
           elegida: elegida == ResultadoDelPaso.cumple,
           alTocar: () => setState(() => elegida = ResultadoDelPaso.cumple),
         ),
-        const SizedBox(height: 8),
-        _LaSalida(
-          icono: Icons.error_outline,
-          color: PaletaEstaciones.ambar,
-          palabra: 'Cumple, con observación',
-          explicacion: 'El paso se cierra igual, y queda algo escrito en la '
-              'ficha para quien venga detrás.',
-          elegida: elegida == ResultadoDelPaso.observado,
-          alTocar: () => setState(() => elegida = ResultadoDelPaso.observado),
-        ),
-        if (elegida == ResultadoDelPaso.observado) ...[
-          const SizedBox(height: 8),
-          _LaObservacion(controlador: observacion),
-        ],
         // Aire de sobra antes de la destructiva: §3 pide los destructivos
         // separados del principal, y aquí la distancia es el separador.
         const SizedBox(height: 22),
         _LaSalida(
           icono: Icons.undo,
           color: PaletaEstaciones.rojo,
-          palabra: 'Devolver',
+          palabra: 'No cumple',
           explicacion: 'No trajo lo que falta. El paso NO se cierra: se queda '
               'en tu fila hasta que vuelva.',
           elegida: elegida == ResultadoDelPaso.devuelto,
           alTocar: () => setState(() => elegida = ResultadoDelPaso.devuelto),
+        ),
+        const SizedBox(height: 18),
+        _LaNota(
+          controlador: interna,
+          titulo: 'Nota interna',
+          pista: 'Qué conviene que sepa la estación siguiente',
+          ayuda: 'La ve el personal en la ficha, no la familia.',
+          alCambiar: () => setState(() {}),
+        ),
+        const SizedBox(height: 12),
+        _LaNota(
+          controlador: familia,
+          titulo: 'Nota para la familia',
+          pista: elegida == ResultadoDelPaso.devuelto
+              ? 'Qué tiene que traer o hacer para volver'
+              : 'Algo que la familia deba saber de esta estación',
+          ayuda: elegida == ResultadoDelPaso.devuelto
+              ? 'Con «No cumple» es obligatoria: es el motivo, y la familia '
+                  'la lee en «Mi matrícula».'
+              : 'La familia la lee en «Mi matrícula». En blanco, se borra la '
+                  'que hubiera.',
+          alCambiar: () => setState(() {}),
         ),
         const SizedBox(height: 18),
         _LaConsecuencia(
@@ -280,8 +298,13 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
               width: double.infinity,
               height: PaletaEstaciones.alturaDeBoton,
               child: FilledButton(
-                onPressed:
-                    salida == null || apagadoPorElPendiente ? null : _confirmar,
+                onPressed: salida == null ||
+                        apagadoPorElPendiente ||
+                        guardandoNotas ||
+                        (salida == ResultadoDelPaso.devuelto &&
+                            familia.text.trim().isEmpty)
+                    ? null
+                    : _confirmar,
                 style: salida == ResultadoDelPaso.devuelto
                     ? FilledButton.styleFrom(
                         backgroundColor: PaletaEstaciones.rojo,
@@ -290,6 +313,13 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
                 child: Text(_loQueDiceElBoton(salida)),
               ),
             ),
+            if (_lasNotasCambiaron && !apagadoPorElPendiente)
+              TextButton(
+                onPressed: guardandoNotas ? null : _guardarSoloLasNotas,
+                child: Text(guardandoNotas
+                    ? 'Guardando…'
+                    : 'Guardar sólo las notas, sin cerrar el paso'),
+              ),
             const SizedBox(height: 6),
             Text(
               apagadoPorElPendiente
@@ -300,6 +330,9 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
                       'despliegue.'
                   : salida == null
                       ? 'Elige arriba cómo quedó el paso.'
+                      : salida == ResultadoDelPaso.devuelto &&
+                              familia.text.trim().isEmpty
+                          ? 'Para «No cumple» escribe la nota para la familia.'
                       : 'Lee lo que va a pasar antes de confirmar: eso es lo '
                           'que le vas a decir a la familia.',
               textAlign: TextAlign.center,
@@ -319,9 +352,7 @@ class _MarcarPasoScreenState extends State<MarcarPasoScreen> {
         null => 'Confirmar',
         ResultadoDelPaso.cumple => 'Confirmar: cumple',
         ResultadoDelPaso.observado => 'Confirmar: cumple con observación',
-        // No dice «devolver» a secas porque **todavía no devuelve nada**: lleva
-        // a escribir el motivo, que es lo que devuelve.
-        ResultadoDelPaso.devuelto => 'Escribir el motivo y devolver',
+        ResultadoDelPaso.devuelto => 'Confirmar: no cumple',
       };
 }
 
@@ -453,41 +484,53 @@ class _LaSalida extends StatelessWidget {
   }
 }
 
-/// La casilla de la observación, con lo que hace y lo que NO hace.
-///
-/// **Dejarla en blanco no borra la que hubiera**, y decirlo importa: el
-/// servidor decide con `Request::has('observacion')`, así que mandar una
-/// casilla vacía **borraría** lo que otra estación dejó escrito en ese
-/// requisito. Esta app no la manda cuando está vacía —ver [repartirElTexto]—, y
-/// aquí se cuenta para que nadie espere lo contrario.
-class _LaObservacion extends StatelessWidget {
-  const _LaObservacion({required this.controlador});
+/// Una de las dos notas de la estación, ya escrita con lo que había guardado.
+class _LaNota extends StatelessWidget {
+  const _LaNota({
+    required this.controlador,
+    required this.titulo,
+    required this.pista,
+    required this.ayuda,
+    required this.alCambiar,
+  });
 
   final TextEditingController controlador;
+  final String titulo;
+  final String pista;
+  final String ayuda;
+  final VoidCallback alCambiar;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          titulo,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: PaletaEstaciones.tinta,
+          ),
+        ),
+        const SizedBox(height: 6),
         TextField(
           controller: controlador,
           maxLines: 3,
           minLines: 2,
           textCapitalization: TextCapitalization.sentences,
+          onChanged: (_) => alCambiar(),
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            hintText: 'Qué conviene que sepa la estación siguiente',
+            hintText: pista,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
         const SizedBox(height: 5),
-        const Text(
-          'La ve el personal en la ficha, no la familia. Si la dejas en '
-          'blanco, la observación que ya hubiera se queda como está; para '
-          'cambiarla, escribe la nueva encima.',
-          style: TextStyle(
+        Text(
+          ayuda,
+          style: const TextStyle(
             fontSize: 11.5,
             height: 1.35,
             color: PaletaEstaciones.tintaApagada,
@@ -648,7 +691,7 @@ class _LaConsecuencia extends StatelessWidget {
           Icons.edit_note,
           PaletaEstaciones.rojo,
           'Hace falta el motivo, escrito',
-          'En la pantalla siguiente. Sin texto el botón no se enciende, '
+          'Es la nota para la familia. Sin ella el botón no se enciende, '
               'porque ese texto es lo único que la familia va a poder leer.',
         ),
       ];

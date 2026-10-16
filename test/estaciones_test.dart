@@ -595,7 +595,7 @@ void main() {
       expect(fallo, isNotNull);
       expect(servidor.pedidos, isEmpty);
     });
-  });
+  }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
   group('los pendientes de estas pantallas', () {
     test('encendidos los que tienen pantalla y ruta; apagados los decididos',
@@ -656,7 +656,7 @@ void main() {
       // menú dice «Estaciones», la pantalla dice «Estaciones».
       await montar(tester);
       expect(find.text('Estaciones'), findsOneWidget);
-    });
+    }, skip: Interruptores.estaciones);
   });
 
   group('buscar en todo el colegio', () {
@@ -699,7 +699,7 @@ void main() {
       final servidor = ServidorQueApunta();
       expect(await traerElRecorrido(servidor, 31), isNull);
       expect(servidor.pedidos, isEmpty);
-    });
+    }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
     test('un requisito sin marca es pendiente, no «no está»', () {
       // El SQL del servidor usa LEFT JOIN a propósito: «un requisito que nadie

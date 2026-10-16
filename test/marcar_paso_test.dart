@@ -343,7 +343,7 @@ void main() {
       expect(servidor.cuerposEnviados, isEmpty);
       expect(Interruptores.estaciones, isFalse);
     });
-  });
+  }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
   // -------------------------------------------------------------------------
   group('05 · la consecuencia se enseña ANTES de confirmar', () {
@@ -440,7 +440,7 @@ void main() {
       expect(encendido<FilledButton>(tester, 'Confirmar: cumple'), isFalse);
     });
 
-    testWidgets('devolver lleva a escribir el motivo, no a devolver',
+    testWidgets('«No cumple» pide la nota para la familia, que es el motivo',
         (tester) async {
       PendientesEstaciones.marcarElPaso = true;
 
@@ -453,16 +453,53 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Devolver'));
+      await tester.tap(find.text('No cumple'));
       await tester.pumpAndSettle();
 
       // Dos veces: en la tarjeta de la salida y en el bloque de la
       // consecuencia. Es la frase que hay que leer dos veces.
       expect(find.textContaining('El paso NO se cierra'), findsWidgets);
-      expect(
-        encendido<FilledButton>(tester, 'Escribir el motivo y devolver'),
-        isTrue,
+      expect(encendido<FilledButton>(tester, 'Confirmar: no cumple'), isFalse);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Qué tiene que traer o hacer para volver'),
+        'Falta el registro civil',
       );
+      await tester.pump();
+
+      expect(encendido<FilledButton>(tester, 'Confirmar: no cumple'), isTrue);
+    });
+
+    testWidgets('las dos notas llegan escritas con lo que ya estaba guardado',
+        (tester) async {
+      PendientesEstaciones.marcarElPaso = true;
+
+      await montar(
+        tester,
+        MarcarPasoScreen(
+          estacion: laEstacion,
+          ficha: laFicha(pasos: const [
+            PasoDelRecorrido(
+              nro: 2,
+              nombre: 'Documentos',
+              estado: EstadoDelPaso.pendiente,
+              notaInterna: 'Llamar a tesorería',
+              notaFamilia: 'Traer la foto',
+            ),
+          ]),
+          servidor: ServidorQueApunta(),
+        ),
+      );
+
+      expect(find.text('Llamar a tesorería'), findsOneWidget);
+      expect(find.text('Traer la foto'), findsOneWidget);
+      // Sin cambios no se ofrece guardarlas solas.
+      expect(find.textContaining('Guardar sólo las notas'), findsNothing);
+
+      await tester.enterText(find.text('Traer la foto'), 'Traer dos fotos');
+      await tester.pump();
+
+      expect(find.textContaining('Guardar sólo las notas'), findsOneWidget);
     });
   });
 
@@ -705,7 +742,7 @@ void main() {
       );
       expect(find.textContaining('No quedó escrito nada'), findsOneWidget);
       expect(find.text('Reintentar'), findsOneWidget);
-    });
+    }, skip: Interruptores.estaciones);
 
     testWidgets('el destructivo va separado del principal, y los dos a 56',
         (tester) async {

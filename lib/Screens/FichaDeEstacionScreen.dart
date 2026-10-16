@@ -4,6 +4,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/EstacionModel.dart';
 import 'package:myvc_flutter/Screens/DevolverConMotivoScreen.dart';
 import 'package:myvc_flutter/Screens/MarcarPasoScreen.dart';
+import 'package:myvc_flutter/Screens/PasoCerradoScreen.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/Anchos.dart';
 import 'package:myvc_flutter/Utils/PaletaEstaciones.dart';
@@ -237,6 +238,7 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
         ],
         const SizedBox(height: 10),
         _LosRequisitos(paso: _miPaso, nombreEstacion: widget.estacion.nombre),
+        _LasNotasDelRecorrido(pasos: actual.pasos),
       ],
     );
   }
@@ -328,14 +330,14 @@ class _FichaDeEstacionScreenState extends State<FichaDeEstacionScreen> {
                 // la mañana. Lo que falta se enseña en la lista de arriba y en
                 // la 05, que es información, no un candado.
                 onPressed: _miPaso == null ? null : _cerrarElPaso,
-                child: Text('Cerrar ${widget.estacion.nombre}'),
+                child: const Text('Cumple / No cumple, y las notas'),
               ),
             ),
             if (PendientesEstaciones.devolverConMotivo)
               TextButton(
                 onPressed: _miPaso == null ? null : _devolver,
                 child: const Text(
-                  'Devolver a la familia',
+                  'No cumple: devolver a la familia',
                   style: TextStyle(color: PaletaEstaciones.rojo),
                 ),
               ),
@@ -889,6 +891,101 @@ class _GloboDeNotas extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+}
+
+/// Lo que dejaron escrito las estaciones, la interna y la de la familia.
+///
+/// La interna de las estaciones anteriores es para quien atiende después: «trae
+/// la copia del documento la semana que viene», «hablar con tesorería».
+class _LasNotasDelRecorrido extends StatelessWidget {
+  const _LasNotasDelRecorrido({required this.pasos});
+
+  final List<PasoDelRecorrido> pasos;
+
+  @override
+  Widget build(BuildContext context) {
+    final conNotas = [
+      for (final paso in pasos)
+        if ((paso.notaInterna ?? '').trim().isNotEmpty ||
+            (paso.notaFamilia ?? '').trim().isNotEmpty)
+          paso,
+    ];
+    if (conNotas.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Notas del recorrido',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: PaletaEstaciones.tinta,
+            ),
+          ),
+          for (final paso in conNotas) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    comoSeLlamaLaEstacion(paso.nro, paso.nombre),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: PaletaEstaciones.tinta,
+                    ),
+                  ),
+                  if ((paso.notaInterna ?? '').trim().isNotEmpty)
+                    _renglon(Icons.lock_outline, 'Interna', paso.notaInterna!),
+                  if ((paso.notaFamilia ?? '').trim().isNotEmpty)
+                    _renglon(Icons.family_restroom, 'Para la familia',
+                        paso.notaFamilia!),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _renglon(IconData icono, String rotulo, String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icono, size: 15, color: PaletaEstaciones.tintaApagada),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(
+                  text: '$rotulo: ',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                TextSpan(text: texto),
+              ]),
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: PaletaEstaciones.tintaSuave,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -195,6 +195,7 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
         _LasTresCifras(
           atendidosHoy: datos.atendidosHoy,
           esperando: cola.length,
+          alVerLosAtendidos: _verLosAtendidos,
         ),
         _LaFrescura(desde: _ultimaVezQueSeMovio, cargando: cargando),
         Expanded(child: _cuerpo()),
@@ -243,6 +244,36 @@ class _ColaDeEstacionScreenState extends State<ColaDeEstacionScreen> {
       servidor: widget.servidor,
       encajada: true,
     );
+  }
+
+  /// Quiénes pasaron hoy por aquí, y desde la lista se abre su ficha.
+  Future<void> _verLosAtendidos() async {
+    final elegido = await showModalBottomSheet<AtendidoHoy>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _LosAtendidos(
+        traerlos: traerLosAtendidosDeHoy(server, widget.estacion.nro),
+      ),
+    );
+    if (elegido == null || !mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        settings: const RouteSettings(name: 'ficha-de-estacion'),
+        builder: (_) => FichaDeEstacionScreen(
+          estacion: widget.estacion,
+          persona: PersonaEnCola(
+            id: elegido.personaId,
+            nombres: elegido.nombres,
+            apellidos: elegido.apellidos,
+          ),
+          servidor: widget.servidor,
+        ),
+      ),
+    );
+    if (mounted) _cargar();
   }
 
   /// «Estación 2 · 4 esperando».
@@ -447,10 +478,15 @@ List<ChipDeLaCola> losChipsDeLaFila(EnLaCola uno) {
 /// servidor no lo dijo» —una versión anterior a este campo— y se pinta con la
 /// raya, no con un 0 que nadie contó.
 class _LasTresCifras extends StatelessWidget {
-  const _LasTresCifras({required this.atendidosHoy, required this.esperando});
+  const _LasTresCifras({
+    required this.atendidosHoy,
+    required this.esperando,
+    required this.alVerLosAtendidos,
+  });
 
   final int? atendidosHoy;
   final int esperando;
+  final VoidCallback alVerLosAtendidos;
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +502,12 @@ class _LasTresCifras extends StatelessWidget {
             rotulo: 'Atendidos hoy',
             icono: Icons.task_alt,
             color: PaletaEstaciones.verde,
-            nota: atendidosHoy == null ? 'tu colegio no lo manda' : null,
+            nota: atendidosHoy == null
+                ? 'tu colegio no lo manda'
+                : atendidosHoy! > 0
+                    ? 'toca para verlos'
+                    : null,
+            alTocar: (atendidosHoy ?? 0) > 0 ? alVerLosAtendidos : null,
           ),
           _UnaCifra(
             cifra: '$esperando',
@@ -496,6 +537,7 @@ class _UnaCifra extends StatelessWidget {
     required this.icono,
     required this.color,
     this.nota,
+    this.alTocar,
   });
 
   final String cifra;
@@ -503,47 +545,55 @@ class _UnaCifra extends StatelessWidget {
   final IconData icono;
   final Color color;
   final String? nota;
+  final VoidCallback? alTocar;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icono, size: 14, color: color),
-              const SizedBox(width: 5),
-              Text(
-                cifra,
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            rotulo,
-            style: const TextStyle(
-              fontSize: 11.5,
-              color: PaletaEstaciones.tintaSuave,
-            ),
-          ),
-          if (nota != null)
-            Text(
-              nota!,
-              style: const TextStyle(
-                fontSize: 10.5,
-                height: 1.25,
-                color: PaletaEstaciones.tintaApagada,
-              ),
-            ),
-        ],
+      child: InkWell(
+        onTap: alTocar,
+        child: _contenido(),
       ),
+    );
+  }
+
+  Widget _contenido() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icono, size: 14, color: color),
+            const SizedBox(width: 5),
+            Text(
+              cifra,
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w700,
+                height: 1.1,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          rotulo,
+          style: const TextStyle(
+            fontSize: 11.5,
+            color: PaletaEstaciones.tintaSuave,
+          ),
+        ),
+        if (nota != null)
+          Text(
+            nota!,
+            style: const TextStyle(
+              fontSize: 10.5,
+              height: 1.25,
+              color: PaletaEstaciones.tintaApagada,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -987,6 +1037,107 @@ class _Centrado extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// La hoja de «atendidos hoy»: quién pasó, si cumplió y quién lo marcó.
+class _LosAtendidos extends StatefulWidget {
+  const _LosAtendidos({required this.traerlos});
+
+  final Future<List<AtendidoHoy>> traerlos;
+
+  @override
+  State<_LosAtendidos> createState() => _LosAtendidosState();
+}
+
+class _LosAtendidosState extends State<_LosAtendidos> {
+  String filtro = '';
+
+  /// Sin tildes ni mayúsculas: «gomez» encuentra a «Gómez».
+  static String _plano(String texto) => texto
+      .toLowerCase()
+      .replaceAll(RegExp('[áà]'), 'a')
+      .replaceAll(RegExp('[éè]'), 'e')
+      .replaceAll(RegExp('[íì]'), 'i')
+      .replaceAll(RegExp('[óò]'), 'o')
+      .replaceAll(RegExp('[úùü]'), 'u');
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.75,
+      child: FutureBuilder<List<AtendidoHoy>>(
+        future: widget.traerlos,
+        builder: (context, foto) {
+          if (foto.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (foto.hasError) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                '${foto.error}'.replaceFirst('Exception: ', ''),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          final todos = foto.data ?? const <AtendidoHoy>[];
+          final buscado = _plano(filtro.trim());
+          final vistos = buscado.isEmpty
+              ? todos
+              : todos
+                  .where((a) =>
+                      _plano('${a.nombres} ${a.apellidos}').contains(buscado))
+                  .toList();
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: TextField(
+                  onChanged: (v) => setState(() => filtro = v),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: 'Buscar entre los ${todos.length} de hoy',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: vistos.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final uno = vistos[i];
+                    final hora = uno.cuando != null && uno.cuando!.length >= 16
+                        ? uno.cuando!.substring(11, 16)
+                        : null;
+                    return ListTile(
+                      leading: Icon(
+                        uno.cumple ? Icons.check_circle : Icons.undo,
+                        color: uno.cumple
+                            ? PaletaEstaciones.verde
+                            : PaletaEstaciones.rojo,
+                      ),
+                      title: Text('${uno.nombres} ${uno.apellidos}'),
+                      subtitle: Text([
+                        uno.cumple ? 'Cumple' : 'No cumple',
+                        if (hora != null) hora,
+                        if (uno.por != null) uno.por!,
+                      ].join(' · ')),
+                      onTap: () => Navigator.pop(context, uno),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

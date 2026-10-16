@@ -31,7 +31,7 @@ void main() {
       final servidor = ServidorQueApunta();
       expect(await traerMiRecorrido(servidor, 31), isNull);
       expect(servidor.pedidos, isEmpty);
-    });
+    }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
 
     test('son TRES interruptores distintos y ninguno vale por otro', () {
       // No es una comprobación de valores —hoy los tres están apagados— sino de
@@ -54,8 +54,9 @@ void main() {
         Interruptores.miMatricula,
       ];
 
-      expect(tres, [false, false, false],
-          reason: 'los tres esperan despliegue, cada uno el suyo');
+      // Los tres se encendieron juntos el 16 oct 2026, con 8myvc 4f0ffa51
+      // desplegado en los dieciocho colegios; siguen siendo tres.
+      expect(tres, [true, true, true]);
     });
   });
 
@@ -226,6 +227,6 @@ void main() {
 
       expect(await traerMiRecorrido(servidor, 0), isNull);
       expect(servidor.pedidos, isEmpty);
-    });
+    }, skip: Interruptores.estaciones ? 'Encendidas el 16 oct 2026' : false);
   });
 }

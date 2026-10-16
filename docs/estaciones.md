@@ -641,3 +641,33 @@ app ya la lee) y el recorrido del personal enseña la observación en vez del mo
 - **No se condujo en un teléfono**: la base del docker (`micolev1_la_hermosa` hoy) no tiene
   recorrido armado y armarlo es escribir en la base compartida.
 
+
+## 9. Al día con la web y encendidas — 16 oct 2026
+
+La web cambió el 14 y el 15 de octubre (8myvc desplegado en los dieciocho colegios en
+`4f0ffa51`), y la app la sigue:
+
+- **Un docente por estación.** Secretaría asigna quién atiende con `PUT requisitos/atiende`,
+  y `GET estaciones` lo devuelve como `mi_estacion`. La app abre ahí, por encima de la última
+  estación que se eligió en el teléfono. Es sólo **dónde abre**: cualquiera del personal sigue
+  pudiendo cerrar cualquier estación. Asignar se hace en la web, porque es tarea de una vez
+  por campaña.
+- **El año de la campaña.** El servidor trabaja sobre `AnioDeLaCampana` (el año siguiente, si
+  ya existe) y la app no manda ningún año. Sólo lo enseña: «Matrícula 2027 · 4 estaciones».
+- **«Cumple / No cumple» y dos notas.** La 05 ya no tiene «cumple con observación»: tiene
+  Cumple, No cumple, la **nota interna** (`descripcion`, la ve sólo el personal) y la **nota
+  para la familia** (`motivo_devolucion`, la lee el acudiente en «Mi matrícula»). Las dos
+  vienen escritas con lo guardado (`nota_interna` y `nota_familia` de la ficha). Con No cumple
+  la de la familia es obligatoria y va como `motivo`. Después de la marca, si cambiaron, se
+  guardan con `PUT estaciones/{nro}/notas`, que sobrescribe las dos. «Guardar sólo las notas»
+  las guarda sin tocar el paso. Cumple ya no borra la nota de la familia.
+- **Atendidos hoy.** La cifra de la cola abre `GET estaciones/{nro}/atendidos`, con un buscador
+  sin tildes, y desde ahí se abre la ficha.
+- **Las notas del recorrido** de todas las estaciones salen en la ficha.
+
+Los tres interruptores (`estaciones`, `recorridoDeMatricula`, `miMatricula`) nacen
+**encendidos** desde este día. `--dart-define=ESTACIONES=false` los apaga para probar. Las
+pruebas del estado apagado se saltan mientras estén encendidos.
+
+Lo que no se trajo: matricular o poner como asistente desde la última estación, y asignar el
+docente. Las dos cosas siguen en la web.

@@ -969,8 +969,11 @@ class _DejarUnaNota extends StatelessWidget {
     final apagada = !Interruptores.estaciones;
     final nros = donde.keys.toList()..sort();
 
-    return Container(
+    // Material y no Container: los SwitchListTile pintan su toque en el
+    // Material más cercano, y un fondo de color en medio lo tapaba.
+    return Material(
       color: Colors.white,
+      child: Padding(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1123,6 +1126,7 @@ class _DejarUnaNota extends StatelessWidget {
             ],
           ],
         ],
+      ),
       ),
     );
   }

@@ -200,7 +200,12 @@ class Interruptores {
   /// `--dart-define` se resuelve al compilar, así que un APK de la tienda
   /// construido sin él lleva el `false`.
   /// Receta entera en `docs/estaciones.md` §8.
-  static const bool estaciones = bool.fromEnvironment('ESTACIONES');
+  ///
+  /// **Encendido desde el 16 oct 2026**, con 8myvc `4f0ffa51` en los dieciocho
+  /// colegios: lo de arriba es la historia. Para apagarlo en una prueba,
+  /// `--dart-define=ESTACIONES=false`. Ver `docs/estaciones.md` §9.
+  static const bool estaciones =
+      bool.fromEnvironment('ESTACIONES', defaultValue: true);
 
   /// El recorrido de matrícula de una persona, con `GET requisitos/recorrido/{id}`.
   ///
@@ -222,7 +227,7 @@ class Interruptores {
   ///
   /// Para probarlo: `--dart-define=RECORRIDO_MATRICULA=true` (ver [estaciones]).
   static const bool recorridoDeMatricula =
-      bool.fromEnvironment('RECORRIDO_MATRICULA');
+      bool.fromEnvironment('RECORRIDO_MATRICULA', defaultValue: true);
 
   /// «Mi proceso»: lo que ve la FAMILIA, con `GET requisitos/mi-recorrido/{id}`.
   ///
@@ -247,7 +252,8 @@ class Interruptores {
   /// entrando a mano, que es como se va a usar el primer año.
   ///
   /// Para probarlo: `--dart-define=MI_MATRICULA=true` (ver [estaciones]).
-  static const bool miMatricula = bool.fromEnvironment('MI_MATRICULA');
+  static const bool miMatricula =
+      bool.fromEnvironment('MI_MATRICULA', defaultValue: true);
 
   /// Votar desde el teléfono: personero, contralor y los demás cargos.
   ///

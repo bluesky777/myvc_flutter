@@ -362,6 +362,8 @@ class PasoDelRecorrido {
     this.obligatorio = true,
     this.notas = const NotasDelPaso(),
     this.requisitos = const [],
+    this.notaInterna,
+    this.notaFamilia,
   });
 
   final int nro;
@@ -396,6 +398,14 @@ class PasoDelRecorrido {
 
   final bool obligatorio;
   final NotasDelPaso notas;
+
+  /// Las dos notas de la estación, una de cada y sobrescritas con
+  /// `PUT estaciones/{nro}/notas` (14 oct 2026). La interna es
+  /// `requisitos_alumno.descripcion` y la ve sólo el personal; la de la
+  /// familia es `motivo_devolucion`, la lee el acudiente en «Mi matrícula» y es
+  /// el motivo cuando el paso no cumple.
+  final String? notaInterna;
+  final String? notaFamilia;
 
   /// Lo que hay que entregar en este paso. Puede venir vacío.
   final List<Requisito> requisitos;
@@ -440,6 +450,8 @@ class PasoDelRecorrido {
       ),
       notas: NotasDelPaso.fromJson(json['notas']),
       requisitos: requisitos,
+      notaInterna: texto(json['nota_interna']),
+      notaFamilia: texto(json['nota_familia']),
     );
   }
 }
