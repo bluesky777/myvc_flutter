@@ -914,8 +914,8 @@ Map<int, MatriculaEnLaCampana> leerLasMatriculasDeLaCampana(dynamic cuerpo) {
 /// «Matricular»: la matrícula de la campaña pasa a MATR en su grupo, con
 /// `POST matriculas/matricularuno`. Devuelve null si entró, o el motivo.
 ///
-/// El servidor sólo deja a un superusuario, o a un «Profesor» con el permiso
-/// de editar alumnos del colegio; el rol «Rector» por sí solo no basta.
+/// Quién puede lo decide el servidor (`postMatricularuno`), no la app: aquí
+/// sólo se enseña su frase si dice que no. Ver `docs/estaciones.md` §9.
 Future<String?> matricularEnLaCampana(
   Server server, {
   required int personaId,

@@ -675,10 +675,11 @@ el alumno ya tiene en la campaña (`GET estaciones/alumnos`), «Matricular en 8A
 `PUT matriculas/prematricular` con `ASIS` (el 404 significa que entró). Sin grupo en la campaña,
 la ficha manda a Prematrículas en la web.
 
-**El permiso lo pone el servidor, y no es el rol «Rector».** `postMatricularuno` sólo deja pasar a
-un superusuario, o a un «Profesor» con `profes_can_edit_alumnos` encendido. Un rector que no sea
-superusuario recibe «No tiene permisos para editar», en la app igual que en la web. La app enseña
-esa frase.
+**El permiso lo pone el servidor, y la app no lo repite.** El 16 oct 2026 `postMatricularuno`
+sólo dejaba pasar a un superusuario o a un «Profesor» con `profes_can_edit_alumnos`, y Joseth
+lo estaba abriendo al rector en 8myvc ese mismo día. Para saber cómo está hoy:
+`grep -n "function postMatricularuno" -A3 ~/DESARROLLOS/8myvc/app/Http/Controllers/Matriculas/MatriculasController.php`.
+Si dice que no, la app enseña su frase («No tiene permisos para editar»).
 
 Lo que no se trajo: cambiar de grupo y asignar el docente a cada estación. Las dos cosas siguen
 en la web.
