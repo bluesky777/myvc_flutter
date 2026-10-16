@@ -32,6 +32,7 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
 
 import 'AlumTardanzaColeScreen.dart';
+import 'JuegosScreen.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -112,6 +113,9 @@ class RouteGenerator {
                 aviso: settings.arguments is AvisoDeActividad
                     ? settings.arguments as AvisoDeActividad
                     : null));
+      case '/juegos':
+        return MaterialPageRoute(
+            settings: settings, builder: (context) => const JuegosScreen());
       case '/mi-asistencia':
         return MaterialPageRoute(
             settings: settings, builder: (context) => MiAsistenciaScreen());

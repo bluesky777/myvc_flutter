@@ -16,6 +16,7 @@ import 'package:myvc_flutter/Screens/FichaDisciplinaScreen.dart';
 import 'package:myvc_flutter/Screens/SituacionEditorScreen.dart';
 import 'package:myvc_flutter/Screens/UniformesAlumnoScreen.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
+import 'package:myvc_flutter/Utils/GruposDelUsuario.dart';
 import 'package:myvc_flutter/Utils/TextoPlano.dart';
 import 'package:myvc_flutter/Widgets/AvatarPersona.dart';
 import 'package:myvc_flutter/Widgets/SelectorGrupo.dart';
@@ -122,7 +123,7 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
           .catchError((_) {});
 
       final traidos = await traerDatosDeDisciplina(server);
-      final permitidos = await _gruposDelUsuario(traidos.grupos);
+      final permitidos = await gruposDelUsuario(server, traidos.grupos);
 
       await losAnios;
 
@@ -151,43 +152,6 @@ class _DisciplinaGrupoScreenState extends State<DisciplinaGrupoScreen> {
         error = '$err';
       });
     }
-  }
-
-  /// Los grupos que le tocan a quien está mirando.
-  ///
-  /// `grupos/con-disciplina` devuelve TODOS los del año —el backend no filtra—,
-  /// así que el recorte es de aquí:
-  ///
-  ///  - Quien es especial —superusuario, admin, coordinación— los ve todos.
-  ///  - Un docente ve aquellos donde tiene asignatura, más el que sea suyo por
-  ///    ser titular aunque no le dé ninguna clase.
-  ///  - A quien no es ninguna de las dos cosas —una secretaría, sin rol de
-  ///    coordinación— se le enseñan todos: no da clase en ninguno, así que
-  ///    filtrar por asignaturas le dejaría la pantalla en blanco, y el backend
-  ///    ya decidió que es personal del colegio al dejarle pasar.
-  Future<List<GrupoModel>> _gruposDelUsuario(List<GrupoModel> todos) async {
-    final usuario = AuthService.user;
-
-    if (usuario.esEspecial || !usuario.esDocente) return todos;
-
-    final mios = <int>{};
-    try {
-      final asignaturas = await traerAsignaturasConUnidades(server);
-      for (final asignatura in asignaturas) {
-        mios.add(asignatura.asignatura.grupoId);
-      }
-    } catch (_) {
-      // Sin sus asignaturas queda al menos el grupo del que es titular, que es
-      // mejor que una pantalla vacía sin explicación.
-    }
-
-    final personaId = usuario.personaId;
-
-    return todos
-        .where((grupo) =>
-            mios.contains(grupo.id) ||
-            (personaId != null && grupo.titularId == personaId))
-        .toList();
   }
 
   /// Los docentes y, de la misma respuesta, el cruce de user_id a nombre.

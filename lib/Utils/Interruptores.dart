@@ -344,4 +344,10 @@ class Interruptores {
   ///
   /// Para probarlo: `--dart-define=ENFERMERIA=true` (ver [estaciones]).
   static const bool enfermeria = bool.fromEnvironment('ENFERMERIA');
+
+  /// Los juegos 3D de la web (16 oct 2026), para todos. Son estáticos del
+  /// colegio (`up2/juegos3d/`), ya desplegados en los dieciocho. Ver
+  /// `docs/juegos.md`.
+  static const bool juegos =
+      bool.fromEnvironment('JUEGOS', defaultValue: true);
 }

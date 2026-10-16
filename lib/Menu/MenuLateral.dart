@@ -164,6 +164,13 @@ class MenuLateral extends StatelessWidget {
             texto: 'Mi cuenta',
             ruta: '/mi-cuenta',
           ),
+        if (Interruptores.juegos)
+          _opcion(
+            context,
+            icono: Icons.sports_esports_outlined,
+            texto: 'Juegos',
+            ruta: '/juegos',
+          ),
         _opcionNotificaciones(context),
         _opcionMiPerfil(context),
         _opcionPrivacidad(context),
@@ -307,6 +314,15 @@ class MenuLateral extends StatelessWidget {
         icono: Icons.person_search_outlined,
         texto: 'Buscar',
         ruta: '/buscar-matriculas',
+      ));
+    }
+
+    if (Interruptores.juegos) {
+      opciones.add(_opcion(
+        context,
+        icono: Icons.sports_esports_outlined,
+        texto: 'Juegos',
+        ruta: '/juegos',
       ));
     }
 
