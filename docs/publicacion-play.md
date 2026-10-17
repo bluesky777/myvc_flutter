@@ -797,6 +797,9 @@ mismo envío:
 
 ### `1.3.0 (8)`, enviada el 16 oct 2026
 
+**Aprobada y disponible en Google Play el mismo día a las 19:09**, horas después del envío.
+El aviso de borde a borde se ignoró, como en las anteriores.
+
 Se envió junto con **Seguridad de los datos**, en el mismo envío: Información financiera (las dos
 de «Mi cuenta») y Diagnóstico (ML Kit). La política con «Mi cuenta», la cámara de portería, ML
 Kit y los juegos se subió a `micolevirtual.com/privacidad.html` antes de enviar; ver
