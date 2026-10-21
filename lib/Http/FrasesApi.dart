@@ -49,7 +49,7 @@ Future<List<FraseDelCatalogo>> traerCatalogoDeFrases(Server server) async {
   final res = await server.get('/frases');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);
@@ -114,7 +114,7 @@ Future<ResultadoDeFrases> ponerFrase(
     }
     if (res.statusCode >= 300) {
       return ResultadoDeFrases(
-        motivo: 'El servidor respondió ${res.statusCode}.',
+        motivo: fraseDeFallo(res.statusCode, res.body),
       );
     }
 
@@ -140,7 +140,7 @@ Future<String?> quitarFrase(Server server, {required int id}) async {
       return 'No tienes permiso para escribir en este periodo.';
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

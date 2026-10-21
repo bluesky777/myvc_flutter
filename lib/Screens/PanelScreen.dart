@@ -6,6 +6,7 @@ import 'package:myvc_flutter/Models/GrupoModel.dart';
 import 'package:myvc_flutter/Widgets/TituloPantalla.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/PreferenciaGrupo.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 class PanelScreen extends StatefulWidget {
   const PanelScreen({super.key});
@@ -45,7 +46,7 @@ class _PanelScreen extends State<PanelScreen> {
       if (!mounted) return;
 
       if (response.statusCode >= 300) {
-        setState(() => error = 'El servidor respondió ${response.statusCode}.');
+        setState(() => error = fraseDeFallo(response.statusCode, response.body));
         return;
       }
 

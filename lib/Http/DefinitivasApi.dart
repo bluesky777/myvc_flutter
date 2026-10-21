@@ -119,7 +119,7 @@ Future<String?> _pedir(
       );
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

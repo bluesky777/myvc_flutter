@@ -55,3 +55,49 @@ String? loQueDijoElServidor(dynamic cuerpo) {
 String motivoDeRechazo(dynamic cuerpo, {required String respaldo}) {
   return loQueDijoElServidor(cuerpo) ?? respaldo;
 }
+
+/// Qué decirle a la persona cuando el servidor contesta con un fallo.
+///
+/// Lo que escribió el servidor, si vino en JSON y se puede enseñar. Si no, una
+/// frase por código en vez de «El servidor respondió 403.», que no dice si es
+/// cosa de permisos, del colegio o de la red. El número va siempre entre
+/// paréntesis: es lo que se lee en la captura que manda el colegio.
+///
+/// El 401 casi nunca llega a verse: Server lo manda a SesionCaducada, que
+/// devuelve al login. Está por si se pinta antes de que la pantalla se vaya.
+String fraseDeFallo(int codigo, [dynamic cuerpo]) {
+  final dijo = loQueDijoElServidor(cuerpo);
+  if (dijo != null) return dijo;
+
+  if (codigo == 401) return 'Tu sesión venció. Vuelve a entrar (401).';
+  if (codigo == 403) return 'No tienes permiso para esto (403).';
+  if (codigo == 404) return 'El colegio no tiene esto disponible (404).';
+  if (codigo == 429) {
+    return 'Demasiadas peticiones seguidas. Espera un minuto y vuelve a '
+        'intentarlo (429).';
+  }
+  if (codigo >= 500) {
+    return 'El servidor del colegio tuvo un problema. Inténtalo en un rato '
+        '($codigo).';
+  }
+  return 'El servidor respondió $codigo.';
+}
+
+/// Un fallo del servidor, para lanzarlo desde la capa de datos.
+///
+/// Su texto es [fraseDeFallo] **sin el «Exception: » delante**, que es lo que
+/// se veía en las pantallas que pintan `'$err'` tal cual.
+class FalloDelServidor implements Exception {
+  final int codigo;
+  final String mensaje;
+
+  FalloDelServidor(this.codigo, [dynamic cuerpo])
+      : mensaje = fraseDeFallo(codigo, cuerpo);
+
+  /// Desde una respuesta de `http`, o de los servidores de mentira.
+  factory FalloDelServidor.de(dynamic res) =>
+      FalloDelServidor(res.statusCode as int, res.body);
+
+  @override
+  String toString() => mensaje;
+}

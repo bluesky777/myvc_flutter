@@ -14,7 +14,10 @@ import 'ButtonSelectServidores.dart';
 import 'FormLoginContainer.dart';
 
 class LoginAnimScreen extends StatefulWidget {
-  const LoginAnimScreen({super.key});
+  const LoginAnimScreen({super.key, this.aviso});
+
+  /// Un aviso para enseñar nada más abrir, como el de la sesión vencida.
+  final String? aviso;
 
   @override
   _LoginAnimScreenState createState() => _LoginAnimScreenState();
@@ -45,6 +48,13 @@ class _LoginAnimScreenState extends State<LoginAnimScreen>
 
     animationController =
         AnimationController(vsync: this, duration: animationDuration);
+    final aviso = widget.aviso;
+    if (aviso != null) {
+      // Tras el primer cuadro: el Overlay no existe hasta entonces.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mostrarAviso(aviso);
+      });
+    }
 
     SharedPreferences.getInstance().then((SharedPreferences preferences) async {
       // Si el dispositivo no recuerda los datos, el formulario arranca vacío

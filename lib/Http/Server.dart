@@ -5,6 +5,49 @@ import 'package:myvc_flutter/Http/AuthService.dart';
 import 'package:myvc_flutter/Http/ClienteApp.dart';
 
 class Server {
+  /// Qué hacer cuando una petición que llevaba token vuelve con 401.
+  ///
+  /// Un 401 es siempre lo mismo: no hay token, venció o lo revocaron. Antes
+  /// cada pantalla lo enseñaba como un error suyo —«No se pudo abrir la
+  /// disciplina. El servidor respondió 401.»— y reintentar no servía de nada:
+  /// el token que dura 24 h fijas seguía muerto hasta cerrar sesión a mano. Lo
+  /// monta main.dart con [SesionCaducada.notar]; aquí es un gancho y no una
+  /// llamada directa para que Server no dependa del login, y en las pruebas,
+  /// que no lo montan, no pasa nada.
+  ///
+  /// Recibe el token con el que salió la petición, no el de ahora: una
+  /// respuesta que llega después de que se entrara con otra cuenta no puede
+  /// echar a la cuenta nueva.
+  static void Function(String? tokenUsado)? alCaducarSesion;
+
+  /// Las rutas cuyo 401 no es una sesión caducada.
+  ///
+  /// `login/logout` responde 401 si el token ya estaba muerto, y quien la
+  /// llama ya está saliendo: avisar ahí sería salir dos veces a la vez.
+  static const List<String> _sin401Global = ['/login/logout'];
+
+  Future<T> _vigilando<T>(
+      String direccion, String? tokenUsado, Future<T> peticion) async {
+    final T res;
+    try {
+      res = await peticion;
+    } on http.ClientException catch (err) {
+      throw SinConexion(err);
+    } catch (err) {
+      // `SocketException` y `HandshakeException` son de `dart:io`, que no se
+      // puede importar en una app que también compila a web: por su nombre.
+      if (SinConexion.loParece(err)) throw SinConexion(err);
+      rethrow;
+    }
+    if (res is http.BaseResponse &&
+        res.statusCode == 401 &&
+        tokenUsado != null &&
+        !_sin401Global.contains(direccion)) {
+      alCaducarSesion?.call(tokenUsado);
+    }
+    return res;
+  }
+
   /// El servidor del colegio. Lo fija el login, que es quien sabe cuál es.
   ///
   /// Vacío mientras nadie haya entrado: antes aquí había una IP de una red
@@ -146,41 +189,45 @@ class Server {
   }
 
   Future login() {
+    final token = AuthService.user.token;
     var url = _uri('/login');
     var response = http.post(url, headers: _deLaApp({
-      'Authorization': 'Bearer ${AuthService.user.token}',
+      'Authorization': 'Bearer $token',
     }));
-    return response;
+    return _vigilando('/login', token, response);
   }
 
   Future get(String direccion) {
+    final token = AuthService.user.token;
     var url = _uri(direccion);
     var response = http.get(url, headers: _deLaApp(_conAccept(direccion, {
-      'Authorization': 'Bearer ${AuthService.user.token}',
+      'Authorization': 'Bearer $token',
     })));
-    return response;
+    return _vigilando(direccion, token, response);
   }
 
   Future put(String direccion, params) {
+    final token = AuthService.user.token;
     var url = _uri(direccion);
     var response = http.put(url,
         headers: _deLaApp(_conAccept(direccion, {
-          'Authorization': 'Bearer ${AuthService.user.token}',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         })),
         body: jsonEncode(params));
-    return response;
+    return _vigilando(direccion, token, response);
   }
 
   Future post(String direccion, params) {
+    final token = AuthService.user.token;
     var url = _uri(direccion);
     var response = http.post(url,
         headers: _deLaApp(_conAccept(direccion, {
-          'Authorization': 'Bearer ${AuthService.user.token}',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         })),
         body: jsonEncode(params));
-    return response;
+    return _vigilando(direccion, token, response);
   }
 
   /// Sube un archivo como `multipart/form-data`, en el campo `file`.
@@ -194,12 +241,14 @@ class Server {
   /// quien llama lo trate igual que un `post`.
   Future<http.Response> subir(
       String direccion, List<int> bytes, String nombreArchivo) async {
+    final token = AuthService.user.token;
     final peticion = http.MultipartRequest('POST', _uri(direccion))
       ..headers.addAll(_deLaApp(_conAccept(direccion, _encabezado())))
       ..files.add(http.MultipartFile.fromBytes('file', bytes,
           filename: nombreArchivo));
 
-    return http.Response.fromStream(await peticion.send());
+    return _vigilando(direccion, token,
+        http.Response.fromStream(await peticion.send()));
   }
 
   /// Como [subir], con campos de texto al lado del archivo.
@@ -211,19 +260,52 @@ class Server {
   /// y `pregunta_id`.
   Future<http.Response> subirConCampos(String direccion, List<int> bytes,
       String nombreArchivo, Map<String, String> campos) async {
+    final token = AuthService.user.token;
     final peticion = http.MultipartRequest('POST', _uri(direccion))
       ..headers.addAll(_deLaApp(_conAccept(direccion, _encabezado())))
       ..fields.addAll(campos)
       ..files.add(http.MultipartFile.fromBytes('file', bytes,
           filename: nombreArchivo));
 
-    return http.Response.fromStream(await peticion.send());
+    return _vigilando(direccion, token,
+        http.Response.fromStream(await peticion.send()));
   }
 
   Future delete(String direccion) {
+    final token = AuthService.user.token;
     var url = _uri(direccion);
     var response = http.delete(url,
         headers: _deLaApp(_encabezado()),);
-    return response;
+    return _vigilando(direccion, token, response);
   }
+}
+
+/// Una petición que no llegó al colegio: sin señal, sin datos, o el servidor
+/// no contesta.
+///
+/// Antes llegaba a la pantalla tal cual —«ClientException: Failed to fetch»,
+/// «SocketException: Failed host lookup…»— por las pantallas que pintan
+/// `'$err'`. Su texto es la frase que se enseña, sin «Exception: » delante.
+///
+/// Sigue siendo un [http.ClientException], así que quien ya lo reconocía por
+/// el tipo —`pareceFaltaDeSenal` en la hoja— lo sigue reconociendo.
+class SinConexion extends http.ClientException {
+  SinConexion(Object causa)
+      : super('No se pudo conectar con el colegio. Revisa tu conexión a '
+            'internet y vuelve a intentarlo. ($causa)');
+
+  static const String frase = 'No se pudo conectar con el colegio. Revisa tu '
+      'conexión a internet y vuelve a intentarlo.';
+
+  static bool loParece(Object err) {
+    final dicho = '$err';
+    return dicho.contains('SocketException') ||
+        dicho.contains('HandshakeException') ||
+        dicho.contains('Failed host lookup') ||
+        dicho.contains('Connection refused') ||
+        dicho.contains('Connection closed');
+  }
+
+  @override
+  String toString() => frase;
 }

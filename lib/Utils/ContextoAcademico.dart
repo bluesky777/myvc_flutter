@@ -7,6 +7,7 @@ import 'package:myvc_flutter/Utils/ConfiguracionColegio.dart';
 import 'package:myvc_flutter/Utils/SesionGuardada.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// El año y el periodo con los que trabaja el usuario ahora mismo.
 ///
@@ -285,7 +286,7 @@ class ContextoAcademico extends ChangeNotifier {
 
     final res = await server.get('/years');
     if (res.statusCode >= 300) {
-      throw Exception('El servidor respondió ${res.statusCode}.');
+      throw FalloDelServidor.de(res);
     }
 
     tomarSenasDelColegio(res.body);

@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/ColegioModel.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Trae la escala del año, de la nota más alta a la más baja.
 ///
@@ -36,7 +37,7 @@ Future<List<EscalaDeValoracion>> traerEscalasDelAnio(Server server) async {
   final res = await server.get('/escalas');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);

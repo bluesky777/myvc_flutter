@@ -36,12 +36,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 3. Revocar un token es raro; arrancar la app es lo que hace todo el mundo
 ///    todos los días.
 ///
-/// **El arreglo de fondo es otro** y está anotado en
-/// [docs/backend-pendiente.md](../../docs/backend-pendiente.md) §5: dejar de
-/// comprobar por adelantado y tratar el 401 de la primera petición de verdad
-/// como lo que es. Eso ahorra el 100 % de estas llamadas en vez del 60 %, pero
-/// toca la navegación de cuatro pantallas y no es un cambio para meter junto a
-/// éste.
+/// **El arreglo de fondo ya está** (21 oct 2026): cualquier 401 de una
+/// petición con token pasa por [Server.alCaducarSesion] y devuelve al login.
+/// Ver SesionCaducada. Esta comprobación queda para el arranque, que es el
+/// único sitio donde decide qué pantalla se abre.
 ///
 /// ## El invariante
 ///

@@ -71,8 +71,13 @@ class RouteGenerator {
       // otra pantalla al recuperar la sesión.
       case '/':
       case '/login':
+        // El argumento es el motivo por el que se llegó sin pedirlo: la sesión
+        // venció. Ver SesionCaducada.
+        final aviso = settings.arguments;
         return MaterialPageRoute(
-            settings: settings, builder: (context) => LoginAnimScreen());
+            settings: settings,
+            builder: (context) =>
+                LoginAnimScreen(aviso: aviso is String ? aviso : null));
       // La cuenta que sólo es de portería no tiene muro: el servidor no la deja
       // salir de `porteria/*`. Todo lo que lleva a «Inicio» —el login, la
       // sesión recuperada, el menú— la deja en la portería.

@@ -49,7 +49,7 @@ Future<String?> cambiarMiContrasena(
       return loQueDijoElServidor(res.body) ?? 'Falta la contraseña nueva.';
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

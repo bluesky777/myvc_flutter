@@ -8,11 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Http/ClienteApp.dart';
+import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Screens/RouteGenerator.dart';
 import 'package:myvc_flutter/Utils/Analitica.dart';
 import 'package:myvc_flutter/Utils/Avisos.dart';
 import 'package:myvc_flutter/Utils/Navegador.dart';
 import 'package:myvc_flutter/Utils/PreferenciasSesion.dart';
+import 'package:myvc_flutter/Utils/SesionCaducada.dart';
 import 'package:myvc_flutter/Utils/UriColegio.dart';
 import 'package:myvc_flutter/Utils/VersionMinima.dart';
 import 'package:myvc_flutter/cubit/select_server_cubit.dart';
@@ -75,6 +77,11 @@ void main() async {
   // recupera. Es lo que hace que recargar la página en la web no tire al
   // usuario a la calle. Ver LoginController.restaurar().
   final haySesion = await LoginController().restaurar();
+
+  // Desde aquí, un 401 de cualquier pantalla devuelve al login con el motivo
+  // arriba, en vez de quedarse en «El servidor respondió 401». Después de
+  // restaurar a propósito: ese 401 lo trata restaurar(). Ver SesionCaducada.
+  Server.alCaducarSesion = SesionCaducada.notar;
 
   runApp(
     MultiBlocProvider(

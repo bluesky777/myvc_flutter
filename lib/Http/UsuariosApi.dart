@@ -354,7 +354,7 @@ dynamic _cuerpo(dynamic res, String que) {
     throw Exception('No tienes permiso para ver $que.');
   }
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = res.body;
@@ -408,7 +408,7 @@ Future<String?> _mandar(
           'El servidor no aceptó $accion.';
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

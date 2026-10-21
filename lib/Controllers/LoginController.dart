@@ -209,7 +209,7 @@ class LoginController implements LoginBaseController {
   /// sexto en recargar se quedaría fuera sin haber tecleado nada. /years exige
   /// token igual, no está limitada, y devuelve poco.
   ///
-  /// Un 401 o un 403 son un no: el token caducó, o le cambiaron la clave, o
+  /// Un 401 es un no: el token caducó, o le cambiaron la clave, o
   /// desactivaron la cuenta. Cualquier otro fallo —sin red, servidor caído, un
   /// 500— no dice nada sobre el token, así que la sesión se queda y se sigue
   /// con lo guardado; ya fallará lo que tenga que fallar, con su mensaje.
@@ -227,7 +227,11 @@ class LoginController implements LoginBaseController {
     try {
       final res = await Server().get('/years');
 
-      if (res.statusCode == 401 || res.statusCode == 403) {
+      // Solo el 401. El 403 es «esto no te toca» con la sesión bien: la cuenta
+      // de portería lo recibe en `/years` («Esta cuenta es sólo de portería»,
+      // CuentaDePorteria en 8myvc), y tratarlo como token muerto la echaba
+      // cada seis horas.
+      if (res.statusCode == 401) {
         await _tirarLaSesion();
         return false;
       }
@@ -251,12 +255,21 @@ class LoginController implements LoginBaseController {
     }
   }
 
+  /// La salida por un 401 en mitad del uso. Ver SesionCaducada.
+  ///
+  /// Sin `login/logout`: el token ya está muerto, y el servidor lo diría con
+  /// otro 401.
+  Future<void> cerrarSesionCaducada() => _tirarLaSesion();
+
   Future<void> _tirarLaSesion() async {
     // También aquí, que es la otra puerta de salida: por aquí se cierra sesión
     // sin pasar por el menú —un 401, o lo guardado ilegible— y los temas hay
     // que soltarlos igual.
     await Avisos.soltarTodo();
     AuthService.limpiar();
+    // El rol y el colegio de la analítica, como en logout(): quien entre
+    // después no puede contar bajo los del que se fue.
+    Analitica.olvidar();
     VersionMinima.limpiar();
     ContextoAcademico.instancia.limpiar();
     HorarioDeHoy.instancia.limpiar();
@@ -341,6 +354,14 @@ class LoginController implements LoginBaseController {
     }
     if (error != null) {
       return 'El servidor rechazó el ingreso: $error (HTTP $codigo).';
+    }
+    // El límite de `throttle:login` —cinco por minuto, por IP y por cuenta— lo
+    // pone el middleware antes del controlador y vuelve como HTML, sin el
+    // `too_many_attempts` de arriba. Sin esto se leía «¿Es esta la dirección
+    // correcta?», y en un colegio todos salen por la misma IP.
+    if (codigo == 429) {
+      return 'Demasiados intentos seguidos desde esta red. Espera un minuto y '
+          'vuelve a intentarlo.';
     }
     if (parsed == null) {
       return 'Respuesta inesperada del servidor (HTTP $codigo).\n'

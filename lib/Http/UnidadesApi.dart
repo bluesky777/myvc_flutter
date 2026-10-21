@@ -5,6 +5,7 @@ import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AsignaturaModel.dart';
 import 'package:myvc_flutter/Models/UnidadModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Las unidades de una asignatura en el periodo, y en qué estado están.
 ///
@@ -84,7 +85,7 @@ Future<List<AsignaturaConUnidades>> traerAsignaturasConUnidades(
   final res = await server.get(ruta);
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);
@@ -143,7 +144,7 @@ Future<List<UnidadModel>> traerUnidadesDe(
       await server.get('/unidades/de-asignatura-periodo/$asignaturaId/$periodoId');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);
@@ -166,7 +167,7 @@ Future<List<DocenteModel>> traerDocentesDelColegio(Server server) async {
   final res = await server.get('/contratos');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final crudos = jsonDecode(res.body) as List;
@@ -397,7 +398,7 @@ Future<PapeleraUnidades> traerPapelera(
       await server.put('/subunidades/eliminadas/$asignaturaId', {});
 
   if (resUnidades.statusCode >= 300 || resSubunidades.statusCode >= 300) {
-    throw Exception('El servidor respondió ${resUnidades.statusCode}.');
+    throw FalloDelServidor.de(resUnidades);
   }
 
   final unidades = jsonDecode(resUnidades.body);

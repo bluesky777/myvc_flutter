@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Http/UnidadesApi.dart';
 import 'package:myvc_flutter/Models/NotasAlumnoModel.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Por qué no se pueden ver unas notas.
 ///
@@ -49,7 +50,7 @@ Future<NotasAlumnoModel> traerNotasDe(
   final res = await server.get('/notas/alumno/$alumnoId/${grupoId ?? ''}');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);

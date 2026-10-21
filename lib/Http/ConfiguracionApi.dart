@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/ColegioModel.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 
 /// Cómo está configurado el colegio, y los siete ajustes que se pueden mover
 /// desde el teléfono.
@@ -25,7 +26,7 @@ Future<List<YearDelColegio>> traerColegio(Server server) async {
   final res = await server.get('/years/colegio');
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);
@@ -181,7 +182,7 @@ Future<String?> _put(
       return 'No tienes permiso para $accion.';
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

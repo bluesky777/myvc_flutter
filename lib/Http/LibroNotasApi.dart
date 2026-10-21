@@ -503,7 +503,7 @@ Future<LibroDeNotas> traerLibroDe(
   });
 
   if (res.statusCode >= 300) {
-    throw Exception('El servidor respondió ${res.statusCode}.');
+    throw FalloDelServidor.de(res);
   }
 
   final cuerpo = jsonDecode(res.body);
@@ -761,7 +761,7 @@ Future<ResultadoGuardado> _guardarEnLote(
             ? 'No tienes permiso para editar notas en este periodo.'
             : motivoDeRechazo(
                 res.body,
-                respaldo: 'El servidor respondió ${res.statusCode}.',
+                respaldo: fraseDeFallo(res.statusCode, res.body),
               );
         procesadas += tanda.length;
         avance?.call(procesadas, cambios.length);
@@ -834,7 +834,7 @@ Future<String?> guardarNota(
       );
     }
     if (res.statusCode >= 300) {
-      return 'El servidor respondió ${res.statusCode}.';
+      return fraseDeFallo(res.statusCode, res.body);
     }
     return null;
   } catch (err) {

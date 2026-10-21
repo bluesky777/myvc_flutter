@@ -147,7 +147,7 @@ Future<List<Competencia>> traerCompetencias(
   if (res.statusCode >= 300) {
     throw Exception(motivoDeRechazo(
       res.body,
-      respaldo: 'El servidor respondió ${res.statusCode}.',
+      respaldo: fraseDeFallo(res.statusCode, res.body),
     ));
   }
 

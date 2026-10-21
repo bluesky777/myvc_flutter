@@ -222,6 +222,6 @@ Exception _loQuePasoAlPedirlo(dynamic res) {
 
   return Exception(motivoDeRechazo(
     cuerpo,
-    respaldo: 'El servidor respondió ${res.statusCode}.',
+    respaldo: fraseDeFallo(res.statusCode, res.body),
   ));
 }
