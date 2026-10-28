@@ -10,7 +10,7 @@ import 'package:myvc_flutter/Models/PorteriaModel.dart';
 /// así que el error trae la frase del servidor en `message` y se enseña tal
 /// cual: «Ese alumno no está matriculado este año» dice más que un 422.
 
-/// Los alumnos del año actual y las tardanzas que ya hay hoy.
+/// Los alumnos del año actual, y las tardanzas y novedades que ya hay hoy.
 /// `GET porteria/alumnos`.
 Future<ListaDePorteria> traerPorteria(Server server) async {
   final http.Response res = await server.get('/porteria/alumnos');
@@ -30,6 +30,10 @@ Future<ListaDePorteria> traerPorteria(Server server) async {
       for (final t in (cuerpo['tardanzas_hoy'] as List? ?? const []))
         TardanzaDeHoy.fromJson(Map<String, dynamic>.from(t as Map)),
     ],
+    novedadesHoy: [
+      for (final n in (cuerpo['novedades_hoy'] as List? ?? const []))
+        NovedadDeHoy.fromJson(Map<String, dynamic>.from(n as Map)),
+    ],
   );
 }
 
@@ -38,7 +42,7 @@ Future<ListaDePorteria> traerPorteria(Server server) async {
 ///
 /// Si ya tenía tardanza hoy el servidor no pone otra: devuelve la que hay, con
 /// `ya_tenia`.
-Future<ResultadoTardanza> ponerTardanza(
+Future<ResultadoDelCarne> ponerTardanza(
   Server server, {
   String? codigo,
   int? alumnoId,
@@ -49,25 +53,115 @@ Future<ResultadoTardanza> ponerTardanza(
       if (alumnoId != null) 'alumno_id': alumnoId,
     });
 
-    if (res.statusCode == 404 && _campo(res, 'desconocido') == true) {
-      return ResultadoTardanza.desconocido(codigo ?? '');
-    }
-    if (res.statusCode == 410) {
-      return ResultadoTardanza.anulado(codigo ?? '');
-    }
+    final otro = _sinAlumno(res, codigo, 'poner la tardanza');
+    if (otro != null) return otro;
+
+    final cuerpo = jsonDecode(res.body) as Map<String, dynamic>;
+
+    return ResultadoDelCarne.puesta(
+      AlumnoDePorteria.fromJson(Map<String, dynamic>.from(cuerpo['alumno'] as Map)),
+      TardanzaDeHoy.fromJson(Map<String, dynamic>.from(cuerpo['tardanza'] as Map)),
+      cuerpo['ya_tenia'] == true,
+      ConteoUniforme.fromJson(cuerpo['uniforme']),
+    );
+  } catch (err) {
+    return ResultadoDelCarne.mal('No se pudo poner la tardanza: $err');
+  }
+}
+
+/// «Sólo novedad»: lee el carné (o el alumno del buscador) SIN poner
+/// tardanza. `POST porteria/leer`, con los mismos [codigo] o [alumnoId] y los
+/// mismos 404 y 410 que [ponerTardanza], así que «¿De quién es este carné?»
+/// sirve igual.
+Future<ResultadoDelCarne> leerCarne(
+  Server server, {
+  String? codigo,
+  int? alumnoId,
+}) async {
+  try {
+    final http.Response res = await server.post('/porteria/leer', {
+      if (codigo != null) 'codigo': codigo,
+      if (alumnoId != null) 'alumno_id': alumnoId,
+    });
+
+    final otro = _sinAlumno(res, codigo, 'leer el carné');
+    if (otro != null) return otro;
+
+    final cuerpo = jsonDecode(res.body) as Map<String, dynamic>;
+    final tardanza = cuerpo['tardanza'];
+
+    return ResultadoDelCarne.leido(
+      AlumnoDePorteria.fromJson(Map<String, dynamic>.from(cuerpo['alumno'] as Map)),
+      tardanza: tardanza is Map
+          ? TardanzaDeHoy.fromJson(Map<String, dynamic>.from(tardanza))
+          : null,
+      novedades: [
+        for (final n in (cuerpo['novedades'] as List? ?? const []))
+          NovedadDeHoy.fromJson(Map<String, dynamic>.from(n as Map)),
+      ],
+      uniforme: ConteoUniforme.fromJson(cuerpo['uniforme']),
+    );
+  } catch (err) {
+    return ResultadoDelCarne.mal('No se pudo leer el carné: $err');
+  }
+}
+
+/// Lo que no trae alumno: el carné que no es de nadie (404 con
+/// `desconocido`), el anulado (410) y cualquier otro error. Null si es un 200.
+ResultadoDelCarne? _sinAlumno(http.Response res, String? codigo, String accion) {
+  if (res.statusCode == 404 && _campo(res, 'desconocido') == true) {
+    return ResultadoDelCarne.desconocido(codigo ?? '');
+  }
+  if (res.statusCode == 410) {
+    return ResultadoDelCarne.anulado(codigo ?? '');
+  }
+  if (res.statusCode != 200) {
+    return ResultadoDelCarne.mal(_frase(res, accion));
+  }
+  return null;
+}
+
+/// Anota la novedad de uniforme de hoy, llegue tarde o no.
+/// `POST porteria/novedad`. [motivos] son claves de [MotivoDeNovedad], al
+/// menos una (sin ninguna el servidor contesta 422).
+Future<NovedadGuardada> guardarNovedad(
+  Server server, {
+  required int alumnoId,
+  required List<String> motivos,
+  String? descripcion,
+}) async {
+  try {
+    final http.Response res = await server.post('/porteria/novedad', {
+      'alumno_id': alumnoId,
+      'motivos': motivos,
+      if (descripcion != null && descripcion.trim().isNotEmpty)
+        'descripcion': descripcion.trim(),
+    });
+
     if (res.statusCode != 200) {
-      return ResultadoTardanza.mal(_frase(res, 'poner la tardanza'));
+      return NovedadGuardada(error: _frase(res, 'guardar la novedad'));
     }
 
     final cuerpo = jsonDecode(res.body) as Map<String, dynamic>;
 
-    return ResultadoTardanza.puesta(
-      AlumnoDePorteria.fromJson(Map<String, dynamic>.from(cuerpo['alumno'] as Map)),
-      TardanzaDeHoy.fromJson(Map<String, dynamic>.from(cuerpo['tardanza'] as Map)),
-      cuerpo['ya_tenia'] == true,
+    return NovedadGuardada(
+      novedad: NovedadDeHoy.fromJson(
+          Map<String, dynamic>.from(cuerpo['novedad'] as Map)),
+      uniforme: ConteoUniforme.fromJson(cuerpo['uniforme']),
     );
   } catch (err) {
-    return ResultadoTardanza.mal('No se pudo poner la tardanza: $err');
+    return NovedadGuardada(error: 'No se pudo guardar la novedad: $err');
+  }
+}
+
+/// «Deshacer» la novedad: sólo una de entrada y de hoy.
+/// `DELETE porteria/novedad/{id}`. Devuelve null si salió bien, o la frase.
+Future<String?> quitarNovedad(Server server, int id) async {
+  try {
+    final http.Response res = await server.delete('/porteria/novedad/$id');
+    return res.statusCode == 200 ? null : _frase(res, 'quitar la novedad');
+  } catch (err) {
+    return 'No se pudo quitar la novedad: $err';
   }
 }
 

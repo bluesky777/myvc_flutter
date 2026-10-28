@@ -25,6 +25,7 @@ import 'package:myvc_flutter/Screens/ConfiguracionScreen.dart';
 import 'package:myvc_flutter/Screens/DisciplinaGrupoScreen.dart';
 import 'package:myvc_flutter/Screens/FaltasAlumnoScreen.dart';
 import 'package:myvc_flutter/Screens/MiPerfilScreen.dart';
+import 'package:myvc_flutter/Models/PorteriaModel.dart';
 import 'package:myvc_flutter/Screens/PorteriaScreen.dart';
 import 'package:myvc_flutter/Screens/MiCarneScreen.dart';
 import 'package:myvc_flutter/Screens/MisPqrsScreen.dart';
@@ -87,9 +88,14 @@ class RouteGenerator {
             builder: (context) => AuthService.user.esSoloPorteria
                 ? const PorteriaScreen()
                 : MuroScreen());
+      // El argumento es el modo con que abre: «Novedades de uniforme» del menú
+      // manda ModoDeEntrada.soloNovedad; sin él, «Tardanza», como siempre.
       case '/porteria':
+        final modo = settings.arguments;
         return MaterialPageRoute(
-            settings: settings, builder: (context) => const PorteriaScreen());
+            settings: settings,
+            builder: (context) => PorteriaScreen(
+                modo: modo is ModoDeEntrada ? modo : ModoDeEntrada.tardanza));
       case '/mi-carne':
         return MaterialPageRoute(
             settings: settings, builder: (context) => const MiCarneScreen());

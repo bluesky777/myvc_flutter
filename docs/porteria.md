@@ -12,6 +12,13 @@ es de la app.
   - Escanear pone la tardanza al instante, con «Deshacer» durante 10 s.
   - Un carné que no es de nadie abre «¿De quién es este carné?» y queda guardado.
   - La lista de alumnos se baja una vez al entrar y el buscador filtra en el teléfono.
+  - **En el menú se llama «Control de entrada»** (28 oct 2026): la entrada la hacen sobre todo
+    los docentes por turnos. Arriba de la cámara se elige qué registra el carné: «Tardanza» (lo de
+    siempre) o «Sólo novedad» (`porteria/leer`, no pone tardanza). La tarjeta del alumno trae el
+    bloque «Novedad de hoy» (seis motivos, nota, el conteo de la regla del uniforme y «Guardar
+    novedad» con «Deshacer»). El acceso directo «Novedades de uniforme» abre la misma pantalla en
+    «Sólo novedad» (argumento `ModoDeEntrada.soloNovedad` de `/porteria`). El contrato está en
+    `myvc_front/docs/novedades-de-entrada.md`.
 - **Mi carné / Carnés** (`/mi-carne`, `MiCarneScreen`). Es para el alumno y el acudiente: el QR que
   se enseña en portería, uno por hijo.
 

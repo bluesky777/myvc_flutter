@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myvc_flutter/Controllers/LoginController.dart';
 import 'package:myvc_flutter/Http/AuthService.dart';
+import 'package:myvc_flutter/Models/PorteriaModel.dart';
 import 'package:myvc_flutter/Utils/ContextoAcademico.dart';
 import 'package:myvc_flutter/Utils/Interruptores.dart';
 import 'package:myvc_flutter/Utils/PermisosPorteria.dart';
@@ -70,7 +71,7 @@ class MenuLateral extends StatelessWidget {
         _opcion(
           context,
           icono: Icons.qr_code_scanner,
-          texto: 'Portería',
+          texto: 'Control de entrada',
           ruta: '/porteria',
         ),
         _opcionMiPerfil(context),
@@ -194,14 +195,26 @@ class MenuLateral extends StatelessWidget {
     ));
 
     // Escanear el carné del que llega tarde. Cualquier docente, coordinación y
-    // quien tenga el rol Portería: ver PermisosPorteria.
+    // quien tenga el rol Portería: ver PermisosPorteria. «Control de entrada» y
+    // no «Portería» (28 oct 2026): la entrada la hacen sobre todo los docentes
+    // por turnos. «Novedades de uniforme» es la misma pantalla, abierta ya en
+    // «Sólo novedad» para el que llegó a tiempo.
     if (Interruptores.porteria && usuario.puedeUsarPorteria) {
-      opciones.add(_opcion(
-        context,
-        icono: Icons.qr_code_scanner,
-        texto: 'Portería',
-        ruta: '/porteria',
-      ));
+      opciones.addAll([
+        _opcion(
+          context,
+          icono: Icons.qr_code_scanner,
+          texto: 'Control de entrada',
+          ruta: '/porteria',
+        ),
+        _opcion(
+          context,
+          icono: Icons.checkroom_outlined,
+          texto: 'Novedades de uniforme',
+          ruta: '/porteria',
+          argumentos: ModoDeEntrada.soloNovedad,
+        ),
+      ]);
     }
 
     // Notas antes que Unidades porque es lo que se hace a diario: las unidades
@@ -405,12 +418,14 @@ class MenuLateral extends StatelessWidget {
     required IconData icono,
     required String texto,
     required String ruta,
+    Object? argumentos,
   }) {
     return ListTile(
       leading: Icon(icono),
       title: Text(texto),
-      onTap: () =>
-          Navigator.pushNamedAndRemoveUntil(context, ruta, (_) => false),
+      onTap: () => Navigator.pushNamedAndRemoveUntil(
+          context, ruta, (_) => false,
+          arguments: argumentos),
     );
   }
 
