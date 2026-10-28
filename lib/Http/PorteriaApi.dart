@@ -62,7 +62,8 @@ Future<ResultadoDelCarne> ponerTardanza(
       AlumnoDePorteria.fromJson(Map<String, dynamic>.from(cuerpo['alumno'] as Map)),
       TardanzaDeHoy.fromJson(Map<String, dynamic>.from(cuerpo['tardanza'] as Map)),
       cuerpo['ya_tenia'] == true,
-      ConteoUniforme.fromJson(cuerpo['uniforme']),
+      novedades: _novedades(cuerpo),
+      uniforme: ConteoUniforme.fromJson(cuerpo['uniforme']),
     );
   } catch (err) {
     return ResultadoDelCarne.mal('No se pudo poner la tardanza: $err');
@@ -95,15 +96,22 @@ Future<ResultadoDelCarne> leerCarne(
       tardanza: tardanza is Map
           ? TardanzaDeHoy.fromJson(Map<String, dynamic>.from(tardanza))
           : null,
-      novedades: [
-        for (final n in (cuerpo['novedades'] as List? ?? const []))
-          NovedadDeHoy.fromJson(Map<String, dynamic>.from(n as Map)),
-      ],
+      novedades: _novedades(cuerpo) ?? const [],
       uniforme: ConteoUniforme.fromJson(cuerpo['uniforme']),
     );
   } catch (err) {
     return ResultadoDelCarne.mal('No se pudo leer el carné: $err');
   }
+}
+
+/// Las novedades de hoy del alumno que vienen en la respuesta; null si no
+/// vienen.
+List<NovedadDeHoy>? _novedades(Map<String, dynamic> cuerpo) {
+  final lista = cuerpo['novedades'];
+  if (lista is! List) return null;
+  return [
+    for (final n in lista) NovedadDeHoy.fromJson(Map<String, dynamic>.from(n as Map)),
+  ];
 }
 
 /// Lo que no trae alumno: el carné que no es de nadie (404 con
@@ -155,13 +163,17 @@ Future<NovedadGuardada> guardarNovedad(
 }
 
 /// «Deshacer» la novedad: sólo una de entrada y de hoy.
-/// `DELETE porteria/novedad/{id}`. Devuelve null si salió bien, o la frase.
-Future<String?> quitarNovedad(Server server, int id) async {
+/// `DELETE porteria/novedad/{id}`, que devuelve el conteo ya sin ella.
+Future<NovedadQuitada> quitarNovedad(Server server, int id) async {
   try {
     final http.Response res = await server.delete('/porteria/novedad/$id');
-    return res.statusCode == 200 ? null : _frase(res, 'quitar la novedad');
+    if (res.statusCode != 200) {
+      return NovedadQuitada(error: _frase(res, 'quitar la novedad'));
+    }
+    return NovedadQuitada(
+        uniforme: ConteoUniforme.fromJson(_campo(res, 'uniforme')));
   } catch (err) {
-    return 'No se pudo quitar la novedad: $err';
+    return NovedadQuitada(error: 'No se pudo quitar la novedad: $err');
   }
 }
 

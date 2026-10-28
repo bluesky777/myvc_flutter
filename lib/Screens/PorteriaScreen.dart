@@ -227,6 +227,9 @@ class _PorteriaScreenState extends State<PorteriaScreen> {
     setState(() {
       _tardanzas[r.alumno!.id] = r.tardanza!;
       _porId.putIfAbsent(r.alumno!.id, () => r.alumno!);
+      // Las de hoy de este alumno, por si otro docente le anotó una en otra
+      // puerta después de bajar la lista.
+      if (r.novedades != null) _novedades[r.alumno!.id] = [...r.novedades!];
     });
     _mostrar(_Letrero.alumno(r.alumno!,
         tardanza: r.tardanza,
@@ -347,18 +350,18 @@ class _PorteriaScreenState extends State<PorteriaScreen> {
     });
   }
 
-  /// [antes] es el conteo de antes de guardarla: deshacer lo deja como estaba.
-  void _alQuitarNovedad(NovedadDeHoy n, ConteoUniforme? antes) {
+  /// [uniforme] es el conteo ya sin esa novedad, como lo devuelve el servidor.
+  void _alQuitarNovedad(NovedadDeHoy n, ConteoUniforme? uniforme) {
     setState(() {
       _novedades[n.alumnoId]?.removeWhere((o) => o.id == n.id);
       if (_letrero?.alumno?.id == n.alumnoId) {
-        _letrero = _letrero!.conUniforme(antes);
+        _letrero = _letrero!.conUniforme(uniforme);
       }
     });
   }
 
-  /// Quitar desde la lista de hoy. No se sabe cómo queda el conteo, así que
-  /// la tarjeta de ese alumno, si está, se cierra.
+  /// Quitar desde la lista de hoy. La tarjeta de ese alumno, si está, se
+  /// queda con el conteo nuevo.
   Future<void> _quitarNovedadDeLaLista(NovedadDeHoy n) async {
     final alumno = _porId[n.alumnoId];
     final si = await _confirmar(
@@ -368,17 +371,14 @@ class _PorteriaScreenState extends State<PorteriaScreen> {
     );
     if (!si) return;
 
-    final error = await quitarNovedad(_server, n.id);
+    final r = await quitarNovedad(_server, n.id);
 
-    if (error != null) {
-      _mostrar(_Letrero.error(error));
+    if (!r.quitada) {
+      _mostrar(_Letrero.error(r.error!));
       return;
     }
 
-    setState(() {
-      _novedades[n.alumnoId]?.removeWhere((o) => o.id == n.id);
-      if (_letrero?.alumno?.id == n.alumnoId) _letrero = null;
-    });
+    _alQuitarNovedad(n, r.uniforme);
   }
 
   // ------------------------------------------------- carné que no es de nadie
@@ -1172,8 +1172,8 @@ class _BloqueNovedad extends StatefulWidget {
   final Duration ventanaDeshacer;
   final void Function(NovedadDeHoy novedad, ConteoUniforme? uniforme) onGuardada;
 
-  /// Con el conteo de antes de guardarla.
-  final void Function(NovedadDeHoy novedad, ConteoUniforme? antes) onQuitada;
+  /// Con el conteo ya sin ella.
+  final void Function(NovedadDeHoy novedad, ConteoUniforme? uniforme) onQuitada;
 
   @override
   State<_BloqueNovedad> createState() => _BloqueNovedadState();
@@ -1187,7 +1187,6 @@ class _BloqueNovedadState extends State<_BloqueNovedad> {
 
   /// La que se acaba de guardar desde esta tarjeta, para «Deshacer».
   NovedadDeHoy? _guardada;
-  ConteoUniforme? _antes;
   bool _puedeDeshacer = false;
   Timer? _ventana;
 
@@ -1231,7 +1230,6 @@ class _BloqueNovedadState extends State<_BloqueNovedad> {
     HapticFeedback.mediumImpact();
     _ventana?.cancel();
     setState(() {
-      _antes = widget.uniforme;
       _guardada = r.novedad;
       _puedeDeshacer = true;
       _otra = false;
@@ -1249,10 +1247,10 @@ class _BloqueNovedadState extends State<_BloqueNovedad> {
     _ventana?.cancel();
     setState(() => _puedeDeshacer = false);
 
-    final error = await quitarNovedad(widget.server, n.id);
+    final r = await quitarNovedad(widget.server, n.id);
 
-    if (error != null) {
-      setState(() => _error = error);
+    if (!r.quitada) {
+      setState(() => _error = r.error);
       return;
     }
 
@@ -1265,7 +1263,7 @@ class _BloqueNovedadState extends State<_BloqueNovedad> {
         ..addAll(MotivoDeNovedad.values.where((m) => n.motivos.contains(m.clave)));
       _nota.text = n.descripcion ?? '';
     });
-    widget.onQuitada(n, _antes);
+    widget.onQuitada(n, r.uniforme);
   }
 
   @override

@@ -246,12 +246,18 @@ class ResultadoDelCarne {
   });
 
   /// Con tardanza: la que se puso, o la que ya tenía.
-  factory ResultadoDelCarne.puesta(AlumnoDePorteria alumno,
-          TardanzaDeHoy tardanza, bool yaTenia, ConteoUniforme? uniforme) =>
+  factory ResultadoDelCarne.puesta(
+    AlumnoDePorteria alumno,
+    TardanzaDeHoy tardanza,
+    bool yaTenia, {
+    List<NovedadDeHoy>? novedades,
+    ConteoUniforme? uniforme,
+  }) =>
       ResultadoDelCarne._(
           alumno: alumno,
           tardanza: tardanza,
           yaTenia: yaTenia,
+          novedades: novedades,
           uniforme: uniforme);
 
   /// Sin escribir nada: el alumno, su tardanza de hoy si la tiene y sus
@@ -281,8 +287,9 @@ class ResultadoDelCarne {
   final TardanzaDeHoy? tardanza;
   final bool yaTenia;
 
-  /// Sólo en la lectura: las novedades de hoy de este alumno. La tardanza no
-  /// las trae; la pantalla tiene las de `GET porteria/alumnos`.
+  /// Las novedades de hoy de este alumno, en la tardanza y en la lectura
+  /// (8myvc f2558b70). Null si el servidor todavía no las manda: entonces
+  /// valen las de `GET porteria/alumnos`.
   final List<NovedadDeHoy>? novedades;
 
   /// Null si el servidor todavía no lo manda.
@@ -302,6 +309,17 @@ class NovedadGuardada {
   final NovedadDeHoy? novedad;
   final ConteoUniforme? uniforme;
   final String? error;
+}
+
+/// Lo que contesta `DELETE porteria/novedad/{id}`: cómo queda el conteo ya sin
+/// esa novedad.
+class NovedadQuitada {
+  NovedadQuitada({this.uniforme, this.error});
+
+  final ConteoUniforme? uniforme;
+  final String? error;
+
+  bool get quitada => error == null;
 }
 
 /// El carné de la app: lo que ve el alumno, o el acudiente de cada hijo.
