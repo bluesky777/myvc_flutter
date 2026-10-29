@@ -26,7 +26,8 @@ es de la app.
 menú no le ofrece nada más que Portería, Mi perfil y Privacidad. El servidor tampoco la deja salir
 de `porteria/*` (`CuentaDePorteria`).
 
-Las pantallas van detrás de `Interruptores.porteria`. Para probarlo: `--dart-define=PORTERIA=true`.
+Las pantallas van detrás de `Interruptores.porteria`, **encendido desde la 1.4.0 (9)** (29 oct
+2026); `--dart-define=PORTERIA=false` lo apaga para probar.
 **El interruptor esconde las pantallas, no el permiso**: `CAMERA` viaja en el APK desde `a9aa91d`
 aunque el interruptor esté apagado, y por eso lo de abajo vale para la primera versión que publique
 este código.

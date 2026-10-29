@@ -430,7 +430,7 @@ consola después de subir.
 **El `versionCode` sube en cada subida, siempre.** Es el `+N` de `version:` en
 `pubspec.yaml`. Play rechaza un bundle con un `versionCode` que ya vio, aunque
 lo hayas borrado. El número vigente es el de `pubspec.yaml`, no el de este
-documento; la última subida a producción fue `1.2.0 (7)`. Súbelo en uno siempre,
+documento; la última subida a producción fue `1.3.0 (8)`. Súbelo en uno siempre,
 y sube también la parte `x.y.z` si cambia lo que ve el usuario.
 
 ### Una sola clave, a propósito
@@ -794,6 +794,22 @@ mismo envío:
   `ficha-play.md` son de este documento, no del texto (`ficha-play.md:104-130`).
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
+
+### `1.4.0 (9)`, preparada el 29 oct 2026
+
+Sólo la versión: ni la ficha, ni Seguridad de los datos, ni la política cambian. La cámara, ML
+Kit y los bloques `⏸ PORTERÍA` ya salieron con la 1.3.0 (8); las novedades de uniforme y el QR
+de «Mi carné» son información del alumno en el servidor del colegio (*Otra información*). Trae:
+- **la portería encendida** (`Interruptores.porteria`, `defaultValue: true`), que hasta la 8
+  viajaba apagada: «Control de entrada» con la tardanza y la novedad de uniforme (`f949965`,
+  `5e145fa`), el acceso «Novedades de uniforme» y «Mi carné» para alumnos y familias;
+- un 401 devuelve al login y los fallos del servidor se leen (`06f519b`).
+
+Antes de compilar, `8myvc` estaba en `9c9ccf6a` en los dieciocho colegios con 111 migraciones
+cada uno, las mismas que tiene ese commit (`tools/censo.sh --migraciones`). Bundle de 75,3 MB,
+firmado con `61:44:AF:9F…`. Notas en `es-419`: «Control de entrada: registra la tardanza y la
+novedad de uniforme escaneando el carné. «Mi carné» con el código QR para alumnos y familias.
+Si la sesión caduca, la app vuelve al inicio de sesión.»
 
 ### `1.3.0 (8)`, enviada el 16 oct 2026
 

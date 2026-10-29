@@ -324,8 +324,11 @@ class Interruptores {
   /// `PorteriaController` y la migración `2026_10_09_100000_porteria_rol_y_codigos_de_carnet`
   /// corrida —sin ella `porteria/*` revienta con la tabla que falta—.
   ///
-  /// Para probarlo: `--dart-define=PORTERIA=true` (ver [estaciones]).
-  static const bool porteria = bool.fromEnvironment('PORTERIA');
+  /// **Encendido desde el 29 oct 2026** para la 1.4.0 (9), con 8myvc `9c9ccf6a`
+  /// —la novedad de uniforme incluida, migración `2026_10_28_100000`— en los
+  /// dieciocho colegios. Para apagarlo en una prueba, `--dart-define=PORTERIA=false`.
+  static const bool porteria =
+      bool.fromEnvironment('PORTERIA', defaultValue: true);
 
   /// Las PQRS del acudiente —radicar, seguir el plazo, leer la respuesta y
   /// contestar la encuesta— y su aviso (Joseth, 9 oct 2026). Ver `docs/pqrs.md`.

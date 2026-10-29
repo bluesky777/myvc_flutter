@@ -469,6 +469,10 @@ void main() {
 
       await montar(tester);
 
+      // Con la portería encendida, «Control de entrada» y «Novedades de
+      // uniforme» la bajan de la primera pantalla.
+      await tester.scrollUntilVisible(find.text('Usuarios'), 200,
+          scrollable: find.byType(Scrollable).first);
       expect(find.text('Usuarios'), findsOneWidget);
     });
 
