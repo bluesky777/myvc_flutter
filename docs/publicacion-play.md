@@ -816,7 +816,7 @@ de «Mi carné» son información del alumno en el servidor del colegio (*Otra i
 **El `9` se gastó sin salir.** Se guardó el 29 oct pero no se llegó a pulsar *Enviar*; al día
 siguiente un docente mandó la captura del «(HTTP 403)» y se descartó para subir el `10` con los
 mensajes nuevos. El 403 de esa captura era la regla del servidor del 8 oct —la ausencia de
-institución era de coordinación—, que Joseth cambió el 30 oct para que la pongan los docentes:
+institución era de coordinación—, que Joseth decidió el 30 oct abrir a los docentes:
 eso es de `8myvc` y no pide versión de la app.
 
 Antes de compilar el `9`, `8myvc` estaba en `9c9ccf6a` en los dieciocho colegios con 111 migraciones
