@@ -803,7 +803,7 @@ mismo envío:
 
 ### `1.4.0 (10)`, enviada el 30 oct 2026
 
-**Enviada a revisión el 30 oct**, con lanzamiento completo y pendiente de aprobación. Al pulsar *Enviar*, la sección pasa a
+**Aprobada y disponible en Google Play el 30 oct**, el mismo día del envío; lanzamiento completo en 9 países. Al pulsar *Enviar*, la sección pasa a
 «Cambios en la etapa de revisión», con *Quitar los cambios*.
 
 Sólo la versión: ni la ficha, ni Seguridad de los datos, ni la política cambian. La cámara, ML
