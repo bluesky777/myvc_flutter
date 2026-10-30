@@ -754,6 +754,12 @@ públicos: nombre, ícono, descripción. Nada de usuarios.
 
 ### Subir una actualización: los clics, como están el 23 sep 2026 (recorridos)
 
+**El 29 oct 2026 el menú ya era otro**: *Probar y lanzar* se despliega en *Versiones y paquetes
+más recientes*, **Producción**, *Pruebas*… Se entra por **Producción** → **Crear versión
+nueva**; lo demás coincide. En *Descripción general de la publicación* el botón dice **Enviar 1
+cambio a revisión** y, mientras corren las verificaciones rápidas (hasta 14 min), **hay que
+pulsarlo igual**: guardar la versión no la envía.
+
 La consola cambia de menú sin avisar. Esto es lo que se vio en pantalla ese día
 y no lo que dice la ayuda de Google; si algo no coincide, se corrige aquí.
 
@@ -795,7 +801,7 @@ mismo envío:
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 
-### `1.4.0 (9)`, preparada el 29 oct 2026
+### `1.4.0 (10)`, preparada el 30 oct 2026
 
 Sólo la versión: ni la ficha, ni Seguridad de los datos, ni la política cambian. La cámara, ML
 Kit y los bloques `⏸ PORTERÍA` ya salieron con la 1.3.0 (8); las novedades de uniforme y el QR
@@ -803,10 +809,18 @@ de «Mi carné» son información del alumno en el servidor del colegio (*Otra i
 - **la portería encendida** (`Interruptores.porteria`, `defaultValue: true`), que hasta la 8
   viajaba apagada: «Control de entrada» con la tardanza y la novedad de uniforme (`f949965`,
   `5e145fa`), el acceso «Novedades de uniforme» y «Mi carné» para alumnos y familias;
-- un 401 devuelve al login y los fallos del servidor se leen (`06f519b`).
+- un 401 devuelve al login y los fallos del servidor se leen (`06f519b`);
+- ningún fallo sale como número suelto (`5245340`): «No se pudo registrar la ausencia: no tienes
+  permiso para esto (403).» en vez de «(HTTP 403)».
 
-Antes de compilar, `8myvc` estaba en `9c9ccf6a` en los dieciocho colegios con 111 migraciones
-cada uno, las mismas que tiene ese commit (`tools/censo.sh --migraciones`). Bundle de 75,3 MB,
+**El `9` se gastó sin salir.** Se guardó el 29 oct pero no se llegó a pulsar *Enviar*; al día
+siguiente un docente mandó la captura del «(HTTP 403)» y se descartó para subir el `10` con los
+mensajes nuevos. El 403 de esa captura era la regla del servidor del 8 oct —la ausencia de
+institución era de coordinación—, que Joseth cambió el 30 oct para que la pongan los docentes:
+eso es de `8myvc` y no pide versión de la app.
+
+Antes de compilar el `9`, `8myvc` estaba en `9c9ccf6a` en los dieciocho colegios con 111 migraciones
+cada uno, las mismas que tiene ese commit (`tools/censo.sh --migraciones`). Bundle del `10` de 75,4 MB,
 firmado con `61:44:AF:9F…`. Notas en `es-419`: «Control de entrada: registra la tardanza y la
 novedad de uniforme escaneando el carné. «Mi carné» con el código QR para alumnos y familias.
 Si la sesión caduca, la app vuelve al inicio de sesión.»
