@@ -801,7 +801,10 @@ mismo envío:
 - **Fuera de Play, el mismo día**: `docs/privacidad.html` a
   `https://micolevirtual.com/privacidad.html`, a mano.
 
-### `1.4.0 (10)`, preparada el 30 oct 2026
+### `1.4.0 (10)`, enviada el 30 oct 2026
+
+**Enviada a revisión el 30 oct**, con lanzamiento completo y pendiente de aprobación. Al pulsar *Enviar*, la sección pasa a
+«Cambios en la etapa de revisión», con *Quitar los cambios*.
 
 Sólo la versión: ni la ficha, ni Seguridad de los datos, ni la política cambian. La cámara, ML
 Kit y los bloques `⏸ PORTERÍA` ya salieron con la 1.3.0 (8); las novedades de uniforme y el QR
