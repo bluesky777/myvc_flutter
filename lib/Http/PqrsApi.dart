@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/PqrsModel.dart';
@@ -83,5 +84,5 @@ String _frase(http.Response res, String accion) {
     // Sin JSON: un 500 o un servidor sin `mis-pqrs` todavía.
   }
   if (res.statusCode == 404) return 'Este colegio todavía no tiene las PQRS en la app.';
-  return 'No se pudo $accion (HTTP ${res.statusCode}).';
+  return noSePudo(accion, res.statusCode);
 }

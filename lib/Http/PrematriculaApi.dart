@@ -164,6 +164,6 @@ Future<({ResultadoPrematricula resultado, String? mensaje})> prematricular(
 
   return (
     resultado: ResultadoPrematricula.fallo,
-    mensaje: dijo ?? 'No se pudo prematricular: el servidor respondió $codigo.',
+    mensaje: dijo ?? noSePudo('prematricular', codigo),
   );
 }

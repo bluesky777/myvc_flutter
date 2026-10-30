@@ -490,5 +490,5 @@ String? _motivoDelRechazo(dynamic res, {required String respaldo}) {
   if (codigo == 403 || codigo == 404 || codigo == 422) {
     return motivoDeRechazo(res.body, respaldo: respaldo);
   }
-  return 'El servidor respondió $codigo.';
+  return fraseDeFallo(codigo);
 }

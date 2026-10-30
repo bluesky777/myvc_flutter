@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:http/http.dart' as http;
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/PorteriaModel.dart';
@@ -234,5 +235,5 @@ dynamic _campo(http.Response res, String campo) {
 String _frase(http.Response res, String accion) {
   final mensaje = _campo(res, 'message');
   if (mensaje is String && mensaje.trim().isNotEmpty) return mensaje;
-  return 'No se pudo $accion (HTTP ${res.statusCode}).';
+  return noSePudo(accion, res.statusCode);
 }

@@ -119,8 +119,8 @@ class MotivoDePerfil implements Exception {
 /// servidor.
 Map<String, dynamic> _mapaO(dynamic res, String accion) {
   if (res.statusCode >= 300) {
-    throw MotivoDePerfil(loQueDijoElServidor(res.body) ??
-        'No se pudo $accion: el servidor respondió ${res.statusCode}.');
+    throw MotivoDePerfil(
+        loQueDijoElServidor(res.body) ?? noSePudo(accion, res.statusCode));
   }
   try {
     final leido = jsonDecode(res.body);

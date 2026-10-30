@@ -18,9 +18,29 @@ void main() {
     test('sin JSON, una frase por código y el número entre paréntesis', () {
       expect(fraseDeFallo(403, '<html>'), contains('permiso'));
       expect(fraseDeFallo(404), contains('(404)'));
-      expect(fraseDeFallo(429), contains('Espera un minuto'));
+      expect(fraseDeFallo(429), contains('espera un minuto'));
       expect(fraseDeFallo(500), contains('(500)'));
-      expect(fraseDeFallo(418), 'El servidor respondió 418.');
+      expect(fraseDeFallo(418), 'El colegio no aceptó la petición (418).');
+    });
+
+    test('noSePudo dice qué no se pudo y por qué', () {
+      expect(noSePudo('registrar la ausencia', 403),
+          'No se pudo registrar la ausencia: no tienes permiso para esto (403).');
+      expect(
+        noSePudo('registrar la ausencia', 403,
+            '{"message":"Las ausencias las pone coordinación."}'),
+        'No se pudo registrar la ausencia: Las ausencias las pone coordinación.',
+      );
+      expect(noSePudo('guardar', 503), contains('mantenimiento'));
+    });
+
+    test('ningún código sale como un número suelto', () {
+      for (final codigo in [400, 401, 403, 404, 405, 408, 409, 410, 413, 419,
+          422, 423, 429, 418, 500, 502, 503, 504, 302]) {
+        final frase = fraseDeFallo(codigo);
+        expect(frase, isNot(contains('respondió')), reason: '$codigo');
+        expect(frase, endsWith('($codigo).'), reason: '$codigo');
+      }
     });
 
     test('FalloDelServidor se pinta sin «Exception: » delante', () {

@@ -511,7 +511,7 @@ void main() {
         accion: 'cerrar ese paso',
       );
 
-      expect(motivo, 'El servidor respondió 500.');
+      expect(motivo, 'El servidor del colegio tuvo un problema; inténtalo en un rato (500).');
       expect(motivo, isNot(contains('SQLSTATE')));
     });
 

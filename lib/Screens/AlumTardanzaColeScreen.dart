@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:myvc_flutter/Menu/PantallaConMenu.dart';
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/AlumnoModel.dart';
 import 'package:myvc_flutter/Models/AsistenciaModel.dart';
@@ -509,8 +510,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
     }
 
     if (res.statusCode >= 300) {
-      _aviso('No se pudo registrar la ${tipo.singular}'
-          ' (HTTP ${res.statusCode}).');
+      _aviso(noSePudo(
+          'registrar la ${tipo.singular}', res.statusCode, res.body));
       return;
     }
 
@@ -564,8 +565,8 @@ class _AlumTardanzaColeScreen extends State<AlumTardanzaColeScreen> {
       final res = await server.delete('/ausencias/destroy/${falta.id}');
 
       if (res.statusCode >= 300) {
-        _aviso('No se pudo eliminar la ${tipo.singular}'
-            ' (HTTP ${res.statusCode}).');
+        _aviso(noSePudo(
+            'eliminar la ${tipo.singular}', res.statusCode, res.body));
         return;
       }
 

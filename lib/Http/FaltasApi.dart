@@ -1,3 +1,4 @@
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Utils/FechaServidor.dart';
 
@@ -40,5 +41,5 @@ String mensajeDeFallo(int codigo, String accion) {
   if (codigo == 400 || codigo == 401 || codigo == 403) {
     return 'No tienes permiso para $accion en este periodo.';
   }
-  return 'No se pudo $accion (HTTP $codigo).';
+  return noSePudo(accion, codigo);
 }

@@ -109,7 +109,7 @@ Future<Papeleta> traerLaPapeleta(Server server) async {
   if (respuesta.statusCode != 200) {
     throw Exception(motivoDeRechazo(
       respuesta.body,
-      respaldo: 'No se pudo traer la votación (HTTP ${respuesta.statusCode}).',
+      respaldo: noSePudo('traer la votación', respuesta.statusCode),
     ));
   }
 
@@ -215,8 +215,7 @@ Future<Escrutinio> traerElEscrutinio(Server server, int votacionId) async {
   if (respuesta.statusCode != 200) {
     throw Exception(motivoDeRechazo(
       respuesta.body,
-      respaldo:
-          'No se pudieron traer los resultados (HTTP ${respuesta.statusCode}).',
+      respaldo: noSePudo('traer los resultados', respuesta.statusCode),
     ));
   }
 
@@ -259,7 +258,7 @@ String _respaldoDe(int codigo) {
     case 401:
       return 'Tu sesión caducó. Vuelve a entrar.';
     default:
-      return 'No se pudo registrar el voto (HTTP $codigo).';
+      return noSePudo('registrar el voto', codigo);
   }
 }
 

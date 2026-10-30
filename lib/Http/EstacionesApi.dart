@@ -1283,7 +1283,7 @@ dynamic _cuerpo(dynamic res, String que) {
     );
   }
   if (codigo >= 300) {
-    throw Exception(dijo ?? 'El servidor respondió $codigo.');
+    throw Exception(dijo ?? fraseDeFallo(codigo));
   }
   final cuerpo = res.body;
   if (cuerpo is! String || cuerpo.trim().isEmpty) return null;
@@ -1398,7 +1398,7 @@ String? motivoDeUnaEscritura(
 
   if (codigo < 300) return null;
 
-  if (codigo >= 500) return 'El servidor respondió $codigo.';
+  if (codigo >= 500) return fraseDeFallo(codigo);
 
   final dijo = loQueDijoElServidor(res.body);
 
@@ -1414,5 +1414,5 @@ String? motivoDeUnaEscritura(
     return dijo ?? porElCuerpo ?? 'El servidor no aceptó $accion.';
   }
 
-  return dijo ?? 'El servidor respondió $codigo.';
+  return dijo ?? fraseDeFallo(codigo);
 }

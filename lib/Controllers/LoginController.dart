@@ -1,3 +1,4 @@
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
@@ -353,7 +354,7 @@ class LoginController implements LoginBaseController {
           : 'Demasiados intentos fallidos. Espera $segundos segundos.';
     }
     if (error != null) {
-      return 'El servidor rechazó el ingreso: $error (HTTP $codigo).';
+      return 'El servidor rechazó el ingreso: $error ($codigo).';
     }
     // El límite de `throttle:login` —cinco por minuto, por IP y por cuenta— lo
     // pone el middleware antes del controlador y vuelve como HTML, sin el
@@ -363,11 +364,13 @@ class LoginController implements LoginBaseController {
       return 'Demasiados intentos seguidos desde esta red. Espera un minuto y '
           'vuelve a intentarlo.';
     }
+    // Un 503 durante un despliegue no es una dirección equivocada.
+    if (codigo >= 500) return fraseDeFallo(codigo);
     if (parsed == null) {
-      return 'Respuesta inesperada del servidor (HTTP $codigo).\n'
+      return 'Respuesta inesperada del servidor ($codigo).\n'
           '¿Es esta la dirección correcta?\n${Server.urlApi}';
     }
-    return 'El servidor respondió HTTP $codigo.';
+    return fraseDeFallo(codigo, response.body);
   }
 
   @override

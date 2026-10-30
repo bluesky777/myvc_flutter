@@ -69,18 +69,72 @@ String fraseDeFallo(int codigo, [dynamic cuerpo]) {
   final dijo = loQueDijoElServidor(cuerpo);
   if (dijo != null) return dijo;
 
-  if (codigo == 401) return 'Tu sesión venció. Vuelve a entrar (401).';
-  if (codigo == 403) return 'No tienes permiso para esto (403).';
-  if (codigo == 404) return 'El colegio no tiene esto disponible (404).';
-  if (codigo == 429) {
-    return 'Demasiadas peticiones seguidas. Espera un minuto y vuelve a '
-        'intentarlo (429).';
+  final que = queSignificaElCodigo(codigo);
+  return '${que[0].toUpperCase()}${que.substring(1)}.';
+}
+
+/// Lo mismo que [fraseDeFallo], diciendo además qué era lo que no se pudo:
+/// «No se pudo registrar la ausencia: no tienes permiso para esto (403).».
+///
+/// Si el servidor se explicó, va su frase tal cual, que ya dice qué pasó.
+String noSePudo(String accion, int codigo, [dynamic cuerpo]) {
+  final dijo = loQueDijoElServidor(cuerpo);
+  if (dijo != null) return 'No se pudo $accion: $dijo';
+
+  return 'No se pudo $accion: ${queSignificaElCodigo(codigo)}.';
+}
+
+/// Qué quiere decir un código cuando el servidor no lo explica, en minúscula y
+/// sin punto, para que quepa detrás de «No se pudo …:».
+///
+/// Los de aquí son los que contesta 8myvc: `abort(403)` de `Autoriza`, el 404
+/// de una ruta que el colegio no tiene desplegada, el 409 y el 423 de las
+/// votaciones, el 410 de un carné vencido, el 419 de la sesión de Laravel y el
+/// 503 del modo mantenimiento durante un despliegue.
+String queSignificaElCodigo(int codigo) {
+  switch (codigo) {
+    case 400:
+      return 'el servidor no aceptó los datos que se enviaron (400)';
+    case 401:
+      return 'tu sesión venció; vuelve a entrar (401)';
+    case 403:
+      return 'no tienes permiso para esto (403)';
+    case 404:
+      return 'el colegio no tiene esto disponible, o ya no existe (404)';
+    case 405:
+      return 'el colegio todavía no tiene esta función (405)';
+    case 408:
+      return 'el servidor tardó demasiado en contestar; inténtalo de nuevo '
+          '(408)';
+    case 409:
+      return 'choca con algo que ya estaba registrado (409)';
+    case 410:
+      return 'eso ya no existe o ya venció (410)';
+    case 413:
+      return 'lo que se envió es demasiado grande (413)';
+    case 419:
+      return 'la sesión de la página caducó; vuelve a intentarlo (419)';
+    case 422:
+      return 'el servidor no aceptó los datos; revisa lo que escribiste (422)';
+    case 423:
+      return 'está cerrado por ahora (423)';
+    case 429:
+      return 'demasiadas peticiones seguidas; espera un minuto y vuelve a '
+          'intentarlo (429)';
+    case 502:
+    case 504:
+      return 'el servidor del colegio no contestó a tiempo; inténtalo en un '
+          'rato ($codigo)';
+    case 503:
+      return 'el servidor del colegio está en mantenimiento; inténtalo en '
+          'unos minutos (503)';
   }
   if (codigo >= 500) {
-    return 'El servidor del colegio tuvo un problema. Inténtalo en un rato '
-        '($codigo).';
+    return 'el servidor del colegio tuvo un problema; inténtalo en un rato '
+        '($codigo)';
   }
-  return 'El servidor respondió $codigo.';
+  if (codigo >= 400) return 'el colegio no aceptó la petición ($codigo)';
+  return 'el servidor contestó algo que la app no esperaba ($codigo)';
 }
 
 /// Un fallo del servidor, para lanzarlo desde la capa de datos.

@@ -354,8 +354,8 @@ class ContextoAcademico extends ChangeNotifier {
     try {
       final res = await server.login();
       if (res.statusCode >= 300) {
-        return 'Se cambió, pero no se pudo releer el periodo'
-            ' (HTTP ${res.statusCode}).';
+        return 'Se cambió, pero no se pudo releer el periodo: '
+            '${queSignificaElCodigo(res.statusCode)}.';
       }
 
       final datos = jsonDecode(res.body);
@@ -383,7 +383,7 @@ class ContextoAcademico extends ChangeNotifier {
     if (codigo == 400 || codigo == 401 || codigo == 403) {
       return 'No tienes permiso para $accion.';
     }
-    return 'No se pudo $accion (HTTP $codigo).';
+    return noSePudo(accion, codigo);
   }
 
   static int? _entero(dynamic valor) {

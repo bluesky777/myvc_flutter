@@ -21,6 +21,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:myvc_flutter/Http/MensajesDelServidor.dart';
 import 'package:myvc_flutter/Http/Server.dart';
 import 'package:myvc_flutter/Models/ActividadModel.dart';
 import 'package:myvc_flutter/Utils/JsonBackend.dart';
@@ -65,7 +66,7 @@ MotivoDeActividad _motivo(dynamic res, String accion) {
     403 => 'Esta actividad no te toca.',
     404 => 'Esta actividad ya no existe.',
     409 => 'Esta actividad no está abierta.',
-    _ => 'No se pudo $accion: el servidor respondió $status.',
+    _ => noSePudo(accion, status),
   };
   return MotivoDeActividad(frase, status: status, faltan: faltan);
 }

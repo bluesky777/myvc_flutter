@@ -345,5 +345,5 @@ String _porQueDijoQueNo(dynamic res, {required String respaldo}) {
     return motivoDeRechazo(res.body, respaldo: respaldo);
   }
 
-  return '$respaldo El servidor respondió $codigo.';
+  return '$respaldo ${fraseDeFallo(codigo)}';
 }

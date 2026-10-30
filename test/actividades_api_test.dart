@@ -337,7 +337,8 @@ void main() {
       expect(await frase(404), 'Esta actividad ya no existe.');
       expect(await frase(409), 'Esta actividad no está abierta.');
       expect(await frase(500),
-          'No se pudo abrir la actividad: el servidor respondió 500.');
+          'No se pudo abrir la actividad: '
+          'el servidor del colegio tuvo un problema; inténtalo en un rato (500).');
     });
 
     test('una traza entera no se le enseña al alumno', () async {
@@ -346,7 +347,8 @@ void main() {
       await expectLater(
         traerMisRespuestas(s, 1),
         throwsA(isA<MotivoDeActividad>().having((m) => m.mensaje, 'mensaje',
-            'No se pudo traer tus respuestas: el servidor respondió 500.')),
+            'No se pudo traer tus respuestas: '
+            'el servidor del colegio tuvo un problema; inténtalo en un rato (500).')),
       );
     });
 
